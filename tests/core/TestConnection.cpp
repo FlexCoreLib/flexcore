@@ -16,5 +16,4 @@ void TestConnection::TestTrivialExamples() {
 
 
 	auto test_connection = connect(give_one, increment);
-
 }
