@@ -1,11 +1,3 @@
-/*
- * TestConnection.cpp
- *
- *  Created on: Sep 8, 2015
- *      Author: ckielwein
- */
-
-
 #include "TestConnection.h"
 
 #include "core/connection.hpp"
@@ -13,7 +5,6 @@
 // boost
 #include <boost/test/included/unit_test.hpp>
 
-//void TestConnection::TestTrivialExamples() {
 BOOST_AUTO_TEST_CASE(foo)
 {
 

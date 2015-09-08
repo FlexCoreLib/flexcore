@@ -1,10 +1,3 @@
-/*
- * traits.hpp
- *
- *  Created on: Sep 8, 2015
- *      Author: ckielwein
- */
-
 #ifndef SRC_CORE_TRAITS_HPP_
 #define SRC_CORE_TRAITS_HPP_
 
