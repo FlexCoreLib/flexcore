@@ -10,12 +10,13 @@
 
 // Code:
 
-#include <traits.hpp>
+// boost
+#include <boost/test/unit_test.hpp>
+
+#include <core/traits.hpp>
 
 #include <iostream>
 #include <type_traits>
-
-
 
 //////////////////////////////////////////////////
 /// MACROS
@@ -71,7 +72,7 @@ static bool StaticFunction(int)
 //////////////////////////////////////////////////
 /// Actual tests
 
-int main(int /*argc*/, char *[])
+BOOST_AUTO_TEST_CASE( test_callable_traits )
 {
 	{ /// Check the return value of a bunch of callables
 		std::function<int(int)> callable1;
@@ -92,8 +93,6 @@ int main(int /*argc*/, char *[])
 
 		ASSERT_RESULT_OF(callable5, bool);
 	}
-
-	return 0;
 }
 
 

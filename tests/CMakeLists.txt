@@ -11,10 +11,13 @@ INCLUDE_DIRECTORIES(../src)
 
 ADD_DEFINITIONS(-std=c++1y)
 
+## Find all source files to be compiled into object files
+file( GLOB SOURCES core/Test*.cpp )
+
 # creates the executable
 ADD_EXECUTABLE(test_executable 
 	core/Runner.cpp
-	core/TestConnection.cpp)
+	${SOURCES})
 
 # indicates the include paths
 TARGET_INCLUDE_DIRECTORIES(test_executable PRIVATE ${BOOST_INCLUDE_DIRS})
