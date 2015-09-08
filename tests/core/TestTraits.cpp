@@ -1,6 +1,6 @@
-// main.cpp ---
+// TestTraits.cpp ---
 //
-// Filename: main.cpp
+// Filename: TestTraits.cpp
 // Description:
 // Author: Thomas Karolski
 // Created: Mo Sep  7 16:10:29 2015 (+0200)
@@ -97,4 +97,4 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 
 
 //
-// main.cpp ends here
+// TestTraits.cpp ends here
