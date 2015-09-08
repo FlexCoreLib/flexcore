@@ -10,8 +10,8 @@
 
 #include <type_traits>
 
-// #include "master_traits.h"
-#include "traits.hpp"
+#include "core/function_traits.hpp"
+#include "core/traits.hpp"
 
 template<class source_t, class sink_t, class sink_result,
 		class param_type>
