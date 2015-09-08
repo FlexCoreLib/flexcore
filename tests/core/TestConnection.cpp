@@ -7,7 +7,7 @@
 
 #include "TestConnection.h"
 
-#include "src/core/connection.hpp"
+#include "core/connection.hpp"
 
 void TestConnection::TestTrivialExamples() {
 

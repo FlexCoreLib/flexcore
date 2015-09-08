@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <functional>
 
-#include "functional.h"
+#include "function_traits.hpp"
 
 // is_callable trait
 namespace detail {
