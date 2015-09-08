@@ -10,8 +10,8 @@
 
 #include <type_traits>
 
-#include "master_traits.h"
-#include "traits.h"
+#include "core/function_traits.hpp"
+#include "core/traits.hpp"
 
 template<class source_t, class sink_t, class sink_result,
 		class param_type>
@@ -92,7 +92,7 @@ struct connection_trait {
 namespace detail
 {
 template<class source_t, class sink_t>
-typename connection_trait<source_t, sink_t>::type Connect_impl(
+typename connection_trait<source_t, sink_t>::type connect_impl(
 		const source_t& source, const sink_t& sink) {
 	return typename connection_trait<source_t, sink_t>::type { source,
 			sink };
