@@ -13,6 +13,7 @@ ADD_DEFINITIONS(-std=c++1y)
 
 # creates the executable
 ADD_EXECUTABLE(test_executable 
+	core/Runner.cpp
 	core/TestConnection.cpp)
 
 # indicates the include paths

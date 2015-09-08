@@ -92,7 +92,7 @@ struct connection_trait {
 namespace detail
 {
 template<class source_t, class sink_t>
-typename connection_trait<source_t, sink_t>::type Connect_impl(
+typename connection_trait<source_t, sink_t>::type connect_impl(
 		const source_t& source, const sink_t& sink) {
 	return typename connection_trait<source_t, sink_t>::type { source,
 			sink };
