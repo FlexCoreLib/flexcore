@@ -6,78 +6,127 @@
 #include "core/function_traits.hpp"
 #include "core/traits.hpp"
 
-template<
-		class source_t,
-		class sink_t,
-		class sink_result,
-		class param_type
-		>
-struct Connection
+/// Holds ownership of source and sink, used by connections as mixin to avoid code duplication.
+template<class source_t, class sink_t>
+struct SinkSourceOwner
 {
 	source_t source;
 	sink_t sink;
-	sink_result operator()(const param_type&& p)
+};
+
+/**
+ * \brief defines basic connection object, which is connectable.
+ *
+ */
+template<
+		class source_t,
+		class sink_t,
+		bool param_void,
+		bool result_void,
+		bool payload_void
+		>
+struct Connection;
+
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, false, false, false>
+		: public SinkSourceOwner<source_t, sink_t>
+{
+	typedef typename ParamType<source_t>::type param_type;
+	auto operator()(const param_type&& p)
 	{
 		// execute source with parameter and execute sink with result from source.
-		return sink(source(p));
+		return this->sink(this->source(p));
 	}
 };
 
 // partial  specialization for no parameter
-template<class source_t, class sink_t, class sink_result>
-struct Connection<source_t, sink_t, sink_result, void>
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, true, false, false>
+		: public SinkSourceOwner<source_t, sink_t>
 {
-	source_t source;
-	sink_t sink;
-	sink_result operator()()
+	auto operator()()
 	{
 		// execute source and execute sink with result from source.
-		return sink(source());
+		return this->sink(this->source());
+	}
+};
+
+//This is the special case, when there is no payload in the connnection
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, false, false, true>
+		: public SinkSourceOwner<source_t, sink_t>
+{
+	typedef typename ParamType<source_t>::type param_type;
+	auto operator()(const param_type&& p)
+	{
+		// execute source and execute sink separately.
+		this->source(p);
+		return this->sink();
+	}
+};
+
+
+/// partial specialization for no parameter and no payload
+template<class source_t, class sink_t>
+struct Connection<source_t, sink_t, true, false, true>
+		: public SinkSourceOwner<source_t, sink_t>
+{
+	void operator()()
+	{
+		// execute source and execute sink separately since source has no result.
+		this->source();
+		return this->sink();
 	}
 };
 
 // Special case of connection which has no return value
-template<class source_t, class sink_t, class param_type>
-struct VoidConnection
+template<class source_t, class sink_t>
+struct Connection<source_t, sink_t,false, true, false>
+		: public SinkSourceOwner<source_t, sink_t>
 {
-	source_t source;
-	sink_t sink;
+	typedef typename ParamType<source_t>::type param_type;
 	void operator()(const param_type&& p)
 	{
 		// execute source with parameter and execute sink with result from source.
-		sink(source(p));
+		this->sink(this->source(p));
 	}
 };
 
 // partial  specialization for no parameter and no return value
 template<class source_t, class sink_t>
-struct VoidConnection<source_t, sink_t, void>
+struct Connection<source_t, sink_t, true, true, false>
+		: public SinkSourceOwner<source_t, sink_t>
 {
-	source_t source;
-	sink_t sink;
 	void operator()()
 	{
 		// execute source and execute sink with result from source.
-		sink(source());
+		this->sink(this->source());
 	}
 };
 
-
-template<bool no_arg, class T>
-struct ParamType
+/// partial specialization for no parameter and no return value and no payload
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, true, true, true>
+		: public SinkSourceOwner<source_t, sink_t>
 {
-};
-
-template<class T>
-struct ParamType<true, T>
-{
-	typedef void type;
-};
-
-template<class T>
-struct ParamType<false, T>
-{
-	typedef typename utils::function_traits<T>::template arg<0>::type type;
+	void operator()()
+	{
+		// execute source and execute sink separately since source has no result.
+		this->source();
+		this->sink();
+	}
 };
 
 // metafunction which creates correct Connection type by checking
@@ -85,18 +134,22 @@ struct ParamType<false, T>
 template<class source_t, class sink_t>
 struct connection_trait
 {
-	static const bool source_no_arg = utils::function_traits<source_t>::arity == 0;
 
-	typedef typename ParamType<source_no_arg, source_t>::type source_param;
+	typedef typename result_of<source_t>::type source_result;
 	typedef typename result_of<sink_t>::type sink_result;
 
+	static const bool param_is_void = utils::function_traits<source_t>::arity == 0;
 	static const bool result_is_void = std::is_void<sink_result>::value;
-	typedef typename std::conditional
-		<
+	static const bool payload_is_void = std::is_void<source_result>::value;
+
+	typedef Connection
+			<
+			source_t,
+			sink_t,
+			param_is_void,
 			result_is_void,
-			VoidConnection<source_t, sink_t, source_param>,
-			Connection<source_t, sink_t, sink_result, source_param>
-		>::type type;
+			payload_is_void
+			> type;
 };
 
 namespace detail

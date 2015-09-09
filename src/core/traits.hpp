@@ -53,6 +53,7 @@ struct result_of<typename std::enable_if<has_result<Expr>::value, void>>{
 	typedef typename Expr::result_type type;
 };
 
-
+template<class T>
+using ParamType = typename utils::function_traits<T>::template arg<0>::type;
 
 #endif /* SRC_CORE_TRAITS_HPP_ */
