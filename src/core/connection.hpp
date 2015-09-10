@@ -59,6 +59,40 @@ typename connection_trait<source_t, sink_t>::type connect_impl
 {
 	return typename connection_trait<source_t, sink_t>::type {source, sink};
 }
+
+template<class source_t, class sink_t>
+struct fork_connection : public connection_trait<source_t, sink_t>::type
+{
+	fork_connection(const source_t& source,const sink_t& sink)
+			: connection_trait<source_t, sink_t>::type {source, sink}
+	{
+	}
+};
+
+template<class source_t, class sink_t, class enable = void>
+typename connection_trait<source_t, sink_t>::type fork_impl
+		(
+		const source_t& source,
+		const sink_t& sink
+		)
+{
+	return fork_connection<source_t, sink_t>(source, sink);
+}
+
+//overload, when source_t is a for_connection,
+//this means the connection has been forked
+//We connect the sink to the source of the forked connection, and not the connection itself.
+template<class source_t, class intermediate_t, class sink_t>
+typename connection_trait<source_t, sink_t>::type
+		fork_impl
+		(
+		const fork_connection<source_t, intermediate_t>& source,
+		const sink_t& sink
+		)
+{
+	return fork_connection<source_t, sink_t>(source.source, sink);
+}
+
 } // namespace detail
 
 /**
@@ -80,16 +114,31 @@ auto connect(const source_t& source, const sink_t& sink)
 	return detail::connect_impl(source, sink);
 }
 
+template<class sink_t, class source_t>
+auto fork(const source_t& source, const sink_t& sink)
+{
+	return detail::fork_impl(source, sink);
+}
+
+
 /**
  * \brief Operator >> takes two connectables and returns a connection.
  *
  * This operator is syntactic sugar for Connect.
  */
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 auto operator >>(const source_t& source, const sink_t& sink)
 {
 	return connect(source, sink);
 }
+
+//ToDO does not work yet
+//template<class source_t, class sink_t>
+//auto operator |(const source_t& source, const sink_t& sink)
+//{
+//	return fork(source, sink);
+//}
+
 
 
 /***************** Implementation *********************************************
