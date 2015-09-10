@@ -47,36 +47,51 @@ BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 	// to check if lambdas without return values work.
 	int capture_ref = 0;
 
+	//named differnt sources and sinks to make tests more readable
 	auto write_param = [&](int i){ capture_ref = i; };
 	auto increment = [](int i) -> int {return i+1;};
+	auto give_one = [](){return 1;};
+	auto give_three = [](){return 3;};
+	auto do_nothing = [](){};
+	auto ignore_in = [](int i){};
+	auto increment_ref = [&](){ capture_ref++; };
 
+	// param int,  payload int,  result int
+	auto plus_two = connect(increment, increment);
+	BOOST_CHECK_EQUAL(plus_two(1), 3);
+
+	// param int,  payload int,  result void
 	// this connection takes a parameter and returns void
 	// An int is transmitted as payload between source and sink.
 	auto write_increment = connect(increment, write_param);
 	write_increment(0);
-	BOOST_CHECK(capture_ref == 1);
+	BOOST_CHECK_EQUAL(capture_ref,1);
 
-	auto do_nothing = [](){};
-	auto set_two = [&](){ capture_ref = 2; };
+	// param int,  payload void, result int
+	auto ignore_input_return1 = connect(ignore_in, give_one);
+	BOOST_CHECK_EQUAL(ignore_input_return1(99), 1);
+
+	// param int,  payload void, result void
+	connect(ignore_in, increment_ref)(99);
+	BOOST_CHECK_EQUAL(capture_ref, 2);
+
+	// param void, payload int,  result int
+	// This connection takes no paramter and returns an int.
+	// An int is transmitted as payload between source and sink.
+	BOOST_CHECK_EQUAL(connect(give_one, increment)(), 2);
+
+	// param void, payload int,  result void
+	connect(give_three, write_param)();
+	BOOST_CHECK_EQUAL(capture_ref, 3);
+
+	// param void, payload void, result int
+	// This connection takes no paramter and returns and int.
+	// There is also no payload between source and sink.
+	BOOST_CHECK_EQUAL(connect(do_nothing, give_one)(),1);
+
+	// param void, payload void, result void
 	// This connection takes no parameter, and returns void
 	// There is also no payload between source and sink.
-	auto set_one_connection = connect(do_nothing, set_two);
-	set_one_connection();
-	BOOST_CHECK(capture_ref == 2);
-
-	// This connection takes no paramter and returns and int.
-	// An int is transmitted as payload between source and sink.
-	auto give_one = [](){return 1;};
-	BOOST_CHECK(connect(give_one, increment)() == 2);
-
-	// This connection takes no paramter and returns and int.
-	// There is also no payload between source and sink.
-	BOOST_CHECK(connect(do_nothing, give_one)() == 1);
-
-	// This connection takes no paramter and returns and void.
-	// There is also no payload between source and sink.
-	auto write_nine = [&](){ capture_ref = 9; };
-	connect(do_nothing, write_nine)();
-	BOOST_CHECK(capture_ref == 9);
-
+	connect(do_nothing, increment_ref)();
+	BOOST_CHECK_EQUAL(capture_ref, 4);
 }
