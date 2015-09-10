@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 	BOOST_CHECK(capture_ref == 1);
 
 	auto do_nothing = [](){};
-	auto set_one = [&](){ capture_ref = 1; };
+	auto set_two = [&](){ capture_ref = 2; };
 	// This connection takes no parameter, and returns void
 	// There is also no payload between source and sink.
-	auto set_one_connection = connect(do_nothing, set_one);
+	auto set_one_connection = connect(do_nothing, set_two);
 	set_one_connection();
 	BOOST_CHECK(capture_ref == 2);
 

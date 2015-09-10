@@ -6,13 +6,6 @@
 #include "core/function_traits.hpp"
 #include "core/traits.hpp"
 
-/// Holds ownership of source and sink, used by connections as mixin to avoid code duplication.
-template<class source_t, class sink_t>
-struct SinkSourceOwner
-{
-	source_t source;
-	sink_t sink;
-};
 
 /**
  * \brief defines basic connection object, which is connectable.
@@ -26,108 +19,6 @@ template<
 		bool payload_void
 		>
 struct Connection;
-
-template<
-		class source_t,
-		class sink_t
-		>
-struct Connection<source_t, sink_t, false, false, false>
-		: public SinkSourceOwner<source_t, sink_t>
-{
-	typedef typename ParamType<source_t>::type param_type;
-	auto operator()(const param_type&& p)
-	{
-		// execute source with parameter and execute sink with result from source.
-		return this->sink(this->source(p));
-	}
-};
-
-// partial  specialization for no parameter
-template<
-		class source_t,
-		class sink_t
-		>
-struct Connection<source_t, sink_t, true, false, false>
-		: public SinkSourceOwner<source_t, sink_t>
-{
-	auto operator()()
-	{
-		// execute source and execute sink with result from source.
-		return this->sink(this->source());
-	}
-};
-
-//This is the special case, when there is no payload in the connnection
-template<
-		class source_t,
-		class sink_t
-		>
-struct Connection<source_t, sink_t, false, false, true>
-		: public SinkSourceOwner<source_t, sink_t>
-{
-	typedef typename ParamType<source_t>::type param_type;
-	auto operator()(const param_type&& p)
-	{
-		// execute source and execute sink separately.
-		this->source(p);
-		return this->sink();
-	}
-};
-
-
-/// partial specialization for no parameter and no payload
-template<class source_t, class sink_t>
-struct Connection<source_t, sink_t, true, false, true>
-		: public SinkSourceOwner<source_t, sink_t>
-{
-	void operator()()
-	{
-		// execute source and execute sink separately since source has no result.
-		this->source();
-		return this->sink();
-	}
-};
-
-// Special case of connection which has no return value
-template<class source_t, class sink_t>
-struct Connection<source_t, sink_t,false, true, false>
-		: public SinkSourceOwner<source_t, sink_t>
-{
-	typedef typename ParamType<source_t>::type param_type;
-	void operator()(const param_type&& p)
-	{
-		// execute source with parameter and execute sink with result from source.
-		this->sink(this->source(p));
-	}
-};
-
-// partial  specialization for no parameter and no return value
-template<class source_t, class sink_t>
-struct Connection<source_t, sink_t, true, true, false>
-		: public SinkSourceOwner<source_t, sink_t>
-{
-	void operator()()
-	{
-		// execute source and execute sink with result from source.
-		this->sink(this->source());
-	}
-};
-
-/// partial specialization for no parameter and no return value and no payload
-template<
-		class source_t,
-		class sink_t
-		>
-struct Connection<source_t, sink_t, true, true, true>
-		: public SinkSourceOwner<source_t, sink_t>
-{
-	void operator()()
-	{
-		// execute source and execute sink separately since source has no result.
-		this->source();
-		this->sink();
-	}
-};
 
 // metafunction which creates correct Connection type by checking
 // if parameters or result types are void.
@@ -161,7 +52,7 @@ typename connection_trait<source_t, sink_t>::type connect_impl
 		const sink_t& sink
 		)
 {
-	return typename connection_trait<source_t, sink_t>::type { source, sink };
+	return typename connection_trait<source_t, sink_t>::type {source, sink};
 }
 } // namespace detail
 
@@ -194,5 +85,151 @@ auto operator >>(const source_t& source, const sink_t& sink)
 {
 	return Connect(source, sink);
 }
+
+
+/*
+ * Template specializations on param_is_void, result_is_void and payload_is_void.
+ * These specializations are necessary since different parts of the function bodies
+ * of operator() are ill formed if parameters, payload or results are void.
+ *
+ * std::enable_if on the operator() does not work in all cases, since the metafunctions
+ * param_type and result_of can also be ill formed, when paramt_t and result_t are void.
+ *
+ */
+
+/// Specialization in case no value is void
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, false, false, false>
+{
+	source_t source;
+	sink_t sink;
+	typedef typename param_type<source_t>::type param_type;
+	typedef typename result_of<sink_t>::type sink_result;
+	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
+	sink_result operator()(const param_type&& p)
+	{
+		// execute source with parameter and execute sink with result from source.
+		return sink(source(p));
+	}
+};
+
+/// Partial specialization no parameter
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, true, false, false>
+{
+	source_t source;
+	sink_t sink;
+	typedef typename result_of<sink_t>::type sink_result;
+	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
+	sink_result operator()()
+	{
+		// execute source and execute sink with result from source.
+		return sink(source());
+	}
+};
+
+/// partial  specialization for no parameter and no return value
+template<class source_t, class sink_t>
+struct Connection<source_t, sink_t, true, true, false>
+{
+	source_t source;
+	sink_t sink;
+	void operator()()
+	{
+		// execute source and execute sink with result from source.
+		sink(source());
+	}
+};
+
+/// partial specialization for no parameter and no payload
+template<class source_t, class sink_t>
+struct Connection<source_t, sink_t, true, false, true>
+{
+	source_t source;
+	sink_t sink;
+	typedef typename result_of<sink_t>::type sink_result;
+	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
+	sink_result operator()()
+	{
+		// execute source and execute sink separately since source has no result.
+		source();
+		return sink();
+	}
+};
+
+/// partial specialization for no parameter and no return value and no payload
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, true, true, true>
+{
+	source_t source;
+	sink_t sink;
+	void operator()()
+	{
+		// execute source and execute sink separately since source has no result.
+		source();
+		sink();
+	}
+};
+
+// Special case of connection which has no return value
+template<class source_t, class sink_t>
+struct Connection<source_t, sink_t,false, true, false>
+{
+	source_t source;
+	sink_t sink;
+	typedef typename param_type<source_t>::type param_type;
+	void operator()(const param_type&& p)
+	{
+		// execute source with parameter and execute sink with result from source.
+		sink(source(p));
+	}
+};
+
+/// Special case, when there is no payload in the connnection
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, false, false, true>
+{
+	source_t source;
+	sink_t sink;
+	typedef typename result_of<sink_t>::type sink_result;
+	typedef typename param_type<source_t>::type param_type;
+	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
+	sink_result operator()(const param_type&& p)
+	{
+		// execute source and execute sink separately.
+		source(p);
+		return sink();
+	}
+};
+
+/// Special case, when there is no payload and no result in the connection
+template<
+		class source_t,
+		class sink_t
+		>
+struct Connection<source_t, sink_t, false, true, true>
+{
+	source_t source;
+	sink_t sink;
+	typedef typename param_type<source_t>::type param_type;
+	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
+	void operator()(const param_type&& p)
+	{
+		source(p);
+		sink();
+	}
+};
 
 #endif /* SRC_CORE_CONNECTION_HPP_ */

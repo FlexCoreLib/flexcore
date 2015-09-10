@@ -54,6 +54,9 @@ struct result_of<typename std::enable_if<has_result<Expr>::value, void>>{
 };
 
 template<class T>
-using ParamType = typename utils::function_traits<T>::template arg<0>::type;
+struct param_type
+{
+	typedef typename utils::function_traits<T>::template arg<0>::type type;
+};
 
 #endif /* SRC_CORE_TRAITS_HPP_ */
