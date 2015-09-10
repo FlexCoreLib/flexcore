@@ -5,6 +5,12 @@ ENABLE_TESTING()
 
 INCLUDE_DIRECTORIES(../src)
 
+SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+SET(GCC_COVERAGE_LINK_FLAGS "-lgcov")
+
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
+
 ADD_DEFINITIONS(-std=c++1y)
 
 ## Find all source files to be compiled into object files

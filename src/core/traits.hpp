@@ -83,7 +83,11 @@ struct result_of<typename std::enable_if<has_result<Expr>::value, void>>
 	typedef typename Expr::result_type type;
 };
 
-
+template<class T>
+struct param_type
+{
+	typedef typename utils::function_traits<T>::template arg<0>::type type;
+};
 
 /// Trait for determining the type of a callables parameter.
 /** Works on the same types as result_of.
