@@ -1,1 +1,13 @@
-cmake_minimum_required( VERSION 2.8 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8.12 )
+
+PROJECT( flexcore )
+
+ADD_COMPILE_OPTIONS(  
+    "-Wall"
+    "-std=c++1y" )
+
+ADD_SUBDIRECTORY( src )
+ADD_SUBDIRECTORY( tests )
+
+
+

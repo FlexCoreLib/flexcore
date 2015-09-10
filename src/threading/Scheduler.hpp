@@ -20,7 +20,7 @@
 #include <boost/type_erasure/any.hpp>
 #include <boost/type_erasure/callable.hpp>
 
-#include <core/traits.hpp>
+#include "core/traits.hpp"
 
 template<class Callable, class Enable = void >
 struct is_callable_concept

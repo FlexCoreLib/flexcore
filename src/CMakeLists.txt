@@ -1,8 +1,15 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8.12 )
 
-PROJECT(core)
+# creates the executable
+ADD_LIBRARY( flexcore
+    threading/Scheduler.cpp )
 
-## Find all source files to be compiled into object files
-file( GLOB SOURCES core/*.cpp )
+TARGET_INCLUDE_DIRECTORIES( flexcore
+    PUBLIC "." )
+ 	
 
-ADD_LIBRARY(core ${SOURCES})
+ 	
+ 	
+ 	
+ 	
+ 	
