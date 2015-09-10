@@ -9,7 +9,12 @@
 
 /**
  * \brief defines basic connection object, which is connectable.
- *
+ * \tparam source_t the source node of the connection, data flows from here to the sink.
+ * \tparam sink_t is the sink node of the connection, data goes here.
+ * \tparam param_void is true if the parameter of operator() of source_t is void
+ * \result_void param_void is true if the result of operator() of sink_t is void
+ * \payload_void param_void is true if the result of operator() of source_t is void
+ * the return value of source_t needs to be convertible to the parameter of sink_t.
  */
 template<
 		class source_t,
@@ -83,7 +88,7 @@ auto connect(const source_t& source, const sink_t& sink)
 template<class sink_t, class source_t>
 auto operator >>(const source_t& source, const sink_t& sink)
 {
-	return Connect(source, sink);
+	return connect(source, sink);
 }
 
 

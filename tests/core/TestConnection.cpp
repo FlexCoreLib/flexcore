@@ -40,6 +40,14 @@ BOOST_AUTO_TEST_CASE(examples)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(stream_operator_example)
+{
+	auto make_four = [](){return 1;} // one
+			>> [](int i){return ++i;} // plus one
+			>> [](int i){return i+2;}; // plus two
+	BOOST_CHECK_EQUAL(make_four(), 4); // is four
+}
+
 // test cases for different pairs of parameter and result types
 BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 {
