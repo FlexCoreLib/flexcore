@@ -1,30 +1,24 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
-ENABLE_TESTING()
+#ENABLE_TESTING()
 
-# These four flags enable use of gcov
-#SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-#SET(GCC_COVERAGE_LINK_FLAGS "-lgcov")
-
-#SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
-#SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
+# test_executable
 
 ADD_EXECUTABLE( test_executable 
-	Runner.cpp )
+    core/TestConnection.cpp
+    core/TestTraits.cpp
+	Runner.cpp 
+	threading/TestScheduler.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
     PRIVATE ${BOOST_INCLUDE_DIRS}
     "../src" 
     "." )
 
-#TARGET_COMPILE_OPTIONS( flexcore  
-#    PUBLIC "-Wall"
-#    PUBLIC "-std=c++1y" )
-
 TARGET_LINK_LIBRARIES( test_executable
     PUBLIC flexcore )
 
 # declares a test with our executable
-ADD_TEST(NAME test COMMAND test_executable)
+#ADD_TEST( NAME test WORKING_DIRECTORY "." COMMAND test_executable )
 
 
