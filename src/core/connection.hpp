@@ -87,7 +87,8 @@ auto operator >>(const source_t& source, const sink_t& sink)
 }
 
 
-/*
+/***************** Implementation *********************************************
+ *
  * Template specializations on param_is_void, result_is_void and payload_is_void.
  * These specializations are necessary since different parts of the function bodies
  * of operator() are ill formed if parameters, payload or results are void.
@@ -98,10 +99,7 @@ auto operator >>(const source_t& source, const sink_t& sink)
  */
 
 /// Specialization in case no value is void
-template<
-		class source_t,
-		class sink_t
-		>
+template<class source_t,class sink_t>
 struct Connection<source_t, sink_t, false, false, false>
 {
 	source_t source;
@@ -117,10 +115,7 @@ struct Connection<source_t, sink_t, false, false, false>
 };
 
 /// Partial specialization no parameter
-template<
-		class source_t,
-		class sink_t
-		>
+template<class source_t,class sink_t>
 struct Connection<source_t, sink_t, true, false, false>
 {
 	source_t source;
@@ -164,10 +159,7 @@ struct Connection<source_t, sink_t, true, false, true>
 };
 
 /// partial specialization for no parameter and no return value and no payload
-template<
-		class source_t,
-		class sink_t
-		>
+template<class source_t,class sink_t>
 struct Connection<source_t, sink_t, true, true, true>
 {
 	source_t source;
@@ -195,10 +187,7 @@ struct Connection<source_t, sink_t,false, true, false>
 };
 
 /// Special case, when there is no payload in the connnection
-template<
-		class source_t,
-		class sink_t
-		>
+template<class source_t,class sink_t>
 struct Connection<source_t, sink_t, false, false, true>
 {
 	source_t source;
@@ -215,10 +204,7 @@ struct Connection<source_t, sink_t, false, false, true>
 };
 
 /// Special case, when there is no payload and no result in the connection
-template<
-		class source_t,
-		class sink_t
-		>
+template<class source_t,class sink_t>
 struct Connection<source_t, sink_t, false, true, true>
 {
 	source_t source;
