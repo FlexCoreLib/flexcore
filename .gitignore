@@ -3,4 +3,4 @@
 /.cproject
 Debug
 Release
-build/
+build-*/

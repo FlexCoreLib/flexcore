@@ -1,32 +1,24 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
-PROJECT(tests)
-ENABLE_TESTING()
+#ENABLE_TESTING()
 
-INCLUDE_DIRECTORIES(../src)
+# test_executable
 
-# These four flags enable use of gcov
-#SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-#SET(GCC_COVERAGE_LINK_FLAGS "-lgcov")
+ADD_EXECUTABLE( test_executable 
+	core/TestConnection.cpp
+	core/TestTraits.cpp
+	Runner.cpp 
+	threading/TestScheduler.cpp )
 
-#SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
-#SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
+TARGET_INCLUDE_DIRECTORIES( test_executable 
+	PRIVATE ${BOOST_INCLUDE_DIRS}
+	"../src" 
+	"." )
 
-ADD_DEFINITIONS(-std=c++1y)
-
-## Find all source files to be compiled into object files
-file( GLOB SOURCES core/Test*.cpp )
-
-# creates the executable
-ADD_EXECUTABLE(test_executable 
-	core/Runner.cpp
-	${SOURCES})
-
-# indicates the include paths
-# TARGET_INCLUDE_DIRECTORIES(test_executable PRIVATE ${BOOST_INCLUDE_DIRS})
-
-# Link against core
-TARGET_LINK_LIBRARIES (test_executable LINK_PUBLIC core)
+TARGET_LINK_LIBRARIES( test_executable
+	PUBLIC flexcore )
 
 # declares a test with our executable
-ADD_TEST(NAME test COMMAND test_executable)
+#ADD_TEST( NAME test WORKING_DIRECTORY "." COMMAND test_executable )
+
+
