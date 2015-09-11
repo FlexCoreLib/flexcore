@@ -48,23 +48,6 @@ BOOST_AUTO_TEST_CASE(stream_operator_example)
 	BOOST_CHECK_EQUAL(make_four(), 4); // is four
 }
 
-BOOST_AUTO_TEST_CASE(test_fork)
-{
-	struct foo
-	{
-		bool operator()() {return true;}
-	};
-
-	struct bar
-	{
-		bool operator()(bool a) {return !a;}
-	};
-	//auto dummy_fork = fork([](){return 1;}, [](int i){return i++;});
-	auto test = fork(foo(), bar());
-	BOOST_CHECK(test() == false);
-
-}
-
 // test cases for different pairs of parameter and result types
 BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 {
