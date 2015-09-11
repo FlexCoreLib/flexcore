@@ -82,7 +82,8 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 		auto callable5 = StaticFunction;
 
 		ASSERT_RESULT_OF(callable1, int);
-		static_assert(utils::function_traits<decltype(callable1)>::arity == 1, "Arity of std::function<int(int)> should be 1.");
+		static_assert(utils::function_traits<decltype(callable1)>::arity == 1,
+				"Arity of std::function<int(int)> should be 1.");
 		ASSERT_ARG_TYPE(callable1, 0, int);
 
 		ASSERT_RESULT_OF(callable2, std::string);
@@ -92,6 +93,12 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 		ASSERT_ARG_TYPE(callable4, 1, CustomCallable&&);
 
 		ASSERT_RESULT_OF(callable5, bool);
+
+
+		static_assert(is_callable<CustomCallable>::value,
+				"this type was made to be callable");
+		static_assert(is_connectable<CustomCallable>::value,
+				"struct was made to be connectable");
 	}
 }
 

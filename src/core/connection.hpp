@@ -9,7 +9,12 @@
 
 /**
  * \brief defines basic connection object, which is connectable.
- *
+ * \tparam source_t the source node of the connection, data flows from here to the sink.
+ * \tparam sink_t is the sink node of the connection, data goes here.
+ * \tparam param_void is true if the parameter of operator() of source_t is void
+ * \result_void param_void is true if the result of operator() of sink_t is void
+ * \payload_void param_void is true if the result of operator() of source_t is void
+ * the return value of source_t needs to be convertible to the parameter of sink_t.
  */
 template<
 		class source_t,
@@ -18,7 +23,7 @@ template<
 		bool result_void,
 		bool payload_void
 		>
-struct Connection;
+struct connection;
 
 // metafunction which creates correct Connection type by checking
 // if parameters or result types are void.
@@ -33,7 +38,7 @@ struct connection_trait
 	static const bool result_is_void = std::is_void<sink_result>::value;
 	static const bool payload_is_void = std::is_void<source_result>::value;
 
-	typedef Connection
+	typedef connection
 			<
 			source_t,
 			sink_t,
@@ -64,12 +69,14 @@ typename connection_trait<source_t, sink_t>::type connect_impl
  * \returns connection object which has its type determined by the source_t and sink_t.
  *
  * If source_t and sink_t fulfill connectable, the result is connectable.
- * If one of source_t and sink_t fulsulls receive_connectable and the other fulfills send_connectable,
+ * If one of source_t and sink_t fulfills receive_connectable and the other fulfills send_connectable,
  * the result is not non_connectable.
  * If either source_t or sink_t fulfill send_connectable, the result is send_connectable.
  * If either source_t or sink_t fulfill receive_connectable, the result is receive_connectable.
  */
-template<class sink_t, class source_t>
+template<class source_t, class sink_t,
+	class = typename std::enable_if<is_connectable<source_t>::value>::type,
+	class = typename std::enable_if<is_connectable<sink_t>::value>::type>
 auto connect(const source_t& source, const sink_t& sink)
 {
 	return detail::connect_impl(source, sink);
@@ -80,12 +87,11 @@ auto connect(const source_t& source, const sink_t& sink)
  *
  * This operator is syntactic sugar for Connect.
  */
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 auto operator >>(const source_t& source, const sink_t& sink)
 {
-	return Connect(source, sink);
+	return connect(source, sink);
 }
-
 
 /***************** Implementation *********************************************
  *
@@ -100,7 +106,7 @@ auto operator >>(const source_t& source, const sink_t& sink)
 
 /// Specialization in case no value is void
 template<class source_t,class sink_t>
-struct Connection<source_t, sink_t, false, false, false>
+struct connection<source_t, sink_t, false, false, false>
 {
 	source_t source;
 	sink_t sink;
@@ -116,7 +122,7 @@ struct Connection<source_t, sink_t, false, false, false>
 
 /// Partial specialization no parameter
 template<class source_t,class sink_t>
-struct Connection<source_t, sink_t, true, false, false>
+struct connection<source_t, sink_t, true, false, false>
 {
 	source_t source;
 	sink_t sink;
@@ -131,7 +137,7 @@ struct Connection<source_t, sink_t, true, false, false>
 
 /// partial  specialization for no parameter and no return value
 template<class source_t, class sink_t>
-struct Connection<source_t, sink_t, true, true, false>
+struct connection<source_t, sink_t, true, true, false>
 {
 	source_t source;
 	sink_t sink;
@@ -144,7 +150,7 @@ struct Connection<source_t, sink_t, true, true, false>
 
 /// partial specialization for no parameter and no payload
 template<class source_t, class sink_t>
-struct Connection<source_t, sink_t, true, false, true>
+struct connection<source_t, sink_t, true, false, true>
 {
 	source_t source;
 	sink_t sink;
@@ -160,7 +166,7 @@ struct Connection<source_t, sink_t, true, false, true>
 
 /// partial specialization for no parameter and no return value and no payload
 template<class source_t,class sink_t>
-struct Connection<source_t, sink_t, true, true, true>
+struct connection<source_t, sink_t, true, true, true>
 {
 	source_t source;
 	sink_t sink;
@@ -174,7 +180,7 @@ struct Connection<source_t, sink_t, true, true, true>
 
 // Special case of connection which has no return value
 template<class source_t, class sink_t>
-struct Connection<source_t, sink_t,false, true, false>
+struct connection<source_t, sink_t,false, true, false>
 {
 	source_t source;
 	sink_t sink;
@@ -188,7 +194,7 @@ struct Connection<source_t, sink_t,false, true, false>
 
 /// Special case, when there is no payload in the connnection
 template<class source_t,class sink_t>
-struct Connection<source_t, sink_t, false, false, true>
+struct connection<source_t, sink_t, false, false, true>
 {
 	source_t source;
 	sink_t sink;
@@ -205,7 +211,7 @@ struct Connection<source_t, sink_t, false, false, true>
 
 /// Special case, when there is no payload and no result in the connection
 template<class source_t,class sink_t>
-struct Connection<source_t, sink_t, false, true, true>
+struct connection<source_t, sink_t, false, true, true>
 {
 	source_t source;
 	sink_t sink;
