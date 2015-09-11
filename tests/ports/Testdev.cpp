@@ -8,17 +8,17 @@ BOOST_AUTO_TEST_CASE( fetcher_ )
 {
 	auto give_one = [](){return 1;};
 	fetcher<int> sink;
-	connect(give_one, sink);
+	give_one >> sink;
 	BOOST_CHECK(sink.get() == 1);
 }
 
 BOOST_AUTO_TEST_CASE( state_ )
 {
+	auto increment = [](int i) -> int {return i+1;};
 	state<int> source {1};
 	fetcher<int> sink;
-	connect(source, sink);
-	BOOST_CHECK(sink.get() == 1);
-
+	source >> increment >> sink;
+	BOOST_CHECK(sink.get() == 2);
 }
 
 

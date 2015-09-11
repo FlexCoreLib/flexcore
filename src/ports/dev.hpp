@@ -31,20 +31,20 @@ class fetcher
 {
 public:
 	fetcher()
-		: con(new std::unique_ptr<std::function<data_t()>>())
+		: con(new std::function<data_t()>())
 	{ }
 	fetcher(const fetcher& other) : con(other.con) {  }
 
-	data_t get() { return (**con)(); }
+	data_t get() { return (*con)(); }
 
 	template<class con_t>
 	void connect(con_t c)
 	{
-		con->reset(new std::function<data_t()>(c));
+		(*con) = c;
 	}
 
 private:
-	std::shared_ptr<std::unique_ptr<std::function<data_t()>>> con;
+	std::shared_ptr<std::function<data_t()>> con;
 };
 
 template<>
