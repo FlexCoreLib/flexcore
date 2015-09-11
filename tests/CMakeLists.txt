@@ -5,18 +5,18 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 # test_executable
 
 ADD_EXECUTABLE( test_executable 
-    core/TestConnection.cpp
-    core/TestTraits.cpp
+	core/TestConnection.cpp
+	core/TestTraits.cpp
 	Runner.cpp 
 	threading/TestScheduler.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
-    PRIVATE ${BOOST_INCLUDE_DIRS}
-    "../src" 
-    "." )
+	PRIVATE ${BOOST_INCLUDE_DIRS}
+	"../src" 
+	"." )
 
 TARGET_LINK_LIBRARIES( test_executable
-    PUBLIC flexcore )
+	PUBLIC flexcore )
 
 # declares a test with our executable
 #ADD_TEST( NAME test WORKING_DIRECTORY "." COMMAND test_executable )
