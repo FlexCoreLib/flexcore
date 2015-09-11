@@ -7,6 +7,7 @@
 #include "core/traits.hpp"
 
 
+
 /**
  * \brief defines basic connection object, which is connectable.
  * \tparam source_t the source node of the connection, data flows from here to the sink.
@@ -50,15 +51,36 @@ struct connection_trait
 
 namespace detail
 {
-template<class source_t, class sink_t>
-typename connection_trait<source_t, sink_t>::type connect_impl
-		(
-		const source_t& source,
-		const sink_t& sink
-		)
+//template<class source_t, class sink_t>
+//typename connection_trait<source_t, sink_t>::type connect_impl
+//		(
+//		const source_t& source,
+//		const sink_t& sink
+//		)
+//{
+//	return typename connection_trait<source_t, sink_t>::type {source, sink};
+//}
+
+
+template<class sink_t, class source_t, class Enable = void>
+struct connect_impl
 {
-	return typename connection_trait<source_t, sink_t>::type {source, sink};
-}
+	typename connection_trait<source_t, sink_t>::type
+	operator()(const source_t& source, const sink_t& sink)
+	{
+		return typename connection_trait<source_t, sink_t>::type {source, sink};
+	}
+};
+
+template<class sink_t, class source_t>
+struct connect_impl<sink_t, source_t, typename std::enable_if<is_sink_port<sink_t>::value>::type >
+{
+	void operator()(source_t source, sink_t sink)
+	{
+		sink.connect(source);
+	}
+};
+
 } // namespace detail
 
 /**
@@ -79,7 +101,7 @@ template<class source_t, class sink_t,
 	class = typename std::enable_if<is_connectable<sink_t>::value>::type>
 auto connect(const source_t& source, const sink_t& sink)
 {
-	return detail::connect_impl(source, sink);
+	return detail::connect_impl<sink_t, source_t>()(source, sink);
 }
 
 /**
