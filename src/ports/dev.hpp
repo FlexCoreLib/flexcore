@@ -23,9 +23,6 @@ private:
 	data_t d;
 };
 
-//template<class T>
-//using functionHandle = std::shared_ptr<std::unique_ptr<std::function<T()>>>;
-
 template<class data_t>
 class fetcher
 {

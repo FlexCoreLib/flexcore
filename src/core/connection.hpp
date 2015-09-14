@@ -72,6 +72,9 @@ struct connect_impl
 	}
 };
 
+/**
+ * sink port case
+ */
 template<class sink_t, class source_t>
 struct connect_impl<sink_t, source_t, typename std::enable_if<is_sink_port<sink_t>::value>::type >
 {
