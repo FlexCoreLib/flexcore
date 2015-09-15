@@ -37,8 +37,8 @@ private:
 	std::shared_ptr<std::function<data_t()>> con;
 };
 
-template<>
-struct is_sink_port<stream_sink<int> > : public std::true_type
+template<class T>
+struct is_sink_port<stream_sink<T> > : public std::true_type
 {
 };
 

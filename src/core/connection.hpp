@@ -62,15 +62,43 @@ struct connect_impl
 	}
 };
 
+template<class source_t, class port_t>
+struct sink_proxy
+{
+	sink_proxy(source_t s, port_t p) : source(s), port(p) {}
+
+	template<class con_t>
+	void connect(con_t c)
+	{
+		port.connect(c >> source);
+	}
+
+	source_t source;
+	port_t port;
+};
+
+}
+
+namespace fc
+{
+template<class U, class V>
+struct is_sink_port<detail::sink_proxy<U, V> > : public std::true_type
+{
+};
+}
+
+namespace detail
+{
 /**
  * sink port case
  */
 template<class sink_t, class source_t>
 struct connect_impl<sink_t, source_t, typename std::enable_if<fc::is_sink_port<sink_t>::value>::type >
 {
-	void operator()(source_t source, sink_t sink)
+	sink_proxy<source_t, sink_t> operator()(source_t source, sink_t sink)
 	{
 		sink.connect(source);
+		return sink_proxy<source_t, sink_t>(source, sink);
 	}
 };
 

@@ -39,7 +39,19 @@ BOOST_AUTO_TEST_CASE( state_multiple_fetchers_and_assignment )
 	BOOST_CHECK(sink2.get() == 7);
 }
 
+BOOST_AUTO_TEST_CASE( state_fetcher_new_name )
+{
+	stream_state<int> source {1};
+	auto increment = [](int i) -> int {return i+1;};
+	stream_sink<int> sink;
 
+	auto tmp = (increment >> sink);
+	source >> tmp;
+
+	BOOST_CHECK(sink.get() == 1);
+	source.set(2);
+	BOOST_CHECK(sink.get() == 2);
+}
 
 
 
