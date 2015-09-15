@@ -9,20 +9,32 @@
 
 #include <core/connection.hpp>
 
+/**
+ * Simple StreamSource implementation that holds a state.
+ * Can be connected to any number of SinkConnections.
+ * Is a SourceConnection.
+ */
 template<class data_t>
 class state
 {
 public:
-	state(data_t d_) : d(d_){}
+	state(data_t d_) : d(new data_t(d_)){}
 
-	data_t operator()() { return d; }
+	/// pull data
+	data_t operator()() { return *d; }
 
-	void set(data_t d_) { d = d_; }
+	/// set current value
+	void set(data_t d_) { *d = d_; }
 
 private:
-	data_t d;
+	std::shared_ptr<data_t> d;
 };
 
+/**
+ * Simple implementation for StreamSink.
+ * Will pull data when get is called.
+ * Is not a Connectable.
+ */
 template<class data_t>
 class fetcher
 {
