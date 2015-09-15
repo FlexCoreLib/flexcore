@@ -127,6 +127,10 @@ struct param_type
 	typedef typename argtype_of<T,0>::type type;
 };
 
+// TODO expand fc to whole file
+namespace fc
+{
+
 template<class sink>
 struct is_sink_port : public std::false_type
 {
@@ -136,5 +140,7 @@ template<class sink>
 struct is_source_port : public std::false_type
 {
 };
+
+} // namespace fc
 
 #endif /* SRC_CORE_TRAITS_H_ */
