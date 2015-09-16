@@ -7,7 +7,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 ADD_EXECUTABLE( test_executable 
 	core/TestConnection.cpp
 	core/TestTraits.cpp
-	ports/TestStreams.cpp
+	ports/test_stream_query_node.cpp
+	ports/test_stream_state.cpp
 	Runner.cpp 
 	threading/TestScheduler.cpp )
 
