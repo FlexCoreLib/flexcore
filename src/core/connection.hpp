@@ -111,9 +111,7 @@ struct connection<source_t, sink_t, false, false, false>
 	source_t source;
 	sink_t sink;
 	typedef typename param_type<source_t>::type param_type;
-	typedef typename result_of<sink_t>::type sink_result;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()(const param_type&& p)
+	auto operator()(const param_type&& p)
 	{
 		// execute source with parameter and execute sink with result from source.
 		return sink(source(p));
@@ -126,9 +124,7 @@ struct connection<source_t, sink_t, true, false, false>
 {
 	source_t source;
 	sink_t sink;
-	typedef typename result_of<sink_t>::type sink_result;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()()
+	auto operator()()
 	{
 		// execute source and execute sink with result from source.
 		return sink(source());
@@ -154,9 +150,7 @@ struct connection<source_t, sink_t, true, false, true>
 {
 	source_t source;
 	sink_t sink;
-	typedef typename result_of<sink_t>::type sink_result;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()()
+	auto operator()()
 	{
 		// execute source and execute sink separately since source has no result.
 		source();
@@ -198,10 +192,8 @@ struct connection<source_t, sink_t, false, false, true>
 {
 	source_t source;
 	sink_t sink;
-	typedef typename result_of<sink_t>::type sink_result;
 	typedef typename param_type<source_t>::type param_type;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()(const param_type&& p)
+	auto operator()(const param_type&& p)
 	{
 		// execute source and execute sink separately.
 		source(p);
@@ -216,7 +208,6 @@ struct connection<source_t, sink_t, false, true, true>
 	source_t source;
 	sink_t sink;
 	typedef typename param_type<source_t>::type param_type;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
 	void operator()(const param_type&& p)
 	{
 		source(p);
