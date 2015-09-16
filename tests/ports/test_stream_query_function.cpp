@@ -1,3 +1,6 @@
+// std
+#include <functional>
+
 // boost
 #include <boost/test/unit_test.hpp>
 
@@ -12,13 +15,13 @@ template<class data_t>
 struct node_class
 {
 	node_class(data_t v = data_t())
-		: port(this)
+		: port(std::bind( &node_class<data_t>::get_value, this ))
 		, value(v)
 	{}
 
 	data_t get_value() { return value; }
 
-	typedef stream_query_node<data_t, node_class<data_t>, &node_class<data_t>::get_value> port_t;
+	typedef stream_query_function<data_t> port_t;
 	port_t port;
 
 	data_t value;
