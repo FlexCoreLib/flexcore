@@ -16,7 +16,7 @@ template<class data_t>
 class stream_state
 {
 public:
-	stream_state(data_t d_) : d(new data_t(d_)){}
+	stream_state(data_t d_) : d(std::make_shared<data_t>(d_)){}
 
 	/// pull data
 	data_t operator()() { return *d; }
