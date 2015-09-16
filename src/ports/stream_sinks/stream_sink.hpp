@@ -21,7 +21,7 @@ class stream_sink
 {
 public:
 	stream_sink()
-		: con(new std::function<data_t()>())
+		: con(std::make_shared<std::function<data_t()>>())
 	{ }
 	stream_sink(const stream_sink& other) : con(other.con) {  }
 
