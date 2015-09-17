@@ -43,7 +43,7 @@ private:
 };
 
 template<class T>
-struct is_sink_port<stream_sink<T> > : public std::true_type
+struct is_stream_sink<stream_sink<T> > : public std::true_type
 {
 };
 
@@ -56,8 +56,8 @@ namespace detail
  */
 template<class sink_t, class source_t>
 struct connect_impl<sink_t, source_t, typename std::enable_if<
-		(!fc::is_source_port<source_t>::value) &&
-		fc::is_sink_port<sink_t>::value
+		(!fc::is_stream_source<source_t>::value) &&
+		fc::is_stream_sink<sink_t>::value
 		>::type >
 {
 	fc::stream_proxy<source_t, sink_t> operator()(source_t source, sink_t sink)
@@ -75,8 +75,8 @@ struct connect_impl<sink_t, source_t, typename std::enable_if<
  */
 template<class sink_t, class source_t>
 struct connect_impl<sink_t, source_t, typename std::enable_if<
-		fc::is_source_port<source_t>::value &&
-		fc::is_sink_port<sink_t>::value
+		fc::is_stream_source<source_t>::value &&
+		fc::is_stream_sink<sink_t>::value
 		>::type >
 {
 	void operator()(source_t source, sink_t sink)

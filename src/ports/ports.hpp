@@ -43,7 +43,7 @@ struct stream_proxy
 	 * \returns a stream_proxy, which contains the new_source as the source.
 	 */
 	template<class new_source_t, class = typename std::enable_if<
-	        !is_source_port<new_source_t>::value>::type>
+	        !is_stream_source<new_source_t>::value>::type>
 	auto connect(new_source_t new_source)
 	{
 		auto connection = fc::connect(new_source, stored_source);
@@ -61,7 +61,8 @@ struct stream_proxy
 	 * \returns nothing, the connection is complete now
 	 */
 	template<class new_source_t, class enable = void>
-	typename std::enable_if<is_source_port<new_source_t>::value, void>::type connect(new_source_t new_source)
+	typename std::enable_if<is_stream_source<new_source_t>::value, void>::type
+	connect(new_source_t new_source)
 	{
 		auto tmp = fc::connect(new_source, stored_source);
 		sink.connect(tmp);

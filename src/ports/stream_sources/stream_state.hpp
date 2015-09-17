@@ -30,7 +30,7 @@ private:
 
 
 template<class data_t>
-struct is_source_port<stream_state<data_t>> : std::true_type
+struct is_stream_source<stream_state<data_t>> : std::true_type
 {
 };
 } // namespace fc
