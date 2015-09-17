@@ -6,7 +6,8 @@
 #include "core/function_traits.hpp"
 #include "core/traits.hpp"
 
-
+namespace fc
+{
 
 /**
  * \brief defines basic connection object, which is connectable.
@@ -62,19 +63,7 @@ struct connect_impl
 	}
 };
 
-/**
- * sink port case
- */
-template<class sink_t, class source_t>
-struct connect_impl<sink_t, source_t, typename std::enable_if<fc::is_sink_port<sink_t>::value>::type >
-{
-	void operator()(source_t source, sink_t sink)
-	{
-		sink.connect(source);
-	}
-};
-
-} // namespace detail
+}
 
 /**
  * \brief Connect takes two connectables and returns a connection.
@@ -92,7 +81,7 @@ struct connect_impl<sink_t, source_t, typename std::enable_if<fc::is_sink_port<s
 template<class source_t, class sink_t,
 	class = typename std::enable_if<is_connectable<source_t>::value>::type,
 	class = typename std::enable_if<is_connectable<sink_t>::value>::type>
-auto connect(const source_t& source, const sink_t& sink)
+auto connect(source_t source, sink_t sink)
 {
 	return detail::connect_impl<sink_t, source_t>()(source, sink);
 }
@@ -126,9 +115,7 @@ struct connection<source_t, sink_t, false, false, false>
 	source_t source;
 	sink_t sink;
 	typedef typename param_type<source_t>::type param_type;
-	typedef typename result_of<sink_t>::type sink_result;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()(const param_type&& p)
+	auto operator()(const param_type& p)
 	{
 		// execute source with parameter and execute sink with result from source.
 		return sink(source(p));
@@ -141,9 +128,7 @@ struct connection<source_t, sink_t, true, false, false>
 {
 	source_t source;
 	sink_t sink;
-	typedef typename result_of<sink_t>::type sink_result;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()()
+	auto operator()()
 	{
 		// execute source and execute sink with result from source.
 		return sink(source());
@@ -169,9 +154,7 @@ struct connection<source_t, sink_t, true, false, true>
 {
 	source_t source;
 	sink_t sink;
-	typedef typename result_of<sink_t>::type sink_result;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()()
+	auto operator()()
 	{
 		// execute source and execute sink separately since source has no result.
 		source();
@@ -200,7 +183,7 @@ struct connection<source_t, sink_t,false, true, false>
 	source_t source;
 	sink_t sink;
 	typedef typename param_type<source_t>::type param_type;
-	void operator()(const param_type&& p)
+	void operator()(const param_type& p)
 	{
 		// execute source with parameter and execute sink with result from source.
 		sink(source(p));
@@ -213,10 +196,8 @@ struct connection<source_t, sink_t, false, false, true>
 {
 	source_t source;
 	sink_t sink;
-	typedef typename result_of<sink_t>::type sink_result;
 	typedef typename param_type<source_t>::type param_type;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()(const param_type&& p)
+	auto operator()(const param_type& p)
 	{
 		// execute source and execute sink separately.
 		source(p);
@@ -231,12 +212,13 @@ struct connection<source_t, sink_t, false, true, true>
 	source_t source;
 	sink_t sink;
 	typedef typename param_type<source_t>::type param_type;
-	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	void operator()(const param_type&& p)
+	void operator()(const param_type& p)
 	{
 		source(p);
 		sink();
 	}
 };
+
+} //namespace fc
 
 #endif /* SRC_CORE_CONNECTION_HPP_ */

@@ -18,6 +18,8 @@
 #include <iostream>
 #include <type_traits>
 
+using namespace fc;
+
 //////////////////////////////////////////////////
 /// MACROS
 
