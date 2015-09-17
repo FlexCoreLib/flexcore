@@ -1,5 +1,4 @@
 #include "core/connection.hpp"
-#include <core/fork_connection.hpp>
 
 // boost
 #include <boost/test/unit_test.hpp>

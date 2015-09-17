@@ -28,33 +28,36 @@ struct expr_is_callable_impl: std::false_type
 };
 
 template<class F, class ...Args>
-struct expr_is_callable_impl<F(Args...),
-        always_void<std::result_of<F(Args...)>>> :std::true_type
+struct expr_is_callable_impl<F(Args...), always_void<std::result_of<F(Args...)>>> :std::true_type
 {
 };
 
-template<class > struct result_of;
-template<class, int> struct argtype_of;
+template<class> struct result_of;
+template<class,int> struct argtype_of;
 template<class T>
-struct type_is_callable_impl: expr_is_callable_impl<
-        result_of<T>(argtype_of<T, 0>)>::type
+struct type_is_callable_impl : expr_is_callable_impl<result_of<T>(argtype_of<T,0>)>::type
 {
 };
 
-}  // namespace detail
+} // namespace detail
 
 /// Trait for determining if Expr is callable
 template<class Expr>
-struct is_callable: std::conditional<std::is_class<Expr>::value,
-        detail::type_is_callable_impl<Expr>, detail::expr_is_callable_impl<Expr> >::type
+struct is_callable:
+		std::conditional<
+			std::is_class<Expr>::value,
+			detail::type_is_callable_impl<Expr>,
+			detail::expr_is_callable_impl<Expr>
+		>::type
 {
 };
 
 template<class T>
 struct is_connectable
 {
-	static const bool value = is_callable<T>::value
-	        && std::is_copy_constructible<T>::value;
+	static const bool value =
+			is_callable<T>::value &&
+			std::is_copy_constructible<T>::value;
 };
 
 namespace detail
@@ -66,14 +69,13 @@ struct has_result_impl: std::false_type
 
 // this one will only be selected if C::result_type is valid
 template<class C> struct has_result_impl<C,
-        typename detail::always_void<typename C::result_type>> : std::false_type
-{
+	typename detail::always_void<typename C::result_type>> : std::false_type {
 };
 }
 
 /// Has result trait to check if a type has a nested type 'result_type'
 template<class T>
-struct has_result: detail::has_result_impl<T>
+struct has_result : detail::has_result_impl<T>
 {
 };
 
@@ -95,7 +97,7 @@ struct has_result: detail::has_result_impl<T>
 template<class Expr, class enable = void>
 struct result_of
 {
-	typedef typename utils::function_traits<Expr>::result_type type;
+	typedef  typename utils::function_traits<Expr>::result_type type;
 };
 
 template<class Expr>
@@ -125,7 +127,7 @@ struct argtype_of
 template<class T>
 struct param_type
 {
-	typedef typename argtype_of<T, 0>::type type;
+	typedef typename argtype_of<T,0>::type type;
 };
 
 template<class T>
@@ -156,6 +158,6 @@ struct is_instantiation_of : std::false_type
 template<template<class ...> class template_type, class... Args >
 struct is_instantiation_of< template_type, template_type<Args...> > : std::true_type {};
 
-}  // namespace fc
+} // namespace fc
 
 #endif /* SRC_CORE_TRAITS_H_ */
