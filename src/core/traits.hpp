@@ -134,6 +134,16 @@ struct is_stream_sink: public std::false_type
 };
 
 template<class T>
+struct is_event_sink: public std::false_type
+{
+};
+
+template<class T>
+struct is_event_source: public std::false_type
+{
+};
+
+template<class T>
 struct is_stream_source: public std::integral_constant<bool,
         utils::function_traits<T>::arity == 0>
 {

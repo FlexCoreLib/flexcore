@@ -117,7 +117,7 @@ struct connection<source_t, sink_t, false, false, false>
 	typedef typename param_type<source_t>::type param_type;
 	typedef typename result_of<sink_t>::type sink_result;
 	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()(const param_type&& p)
+	sink_result operator()(const param_type& p)
 	{
 		// execute source with parameter and execute sink with result from source.
 		return sink(source(p));
@@ -189,7 +189,7 @@ struct connection<source_t, sink_t,false, true, false>
 	source_t source;
 	sink_t sink;
 	typedef typename param_type<source_t>::type param_type;
-	void operator()(const param_type&& p)
+	void operator()(const param_type& p)
 	{
 		// execute source with parameter and execute sink with result from source.
 		sink(source(p));
@@ -205,7 +205,7 @@ struct connection<source_t, sink_t, false, false, true>
 	typedef typename result_of<sink_t>::type sink_result;
 	typedef typename param_type<source_t>::type param_type;
 	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	sink_result operator()(const param_type&& p)
+	sink_result operator()(const param_type& p)
 	{
 		// execute source and execute sink separately.
 		source(p);
@@ -221,7 +221,7 @@ struct connection<source_t, sink_t, false, true, true>
 	sink_t sink;
 	typedef typename param_type<source_t>::type param_type;
 	// auto return type here crashes gcc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53756
-	void operator()(const param_type&& p)
+	void operator()(const param_type& p)
 	{
 		source(p);
 		sink();
