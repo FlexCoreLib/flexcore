@@ -6,7 +6,8 @@
 #include "core/function_traits.hpp"
 #include "core/traits.hpp"
 
-
+namespace fc
+{
 
 /**
  * \brief defines basic connection object, which is connectable.
@@ -62,47 +63,7 @@ struct connect_impl
 	}
 };
 
-template<class source_t, class port_t>
-struct sink_proxy
-{
-	sink_proxy(source_t s, port_t p) : source(s), port(p) {}
-
-	template<class con_t>
-	void connect(con_t c)
-	{
-		port.connect(c >> source);
-	}
-
-	source_t source;
-	port_t port;
-};
-
 }
-
-namespace fc
-{
-template<class U, class V>
-struct is_sink_port<detail::sink_proxy<U, V> > : public std::true_type
-{
-};
-}
-
-namespace detail
-{
-/**
- * sink port case
- */
-template<class sink_t, class source_t>
-struct connect_impl<sink_t, source_t, typename std::enable_if<fc::is_sink_port<sink_t>::value>::type >
-{
-	sink_proxy<source_t, sink_t> operator()(source_t source, sink_t sink)
-	{
-		sink.connect(source);
-		return sink_proxy<source_t, sink_t>(source, sink);
-	}
-};
-
-} // namespace detail
 
 /**
  * \brief Connect takes two connectables and returns a connection.
@@ -120,7 +81,7 @@ struct connect_impl<sink_t, source_t, typename std::enable_if<fc::is_sink_port<s
 template<class source_t, class sink_t,
 	class = typename std::enable_if<is_connectable<source_t>::value>::type,
 	class = typename std::enable_if<is_connectable<sink_t>::value>::type>
-auto connect(const source_t& source, const sink_t& sink)
+auto connect(source_t source, sink_t sink)
 {
 	return detail::connect_impl<sink_t, source_t>()(source, sink);
 }
@@ -266,5 +227,7 @@ struct connection<source_t, sink_t, false, true, true>
 		sink();
 	}
 };
+
+} //namespace fc
 
 #endif /* SRC_CORE_CONNECTION_HPP_ */

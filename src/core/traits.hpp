@@ -13,7 +13,9 @@
 
 #include "function_traits.hpp"
 
-// is_callable trait from talesofcpp.fusionfenix.com
+namespace fc
+{
+
 namespace detail
 {
 
@@ -127,19 +129,22 @@ struct param_type
 	typedef typename argtype_of<T,0>::type type;
 };
 
-// TODO expand fc to whole file
-namespace fc
-{
-
 template<class sink>
 struct is_sink_port : public std::false_type
 {
 };
 
 template<class sink>
-struct is_source_port : public std::false_type
+struct is_source_port : public std::integral_constant<bool, utils::function_traits<sink>::arity == 0>
 {
 };
+
+
+template<template<class...> class template_type, class T >
+struct is_instantiation_of : std::false_type {};
+
+template< template<class...> class template_type, class... Args >
+struct is_instantiation_of< template_type, template_type<Args...> > : std::true_type {};
 
 } // namespace fc
 
