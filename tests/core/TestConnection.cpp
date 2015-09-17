@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 	auto give_one = [](){return 1;};
 	auto give_three = [](){return 3;};
 	auto do_nothing = [](){};
-	auto ignore_in = [](int i){};
+	auto ignore_in = [](int){};
 	auto increment_ref = [&](){ capture_ref++; };
 
 	// param int,  payload int,  result int
