@@ -7,6 +7,7 @@ SET( ENABLE_COVERAGE_ANALYSIS FALSE CACHE BOOL "" )
 # TODO: use profiling args only in debug mode
 ADD_COMPILE_OPTIONS(  
     "-Wall"
+    "-Wextra"
     "-std=c++1y" 
     $<$<BOOL:ENABLE_COVERAGE_ANALYSIS>:-fprofile-arcs>
     $<$<BOOL:ENABLE_COVERAGE_ANALYSIS>:-ftest-coverage> 

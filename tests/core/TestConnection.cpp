@@ -3,6 +3,7 @@
 // boost
 #include <boost/test/unit_test.hpp>
 
+using namespace fc;
 /**
  * Example test cases for core connections.
  * These this test shows how connections are used in general.
