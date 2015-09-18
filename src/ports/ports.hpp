@@ -56,7 +56,7 @@ struct stream_proxy
 	 * connects the new_source to the current stored source
 	 * then connects this connection to the sink which completes the connection
 	 *
-	 * \pre new_source_t needs to a source_port
+	 * \pre new_source_t needs to be a source_port
 	 * \post new_source is now connected to sink via the connection stored in the proxy.
 	 * \returns nothing, the connection is complete now
 	 */
