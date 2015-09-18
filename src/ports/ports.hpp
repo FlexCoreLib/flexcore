@@ -17,7 +17,7 @@ namespace fc
  * Until the stream source is connected to a proper stream_sink,
  * the connection is not complete and no value can be pulled through.
  * Nonetheless, the connection needs to be stored to allow further connections.
- * the stream_storage stores these temporary objects.
+ * the stream_proxy stores these temporary objects.
  *
  *
  * \tparam source_t the source of the connection, either a connectable or a stream_source
