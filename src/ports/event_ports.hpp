@@ -54,7 +54,7 @@ private:
 	// but will be copied, when it is connected. The node needs to send
 	// to all connected event_handlers, when an event is fired.
 	typedef std::shared_ptr<std::vector<handler_t<event_t>>>handler_vector;
-	handler_vector event_handlers = new handler_vector();
+	handler_vector event_handlers = std::make_shared<handler_vector>();
 };
 
 template<class T>

@@ -22,7 +22,7 @@ struct event_sink
 	{
 		*storage = in;
 	}
-	std::shared_ptr<T> storage = std::shared_ptr<T>(new T);
+	std::shared_ptr<T> storage = std::make_shared<T>();
 };
 
 namespace fc{
@@ -63,7 +63,7 @@ struct event_vector_sink
 		storage->push_back(in);
 	}
 	std::shared_ptr<std::vector<T>> storage =
-			std::shared_ptr<std::vector<T>>(new std::vector<T>);
+			std::make_shared<std::vector<T>>();
 };
 
 namespace fc{
