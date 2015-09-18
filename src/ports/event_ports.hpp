@@ -37,11 +37,6 @@ using handler_t = std::function<void(event_t)>;
 template<class event_t>
 struct event_out_port
 {
-	event_out_port() :
-			event_handlers(new std::vector<handler_t<event_t>>)
-	{
-	}
-
 	void fire(event_t event)
 	{
 		for (auto target : *event_handlers)
@@ -56,7 +51,7 @@ struct event_out_port
 private:
 
 	// stores event_handlers in shared vector, since the port is stored in a node
-	// but will be copied, when it is connected. The node needs to send to connection
+	// but will be copied, when it is connected. The node needs to send
 	// to all connected event_handlers, when an event is fired.
 	typedef std::shared_ptr<std::vector<handler_t<event_t>>>handler_vector;
 	handler_vector event_handlers = new handler_vector();
