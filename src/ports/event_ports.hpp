@@ -55,6 +55,9 @@ struct event_out_port
 
 private:
 
+	// stores event_handlers in shared vector, since the port is stored in a node
+	// but will be copied, when it is connected. The node needs to send to connection
+	// to all connected event_handlers, when an event is fired.
 	typedef std::shared_ptr<std::vector<handler_t<event_t>>>handler_vector;
 	handler_vector event_handlers = new handler_vector();
 };
@@ -62,27 +65,6 @@ private:
 template<class T>
 struct is_event_source<event_out_port<T>> : public std::true_type
 {
-};
-
-/**
- * \brief wraps access to an event_in_port in connection objects.
- *
- * Purpose of event_port_handle is to allow the necessary access to the port
- * without transferring ownership of the port to the connection.
- * An object of this type can be copied into and owned in connections of event_in_ports.
- * It contains a callback to the connect function of the port.
- *
- * event_port_handle is active_connectable, but not callable.
- */
-template<class event_t>
-struct event_port_handle
-{
-	event_port_handle(std::function<void(handler_t<event_t>)> port_access) :
-			connect(port_access)
-	{
-	}
-
-	std::function<void(handler_t<event_t>)> connect;
 };
 
 /**
