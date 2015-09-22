@@ -50,6 +50,8 @@ struct virtual_clock
 		static time_point from_time_t( std::time_t t );
 
 	private:
+		friend class master;
+
 		void advance();
 		void set_time(time_point r);
 
@@ -81,13 +83,15 @@ struct virtual_clock
 
 	private:
 		void advance();
+		friend class master;
 
 		time_point current_time;
 	};
 
 private:
-	struct master
+	class master
 	{
+	public:
 		/**
 		 * \brief advances clock by a single tick
 		 *
