@@ -4,6 +4,9 @@
 // std
 #include <memory>
 
+#include <core/traits.hpp>
+#include <ports/detail/stream_proxy.hpp>
+
 namespace fc
 {
 

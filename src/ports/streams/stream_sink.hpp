@@ -1,5 +1,5 @@
-#ifndef SRC_PORTS_STREAM_SINKS_STREAM_SINK_HPP_
-#define SRC_PORTS_STREAM_SINKS_STREAM_SINK_HPP_
+#ifndef SRC_PORTS_STREAMS_STREAM_SINK_HPP_
+#define SRC_PORTS_STREAMS_STREAM_SINK_HPP_
 
 // std
 #include <functional>
@@ -10,8 +10,8 @@
 #include <core/connection.hpp>
 #include <ports/ports.hpp>
 
-#include <ports/stream_sources/stream_state.hpp>
-
+#include <ports/streams/stream_state.hpp>
+#include <ports/detail/stream_proxy.hpp>
 
 namespace fc
 {
@@ -89,4 +89,4 @@ struct connect_impl<sink_t, source_t, typename std::enable_if<
 } // namespace detail
 }  // namespace fc
 
-#endif /* SRC_PORTS_STREAM_SINKS_STREAM_SINK_HPP_ */
+#endif /* SRC_PORTS_STREAMS_STREAM_SINK_HPP_ */
