@@ -1,18 +1,5 @@
-// Scheduler.h ---
-//
-// Filename: Scheduler.h
-// Description:
-// Author: Thomas Karolski
-// Created: Di Sep  8 19:08:17 2015 (+0200)
-//
-//
-//
-
-// Code:
-
-
-#ifndef SCHEDULER_H_
-#define SCHEDULER_H_
+#ifndef SRC_THREADING_SCHEDULER_H_
+#define SRC_THREADING_SCHEDULER_H_
 
 #include <queue>
 #include <boost/concept/assert.hpp>
@@ -21,6 +8,9 @@
 #include <boost/type_erasure/callable.hpp>
 
 #include <core/traits.hpp>
+
+namespace fc
+{
 
 template<class Callable, class Enable = void >
 struct is_callable_concept
@@ -31,15 +21,15 @@ struct is_callable_concept
 
 /// Basic, single threaded scheduler. Takes tasks and provides a means to execute them.
 /** Takes anything that is copy_constructible and callable as a task. */
-class Scheduler
+class scheduler
 {
 public:
 	typedef boost::mpl::vector< boost::type_erasure::copy_constructible<>,
 								boost::type_erasure::callable<void()>
 								> CallableRequirements;
 
-	Scheduler() {}
-	virtual ~Scheduler() {}
+	scheduler() {}
+	virtual ~scheduler() {}
 
 	/// Add a task to be executed in fifo order.
 	/** The task must adhere to the boost::Generator concept. */
@@ -81,8 +71,8 @@ private:
 	std::queue< boost::type_erasure::any<CallableRequirements > > mTaskQueue;
 };
 
+} // namespace fc
 
-#endif // SCHEDULER_H_
+#endif // SRC_THREADING_SCHEDULER_H_
 
-//
-// Scheduler.h ends here
+

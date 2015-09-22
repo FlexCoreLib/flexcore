@@ -15,7 +15,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/bind.hpp>
 
-#include "threading/Scheduler.hpp"
+#include "../../src/threading/scheduler.hpp"
+
+using namespace fc;
 
 class IncOp
 {
@@ -36,7 +38,7 @@ static void IncOpFn(size_t& val, int delta = 3) { val += delta; }
 
 BOOST_AUTO_TEST_CASE( test_scheduler_possible_callables)
 { // test what can be inserted as a task
-	Scheduler scheduler;
+	scheduler scheduler;
 	size_t state(0);
 	IncOp incrementer(state, 2);
 	scheduler.AddTask(IncOp(state));								// class with operator()()
@@ -59,7 +61,7 @@ BOOST_AUTO_TEST_CASE( test_scheduler_possible_callables)
 
 BOOST_AUTO_TEST_CASE( test_scheduler_exec_next_task )
 {
-	Scheduler scheduler;
+	scheduler scheduler;
 	size_t state(0);
 	scheduler.AddTask([&state]() { state += 1; });
 	scheduler.AddTask([&state]() { state += 2; });
@@ -85,7 +87,7 @@ BOOST_AUTO_TEST_CASE( test_scheduler_exec_next_task )
 
 BOOST_AUTO_TEST_CASE( test_scheduler_exec_all_tasks )
 {
-	Scheduler scheduler;
+	scheduler scheduler;
 	size_t state(0);
 	scheduler.AddTask([&state]() { state += 1; });
 	scheduler.AddTask([&state]() { state += 2; });

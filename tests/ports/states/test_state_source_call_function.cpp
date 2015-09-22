@@ -4,8 +4,8 @@
 // boost
 #include <boost/test/unit_test.hpp>
 
-#include <ports/stream_ports.hpp>
 #include <core/connection.hpp>
+#include <ports/state_ports.hpp>
 
 using namespace fc;
 
@@ -21,7 +21,7 @@ struct node_class
 
 	data_t get_value() { return value; }
 
-	typedef stream_query_function<data_t> port_t;
+	typedef state_source_call_function<data_t> port_t;
 	port_t port;
 
 	data_t value;
@@ -31,7 +31,7 @@ struct node_class
 BOOST_AUTO_TEST_CASE( stream_query_node_simple_case )
 {
 	node_class<int> node;
-	stream_sink<int> sink;
+	state_sink<int> sink;
 
 	node.port >> sink;
 
@@ -45,8 +45,8 @@ BOOST_AUTO_TEST_CASE( stream_query_multiple_sinks )
 {
 	node_class<int> node;
 	auto increment = [](int i) -> int { return i+1; };
-	stream_sink<int> sink1;
-	stream_sink<int> sink2;
+	state_sink<int> sink1;
+	state_sink<int> sink2;
 
 	node.port >> increment >> sink1;
 	node.port >> increment >> sink2;

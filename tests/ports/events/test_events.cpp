@@ -28,7 +28,7 @@ struct event_sink
 namespace fc{
 
 template<class T>
-struct is_event_sink<event_sink<T>> : public std::true_type
+struct is_passive_sink<event_sink<T>> : public std::true_type
 {
 };
 }
@@ -69,7 +69,7 @@ struct event_vector_sink
 namespace fc{
 
 template<class T>
-struct is_event_sink<event_vector_sink<T>> : public std::true_type
+struct is_passive_sink<event_vector_sink<T>> : public std::true_type
 {
 };
 }
