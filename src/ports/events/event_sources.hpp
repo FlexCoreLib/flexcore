@@ -37,15 +37,9 @@ private:
 
 //static_assert(not is_callable<event_out_port<int>>::value, "CALLABLE");
 
-template<class T>
-struct is_callable<event_out_port<T>> : public std::false_type
-{
-};
-
-template<class T>
-struct is_event_source<event_out_port<T>> : public std::true_type
-{
-};
+// traits
+template<class T> struct is_callable<event_out_port<T>> : public std::false_type {};
+template<class T> struct is_active_source<event_out_port<T>> : public std::true_type {};
 
 } // namespace fc
 

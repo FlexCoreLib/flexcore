@@ -63,7 +63,7 @@ struct connect_impl
 	}
 };
 
-}
+} // namespace detail
 
 /**
  * \brief Connect takes two connectables and returns a connection.
@@ -220,5 +220,53 @@ struct connection<source_t, sink_t, false, true, true>
 };
 
 } //namespace fc
+
+#include "detail/active_sink_proxy.hpp"
+#include "detail/active_source_proxy.hpp"
+
+namespace fc
+{
+namespace detail
+{
+
+/**
+ * Specialization of connect_impl for the case of connecting a standard connectable
+ * which is not a source_port to a sink_port.
+ * \return a stream_proxy which contains the source and the sink.
+ */
+template<class sink_t, class source_t>
+struct connect_impl<sink_t, source_t, typename std::enable_if<
+		(!fc::is_passive_source<source_t>::value) &&
+		fc::is_active_sink<sink_t>::value
+		>::type >
+{
+	active_sink_proxy<source_t, sink_t> operator()(source_t source, sink_t sink)
+	{
+		return active_sink_proxy<source_t, sink_t>(source, sink);
+	}
+};
+
+/**
+ * Specialization for the case of connecting a source_port to a sink_port.
+ * \pre source_t needs to be a stream_source.
+ * \pre sink_t needs to be a stream_sink.
+ * \post source is now connected to sink
+ * \return nothing, the connection is complete
+ */
+template<class sink_t, class source_t>
+struct connect_impl<sink_t, source_t, typename std::enable_if<
+		fc::is_passive_source<source_t>::value &&
+		fc::is_active_sink<sink_t>::value
+		>::type >
+{
+	void operator()(source_t source, sink_t sink)
+	{
+		sink.connect(source);
+		return;
+	}
+};
+
+} // namespace detail
+} // namespace fc
 
 #endif /* SRC_CORE_CONNECTION_HPP_ */

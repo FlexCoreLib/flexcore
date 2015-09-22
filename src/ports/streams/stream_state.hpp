@@ -5,7 +5,6 @@
 #include <memory>
 
 #include <core/traits.hpp>
-#include <ports/detail/stream_proxy.hpp>
 
 namespace fc
 {
@@ -31,11 +30,9 @@ private:
 	std::shared_ptr<data_t> d;
 };
 
+// traits
+template<class data_t> struct is_passive_source<stream_state<data_t>> : std::true_type {};
 
-template<class data_t>
-struct is_stream_source<stream_state<data_t>> : std::true_type
-{
-};
 } // namespace fc
 
 #endif /* SRC_PORTS_STREAM_SOURCES_STREAM_STATE_HPP_ */

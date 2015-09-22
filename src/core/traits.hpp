@@ -131,22 +131,22 @@ struct param_type
 };
 
 template<class T>
-struct is_stream_sink: public std::false_type
+struct is_active_sink: public std::false_type
 {
 };
 
 template<class T>
-struct is_event_sink: public std::false_type
+struct is_passive_sink: public std::false_type
 {
 };
 
 template<class T>
-struct is_event_source: public std::false_type
+struct is_active_source: public std::false_type
 {
 };
 
 template<class T>
-struct is_stream_source: public std::integral_constant<bool,
+struct is_passive_source: public std::integral_constant<bool,
         utils::function_traits<T>::arity == 0>
 {
 };

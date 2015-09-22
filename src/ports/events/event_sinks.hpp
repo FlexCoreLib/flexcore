@@ -26,10 +26,8 @@ private:
 	std::function<void(event_t)> event_handler;
 };
 
-template<class T>
-struct is_event_sink<event_in_port<T>> : public std::true_type
-{
-};
+// traits
+template<class T> struct is_passive_sink<event_in_port<T>> : public std::true_type {};
 
 } // namespace fc
 
