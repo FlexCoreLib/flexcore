@@ -5,9 +5,6 @@
  *      Author: ckielwein
  */
 
-#ifndef SRC_CLOCK_CLOCK_HPP_
-#define SRC_CLOCK_CLOCK_HPP_
-
 #include "clock.hpp"
 
 namespace fc
@@ -16,14 +13,18 @@ namespace fc
 namespace chrono
 {
 
-virtual_clock::system::time_point virtual_clock::system::now()
+using namespace std::chrono;
+
+virtual_clock::system::time_point virtual_clock::system::now() noexcept
 {
-	return current_time;
+	return current_time.load();
 }
 
 std::time_t virtual_clock::system::to_time_t(const time_point& t)
 {
-	//ToDo
+	const auto duration = t.time_since_epoch();
+	const auto hours = duration_cast<seconds>(duration);
+	return hours.count();
 }
 
 virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t t)
@@ -33,35 +34,25 @@ virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t
 
 void virtual_clock::system::advance()
 {
-	current_time += current_time.min();
+	const auto tmp = current_time.load();
+	current_time.store(tmp + tmp.min().time_since_epoch());
 }
 
 void virtual_clock::system::set_time(time_point r)
 {
-	//ToDo
+	current_time.store(r);
 }
 
-virtual_clock::steady::time_point virtual_clock::steady::now()
+virtual_clock::steady::time_point virtual_clock::steady::now() noexcept
 {
-	return current_time;
-}
-
-std::time_t virtual_clock::steady::to_time_t(const time_point& t)
-{
-	//ToDo
-}
-
-virtual_clock::steady::time_point virtual_clock::steady::from_time_t(std::time_t t)
-{
-	//ToDo
+	return current_time.load();
 }
 
 void virtual_clock::steady::advance()
 {
-	current_time += current_time.min();
+	const auto tmp = current_time.load();
+	current_time.store(tmp + tmp.min().time_since_epoch());
 }
 
 } //namespace chrono
 }  //namespace fc
-
-#endif /* SRC_CLOCK_CLOCK_HPP_ */

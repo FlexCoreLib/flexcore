@@ -8,6 +8,7 @@
 #ifndef SRC_CLOCK_CLOCK_HPP_
 #define SRC_CLOCK_CLOCK_HPP_
 
+#include <atomic>
 #include <chrono>
 
 namespace fc
@@ -29,17 +30,18 @@ struct virtual_clock
 {
 	typedef std::chrono::system_clock::rep rep;
 	typedef std::chrono::system_clock::period period;
-	struct time_point;
+	typedef std::chrono::steady_clock::time_point time_point;
 
+	class master;
 	class system
 	{
 	public:
-		constexpr bool is_steady = false;
+		static constexpr bool is_steady = false;
 
 		typedef virtual_clock::rep rep;
 		typedef virtual_clock::period period;
-		struct time_point;
-		struct duration;
+		typedef virtual_clock::time_point time_point;
+		typedef std::chrono::system_clock::duration duration;
 
 		/**
 		 * \brief returns current absolute simulation time
@@ -49,13 +51,13 @@ struct virtual_clock
 		static std::time_t to_time_t( const time_point& t );
 		static time_point from_time_t( std::time_t t );
 
-	private:
 		friend class master;
+	private:
 
 		void advance();
 		void set_time(time_point r);
 
-		time_point current_time;
+		static std::atomic<time_point> current_time;
 	};
 
 	/**
@@ -65,12 +67,12 @@ struct virtual_clock
 	 */
 	struct steady
 	{
-		constexpr bool is_steady = true;
+		static constexpr bool is_steady = true;
 
 		typedef virtual_clock::rep rep;
 		typedef virtual_clock::period period;
 		typedef virtual_clock::time_point time_point;
-		struct duration;
+		typedef std::chrono::steady_clock::duration duration;
 
 		/**
 		 * \brief returns current relative simulation time
@@ -78,17 +80,15 @@ struct virtual_clock
 		 * \post if now is called twice with results t1 and t2, t2 >= t1 holds.
 		 */
 		static time_point now() noexcept;
-		static std::time_t to_time_t( const time_point& t );
-		static time_point from_time_t( std::time_t t );
 
 	private:
-		void advance();
 		friend class master;
 
-		time_point current_time;
+		void advance();
+
+		static std::atomic<time_point> current_time;
 	};
 
-private:
 	class master
 	{
 	public:
