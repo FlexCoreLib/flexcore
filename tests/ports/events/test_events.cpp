@@ -109,4 +109,18 @@ BOOST_AUTO_TEST_CASE(split_events)
 	BOOST_CHECK_EQUAL(*(test_handler_2.storage), 2);
 }
 
+BOOST_AUTO_TEST_CASE(test_event_in_port)
+{
+	int test_value = 0;
+
+	auto test_writer = [&](int i) {test_value = i;};
+
+	event_in_port<int> in_port(test_writer);
+	event_out_port<int> test_event;
+
+	test_event >> in_port;
+	test_event.fire(1);
+	BOOST_CHECK_EQUAL(test_value, 1);
+}
+
 #endif /* TESTS_CORE_TESTEVENTS_CPP_ */
