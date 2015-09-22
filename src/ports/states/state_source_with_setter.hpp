@@ -10,15 +10,15 @@ namespace fc
 {
 
 /**
- * Simple StreamSource implementation that holds a stream_state.
+ * Simple StreamSource implementation that holds a state_source_with_setter.
  * Can be connected to any number of SinkConnections.
  * Is a SourceConnection.
  */
 template<class data_t>
-class stream_state
+class state_source_with_setter
 {
 public:
-	stream_state(data_t d_) : d(std::make_shared<data_t>(d_)){}
+	state_source_with_setter(data_t d_) : d(std::make_shared<data_t>(d_)){}
 
 	/// pull data
 	data_t operator()() { return *d; }
@@ -31,7 +31,7 @@ private:
 };
 
 // traits
-template<class data_t> struct is_passive_source<stream_state<data_t>> : std::true_type {};
+template<class data_t> struct is_passive_source<state_source_with_setter<data_t>> : std::true_type {};
 
 } // namespace fc
 
