@@ -4,8 +4,8 @@
 // boost
 #include <boost/test/unit_test.hpp>
 
-#include <ports/stream_ports.hpp>
 #include <core/connection.hpp>
+#include <ports/state_ports.hpp>
 
 using namespace fc;
 
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE( node_with_lambda_to_member )
 {
 	node_class<int> node;
 	auto increment = [](int i) -> int { return i+1; };
-	stream_sink<int> sink;
+	state_sink<int> sink;
 
 	node.port() >> increment >> sink;
 
