@@ -32,10 +32,52 @@ struct expr_is_callable_impl<F(Args...), always_void<std::result_of<F(Args...)>>
 {
 };
 
+
+/**
+ * \brief has_call_op trait, based on member_detector idiom
+ *
+ * Explanation found at: https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Member_Detector
+ */
+template<class T>
+struct has_call_op
+{
+private:
+	struct fallback
+	{
+		void operator()();
+	};
+	// derived always has one operator() (the one from fallback)
+	// if T has operator(), derived will have that one as well and lookup will take it first.
+	struct derived : T, fallback
+	{
+	};
+
+	template<class U, U> struct check;
+
+	/*
+	 * if T has no(!) operator(),
+	 *  void (fallback::*)() and  &to_test::operator()>*, will be the same.
+	 *  Then this overload of test will be chosen, and the return value will be false_type
+	 */
+	template<class to_test>
+	static std::false_type test(check<void (fallback::*)(), &to_test::operator()>*);
+
+	// in all other caes, which means, T has operator() with any argument,
+	// this overload will be chosen and the return is true_type.
+	template<class>
+	static std::true_type test(...);
+
+public:
+	// this actually evaluates the test by building the derived type
+	// and evaluating the result type of test, either false_type or true_type
+	typedef decltype(test<derived>(nullptr)) type;
+
+};
+
 template<class> struct result_of;
 template<class,int> struct argtype_of;
 template<class T>
-struct type_is_callable_impl : expr_is_callable_impl<result_of<T>(argtype_of<T,0>)>::type
+struct type_is_callable_impl : has_call_op<T>::type
 {
 };
 
@@ -62,20 +104,17 @@ struct is_connectable
 
 namespace detail
 {
-template<class T, class enable = void>
-struct has_result_impl: std::false_type
-{
-};
+template<class T>
+static std::false_type has_result_impl(T*);
 
-// this one will only be selected if C::result_type is valid
-template<class C> struct has_result_impl<C,
-	typename detail::always_void<typename C::result_type>> : std::false_type {
-};
+template<class T>
+static std::true_type has_result_impl(typename T::result_type*);
+
 }
 
 /// Has result trait to check if a type has a nested type 'result_type'
 template<class T>
-struct has_result : detail::has_result_impl<T>
+struct has_result : decltype(detail::has_result_impl<T>(nullptr))
 {
 };
 
@@ -145,9 +184,19 @@ struct is_active_source: public std::false_type
 {
 };
 
+template<class T, class enable = void>
+struct is_passive_source_impl: public std::false_type
+{
+};
+
 template<class T>
-struct is_passive_source: public std::integral_constant<bool,
-        utils::function_traits<T>::arity == 0>
+struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+		: public std::integral_constant<bool, utils::function_traits<T>::arity == 0>
+{
+};
+
+template<class T>
+struct is_passive_source: is_passive_source_impl<T>
 {
 };
 
