@@ -5,20 +5,22 @@
 #include <functional>
 #include <memory>
 
+// fc
+
 namespace fc
 {
 
 /**
- * Stream source port that queries a node for the value
+ * State source port that queries a node for the value
  * See test_stream_query_node.cpp for sample use inside a node
  *
  * Caller is responsible that the node passed to the constructor is not destroyed before the port
  */
 template<class data_t>
-class stream_query_function
+class state_source_call_function
 {
 public:
-	stream_query_function(std::function<data_t()> f) : call(f) {}
+	state_source_call_function(std::function<data_t()> f) : call(f) {}
 
 	data_t operator()()
 	{

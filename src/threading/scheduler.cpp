@@ -1,19 +1,9 @@
-// Scheduler.cpp ---
-//
-// Filename: Scheduler.cpp
-// Description:
-// Author: Thomas Karolski
-// Created: Di Sep  8 21:10:40 2015 (+0200)
-//
-//
-//
+#include "scheduler.hpp"
 
-// Code:
+namespace fc
+{
 
-
-#include "Scheduler.hpp"
-
-bool Scheduler::ExecNextTask()
+bool scheduler::ExecNextTask()
 {
 	bool result(false);
 	PreTaskHook();
@@ -33,8 +23,7 @@ bool Scheduler::ExecNextTask()
 	return result;
 }
 
-
-size_t Scheduler::ExecAllTasks()
+size_t scheduler::ExecAllTasks()
 {
 	ClockTick();
 	size_t count(0);
@@ -42,7 +31,4 @@ size_t Scheduler::ExecAllTasks()
 	return count;
 }
 
-
-
-//
-// Scheduler.cpp ends here
+} // namespace fc
