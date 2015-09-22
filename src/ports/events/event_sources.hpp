@@ -35,10 +35,8 @@ private:
 	std::shared_ptr<handler_vector> event_handlers = std::make_shared<handler_vector>();
 };
 
-//static_assert(not is_callable<event_out_port<int>>::value, "CALLABLE");
-
 // traits
-template<class T> struct is_callable<event_out_port<T>> : public std::false_type {};
+// TODO prefer to test this algorithmically
 template<class T> struct is_active_source<event_out_port<T>> : public std::true_type {};
 
 } // namespace fc

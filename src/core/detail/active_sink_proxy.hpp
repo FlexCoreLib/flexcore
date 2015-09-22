@@ -1,10 +1,12 @@
 #ifndef SRC_PORTS_MISPLACED_STUFF_HPP_
 #define SRC_PORTS_MISPLACED_STUFF_HPP_
 
+// std
 #include <functional>
 
+// fc
 #include <core/traits.hpp>
-#include <core/connection.hpp>
+#include <core/detail/connection.hpp>
 
 namespace fc
 {
@@ -30,8 +32,8 @@ namespace detail
 template<class source_t, class sink_t>
 struct active_sink_proxy
 {
-	active_sink_proxy(source_t source, sink_t sink_) :
-			stored_source(source), sink(sink_)
+	active_sink_proxy(source_t source, sink_t sink_)
+			: stored_source(source), sink(sink_)
 	{
 	}
 
@@ -44,8 +46,10 @@ struct active_sink_proxy
 	 * \post new_source is connected to the old source.
 	 * \returns a active_sink_proxy, which contains the new_source as the source.
 	 */
-	template<class new_source_t, class = typename std::enable_if<
-	        !is_passive_source<new_source_t>::value>::type>
+	template<
+			class new_source_t,
+			class = typename std::enable_if<not is_passive_source<new_source_t>::value>::type
+			>
 	auto connect(new_source_t new_source)
 	{
 		auto connection = ::fc::connect(new_source, stored_source);
@@ -77,24 +81,46 @@ struct active_sink_proxy
 };
 
 
-template<class T>
-struct is_stream_proxy: std::false_type
-{
-};
+template<class T> struct is_active_sink_proxy: std::false_type {};
 
 template<class source_t, class sink_t>
-struct is_stream_proxy<active_sink_proxy<source_t, sink_t>> : std::true_type
-{
-};
+struct is_active_sink_proxy<active_sink_proxy<source_t, sink_t>> : std::true_type {};
 
 /// Specialization of connect to call member connect of active_sink_proxy.
 template<class sink_t, class source_t>
-struct connect_impl<sink_t, source_t,
-        typename std::enable_if<is_stream_proxy<sink_t>::value>::type>
+struct connect_impl
+	<
+		sink_t,
+		source_t,
+		typename std::enable_if<is_active_sink_proxy<sink_t>::value>::type
+	>
 {
 	auto operator()(source_t source, sink_t sink)
 	{
 		return sink.connect(source);
+	}
+};
+
+/**
+ * Specialization of connect_impl for the case of connecting a standard connectable
+ * which is not a source_port to a sink_port.
+ * \return a stream_proxy which contains the source and the sink.
+ */
+template<class sink_t, class source_t>
+struct connect_impl
+	<
+		sink_t,
+		source_t,
+		typename std::enable_if
+			<
+				(not fc::is_passive_source<source_t>::value)
+			and fc::is_active_sink<sink_t>::value
+			>::type
+	>
+{
+	active_sink_proxy<source_t, sink_t> operator()(source_t source, sink_t sink)
+	{
+		return active_sink_proxy<source_t, sink_t>(source, sink);
 	}
 };
 
