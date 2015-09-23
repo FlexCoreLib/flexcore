@@ -1,5 +1,5 @@
-#ifndef SRC_THREADING_SCHEDULER_H_
-#define SRC_THREADING_SCHEDULER_H_
+#ifndef SRC_THREADING_MINIMALSCHEDULER_H_
+#define SRC_THREADING_MINIMALSCHEDULER_H_
 
 #include <queue>
 #include <boost/concept/assert.hpp>
@@ -21,15 +21,15 @@ struct is_callable_concept
 
 /// Basic, single threaded scheduler. Takes tasks and provides a means to execute them.
 /** Takes anything that is copy_constructible and callable as a task. */
-class scheduler
+class minimal_scheduler
 {
 public:
 	typedef boost::mpl::vector< boost::type_erasure::copy_constructible<>,
 								boost::type_erasure::callable<void()>
 								> CallableRequirements;
 
-	scheduler() {}
-	virtual ~scheduler() {}
+	minimal_scheduler() {}
+	virtual ~minimal_scheduler() {}
 
 	/// Add a task to be executed in fifo order.
 	/** The task must adhere to the boost::Generator concept. */
@@ -73,6 +73,6 @@ private:
 
 } // namespace fc
 
-#endif // SRC_THREADING_SCHEDULER_H_
+#endif // SRC_THREADING_MINIMALSCHEDULER_H_
 
 
