@@ -15,6 +15,11 @@ namespace chrono
 
 using namespace std::chrono;
 
+std::atomic<virtual_clock::system::time_point>
+		virtual_clock::system::current_time(virtual_clock::system::time_point::min());
+std::atomic<virtual_clock::steady::time_point>
+		virtual_clock::steady::current_time(virtual_clock::steady::time_point::min());
+
 virtual_clock::system::time_point virtual_clock::system::now() noexcept
 {
 	return current_time.load();
