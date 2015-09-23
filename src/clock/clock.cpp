@@ -23,22 +23,22 @@ virtual_clock::system::time_point virtual_clock::system::now() noexcept
 std::time_t virtual_clock::system::to_time_t(const time_point& t)
 {
 	const auto duration = t.time_since_epoch();
-	const auto hours = duration_cast<seconds>(duration);
-	return hours.count();
+	const auto seconds_ = duration_cast<seconds>(duration);
+	return seconds_.count();
 }
 
-virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t t)
-{
-	//ToDo
-}
+//virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t t)
+//{
+//	//ToDo
+//}
 
-void virtual_clock::system::advance()
+void virtual_clock::system::advance() noexcept
 {
 	const auto tmp = current_time.load();
 	current_time.store(tmp + tmp.min().time_since_epoch());
 }
 
-void virtual_clock::system::set_time(time_point r)
+void virtual_clock::system::set_time(time_point r) noexcept
 {
 	current_time.store(r);
 }
@@ -48,7 +48,7 @@ virtual_clock::steady::time_point virtual_clock::steady::now() noexcept
 	return current_time.load();
 }
 
-void virtual_clock::steady::advance()
+void virtual_clock::steady::advance() noexcept
 {
 	const auto tmp = current_time.load();
 	current_time.store(tmp + tmp.min().time_since_epoch());

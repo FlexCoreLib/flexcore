@@ -49,13 +49,13 @@ struct virtual_clock
 		 */
 		static time_point now() noexcept;
 		static std::time_t to_time_t( const time_point& t );
-		static time_point from_time_t( std::time_t t );
+		//static time_point from_time_t( std::time_t t ); ToDO Do we need this? I'm unsure how to correctly implement it
 
 		friend class master;
 	private:
 
-		void advance();
-		void set_time(time_point r);
+		static void advance() noexcept;
+		static void set_time(time_point r) noexcept;
 
 		static std::atomic<time_point> current_time;
 	};
@@ -84,7 +84,7 @@ struct virtual_clock
 	private:
 		friend class master;
 
-		void advance();
+		static void advance() noexcept;
 
 		static std::atomic<time_point> current_time;
 	};
@@ -98,12 +98,12 @@ struct virtual_clock
 		 * this method controls the flow of time of the virtual clock.
 		 * The Scheduler calls advance during runtime of the program to advance the time.
 		 */
-		static void advance()
+		static void advance() noexcept
 		{
 			steady_clock.advance();
 			system_clock.advance();
 		}
-		void set_time(time_point r)
+		static void set_time(time_point r) noexcept
 		{
 			system_clock.set_time(r);
 			//do not set time of steady clock, as it has only relative timings.

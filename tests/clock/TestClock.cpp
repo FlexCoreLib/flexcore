@@ -8,8 +8,9 @@
 #include <clock/clock.hpp>
 
 using namespace fc;
+using namespace chrono;
 
 BOOST_AUTO_TEST_CASE(test_example_uses)
 {
-
+	virtual_clock::master.set_time(0);
 }
