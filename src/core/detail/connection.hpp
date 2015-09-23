@@ -82,9 +82,7 @@ struct connect_impl
  */
 template
 	<	class source_t,
-		class sink_t,
-		class = typename std::enable_if<is_connectable<source_t>::value>::type,
-		class = typename std::enable_if<is_connectable<sink_t>::value>::type
+		class sink_t
 	>
 auto connect(source_t source, sink_t sink)
 {
