@@ -55,6 +55,15 @@ public:
 	}
 };
 
+class CustomCallableArg
+{
+public:
+	bool operator()(int)
+	{
+		return 0;
+	}
+};
+
 /// Dummy class to test result_of & argument deduction
 struct CustomCallable2
 {
@@ -69,7 +78,10 @@ static bool StaticFunction(int)
 	return true;
 }
 
-
+struct result_haver
+{
+	typedef int result_type; // has a result_type
+};
 
 //////////////////////////////////////////////////
 /// Actual tests
@@ -96,14 +108,45 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 
 		ASSERT_RESULT_OF(callable5, bool);
 
-
 		static_assert(is_callable<CustomCallable>::value,
 				"this type was made to be callable");
 		static_assert(is_connectable<CustomCallable>::value,
 				"struct was made to be connectable");
+
+		auto test = [](int){ };
+		static_assert(is_callable<decltype(test)>::value,
+				"lambda taking int is callable");
+		static_assert(is_connectable<decltype(test)>::value,
+				"lambda taking int is connectable");
+
+		auto con_lambda = [](int)->int{return 1;};
+		static_assert(is_connectable<decltype(con_lambda)>::value,
+				"lambda takes and returns int, is connectable");
+
+		static_assert(!has_result<CustomCallable>::value, "CustomCallable does not have a result_type");
+		static_assert(has_result<result_haver>::value, "result_haver has a result_type");
+
 	}
 }
 
+struct not_callable
+{
+	//note the absence of operator()
+};
+
+BOOST_AUTO_TEST_CASE( test_is_callable )
+{
+	static_assert(is_callable<CustomCallable>::value,
+			"type is defined to be callable");
+	static_assert(is_callable<CustomCallableArg>::value,
+			"this type was made to be callable");
+
+	static_assert(!is_callable<int>::value,
+			"int is very much not callable");
+
+	static_assert(!is_callable<not_callable>::value,
+			"type is defined to be not callable");
+}
 
 //
 // TestTraits.cpp ends here
