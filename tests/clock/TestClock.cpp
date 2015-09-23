@@ -12,5 +12,6 @@ using namespace chrono;
 
 BOOST_AUTO_TEST_CASE(test_example_uses)
 {
-	virtual_clock::master.set_time(0);
+	virtual_clock::master test;
+	test.set_time(virtual_clock::time_point::min());
 }
