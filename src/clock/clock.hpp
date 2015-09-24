@@ -26,15 +26,25 @@ struct wall_clock
 };
 
 
+/**
+ * \brief virtual clock controls the time within the flexcore application
+ *
+ * The virtual clock is independent of the system real time clock.
+ * It is used to determine timings in simulations and replays of logged data.
+ * The clock itself is controlled by the scheduler of the application.
+ */
 struct virtual_clock
 {
-	//currently the timing period is set to 10ms.
-	//we set the base type of the duration to a fixed width integer
-	//to have the same value on all platforms.
+	/**
+	 * \brief type determining the time discretisztion of the virtual clock
+	 *
+	 * currently the timing period is set to 10ms.
+	 * we set the base type of the duration to a fixed width integer
+	 * to have the same value on all platforms.
+	 */
 	typedef std::chrono::duration<int64_t, std::centi> duration;
-	typedef duration::rep rep;
-	typedef duration::period period;
-	typedef std::chrono::time_point<std::chrono::steady_clock, duration> time_point;
+	typedef duration::rep rep; ///<storage format of the time
+	typedef duration::period period; ///<duration of a tick == smallest duration possible
 
 	class master;
 	class system
@@ -44,16 +54,15 @@ struct virtual_clock
 
 		typedef virtual_clock::rep rep;
 		typedef virtual_clock::period period;
-		typedef virtual_clock::time_point time_point;
 		typedef virtual_clock::duration duration;
-
+		typedef std::chrono::time_point<system, duration> time_point;
 		/**
 		 * \brief returns current absolute simulation time
 		 * \return A time point representing the current virtual time.
 		 */
 		static time_point now() noexcept;
 		static std::time_t to_time_t( const time_point& t );
-		//static time_point from_time_t( std::time_t t ); ToDO Do we need this? I'm unsure how to correctly implement it
+		static time_point from_time_t( std::time_t t );
 
 		friend class master;
 	private:
@@ -75,8 +84,8 @@ struct virtual_clock
 
 		typedef virtual_clock::rep rep;
 		typedef virtual_clock::period period;
-		typedef virtual_clock::time_point time_point;
 		typedef virtual_clock::duration duration;
+		typedef std::chrono::time_point<steady, duration> time_point;
 
 		/**
 		 * \brief returns current relative simulation time
@@ -107,7 +116,7 @@ struct virtual_clock
 			steady_clock.advance();
 			system_clock.advance();
 		}
-		static void set_time(time_point r) noexcept
+		static void set_time(virtual_clock::system::time_point r) noexcept
 		{
 			system_clock.set_time(r);
 			//do not set time of steady clock, as it has only relative timings.

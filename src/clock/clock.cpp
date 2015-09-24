@@ -32,10 +32,15 @@ std::time_t virtual_clock::system::to_time_t(const time_point& t)
 	return seconds.count();
 }
 
-//virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t t)
-//{
-//	//ToDo
-//}
+virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t t)
+{
+	typedef std::chrono::time_point <virtual_clock::system,
+			std::chrono::seconds>	from_t;
+
+	auto tmp= from_t(std::chrono::seconds(t));
+	auto result = std::chrono::time_point_cast<virtual_clock::duration>(tmp);
+	return result;
+}
 
 void virtual_clock::system::advance() noexcept
 {
