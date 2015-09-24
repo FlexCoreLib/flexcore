@@ -15,6 +15,8 @@
 #include <cassert>
 #include <mutex>
 
+#include <iostream>
+
 namespace fc
 {
 namespace thread
@@ -37,9 +39,8 @@ public:
 		task_queue.push(new_task);
 	}
 
-	void stop() noexcept {do_work = false;}
-	void start() noexcept {do_work = true; }
-
+	void start() noexcept { std::cout << "task_queue.size() start " << task_queue.size() << "\n";do_work = true; }
+	void stop() noexcept { std::cout << "task_queue.size() stop " << task_queue.size() << "\n"; do_work = false;}
 private:
 	std::vector<std::thread> thread_pool;
 	std::atomic<bool> do_work; // flag indicates threads to keep working.

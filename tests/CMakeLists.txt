@@ -13,7 +13,8 @@ ADD_EXECUTABLE( test_executable
 	ports/states/test_state_source_call_function.cpp
 	ports/states/test_state_source_with_setter.cpp
 	runner.cpp 
-	threading/test_minimalscheduler.cpp )
+	threading/test_minimalscheduler.cpp
+	threading/test_parallelscheduler.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}

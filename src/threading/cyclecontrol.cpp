@@ -9,6 +9,8 @@
 
 #include <stdexcept>
 
+#include <iostream>
+
 namespace fc
 {
 namespace thread
@@ -45,8 +47,9 @@ void cycle_control::work()
 
 void cycle_control::run_periodic_tasks()
 {
-	for (auto task : tasks)
-	{ //todo check if task is dueue
+	std::cout << "tasks.size() " << tasks.size() << "\n";
+	for (auto& task : tasks)
+	{ //todo check if task is due
 		if (!task.done())  //todo specify error model
 			throw out_of_time_exepction();
 
@@ -55,6 +58,10 @@ void cycle_control::run_periodic_tasks()
 	}
 }
 
+void cycle_control::add_task(periodic_task task)
+{
+	tasks.push_back(task);
+}
+
 } /* namespace thread */
 } /* namespace fc */
-

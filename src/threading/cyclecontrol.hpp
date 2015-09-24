@@ -20,24 +20,40 @@ namespace thread
 
 struct periodic_task
 {
-	bool done() { return work_to_do; }
+	periodic_task(std::function<void(void)> job,
+			chrono::virtual_clock::duration rate) :
+				work_to_do(false),
+				cycle_rate(rate),
+				work(job)
+	{
+
+	}
+
+	bool done() const { return !work_to_do; }
 	void operator()()
 	{
+		std::cout << "periodic_task!\n";
 		work_to_do = false;
+		work();
 	}
 	bool work_to_do;
 private:
 	chrono::virtual_clock::duration cycle_rate;
+	/// work to be done every cycle
+	std::function<void(void)> work;
 };
 
 class cycle_control
 {
+public:
 	/// starts the main loop
 	void start();
 	/// stops the main loop in all threads
 	void stop();
 
 	void work();
+
+	void add_task(periodic_task task);
 private:
 	void run_periodic_tasks();
 	std::vector<periodic_task> tasks;
