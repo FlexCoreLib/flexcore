@@ -36,7 +36,7 @@ struct wall_clock
 struct virtual_clock
 {
 	/**
-	 * \brief type determining the time discretisztion of the virtual clock
+	 * \brief type determining the time discretization of the virtual clock
 	 *
 	 * currently the timing period is set to 10ms.
 	 * we set the base type of the duration to a fixed width integer
@@ -55,7 +55,7 @@ struct virtual_clock
 		typedef virtual_clock::rep rep;
 		typedef virtual_clock::period period;
 		typedef virtual_clock::duration duration;
-		typedef std::chrono::time_point<system, duration> time_point;
+		typedef std::chrono::time_point<virtual_clock::system, duration> time_point;
 		/**
 		 * \brief returns current absolute simulation time
 		 * \return A time point representing the current virtual time.
@@ -85,7 +85,7 @@ struct virtual_clock
 		typedef virtual_clock::rep rep;
 		typedef virtual_clock::period period;
 		typedef virtual_clock::duration duration;
-		typedef std::chrono::time_point<steady, duration> time_point;
+		typedef std::chrono::time_point<virtual_clock::steady, duration> time_point;
 
 		/**
 		 * \brief returns current relative simulation time

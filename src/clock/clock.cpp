@@ -34,18 +34,16 @@ std::time_t virtual_clock::system::to_time_t(const time_point& t)
 
 virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t t)
 {
-	typedef std::chrono::time_point <virtual_clock::system,
-			std::chrono::seconds>	from_t;
+	typedef chr::time_point<virtual_clock::system,chr::seconds> from_t;
 
-	auto tmp= from_t(std::chrono::seconds(t));
-	auto result = std::chrono::time_point_cast<virtual_clock::duration>(tmp);
-	return result;
+	const auto tmp = from_t(chr::seconds(t));
+	return chr::time_point_cast<virtual_clock::duration>(tmp);
 }
 
 void virtual_clock::system::advance() noexcept
 {
 	const auto tmp = current_time.load();
-	current_time.store(tmp + tmp.min().time_since_epoch());
+	current_time.store(tmp + duration(1));
 }
 
 void virtual_clock::system::set_time(time_point r) noexcept
@@ -61,7 +59,7 @@ virtual_clock::steady::time_point virtual_clock::steady::now() noexcept
 void virtual_clock::steady::advance() noexcept
 {
 	const auto tmp = current_time.load();
-	current_time.store(tmp + tmp.min().time_since_epoch());
+	current_time.store(tmp + duration(1));
 }
 
 } //namespace chrono
