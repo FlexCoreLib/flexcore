@@ -8,7 +8,6 @@
 #include <clock/clock.hpp>
 
 using namespace fc;
-using namespace chrono;
 namespace chr = std::chrono;
 
 typedef master_clock<std::centi> master;

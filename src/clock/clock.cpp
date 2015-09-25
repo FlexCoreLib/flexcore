@@ -10,9 +10,6 @@
 namespace fc
 {
 
-namespace chrono
-{
-
 namespace chr = std::chrono;
 
 std::atomic<virtual_clock::system::time_point>
@@ -62,5 +59,4 @@ void virtual_clock::steady::advance(duration d) noexcept
 	current_time.store(tmp + d);
 }
 
-} //namespace chrono
 }  //namespace fc

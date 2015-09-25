@@ -14,9 +14,6 @@
 namespace fc
 {
 
-namespace chrono
-{
-
 //forward declaration for friend declartations in virtual_clock
 template<class T> class master_clock;
 
@@ -142,7 +139,6 @@ private:
 	static virtual_clock::system system_clock;
 };
 
-} //namespace chrono
 }  //namespace fc
 
 #endif /* SRC_CLOCK_CLOCK_HPP_ */
