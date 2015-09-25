@@ -17,6 +17,9 @@ namespace fc
 namespace chrono
 {
 
+//forward declaration for friend declartations in virtual_clock
+template<class T> class master_clock;
+
 struct wall_clock
 {
 	/// system_wall_clock is just a forward to std::system_clock
@@ -38,15 +41,15 @@ struct virtual_clock
 	/**
 	 * \brief type determining the time discretization of the virtual clock
 	 *
-	 * currently the timing period is set to 10ms.
+	 * currently the timing period is set to nanoseconds,
+	 * although the actual step size is determined by the master clock.
 	 * we set the base type of the duration to a fixed width integer
 	 * to have the same value on all platforms.
 	 */
-	typedef std::chrono::duration<int64_t, std::centi> duration;
+	typedef std::chrono::nanoseconds duration;
 	typedef duration::rep rep; ///<storage format of the time
 	typedef duration::period period; ///<duration of a tick == smallest duration possible
 
-	class master;
 	class system
 	{
 	public:
@@ -64,10 +67,11 @@ struct virtual_clock
 		static std::time_t to_time_t( const time_point& t );
 		static time_point from_time_t( std::time_t t );
 
-		friend class master;
+		template<class T>
+		friend class master_clock;
 	private:
 
-		static void advance() noexcept;
+		static void advance(duration d) noexcept;
 		static void set_time(time_point r) noexcept;
 
 		static std::atomic<time_point> current_time;
@@ -95,37 +99,47 @@ struct virtual_clock
 		static time_point now() noexcept;
 
 	private:
-		friend class master;
+		template<class T>
+		friend class master_clock;
 
-		static void advance() noexcept;
+		static void advance(duration d) noexcept;
 
 		static std::atomic<time_point> current_time;
 	};
+};
 
-	class master
+template<class period_t>
+class master_clock
+{
+public:
+	typedef std::chrono::duration<int64_t, period_t> duration;
+	typedef typename duration::rep rep; ///<storage format of the time
+	typedef typename duration::period period; ///<duration of a tick == smallest duration possible
+
+	/**
+	 * \brief advances clock by a single tick
+	 *
+	 * this method controls the flow of time of the virtual clock.
+	 * The Scheduler calls advance during runtime of the program to advance the time.
+	 */
+	static void advance() noexcept
 	{
-	public:
-		/**
-		 * \brief advances clock by a single tick
-		 *
-		 * this method controls the flow of time of the virtual clock.
-		 * The Scheduler calls advance during runtime of the program to advance the time.
-		 */
-		static void advance() noexcept
-		{
-			steady_clock.advance();
-			system_clock.advance();
-		}
-		static void set_time(virtual_clock::system::time_point r) noexcept
-		{
-			system_clock.set_time(r);
-			//do not set time of steady clock, as it has only relative timings.
-		}
+		steady_clock.advance(
+				std::chrono::duration_cast<virtual_clock::steady::duration>
+				(duration(1)));
+		system_clock.advance(
+				std::chrono::duration_cast<virtual_clock::system::duration>
+				(duration(1)));
+	}
+	static void set_time(virtual_clock::system::time_point r) noexcept
+	{
+		system_clock.set_time(r);
+		//do not set time of steady clock, as it has only relative timings.
+	}
 
-	private:
-		static steady steady_clock;
-		static system system_clock;
-	};
+private:
+	static virtual_clock::steady steady_clock;
+	static virtual_clock::system system_clock;
 };
 
 } //namespace chrono

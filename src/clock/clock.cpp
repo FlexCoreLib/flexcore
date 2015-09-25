@@ -40,10 +40,10 @@ virtual_clock::system::time_point virtual_clock::system::from_time_t(std::time_t
 	return chr::time_point_cast<virtual_clock::duration>(tmp);
 }
 
-void virtual_clock::system::advance() noexcept
+void virtual_clock::system::advance(duration d) noexcept
 {
 	const auto tmp = current_time.load();
-	current_time.store(tmp + duration(1));
+	current_time.store(tmp + d);
 }
 
 void virtual_clock::system::set_time(time_point r) noexcept
@@ -56,10 +56,10 @@ virtual_clock::steady::time_point virtual_clock::steady::now() noexcept
 	return current_time.load();
 }
 
-void virtual_clock::steady::advance() noexcept
+void virtual_clock::steady::advance(duration d) noexcept
 {
 	const auto tmp = current_time.load();
-	current_time.store(tmp + duration(1));
+	current_time.store(tmp + d);
 }
 
 } //namespace chrono

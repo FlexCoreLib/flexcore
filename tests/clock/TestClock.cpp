@@ -11,13 +11,16 @@ using namespace fc;
 using namespace chrono;
 namespace chr = std::chrono;
 
+typedef master_clock<std::centi> master;
+
 static const virtual_clock::steady::duration one_tick
-		= virtual_clock::steady::duration(1);
+		= chr::duration_cast<virtual_clock::duration>(master::duration(1));
+
 
 BOOST_AUTO_TEST_CASE(test_example_uses)
 {
 	auto one_tick_ago = virtual_clock::steady::now();
-	virtual_clock::master::advance();
+	master::advance();
 	auto now = virtual_clock::steady::now();
 	auto diff = now - one_tick_ago; //the time passed between the two calls to now().
 
@@ -31,7 +34,7 @@ BOOST_AUTO_TEST_CASE(test_advance)
 {
 	auto tmp = virtual_clock::steady::now();
 	for (int i = 0; i != 1000; ++i)
-		virtual_clock::master::advance();
+		master::advance();
 
 	auto now = virtual_clock::steady::now();
 	auto diff = now - tmp;
@@ -52,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test_time_t_conversion)
 			chr::duration_cast<chr::seconds>(back_converted.time_since_epoch()).count());
 
 	for (int i = 0; i != 1000; ++i)
-		virtual_clock::master::advance();
+		master::advance();
 
 	auto now_2 = virtual_clock::system::now();
 	BOOST_CHECK(now_2 != now);
