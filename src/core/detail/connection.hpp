@@ -24,7 +24,6 @@ template<
 		class source_t,
 		class sink_t,
 		bool param_void,
-		bool result_void,
 		bool payload_void
 		>
 struct connection;
@@ -47,7 +46,6 @@ struct connection_trait
 		<	source_t,
 			sink_t,
 			param_is_void,
-			result_is_void,
 			payload_is_void
 		> type;
 };
@@ -102,18 +100,19 @@ auto operator >>(const source_t& source, const sink_t& sink)
 
 /***************** Implementation *********************************************
  *
- * Template specializations on param_is_void, result_is_void and payload_is_void.
+ * Template specializations on param_is_void and payload_is_void.
  * These specializations are necessary since different parts of the function bodies
- * of operator() are ill formed if parameters, payload or results are void.
+ * of operator() are ill formed if parameter or payload are void.
+ * since return void is legal in generic code, we do not need to specialize on return type.
  *
  * std::enable_if on the operator() does not work in all cases, since the metafunctions
- * param_type and result_of can also be ill formed, when paramt_t and result_t are void.
+ * param_type can also be ill formed, when paramt_t is void.
  *
  */
 
 /// Specialization in case no value is void
 template<class source_t,class sink_t>
-struct connection<source_t, sink_t, false, false, false>
+struct connection<source_t, sink_t, false, false>
 {
 	source_t source;
 	sink_t sink;
@@ -127,7 +126,7 @@ struct connection<source_t, sink_t, false, false, false>
 
 /// Partial specialization no parameter
 template<class source_t,class sink_t>
-struct connection<source_t, sink_t, true, false, false>
+struct connection<source_t, sink_t, true, false>
 {
 	source_t source;
 	sink_t sink;
@@ -138,22 +137,9 @@ struct connection<source_t, sink_t, true, false, false>
 	}
 };
 
-/// partial  specialization for no parameter and no return value
-template<class source_t, class sink_t>
-struct connection<source_t, sink_t, true, true, false>
-{
-	source_t source;
-	sink_t sink;
-	void operator()()
-	{
-		// execute source and execute sink with result from source.
-		sink(source());
-	}
-};
-
 /// partial specialization for no parameter and no payload
 template<class source_t, class sink_t>
-struct connection<source_t, sink_t, true, false, true>
+struct connection<source_t, sink_t, true, true>
 {
 	source_t source;
 	sink_t sink;
@@ -165,37 +151,9 @@ struct connection<source_t, sink_t, true, false, true>
 	}
 };
 
-/// partial specialization for no parameter and no return value and no payload
-template<class source_t,class sink_t>
-struct connection<source_t, sink_t, true, true, true>
-{
-	source_t source;
-	sink_t sink;
-	void operator()()
-	{
-		// execute source and execute sink separately since source has no result.
-		source();
-		sink();
-	}
-};
-
-// Special case of connection which has no return value
-template<class source_t, class sink_t>
-struct connection<source_t, sink_t,false, true, false>
-{
-	source_t source;
-	sink_t sink;
-	typedef typename param_type<source_t>::type param_type;
-	void operator()(const param_type& p)
-	{
-		// execute source with parameter and execute sink with result from source.
-		sink(source(p));
-	}
-};
-
 /// Special case, when there is no payload in the connnection
 template<class source_t,class sink_t>
-struct connection<source_t, sink_t, false, false, true>
+struct connection<source_t, sink_t, false, true>
 {
 	source_t source;
 	sink_t sink;
@@ -205,20 +163,6 @@ struct connection<source_t, sink_t, false, false, true>
 		// execute source and execute sink separately.
 		source(p);
 		return sink();
-	}
-};
-
-/// Special case, when there is no payload and no result in the connection
-template<class source_t,class sink_t>
-struct connection<source_t, sink_t, false, true, true>
-{
-	source_t source;
-	sink_t sink;
-	typedef typename param_type<source_t>::type param_type;
-	void operator()(const param_type& p)
-	{
-		source(p);
-		sink();
 	}
 };
 
