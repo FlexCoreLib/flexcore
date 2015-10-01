@@ -121,6 +121,28 @@ BOOST_AUTO_TEST_CASE(test_event_in_port)
 	test_event >> in_port;
 	test_event.fire(1);
 	BOOST_CHECK_EQUAL(test_value, 1);
+
+
+	//test void event
+	auto write_999 = [&]() {test_value = 999;};
+
+
+	event_in_port<void> void_in(write_999);
+	event_out_port<void> void_out;
+	void_out >> void_in;
+	void_out.fire();
+	BOOST_CHECK_EQUAL(test_value, 999);
+}
+
+BOOST_AUTO_TEST_CASE(test_event_lambda)
+{
+	int test_value = 0;
+
+	auto write_666 = [&]() {test_value = 666;};
+	event_out_port<void> void_out_2;
+	void_out_2 >> write_666;
+	void_out_2.fire();
+	BOOST_CHECK_EQUAL(test_value, 666);
 }
 
 #endif /* TESTS_CORE_TESTEVENTS_CPP_ */
