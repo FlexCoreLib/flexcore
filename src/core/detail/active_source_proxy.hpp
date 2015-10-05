@@ -48,10 +48,10 @@ struct active_source_proxy
 	sink_t stored_sink;
 };
 
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 struct connect_impl
-	<	sink_t,
-		source_t,
+	<	source_t,
+		sink_t,
         typename std::enable_if
 			<	is_active_source<source_t>::value
 			and	(!::fc::is_passive_sink<sink_t>::value)
@@ -67,10 +67,10 @@ struct connect_impl
 };
 
 
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 struct connect_impl
-	<	sink_t,
-		source_t,
+	<	source_t,
+		sink_t,
         typename std::enable_if
 			<	::fc::is_active_source<source_t>::value
 			and ::fc::is_passive_sink<sink_t>::value
@@ -85,10 +85,10 @@ struct connect_impl
 };
 
 /// Specialization of connect to call member connect of stream_proxy.
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 struct connect_impl
-	<	sink_t,
-		source_t,
+	<	source_t,
+		sink_t,
         typename std::enable_if
 			<	is_instantiation_of< active_source_proxy,
 									 source_t >::value

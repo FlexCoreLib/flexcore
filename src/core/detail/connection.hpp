@@ -53,7 +53,7 @@ struct connection_trait
 namespace detail
 {
 
-template<class sink_t, class source_t, class Enable = void>
+template<class source_t, class sink_t, class Enable = void>
 struct connect_impl
 {
 	typename connection_trait<source_t, sink_t>::type
@@ -84,7 +84,7 @@ template
 	>
 auto connect(source_t source, sink_t sink)
 {
-	return detail::connect_impl<sink_t, source_t>()(source, sink);
+	return detail::connect_impl<source_t, sink_t>()(source, sink);
 }
 
 /**
