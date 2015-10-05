@@ -1,19 +1,20 @@
 #include <boost/test/unit_test.hpp>
 
-#include <ports/node_aware_port.hpp>
 #include <ports/ports.hpp>
+#include "../../src/ports/region_aware_port.hpp"
 
 using namespace fc;
 
 BOOST_AUTO_TEST_CASE(test_node_aware_connection)
 {
-	typedef node_aware_port<event_in_port<int>> test_in_port;
-	typedef node_aware_port<event_out_port<int>> test_out_port;
+	typedef region_aware_port<event_in_port<int>> test_in_port;
+	typedef region_aware_port<event_out_port<int>> test_out_port;
+	auto region = std::make_shared<parallel_region>();
 
 	int test_value = 0;
 	auto write_param = [&](int i) {test_value = i;};
-	test_in_port test_in(write_param);
-	test_out_port test_out;
+	test_in_port test_in(region, write_param);
+	test_out_port test_out(region);
 
 	auto connection = test_out >> test_in;
 	static_assert(is_instantiation_of<node_aware_connection, decltype(connection)>::value,

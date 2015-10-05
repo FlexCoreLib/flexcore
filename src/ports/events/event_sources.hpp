@@ -2,6 +2,7 @@
 #define SRC_PORTS_EVENT_SOURCES_EVENT_SOURCES_HPP_
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include <core/traits.hpp>
