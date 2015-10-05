@@ -18,10 +18,27 @@ struct event_in_port
 	{
 	}
 
-	template<class... T>
-	void operator()(T... in_event)
+	void operator()(event_t in_event)
 	{
-		event_handler(in_event...);
+		event_handler(in_event);
+	}
+
+private:
+	handler_t event_handler;
+};
+
+template<>
+struct event_in_port<void>
+{
+	typedef typename detail::handle_type<void>::type handler_t;
+	explicit event_in_port(handler_t handler) :
+			event_handler(handler)
+	{
+	}
+
+	void operator()()
+	{
+		event_handler();
 	}
 
 private:
@@ -29,7 +46,8 @@ private:
 };
 
 // traits
-template<class T> struct is_passive_sink<event_in_port<T>> : public std::true_type {};
+template<class T> struct is_port<event_in_port<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<event_in_port<T>> : std::true_type {};
 
 } // namespace fc
 

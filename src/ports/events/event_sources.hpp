@@ -27,9 +27,10 @@ struct event_out_port
 			target(event...);
 	}
 
-	void connect(handler_t new_handler)
+	auto connect(handler_t new_handler)
 	{
 		event_handlers->push_back(new_handler);
+		return port_connection<decltype(this), handler_t>();
 	}
 
 private:
@@ -43,7 +44,7 @@ private:
 
 // traits
 // TODO prefer to test this algorithmically
-template<class T> struct is_active_source<event_out_port<T>> : public std::true_type {};
+template<class T> struct is_port<event_out_port<T>> : public std::true_type {};
 
 } // namespace fc
 

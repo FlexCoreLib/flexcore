@@ -1,13 +1,3 @@
-/*
- * TestEvents.h
- *
- *  Created on: Sep 15, 2015
- *      Author: ckielwein
- */
-
-#ifndef TESTS_CORE_TESTEVENTS_CPP_
-#define TESTS_CORE_TESTEVENTS_CPP_
-
 #include <boost/test/unit_test.hpp>
 
 #include "ports/event_ports.hpp"
@@ -144,5 +134,3 @@ BOOST_AUTO_TEST_CASE(test_event_lambda)
 	void_out_2.fire();
 	BOOST_CHECK_EQUAL(test_value, 666);
 }
-
-#endif /* TESTS_CORE_TESTEVENTS_CPP_ */

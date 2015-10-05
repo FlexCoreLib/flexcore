@@ -8,6 +8,7 @@ ADD_EXECUTABLE( test_executable
 	core/test_connection.cpp
 	core/test_traits.cpp
 	clock/TestClock.cpp
+	ports/test_node_aware.cpp
  	ports/events/test_events.cpp
 	ports/states/test_node_with_lambda.cpp
 	ports/states/test_state_source_call_function.cpp

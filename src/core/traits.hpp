@@ -71,8 +71,34 @@ public:
 	// this actually evaluates the test by building the derived type
 	// and evaluating the result type of test, either false_type or true_type
 	typedef decltype(test<derived>(nullptr)) type;
-
 };
+
+/// has_member check for method connect, see has_call_op for explanation
+template<class T>
+struct has_member_connect
+{
+private:
+	struct fallback
+	{
+		void connect();
+	};
+
+	struct derived : T, fallback
+	{
+	};
+
+	template<class U, U> struct check;
+
+	template<class to_test>
+	static std::false_type test(check<void (fallback::*)(), &to_test::connect>*);
+
+	template<class>
+	static std::true_type test(...);
+
+public:
+	typedef decltype(test<derived>(nullptr)) type;
+};
+
 
 template<class> struct result_of;
 template<class,int> struct argtype_of;
@@ -174,17 +200,13 @@ struct is_active_sink: public std::false_type
 {
 };
 
-//template<class T>
-//struct is_passive_sink: public std::false_type
-//{
-//};
-
-
-
 template<class T>
-struct is_active_source: public std::false_type
+struct is_active_connectable :
+		std::integral_constant<bool, detail::has_member_connect<T>::type::value
+		&& std::is_copy_constructible<T>::value>
 {
 };
+
 
 template<class T, class enable = void>
 struct is_passive_source_impl: public std::false_type

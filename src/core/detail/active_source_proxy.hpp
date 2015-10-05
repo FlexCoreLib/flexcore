@@ -3,11 +3,12 @@
 
 #include <functional>
 
-#include <core/traits.hpp>
+#include <ports/port_traits.hpp>
 #include <core/connection.hpp>
 
 namespace fc
 {
+
 namespace detail
 {
 
@@ -25,22 +26,22 @@ struct active_source_proxy
 	{}
 
 	template<	class new_sink_t,
+				class enable = void>
+	auto
+	connect(new_sink_t sink, typename std::enable_if< is_passive_sink<new_sink_t>::value, void >::type* = 0)
+	{
+		auto tmp = ::fc::connect(stored_sink, sink);
+
+		return source.connect(tmp);
+	}
+
+	template<	class new_sink_t,
 				class = typename std::enable_if< not is_passive_sink<new_sink_t>::value >::type
 			>
 	auto connect(new_sink_t sink)
 	{
 		auto connection = ::fc::connect(stored_sink, sink);
 		return active_source_proxy<source_t, decltype(connection)>(source, connection);
-	}
-
-	template<	class new_sink_t,
-				class enable = void>
-	typename std::enable_if< is_passive_sink<new_sink_t>::value, void >::type
-	connect(new_sink_t sink)
-	{
-		auto tmp = ::fc::connect(stored_sink, sink);
-		source.connect(tmp);
-		return;
 	}
 
 	source_t source;
@@ -65,6 +66,7 @@ struct connect_impl
 	}
 };
 
+
 template<class sink_t, class source_t>
 struct connect_impl
 	<	sink_t,
@@ -75,10 +77,10 @@ struct connect_impl
 			>::type
 	>
 {
-	void operator()(source_t source, sink_t sink)
+	auto operator()(source_t source, sink_t sink)
 	{
 		source.connect(sink);
-		return;
+		return port_connection<source_t, sink_t>();
 	}
 };
 
