@@ -14,6 +14,7 @@ ADD_EXECUTABLE( test_executable
 	ports/states/test_state_source_call_function.cpp
 	ports/states/test_state_source_with_setter.cpp
 	runner.cpp 
+	threading/test_parallel_region.cpp
 	threading/test_scheduler.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 

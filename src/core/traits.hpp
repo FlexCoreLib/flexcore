@@ -100,7 +100,6 @@ public:
 };
 
 
-template<class> struct result_of;
 template<class,int> struct argtype_of;
 template<class T>
 struct type_is_callable_impl : has_call_op<T>::type
@@ -144,6 +143,7 @@ struct has_result : decltype(detail::has_result_impl<T>(nullptr))
 {
 };
 
+namespace detail{ template<class, bool> struct result_of_impl; }
 /// Trait for determining the result of a callable.
 /** Works on
  * - things that have a ::result_type member
@@ -159,18 +159,27 @@ struct has_result : decltype(detail::has_result_impl<T>(nullptr))
  *    typedef MyType::result_type
  * }
  * @endcode */
-template<class Expr, class enable = void>
+template<class Expr>
 struct result_of
 {
-	typedef  typename utils::function_traits<Expr>::result_type type;
+	typedef typename detail::result_of_impl<Expr,
+			has_result<typename std::remove_reference<Expr>::type>::value>::type type;
+};
+
+namespace detail
+{
+template<class Expr>
+struct result_of_impl<Expr, false>
+{
+	typedef typename utils::function_traits<Expr>::result_type type;
 };
 
 template<class Expr>
-struct result_of<typename std::enable_if<has_result<Expr>::value, void>>
+struct result_of_impl<Expr, true>
 {
-	typedef typename Expr::result_type type;
+	typedef typename std::remove_reference<Expr>::type::result_type type;
 };
-
+} //namespace detail
 /// Trait for determining the type of a callables parameter.
 /** Works on the same types as result_of.
  *

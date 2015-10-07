@@ -2,6 +2,7 @@
 #define SRC_PORTS_REGION_AWARE_HPP_
 
 #include <ports/port_traits.hpp>
+#include <ports/event_buffer.hpp>
 #include <core/connection.hpp>
 #include <threading/parallelregion.hpp>
 
@@ -38,30 +39,41 @@ bool same_region(const source_t& source, const sink_t& sink)
 	        == sink.parent_region_info.lock()->get_id();
 }
 
-class buffer_interface;
-class buffer;
-class no_buffer;
-
 template<class source_t, class sink_t>
-std::shared_ptr<buffer_interface> construct_buffer(const source_t& source, const sink_t& sink)
+auto construct_buffer(const source_t& source, const sink_t& sink) ->
+		std::shared_ptr<buffer_interface<typename source_t::result_type>>
 {
-	if (same_region(source, sink))
+	typedef typename source_t::result_type event_t;
+	if (!same_region(source, sink))
 	{
-		auto result_buffer = std::make_shared<buffer>();
+		std::cout << __FILE__ << __LINE__ << "\n";
+		auto result_buffer = std::make_shared<event_buffer<event_t>>();
+
 		source.parent_region_info.lock()->switch_tick() >>
-				result_buffer->in_switch();
+				result_buffer->switch_tick();
+		source.parent_region_info.lock()->switch_tick() >> [](){ std::cout << "construct_buffer switch_tick!\n"; };
+
 		sink.parent_region_info.lock()->work_tick() >>
-				result_buffer->in_send();
-		return result;
+				result_buffer->send_tick();
+		sink.parent_region_info.lock()->work_tick() >> [](){ std::cout << "construct_buffer work_tick!\n"; };
+
+		std::cout << source.parent_region_info.lock()->switch_tick().nr_connected_handlers() << "\n";
+		std::cout << source.parent_region_info.lock()->work_tick().nr_connected_handlers() << "\n";
+		std::cout << sink.parent_region_info.lock()->switch_tick().nr_connected_handlers() << "\n";
+		std::cout << sink.parent_region_info.lock()->work_tick().nr_connected_handlers() << "\n";
+
+		return result_buffer;
 	}
 	else
-		return std::make_shared<no_buffer>();
+		return std::make_shared<no_buffer<event_t>>();
 }
 
 template<class base_connection>
 struct node_aware_connection: public base_connection
 {
-	node_aware_connection(std::shared_ptr<buffer_interface> new_buffer,
+	typedef typename base_connection::payload_t event_t;
+
+	node_aware_connection(std::shared_ptr<buffer_interface<event_t>> new_buffer,
 	        const base_connection& base) :
 			base_connection(base),
 			buffer(new_buffer)
@@ -69,7 +81,7 @@ struct node_aware_connection: public base_connection
 	}
 
 	bool already_buffered = false;
-	std::shared_ptr<buffer_interface> buffer;
+	std::shared_ptr<buffer_interface<event_t>> buffer;
 private:
 
 };
@@ -97,23 +109,43 @@ struct node_aware_connect_impl
 	}
 };
 
+template<class source_t, class sink_t, class buffer_t>
+auto make_node_aware_connection(
+		std::shared_ptr<buffer_t> buffer,
+		const source_t& source,
+		const sink_t& sink
+		)
+{
+	static_assert(is_active_connectable<source_t>::value, "");
+	static_assert(is_passive_sink<sink_t>::value, "");
+	typedef  port_connection<source_t, sink_t> base_connection_t;
+
+	source >> buffer->in_events();
+	buffer->out_events() >> sink;
+	std::cout << typeid(sink).name() << "\n";
+
+	return node_aware_connection<base_connection_t>(buffer, base_connection_t());
+}
+
+
 }  //namespace detail
 
-template<class source_t, class sink_t>
-auto connect(region_aware<source_t> source, sink_t sink)
-{
-	return detail::node_aware_connect_impl<region_aware<source_t>, sink_t>()(
-	        source, sink);
-}
+//template<class source_t, class sink_t>
+//auto connect(region_aware<source_t> source, sink_t sink)
+//{
+//	return detail::node_aware_connect_impl<region_aware<source_t>, sink_t>()(
+//	        source, sink);
+//}
 
 template<class source_t, class sink_t>
 auto connect(region_aware<source_t> source, region_aware<sink_t> sink)
 {
 	//construct node_aware_connection
 	//based on if source and sink are from same region
-	return detail::node_aware_connect_impl<region_aware<source_t>,
-	        region_aware<sink_t>>()(construct_buffer(source, sink),
-	        source, sink);
+	return detail::make_node_aware_connection(
+			construct_buffer(source, sink),
+			source,
+			sink);
 }
 
 template<class base_connection, class sink_t>

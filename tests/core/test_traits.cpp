@@ -126,6 +126,8 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 		static_assert(!has_result<CustomCallable>::value, "CustomCallable does not have a result_type");
 		static_assert(has_result<result_haver>::value, "result_haver has a result_type");
 
+		static_assert(std::is_same<typename result_of<result_haver>::type, int>::value, "result_type is int");
+
 	}
 }
 

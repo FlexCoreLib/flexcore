@@ -9,6 +9,37 @@
 namespace fc
 {
 
+template<class event_t>
+struct buffer_interface
+{
+	virtual event_in_port<event_t> in_events() = 0;
+	virtual event_out_port<event_t> out_events() = 0;
+	virtual ~buffer_interface() = default;
+};
+
+template<class event_t>
+class no_buffer : public buffer_interface<event_t>
+{
+public:
+	no_buffer()
+	: 	in_event_port( [this](event_t in_event) { out_event_port.fire(in_event);})
+	{
+	}
+
+	event_in_port<event_t> in_events() override
+	{
+		return in_event_port;
+	}
+	event_out_port<event_t> out_events() override
+	{
+		return out_event_port;
+	}
+
+private:
+	event_in_port<event_t> in_event_port;
+	event_out_port<event_t> out_event_port;
+};
+
 /**
  * \brief buffer for events using double buffering
  *
@@ -19,26 +50,38 @@ namespace fc
  * Events from the external buffer are fired on receiving send tick.
  */
 template<class event_t>
-class event_buffer
+class event_buffer : public buffer_interface<event_t>
 {
 public:
 
 	event_buffer()
 		: in_switch_tick( [this](){ switch_buffers(); } )
 		, in_send_tick( [this](){ send_events(); } )
-		, in_events( [this](event_t in_event) { intern_buffer->push_back(in_event);})
+		, in_event_port( [this](event_t in_event) { std::cout << "in event\n";intern_buffer->push_back(in_event);})
 		, intern_buffer(std::make_shared<buffer_t>())
 		, extern_buffer(std::make_shared<buffer_t>())
-		{}
+		{
+		std::cout << "Zonk! event_buffer()\n";
+		}
 
 	// event in port of type void, switches buffers
 	auto switch_tick() { return in_switch_tick; };
 	// event in port of type void, fires external buffer
 	auto send_tick() { return in_send_tick; };
 
+	event_in_port<event_t> in_events() override
+	{
+		return in_event_port;
+	}
+	event_out_port<event_t> out_events() override
+	{
+		return out_event_port;
+	}
+
 protected:
 	void switch_buffers()
 	{
+		std::cout << "event_buffer switch buffers!\n";
 		// move content of intern buffer to extern, leaving content of extern buffer
 		// since the buffers might be switched several times, before extern buffer is emptied.
 		// otherwise we would potentially lose events on switch.
@@ -49,8 +92,11 @@ protected:
 
 	void send_events()
 	{
+		std::cout << "event_buffer send_events!\n";
+		std::cout << "buffer sizes " << extern_buffer->size() << ", " << intern_buffer->size() << "\n";
+
 		for (event_t e : *extern_buffer)
-			out_events.fire(e);
+			out_event_port.fire(e);
 
 		// delete content of extern buffer, do not change capacity,
 		// since we want to avoid allocations in next cycle.
@@ -59,88 +105,13 @@ protected:
 
 	event_in_port<void> in_switch_tick;
 	event_in_port<void> in_send_tick;
-	event_in_port<event_t> in_events;
-	event_out_port<event_t> out_events;
+	event_in_port<event_t> in_event_port;
+	event_out_port<event_t> out_event_port;
 
 	typedef std::vector<event_t> buffer_t;
 	std::shared_ptr<buffer_t> intern_buffer;
 	std::shared_ptr<buffer_t> extern_buffer;
 };
-
-/**
- * \brief Event buffer for events leaving the region.
- *
- * Fulfills is_passive_sink;
- *
- * include this in your region for outgoing events
- * and connect outputs of inner nodes to it.
- */
-template<class event_t>
-class exit_event : public event_buffer<event_t>
-{
-public:
-	exit_event() = default;
-	/**
-	 * \brief receives events and default port
-	 * \post intern_buffer is not empty.
-	 */
-	void operator()(event_t in_event)
-	{
-		this->in_events(in_event);
-	}
-
-	event_out_port<event_t> region_port() { return this->out_events ; }
-};
-
-/**
- * \brief Event buffer for events entering the region.
- *
- * Fulfills is_active_source;
- *
- * include this in your region for incoming events
- * and forward these to inner nodes.
- */
-template<class event_t>
-class enter_event : public event_buffer<event_t>
-{
-public:
-	enter_event() = default;
-	/**
-	 * \brief receives events and default port
-	 * \post intern_buffer is not empty.
-	 */
-	void operator()(event_t in_event)
-	{
-		this->in_events(in_event);
-	}
-
-	void connect(std::function<void(event_t)> new_handler)
-	{
-		this->out_events.connect(new_handler);
-	}
-
-	event_in_port<event_t> region_port() { return this->in_events ; }
-};
-
-// trait
-template<class T> struct is_passive_sink<exit_event<T>> : public std::true_type {};
-template<class T> struct is_active_source<enter_event<T>> : public std::true_type {};
-
-// region connect
-template<class source_t, class sink_t>
-auto region_connect(source_t source, sink_t sink)
-{
-	return detail::connect_impl<
-			decltype(sink.region_port()),
-			decltype(source.region_port()) >
-			()(source.region_port(), sink.region_port());
-}
-
-template<class source_t, class sink_t>
-auto operator >>=(const source_t& source, const sink_t& sink)
-{
-	return region_connect(source, sink);
-}
 
 } // namespace fc
 

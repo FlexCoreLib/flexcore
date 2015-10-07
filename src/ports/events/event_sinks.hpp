@@ -1,10 +1,12 @@
 #ifndef SRC_PORTS_EVENTS_EVENT_SINKS_HPP_
 #define SRC_PORTS_EVENTS_EVENT_SINKS_HPP_
 
+#include <cassert>
 #include <functional>
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
+
 
 namespace fc
 {
@@ -16,10 +18,13 @@ struct event_in_port
 	explicit event_in_port(handler_t handler) :
 			event_handler(handler)
 	{
+		assert(event_handler);
 	}
 
 	void operator()(event_t in_event)
 	{
+		std::cout << "Event_in port receiving event: " << in_event << "\n";
+		assert(event_handler);
 		event_handler(in_event);
 	}
 
@@ -34,10 +39,12 @@ struct event_in_port<void>
 	explicit event_in_port(handler_t handler) :
 			event_handler(handler)
 	{
+		assert(event_handler);
 	}
 
 	void operator()()
 	{
+		assert(event_handler);
 		event_handler();
 	}
 

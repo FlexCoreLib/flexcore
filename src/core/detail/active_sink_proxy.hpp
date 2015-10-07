@@ -37,6 +37,8 @@ struct active_sink_proxy
 	{
 	}
 
+	typedef typename result_of<source_t>::type payload_t;
+
 	/**
 	 * \brief connects a connectable, which is not a source_port to the active_sink_proxy.
 	 *
