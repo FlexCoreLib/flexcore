@@ -11,6 +11,12 @@
 namespace fc
 {
 
+/**
+ * \brief minimal input port for events
+ *
+ * fulfills passive_sink
+ * \tparam event_t type of event expected, must be copy_constructable
+ */
 template<class event_t>
 struct event_in_port
 {
@@ -23,7 +29,6 @@ struct event_in_port
 
 	void operator()(event_t in_event)
 	{
-		std::cout << "Event_in port receiving event: " << in_event << "\n";
 		assert(event_handler);
 		event_handler(in_event);
 	}

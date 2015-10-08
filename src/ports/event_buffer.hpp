@@ -61,11 +61,10 @@ public:
 	event_buffer()
 		: in_switch_tick( [this](){ switch_buffers(); } )
 		, in_send_tick( [this](){ send_events(); } )
-		, in_event_port( [this](event_t in_event) { std::cout << "in event\n";intern_buffer.push_back(in_event);})
+		, in_event_port( [this](event_t in_event) { intern_buffer.push_back(in_event);})
 		, intern_buffer()
 		, extern_buffer()
 		{
-		std::cout << "Zonk! event_buffer()\n";
 		}
 
 	// event in port of type void, switches buffers
@@ -87,8 +86,6 @@ public:
 protected:
 	void switch_buffers()
 	{
-		std::cout << "event_buffer switch buffers!\n";
-		std::cout << "buffer sizes before switch " << extern_buffer.size() << ", " << intern_buffer.size() << "\n";
 
 		// move content of intern buffer to extern, leaving content of extern buffer
 		// since the buffers might be switched several times, before extern buffer is emptied.
@@ -100,21 +97,22 @@ protected:
 		extern_buffer.insert(
 				end(extern_buffer), begin(intern_buffer), end(intern_buffer));
 		intern_buffer.clear();
-		std::cout << "buffer sizes after switch " << extern_buffer.size() << ", " << intern_buffer.size() << "\n";
-
 	}
 
+	/**
+	 * \sends all events stored in outgoing buffer to targets
+	 *
+	 * \post extern_buffer is empty
+	 */
 	void send_events()
 	{
-		std::cout << "event_buffer send_events!\n";
-		std::cout << "buffer sizes " << extern_buffer.size() << ", " << intern_buffer.size() << "\n";
-
 		for (event_t e : extern_buffer)
 			out_event_port.fire(e);
 
 		// delete content of extern buffer, do not change capacity,
 		// since we want to avoid allocations in next cycle.
 		extern_buffer.clear();
+		assert(extern_buffer.empty());
 	}
 
 	event_in_port<void> in_switch_tick;

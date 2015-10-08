@@ -46,18 +46,18 @@ public:
 	tick_controller() = default;
 
 	/// sends void event on the switch tick of the surrounding region
-	event_out_port<void> switch_tick() { std::cout << "get switch_tick\n";return switch_buffers; }
+	event_out_port<void> switch_tick() { return switch_buffers; }
 	/**
 	 * \brief  sends void event on the work tick of the surrounding region
 	 * connect nodes, that want to be triggered every cycle to this.
 	 */
-	event_out_port<void> work_tick() { std::cout << "get work_tick\n"; return work; }
+	event_out_port<void> work_tick() { return work; }
 
 	//todo add real functionality instead of only forwarding for example subsampling of work tick to get lower cycling rate.
 	auto in_switch_buffers() { return [this](){
-		std::cout << "tick_controller switch_buffers.fire()\n";return switch_buffers.fire();
+			return switch_buffers.fire();
 	};}
-	auto in_work() { return [this](){ std::cout << "tick_controller work.fire()\n";return work.fire(); };}
+	auto in_work() { return [this](){ return work.fire(); };}
 
 	event_out_port<void> switch_buffers;
 	event_out_port<void> work;

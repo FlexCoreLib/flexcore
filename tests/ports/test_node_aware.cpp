@@ -37,10 +37,7 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	static_assert(has_result<test_out_port>::value,
 			"its an out port, that has result_type defined");
 
-	auto connection = test_out >> test_in;
-
-	static_assert(is_instantiation_of<node_aware_connection, decltype(connection)>::value,
-			"connection should be node_aware_connection");
+	test_out >> test_in;
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_out.fire(1);
@@ -69,15 +66,12 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 	test_out >> test_in;
 
 	BOOST_CHECK_EQUAL(test_value, 0);
-	std::cout << "TEST SEND EVENT!\n";
 	test_out.fire(1);
 	//since we have a region transition, we need a switch tick
 	BOOST_CHECK_EQUAL(test_value, 0);
 
-	std::cout << "TEST SWITCH!\n";
 	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	std::cout << "TEST WORK!\n";
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 1);
 }
