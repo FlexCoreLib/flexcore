@@ -15,8 +15,6 @@ namespace fc
 template<class port_t>
 struct region_aware: public port_t
 {
-	static_assert(is_port<port_t>::value,
-			"node_aware_port can only be mixed to port types");
 	//allows explicit access to base of this mixin.
 	typedef port_t base_t;
 
@@ -29,15 +27,20 @@ struct region_aware: public port_t
 		assert(region);
 	}
 
-	//need weak_ptr here as we have a cycle: region -> node -> port -> region
-	std::weak_ptr<region_info> parent_region_info;
+	std::shared_ptr<region_info> parent_region_info;
 };
+
+template<class port_t>
+region_aware<port_t> make_region_aware(const port_t& port, std::shared_ptr<region_info> region)
+{
+	return region_aware<port_t>(region, port);
+}
 
 template<class source_t, class sink_t>
 bool same_region(const source_t& source, const sink_t& sink)
 {
-	return source.parent_region_info.lock()->get_id()
-	        == sink.parent_region_info.lock()->get_id();
+	return source.parent_region_info->get_id()
+	        == sink.parent_region_info->get_id();
 }
 /**
  * \brief factory method to construct buffer
@@ -45,17 +48,17 @@ bool same_region(const source_t& source, const sink_t& sink)
  */
 template<class source_t, class sink_t>
 auto construct_buffer(const source_t& source, const sink_t& sink) ->
-		std::shared_ptr<buffer_interface<typename source_t::result_type>>
+		std::shared_ptr<buffer_interface<typename result_of<source_t>::type>>
 {
-	typedef typename source_t::result_type event_t;
+	typedef typename result_of<source_t>::type event_t;
 	if (!same_region(source, sink))
 	{
 		auto result_buffer = std::make_shared<event_buffer<event_t>>();
 
-		source.parent_region_info.lock()->switch_tick() >>
+		source.parent_region_info->switch_tick() >>
 				result_buffer->switch_tick();
 
-		sink.parent_region_info.lock()->work_tick() >>
+		sink.parent_region_info->work_tick() >>
 				result_buffer->send_tick();
 
 		return result_buffer;
@@ -100,7 +103,7 @@ namespace detail
 template<class source_t, class sink_t, class buffer_t>
 auto make_node_aware_connection(
 		std::shared_ptr<buffer_t> buffer,
-		const source_t& /*source*/,
+		const source_t& /*source*/, //only needed for type deduction
 		const sink_t& sink
 		)
 {
@@ -109,7 +112,6 @@ auto make_node_aware_connection(
 	typedef port_connection<typename source_t::base_t,
 			typename sink_t::base_t> base_connection_t;
 
-	//source >> buffer->in_events();
 	buffer->out_events() >> sink;
 
 	return node_aware_connection<base_connection_t>(buffer, base_connection_t());
@@ -122,10 +124,20 @@ auto connect(region_aware<source_t> source, region_aware<sink_t> sink)
 {
 	//construct node_aware_connection
 	//based on if source and sink are from same region
-	return connect(source, detail::make_node_aware_connection(
+	return connect(static_cast<source_t>(source), detail::make_node_aware_connection(
 			construct_buffer(source, sink),
 			source,
 			sink));
+}
+
+template<class source_t, class sink_t>
+auto connect(region_aware<source_t> source, sink_t sink)
+{
+	//construct node_aware_connection
+	//based on if source and sink are from same region
+	return make_region_aware(
+			connect(static_cast<source_t>(source), sink),
+			source.parent_region_info);
 }
 
 }  //namespace fc
