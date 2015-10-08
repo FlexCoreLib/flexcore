@@ -29,6 +29,7 @@ struct event_out_port
 	template<class... T>
 	void fire(T... event)
 	{
+		assert(event_handlers);
 		std::cout << "event_out_port nr targets: " << event_handlers->size() << "\n";
 		for (auto& target : (*event_handlers))
 		{

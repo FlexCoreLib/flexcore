@@ -42,7 +42,7 @@ protected:
 class tick_controller
 {
 public:
-	friend class unit_test::parallel_tester;
+	friend class ::unit_test::parallel_tester;
 	tick_controller() = default;
 
 	/// sends void event on the switch tick of the surrounding region
@@ -66,7 +66,7 @@ public:
 class parallel_region : public region_info
 {
 public:
-	friend class unit_test::parallel_tester;
+	friend class ::unit_test::parallel_tester;
 
 	virtual ~parallel_region() = default;
 	parallel_region();
@@ -79,7 +79,7 @@ protected:
 	//copy constructor is protected to avoid slicing, since this is meant as base class
 	parallel_region(const parallel_region&) = default;
 	parallel_region& operator=(const parallel_region&) = default;
-private:
+public:
 	tick_controller ticks;
 	region_id id;
 

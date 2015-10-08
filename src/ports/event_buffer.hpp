@@ -12,9 +12,13 @@ namespace fc
 template<class event_t>
 struct buffer_interface
 {
+	buffer_interface() = default;
+	virtual ~buffer_interface() = default;
 	virtual event_in_port<event_t> in_events() = 0;
 	virtual event_out_port<event_t> out_events() = 0;
-	virtual ~buffer_interface() = default;
+
+	buffer_interface(const buffer_interface&) = delete;
+	buffer_interface& operator= (const buffer_interface &) = delete;
 };
 
 template<class event_t>
@@ -57,9 +61,9 @@ public:
 	event_buffer()
 		: in_switch_tick( [this](){ switch_buffers(); } )
 		, in_send_tick( [this](){ send_events(); } )
-		, in_event_port( [this](event_t in_event) { std::cout << "in event\n";intern_buffer->push_back(in_event);})
-		, intern_buffer(std::make_shared<buffer_t>())
-		, extern_buffer(std::make_shared<buffer_t>())
+		, in_event_port( [this](event_t in_event) { std::cout << "in event\n";intern_buffer.push_back(in_event);})
+		, intern_buffer()
+		, extern_buffer()
 		{
 		std::cout << "Zonk! event_buffer()\n";
 		}
@@ -78,29 +82,39 @@ public:
 		return out_event_port;
 	}
 
+	event_buffer(const event_buffer&) = delete;
+
 protected:
 	void switch_buffers()
 	{
 		std::cout << "event_buffer switch buffers!\n";
+		std::cout << "buffer sizes before switch " << extern_buffer.size() << ", " << intern_buffer.size() << "\n";
+
 		// move content of intern buffer to extern, leaving content of extern buffer
 		// since the buffers might be switched several times, before extern buffer is emptied.
 		// otherwise we would potentially lose events on switch.
-		extern_buffer->insert(
-				end(*extern_buffer), begin(*intern_buffer), end(*intern_buffer));
-		intern_buffer->clear();
+//		for (const auto event : intern_buffer)
+//		{
+//			extern_buffer.push_back(event);
+//		}
+		extern_buffer.insert(
+				end(extern_buffer), begin(intern_buffer), end(intern_buffer));
+		intern_buffer.clear();
+		std::cout << "buffer sizes after switch " << extern_buffer.size() << ", " << intern_buffer.size() << "\n";
+
 	}
 
 	void send_events()
 	{
 		std::cout << "event_buffer send_events!\n";
-		std::cout << "buffer sizes " << extern_buffer->size() << ", " << intern_buffer->size() << "\n";
+		std::cout << "buffer sizes " << extern_buffer.size() << ", " << intern_buffer.size() << "\n";
 
-		for (event_t e : *extern_buffer)
+		for (event_t e : extern_buffer)
 			out_event_port.fire(e);
 
 		// delete content of extern buffer, do not change capacity,
 		// since we want to avoid allocations in next cycle.
-		extern_buffer->clear();
+		extern_buffer.clear();
 	}
 
 	event_in_port<void> in_switch_tick;
@@ -109,8 +123,8 @@ protected:
 	event_out_port<event_t> out_event_port;
 
 	typedef std::vector<event_t> buffer_t;
-	std::shared_ptr<buffer_t> intern_buffer;
-	std::shared_ptr<buffer_t> extern_buffer;
+	buffer_t intern_buffer;
+	buffer_t extern_buffer;
 };
 
 } // namespace fc

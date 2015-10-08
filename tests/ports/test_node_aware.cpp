@@ -5,6 +5,23 @@
 
 using namespace fc;
 
+BOOST_AUTO_TEST_SUITE(test_parallle_region);
+
+BOOST_AUTO_TEST_CASE(test_region_aware_node)
+{
+	typedef region_aware<event_in_port<int>> test_in_port;
+	auto region = std::make_shared<parallel_region>();
+
+	int test_value = 0;
+	auto write_param = [&](int i) {test_value = i;};
+	test_in_port test_in(region, write_param);
+
+	BOOST_CHECK_EQUAL(test_value, 0);
+	test_in.operator ()(1);
+	BOOST_CHECK_EQUAL(test_value, 1);
+}
+
+
 BOOST_AUTO_TEST_CASE(test_same_region)
 {
 	typedef region_aware<event_in_port<int>> test_in_port;
@@ -21,6 +38,7 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 			"its an out port, that has result_type defined");
 
 	auto connection = test_out >> test_in;
+
 	static_assert(is_instantiation_of<node_aware_connection, decltype(connection)>::value,
 			"connection should be node_aware_connection");
 
@@ -33,23 +51,6 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	test_out.fire(1);
 	BOOST_CHECK_EQUAL(test_value, 2);
-}
-
-namespace unit_test
-{
-class parallel_tester
-{
-public:
-	static void switch_tick(std::shared_ptr<parallel_region> region)
-	{
-		region->ticks.in_switch_buffers()();
-	}
-	static void work_tick(std::shared_ptr<parallel_region> region)
-	{
-		region->ticks.in_work()();
-	}
-};
-
 }
 
 BOOST_AUTO_TEST_CASE(test_different_region)
@@ -74,9 +75,11 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 	BOOST_CHECK_EQUAL(test_value, 0);
 
 	std::cout << "TEST SWITCH!\n";
-	::unit_test::parallel_tester::switch_tick(region_1);
+	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
 	std::cout << "TEST WORK!\n";
-	::unit_test::parallel_tester::work_tick(region_2);
+	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 1);
 }
+
+BOOST_AUTO_TEST_SUITE_END();

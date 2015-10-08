@@ -15,7 +15,7 @@ template<class event_t>
 struct event_in_port
 {
 	typedef typename detail::handle_type<event_t>::type handler_t;
-	explicit event_in_port(handler_t handler) :
+	explicit event_in_port(const handler_t& handler) :
 			event_handler(handler)
 	{
 		assert(event_handler);
@@ -28,8 +28,13 @@ struct event_in_port
 		event_handler(in_event);
 	}
 
+	event_in_port() = delete;
+
 private:
+	int lots_of_zeros[100] = {0};
 	handler_t event_handler;
+	int lots_of_zeros_[100] = {0};
+
 };
 
 template<>
@@ -47,7 +52,7 @@ struct event_in_port<void>
 		assert(event_handler);
 		event_handler();
 	}
-
+	event_in_port() = delete;
 private:
 	handler_t event_handler;
 };
