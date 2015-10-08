@@ -99,7 +99,6 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 2);
 
-
 	// test more than one lambda in between
 	auto region_3 = std::make_shared<parallel_region>("r3");
 
@@ -117,6 +116,20 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 
 	region_3->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 3);
+}
+
+BOOST_AUTO_TEST_CASE(test_state_transition)
+{
+	typedef region_aware<state_sink<int>> test_in_port;
+	typedef region_aware<state_source_with_setter<int>> test_out_port;
+	auto region_1 = std::make_shared<parallel_region>("r1");
+	auto region_2 = std::make_shared<parallel_region>("r2");
+
+	test_in_port sink(region_1);
+	test_out_port source(region_2,1);
+
+	//sink >> source; Todo doesn't work, as currently the information
+	// if a port handles state or events isnt used by the region transition
 }
 
 BOOST_AUTO_TEST_SUITE_END();
