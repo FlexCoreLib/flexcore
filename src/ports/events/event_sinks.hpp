@@ -36,9 +36,7 @@ struct event_in_port
 	event_in_port() = delete;
 
 private:
-	int lots_of_zeros[100] = {0};
 	handler_t event_handler;
-	int lots_of_zeros_[100] = {0};
 
 };
 
