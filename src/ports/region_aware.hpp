@@ -60,11 +60,8 @@ auto construct_event_buffer(const source_t& source, const sink_t& sink) ->
 	{
 		auto result_buffer = std::make_shared<event_buffer<payload_t>>();
 
-		source.parent_region_info->switch_tick() >>
-				result_buffer->switch_tick();
-
-		sink.parent_region_info->work_tick() >>
-				result_buffer->send_tick();
+		source.parent_region_info->switch_tick() >> result_buffer->switch_tick();
+		sink.parent_region_info->work_tick() >> result_buffer->send_tick();
 
 		return result_buffer;
 	}
@@ -82,11 +79,11 @@ auto construct_state_buffer(const source_t& source, const sink_t& sink) ->
 	{
 		auto result_buffer = std::make_shared<state_buffer<payload_t>>();
 
-		sink.parent_region_info->switch_tick() >>
-				result_buffer->switch_tick();
+		sink.parent_region_info->switch_tick()
+				>> result_buffer->switch_tick();
 
-		source.parent_region_info->work_tick() >>
-				result_buffer->send_tick();
+		source.parent_region_info->work_tick()
+				>> result_buffer->send_tick();
 
 		return result_buffer;
 	}
@@ -96,14 +93,14 @@ auto construct_state_buffer(const source_t& source, const sink_t& sink) ->
 
 /// mixin for connection that is aware of regions the connectables are from
 template<class base_connection>
-struct region_aware_event_connection: public base_connection
+struct region_aware_event_connection : public base_connection
 {
 	typedef typename base_connection::payload_t payload_t;
 
 	region_aware_event_connection(std::shared_ptr<buffer_interface<payload_t>> new_buffer,
-	        const base_connection& base) :
-			base_connection(base),
-			buffer(new_buffer)
+			const base_connection& base) :
+				base_connection(base),
+				buffer(new_buffer)
 	{
 		assert(buffer);
 	}
@@ -124,9 +121,9 @@ struct region_aware_state_connection: public base_connection
 	typedef typename base_connection::payload_t payload_t;
 
 	region_aware_state_connection(std::shared_ptr<state_buffer_interface<payload_t>> new_buffer,
-	        const base_connection& base) :
-			base_connection(base),
-			buffer(new_buffer)
+			const base_connection& base) :
+				base_connection(base),
+				buffer(new_buffer)
 	{
 		assert(buffer);
 	}
@@ -151,7 +148,7 @@ namespace detail
 {
 
 template<class source_t, class sink_t, class buffer_t>
-auto make_node_aware_connection(
+auto make_region_aware_connection(
 		std::shared_ptr<buffer_interface<buffer_t>> buffer,
 		const source_t& /*source*/, //only needed for type deduction
 		const sink_t& sink
@@ -160,14 +157,13 @@ auto make_node_aware_connection(
 	typedef port_connection<typename source_t::base_t,
 			typename sink_t::base_t> base_connection_t;
 
-	::fc::connect<decltype(buffer->out()), typename sink_t::base_t>(
-			buffer->out(), sink);
+	connect(buffer->out(), static_cast<typename sink_t::base_t>(sink));
 
 	return region_aware_event_connection<base_connection_t>(buffer, base_connection_t());
 }
 
 template<class source_t, class sink_t, class buffer_t>
-auto make_node_aware_connection(
+auto make_region_aware_connection(
 		std::shared_ptr<state_buffer_interface<buffer_t>> buffer,
 		const source_t& source,
 		const sink_t& /*sink*/ //only needed for type deduction
@@ -176,17 +172,13 @@ auto make_node_aware_connection(
 	typedef port_connection<typename source_t::base_t,
 			typename sink_t::base_t> base_connection_t;
 
-	::fc::connect<typename source_t::base_t, decltype(buffer->in())>(
-			source, buffer->in());
+	connect(static_cast<typename source_t::base_t>(source), buffer->in());
 
 	return region_aware_state_connection<base_connection_t>(buffer, base_connection_t());
 }
 
 template<class source_t, class sink_t, class Enable = void>
-struct region_aware_connect_impl
-{
-
-};
+struct region_aware_connect_impl;
 
 template<class source_t, class sink_t>
 struct region_aware_connect_impl
@@ -203,7 +195,7 @@ struct region_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
-		return connect(static_cast<source_t>(source), detail::make_node_aware_connection(
+		return connect(static_cast<source_t>(source), detail::make_region_aware_connection(
 				construct_event_buffer(source, sink),
 				source,
 				sink));
@@ -237,17 +229,17 @@ template<class source_t, class sink_t>
 struct region_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
-    	::fc::is_instantiation_of<region_aware, source_t>::value &&
-		::fc::is_instantiation_of<region_aware, sink_t>::value &&
-    	::fc::is_active_sink<sink_t>::value
-			>::type
+		typename std::enable_if<
+			::fc::is_instantiation_of<region_aware, source_t>::value &&
+			::fc::is_instantiation_of<region_aware, sink_t>::value &&
+			::fc::is_active_sink<sink_t>::value
+		>::type
 	>
 {
 
 	auto operator()(source_t source, sink_t sink)
 	{
-		return connect(detail::make_node_aware_connection(
+		return connect(detail::make_region_aware_connection(
 				construct_state_buffer(source, sink),
 				source,
 				sink),
@@ -260,10 +252,10 @@ struct region_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-		::fc::is_instantiation_of<region_aware, sink_t>::value &&
-		!::fc::is_instantiation_of<region_aware, sink_t>::value &&
-    	::fc::is_active_sink<source_t>::value
-			>::type
+				::fc::is_instantiation_of<region_aware, sink_t>::value &&
+				!::fc::is_instantiation_of<region_aware, sink_t>::value &&
+				::fc::is_active_sink<source_t>::value
+		>::type
 	>
 {
 

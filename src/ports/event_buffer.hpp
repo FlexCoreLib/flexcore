@@ -90,12 +90,7 @@ protected:
 		// move content of intern buffer to extern, leaving content of extern buffer
 		// since the buffers might be switched several times, before extern buffer is emptied.
 		// otherwise we would potentially lose events on switch.
-//		for (const auto event : intern_buffer)
-//		{
-//			extern_buffer.push_back(event);
-//		}
-		extern_buffer.insert(
-				end(extern_buffer), begin(intern_buffer), end(intern_buffer));
+		extern_buffer.insert(end(extern_buffer), begin(intern_buffer), end(intern_buffer));
 		intern_buffer.clear();
 	}
 
