@@ -9,8 +9,6 @@
 
 #include <stdexcept>
 
-#include <iostream>
-
 namespace fc
 {
 namespace thread
@@ -28,12 +26,11 @@ struct out_of_time_exepction: std::runtime_error
 
 void cycle_control::start()
 {
-	//todo
+	scheduler.start();
 }
 
 void cycle_control::stop()
 {
-	//todo
 	scheduler.stop();
 }
 
@@ -47,7 +44,6 @@ void cycle_control::work()
 
 void cycle_control::run_periodic_tasks()
 {
-	std::cout << "tasks.size() " << tasks.size() << "\n";
 	for (auto& task : tasks)
 	{ //todo check if task is due
 		if (!task.done())  //todo specify error model

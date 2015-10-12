@@ -32,7 +32,6 @@ struct periodic_task
 	bool done() const { return !work_to_do; }
 	void operator()()
 	{
-		std::cout << "periodic_task!\n";
 		work_to_do = false;
 		work();
 	}

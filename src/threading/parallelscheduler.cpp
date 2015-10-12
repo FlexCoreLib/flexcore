@@ -31,13 +31,18 @@ parallel_scheduler::parallel_scheduler() :
 					{
 						task_t job;
 						{
-							queue_lock lock;
-							if (task_queue.empty())
-								return; // no jobs available
+							queue_lock lock(task_queue_mutex);
+							if (!task_queue.empty())
+							{
+
 							job = task_queue.front();
 							task_queue.pop();
+							}
+							else
+								jobs_available.wait(lock);
 						} //releases lock
-						job();
+						if (job)
+							job();
 					}
 				}));
 	}
@@ -47,6 +52,7 @@ parallel_scheduler::~parallel_scheduler()
 {
 	//first stop the infinite loop in all threads
 	do_work = false;
+	jobs_available.notify_all();
 	//then stop all calculations and join threads
 	for (auto& thread : thread_pool)
 		thread.join();

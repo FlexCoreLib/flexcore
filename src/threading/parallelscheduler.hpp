@@ -13,9 +13,8 @@
 #include <vector>
 #include <queue>
 #include <cassert>
+#include <condition_variable>
 #include <mutex>
-
-#include <iostream>
 
 namespace fc
 {
@@ -35,12 +34,13 @@ public:
 
 	void add_task(task_t new_task)
 	{
-		queue_lock lock;
+		queue_lock lock(task_queue_mutex);
 		task_queue.push(new_task);
+		jobs_available.notify_one();
 	}
 
-	void start() noexcept { std::cout << "task_queue.size() start " << task_queue.size() << "\n";do_work = true; }
-	void stop() noexcept { std::cout << "task_queue.size() stop " << task_queue.size() << "\n"; do_work = false;}
+	void start() noexcept { do_work = true; }
+	void stop() noexcept { do_work = false;}
 private:
 	std::vector<std::thread> thread_pool;
 	std::atomic<bool> do_work; // flag indicates threads to keep working.
@@ -49,6 +49,7 @@ private:
 	//might be worthwhile exchanging it for a lockfree one.
 	std::queue<task_t> task_queue;
 	std::mutex task_queue_mutex;
+	std::condition_variable jobs_available;
 	typedef std::unique_lock<std::mutex> queue_lock;
 };
 
