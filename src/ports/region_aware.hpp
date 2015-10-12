@@ -141,7 +141,7 @@ private:
 template<class T> struct is_port<region_aware<T>> : public std::true_type {};
 template<class T> struct is_active_sink<region_aware<T>> : public is_active_sink<T> {};
 //template<class T> struct is_active_source<region_aware<T>> : public is_active_source<T> {};
-//template<class T> struct is_passive_sink<region_aware<T>> : public is_passive_sink<T> {};
+template<class T> struct is_passive_sink<region_aware<T>> : public is_passive_sink<T> {};
 template<class T> struct is_passive_source<region_aware<T>> : public is_passive_source<T> {};
 
 namespace detail

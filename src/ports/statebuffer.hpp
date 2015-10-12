@@ -73,13 +73,10 @@ public:
 protected:
 	void switch_buffers()
 	{
-		std::cout << "switch_state_buffers: " << *intern_buffer << ", " << *extern_buffer << "\n";
 		using std::swap;
 		if (!already_switched)
 			swap(intern_buffer, extern_buffer);
 		already_switched = true;
-		std::cout << "after swap: " << *intern_buffer << ", " << *extern_buffer << "\n";
-
 	}
 
 	event_in_port<void> in_switch_tick;
@@ -105,7 +102,7 @@ inline fc::state_buffer<T>::state_buffer() :
 					already_switched = false;
 				}),
 		in_port(),
-		out_port([this](){ std::cout << "Zonk! "<< *extern_buffer << "\n"; ; return *extern_buffer; }),
+		out_port([this](){ return *extern_buffer; }),
 		intern_buffer(std::make_shared<T>()), //todo, forces T to be default constructible, we should lift that restriction.
 		extern_buffer(std::make_shared<T>())
 {
