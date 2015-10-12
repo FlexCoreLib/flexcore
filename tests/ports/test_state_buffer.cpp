@@ -13,13 +13,13 @@ BOOST_AUTO_TEST_CASE( test_state_buffer )
 	state_source_with_setter<int> source(1);
 	state_sink<int> sink;
 
-	source >> test_buffer.in_port;
-	test_buffer.out_port >> sink;
+	source >> test_buffer.in();
+	test_buffer.out() >> sink;
 
 	BOOST_CHECK_EQUAL(sink.get(), 0);
 
-	test_buffer.in_work_tick();
-	test_buffer.in_switch_tick();
+	test_buffer.send_tick()();
+	test_buffer.switch_tick()();
 
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 	// sanity check, that we can call the buffer multiple times
@@ -28,11 +28,11 @@ BOOST_AUTO_TEST_CASE( test_state_buffer )
 
 	source.set(2);
 	//since work wasn't ticked since the last switch, expect no change
-	test_buffer.in_switch_tick();
+	test_buffer.switch_tick()();
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 
-	test_buffer.in_work_tick();
+	test_buffer.send_tick()();
 	BOOST_CHECK_EQUAL(sink.get(), 1);
-	test_buffer.in_switch_tick();
+	test_buffer.switch_tick()();
 	BOOST_CHECK_EQUAL(sink.get(), 2);
 }

@@ -125,11 +125,22 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
 
-	test_in_port sink(region_1);
-	test_out_port source(region_2,1);
+	test_out_port source(region_1,1);
+	test_in_port sink(region_2);
 
-	//sink >> source; Todo doesn't work, as currently the information
-	// if a port handles state or events isnt used by the region transition
+	static_assert(is_instantiation_of<region_aware, test_in_port>::value, "");
+	static_assert(is_instantiation_of<region_aware, test_out_port>::value, "");
+	static_assert(is_active_sink<test_in_port>::value, "");
+	static_assert(is_passive_source<test_out_port>::value, "");
+
+	source >> sink;
+
+	BOOST_CHECK_EQUAL(sink.get(), 0);
+
+	region_1->ticks.in_work()();
+	BOOST_CHECK_EQUAL(sink.get(), 0);
+	region_2->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(sink.get(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

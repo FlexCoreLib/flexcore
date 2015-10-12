@@ -15,8 +15,8 @@ BOOST_AUTO_TEST_CASE(test_event_buffer)
 	event_in_port<int> sink(write_param);
 	event_out_port<int> source;
 
-	source >> test_buffer.in_events();
-	test_buffer.out_events() >> sink;
+	source >> test_buffer.in();
+	test_buffer.out() >> sink;
 
 	source.fire(1);
 	BOOST_CHECK_EQUAL(test_value, 0);

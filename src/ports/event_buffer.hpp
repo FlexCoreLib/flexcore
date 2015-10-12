@@ -14,8 +14,8 @@ struct buffer_interface
 {
 	buffer_interface() = default;
 	virtual ~buffer_interface() = default;
-	virtual event_in_port<event_t> in_events() = 0;
-	virtual event_out_port<event_t> out_events() = 0;
+	virtual event_in_port<event_t> in() = 0;
+	virtual event_out_port<event_t> out() = 0;
 
 	buffer_interface(const buffer_interface&) = delete;
 	buffer_interface& operator= (const buffer_interface &) = delete;
@@ -30,11 +30,11 @@ public:
 	{
 	}
 
-	event_in_port<event_t> in_events() override
+	event_in_port<event_t> in() override
 	{
 		return in_event_port;
 	}
-	event_out_port<event_t> out_events() override
+	event_out_port<event_t> out() override
 	{
 		return out_event_port;
 	}
@@ -72,11 +72,11 @@ public:
 	// event in port of type void, fires external buffer
 	auto send_tick() { return in_send_tick; };
 
-	event_in_port<event_t> in_events() override
+	event_in_port<event_t> in() override
 	{
 		return in_event_port;
 	}
-	event_out_port<event_t> out_events() override
+	event_out_port<event_t> out() override
 	{
 		return out_event_port;
 	}
