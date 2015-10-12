@@ -1,10 +1,3 @@
-/*
- * parallelscheduler.h
- *
- *  Created on: Sep 23, 2015
- *      Author: ckielwein
- */
-
 #ifndef SRC_THREADING_PARALLELSCHEDULER_HPP_
 #define SRC_THREADING_PARALLELSCHEDULER_HPP_
 
@@ -21,6 +14,9 @@ namespace fc
 namespace thread
 {
 
+/**
+ * \brief simple scheduler based on a threadpool
+ */
 class parallel_scheduler
 {
 public:
@@ -32,6 +28,7 @@ public:
 	parallel_scheduler(const parallel_scheduler&) = delete;
 	~parallel_scheduler();
 
+	///adds a new task and notifies waiting threads.
 	void add_task(task_t new_task)
 	{
 		queue_lock lock(task_queue_mutex);
@@ -39,7 +36,9 @@ public:
 		jobs_available.notify_one();
 	}
 
+	/// startes the work loop of all threads
 	void start() noexcept { do_work = true; }
+	/// stops the work loop of all threads
 	void stop() noexcept { do_work = false;}
 private:
 	std::vector<std::thread> thread_pool;

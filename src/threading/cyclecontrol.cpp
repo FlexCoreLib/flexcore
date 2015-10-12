@@ -1,10 +1,3 @@
-/*
- * cyclecontrol.cpp
- *
- *  Created on: Sep 23, 2015
- *      Author: ckielwein
- */
-
 #include "cyclecontrol.hpp"
 
 #include <stdexcept>
@@ -37,7 +30,6 @@ void cycle_control::stop()
 void cycle_control::work()
 {
 	//Todo check pass of time, in particular drift.
-
 	clock::advance();
 	run_periodic_tasks();
 }
@@ -49,7 +41,7 @@ void cycle_control::run_periodic_tasks()
 		if (!task.done())  //todo specify error model
 			throw out_of_time_exepction();
 
-		task.work_to_do = true;
+		task.set_work_to_do(true);
 		scheduler.add_task(task);
 	}
 }
@@ -57,6 +49,7 @@ void cycle_control::run_periodic_tasks()
 void cycle_control::add_task(periodic_task task)
 {
 	tasks.push_back(task);
+	assert(!tasks.empty());
 }
 
 } /* namespace thread */

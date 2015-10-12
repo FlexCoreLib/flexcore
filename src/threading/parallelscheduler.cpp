@@ -1,10 +1,3 @@
-/*
- * parallelscheduler.cpp
- *
- *  Created on: Sep 23, 2015
- *      Author: ckielwein
- */
-
 #include "parallelscheduler.hpp"
 
 namespace fc
