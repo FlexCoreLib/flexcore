@@ -51,5 +51,11 @@ parallel_scheduler::~parallel_scheduler()
 		thread.join();
 }
 
+size_t parallel_scheduler::nr_of_waiting_jobs()
+{
+	queue_lock lock(task_queue_mutex);
+	return task_queue.size();
+}
+
 } /* namespace thread */
 } /* namespace fc */

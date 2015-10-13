@@ -41,8 +41,15 @@ BOOST_AUTO_TEST_CASE(test_single_execution)
 			chrono::virtual_clock::duration::min());
 
 	test_scheduler.add_task(task1);
+
 	test_scheduler.work();
-	sleep(1); //todo, don't like sleep in unit tests, how can we specify this thread to wait the minimal necessary time only?
+
+	while (test_scheduler.nr_of_tasks() != 0)
+	{
+		//do nothing but wait
+	}
+	BOOST_CHECK_EQUAL(test_scheduler.nr_of_tasks(), 0);
+
 	}
 
 	BOOST_CHECK_EQUAL(test_values.val, 1);
@@ -65,8 +72,11 @@ BOOST_AUTO_TEST_CASE(test_multiple_execution)
 	}
 
 	test_scheduler.work();
-sleep(1); //todo, don't like sleep in unit tests, how can we specify this thread to wait the minimal necessary time only?
+	while (test_scheduler.nr_of_tasks() != 0)
+	{
+		//do nothing but wait
 	}
+	BOOST_CHECK_EQUAL(test_scheduler.nr_of_tasks(), 0);	}
 	for(auto& single_task: test_values)
 	{
 		BOOST_CHECK_EQUAL(single_task.val, 1);

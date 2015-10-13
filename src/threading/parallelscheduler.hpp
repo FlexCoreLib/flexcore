@@ -40,6 +40,9 @@ public:
 	void start() noexcept { do_work = true; }
 	/// stops the work loop of all threads
 	void stop() noexcept { do_work = false;}
+
+	size_t nr_of_waiting_jobs();
+
 private:
 	std::vector<std::thread> thread_pool;
 	std::atomic<bool> do_work; // flag indicates threads to keep working.

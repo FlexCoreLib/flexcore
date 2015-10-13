@@ -22,6 +22,8 @@ void cycle_control::start()
 {
 	scheduler.start();
 	keep_working = true;
+	// give the main thread some actual work to do (execute infinite main loop)
+	main_loop_thread = std::thread([this](){ main_loop();});
 }
 
 void cycle_control::stop()
@@ -43,8 +45,17 @@ void cycle_control::main_loop()
 		std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
 		const auto now = chrono::wall_clock::steady::now();
 		work();
-		main_loop_control.wait_until(loop_lock, now + cycle_control::min_tick_length);
+		main_loop_control.wait_until(
+				loop_lock, now + cycle_control::min_tick_length);
 	}
+}
+
+cycle_control::~cycle_control()
+{
+	stop();
+	main_loop_control.notify_all(); //in case main loop is currently waiting
+	if (main_loop_thread.joinable())
+		main_loop_thread.join();
 }
 
 void cycle_control::run_periodic_tasks()
