@@ -174,10 +174,12 @@ struct is_active_sink: public std::false_type
 {
 };
 
-template<class T>
-struct is_passive_sink: public std::false_type
-{
-};
+//template<class T>
+//struct is_passive_sink: public std::false_type
+//{
+//};
+
+
 
 template<class T>
 struct is_active_source: public std::false_type
@@ -195,6 +197,22 @@ struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::
 {
 };
 
+template<class T, class enable = void>
+struct is_passive_sink_impl: public std::false_type
+{
+};
+
+template<class T>
+struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+		: public std::integral_constant<bool, std::is_void<typename result_of<T>::type>::value>
+{
+};
+
+
+template<class T>
+struct is_passive_sink: public is_passive_sink_impl<T>
+{
+};
 template<class T>
 struct is_passive_source: is_passive_source_impl<T>
 {

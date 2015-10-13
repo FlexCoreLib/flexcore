@@ -12,18 +12,20 @@ namespace fc
 template<class event_t>
 struct event_in_port
 {
-	event_in_port(std::function<void(event_t)> handler) :
+	typedef typename detail::handle_type<event_t>::type handler_t;
+	explicit event_in_port(handler_t handler) :
 			event_handler(handler)
 	{
 	}
 
-	void operator()(event_t in_event)
+	template<class... T>
+	void operator()(T... in_event)
 	{
-		event_handler(in_event);
+		event_handler(in_event...);
 	}
 
 private:
-	std::function<void(event_t)> event_handler;
+	handler_t event_handler;
 };
 
 // traits
