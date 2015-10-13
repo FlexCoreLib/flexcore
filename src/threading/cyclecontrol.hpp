@@ -53,7 +53,7 @@ class cycle_control
 {
 public:
 	static constexpr chrono::wall_clock::steady::duration min_tick_length =
-			chrono::wall_clock::steady::duration::min(); //todo specify correct time
+			chrono::wall_clock::steady::duration(std::chrono::milliseconds(10)); //todo specify correct time
 
 	cycle_control() = default;
 	~cycle_control();

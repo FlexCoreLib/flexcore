@@ -16,6 +16,8 @@
 
 using namespace fc;
 
+BOOST_AUTO_TEST_SUITE(test_scheduler)
+
 struct store
 {
 	int val = 0;
@@ -81,5 +83,29 @@ BOOST_AUTO_TEST_CASE(test_multiple_execution)
 	{
 		BOOST_CHECK_EQUAL(single_task.val, 1);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(test_main_loop)
+{
+
+	store test_values;
+	thread::cycle_control test_scheduler;
+	thread::periodic_task task1(std::bind(&store::make_1, &test_values),
+			chrono::virtual_clock::duration::min());
+
+std::cout << "start main_loop" << std::endl;
+
+	test_scheduler.add_task(task1);
+	test_scheduler.start(); //start main loop
+	sleep(1);
+	while (test_scheduler.nr_of_tasks() != 0)
+	{
+		//do nothing but wait
+	}
+	test_scheduler.stop(); // stop main loop
+	BOOST_CHECK_EQUAL(test_values.val, 1);
 
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+

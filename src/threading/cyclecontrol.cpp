@@ -28,8 +28,11 @@ void cycle_control::start()
 
 void cycle_control::stop()
 {
-	scheduler.stop();
 	keep_working = false;
+	scheduler.stop();
+	main_loop_control.notify_all(); //in case main loop is currently waiting
+	if (main_loop_thread.joinable())
+		main_loop_thread.join();
 }
 
 void cycle_control::work()
@@ -46,24 +49,21 @@ void cycle_control::main_loop()
 		const auto now = chrono::wall_clock::steady::now();
 		work();
 		main_loop_control.wait_until(
-				loop_lock, now + cycle_control::min_tick_length);
+				loop_lock, now + std::chrono::milliseconds(100));
 	}
 }
 
 cycle_control::~cycle_control()
 {
 	stop();
-	main_loop_control.notify_all(); //in case main loop is currently waiting
-	if (main_loop_thread.joinable())
-		main_loop_thread.join();
 }
 
 void cycle_control::run_periodic_tasks()
 {
 	for (auto& task : tasks)
 	{ //todo check if task is due
-		if (!task.done())  //todo specify error model
-			throw out_of_time_exepction();
+	//	if (!task.done())  //todo specify error model
+	//		throw out_of_time_exepction();
 
 		task.set_work_to_do(true);
 		scheduler.add_task(task);
