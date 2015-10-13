@@ -27,7 +27,6 @@ struct periodic_task
 				cycle_rate(rate),
 				work(job)
 	{
-
 	}
 
 	bool done() const { return !work_to_do; }
@@ -47,10 +46,16 @@ private:
 
 /**
  * \brief Controls timing and the execution of cyclic tasks in the scheduler.
+ * Todo: allow to set virtual clock as control clock for replay as template parameter
+ * todo: allow to set min_tick_length
+ * todo: add functionality to cleanly stop the main loop
  */
 class cycle_control
 {
 public:
+	static constexpr chrono::wall_clock::steady::duration min_tick_length =
+			chrono::wall_clock::steady::duration::min(); //todo specify correct time
+
 	cycle_control() = default;
 
 	/// starts the main loop
@@ -68,9 +73,14 @@ public:
 	 */
 	void add_task(periodic_task task);
 private:
+	/// contains the main loop, which is running as as long as it is not stopped
+	void main_loop();
 	void run_periodic_tasks();
 	std::vector<periodic_task> tasks;
 	parallel_scheduler scheduler;
+	bool keep_working = false;
+	std::condition_variable main_loop_control;
+	std::mutex main_loop_mutex;
 };
 
 } /* namespace thread */

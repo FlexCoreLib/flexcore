@@ -8,6 +8,7 @@ namespace thread
 {
 
 using clock = chrono::virtual_clock::master;
+constexpr chrono::wall_clock::steady::duration cycle_control::min_tick_length;
 
 struct out_of_time_exepction: std::runtime_error
 {
@@ -20,18 +21,30 @@ struct out_of_time_exepction: std::runtime_error
 void cycle_control::start()
 {
 	scheduler.start();
+	keep_working = true;
 }
 
 void cycle_control::stop()
 {
 	scheduler.stop();
+	keep_working = false;
 }
 
 void cycle_control::work()
 {
-	//Todo check pass of time, in particular drift.
 	clock::advance();
 	run_periodic_tasks();
+}
+
+void cycle_control::main_loop()
+{
+	while(keep_working)
+	{
+		std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
+		const auto now = chrono::wall_clock::steady::now();
+		work();
+		main_loop_control.wait_until(loop_lock, now + cycle_control::min_tick_length);
+	}
 }
 
 void cycle_control::run_periodic_tasks()
