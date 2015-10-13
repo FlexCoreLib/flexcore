@@ -1,9 +1,9 @@
-#include "scheduler.hpp"
+#include "minimalscheduler.hpp"
 
 namespace fc
 {
 
-bool scheduler::ExecNextTask()
+bool minimal_scheduler::ExecNextTask()
 {
 	bool result(false);
 	PreTaskHook();
@@ -23,7 +23,7 @@ bool scheduler::ExecNextTask()
 	return result;
 }
 
-size_t scheduler::ExecAllTasks()
+size_t minimal_scheduler::ExecAllTasks()
 {
 	ClockTick();
 	size_t count(0);
