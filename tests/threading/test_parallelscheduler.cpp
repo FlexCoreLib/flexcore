@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(test_single_execution)
 	thread::cycle_control test_scheduler;
 
 	thread::periodic_task task1(std::bind(&store::make_1, &test_values),
-			chrono::virtual_clock::duration::min());
+			virtual_clock::duration::min());
 
 	test_scheduler.add_task(task1);
 
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(test_multiple_execution)
 	for(auto i = begin(test_values); i != end(test_values); ++i)
 	{
 			thread::periodic_task task (std::bind(&store::make_1, &(*i)),
-					chrono::virtual_clock::duration::min());
+					virtual_clock::duration::min());
 
 			test_scheduler.add_task(task);
 	}
@@ -91,9 +91,7 @@ BOOST_AUTO_TEST_CASE(test_main_loop)
 	store test_values;
 	thread::cycle_control test_scheduler;
 	thread::periodic_task task1(std::bind(&store::make_1, &test_values),
-			chrono::virtual_clock::duration::min());
-
-std::cout << "start main_loop" << std::endl;
+			virtual_clock::duration::min());
 
 	test_scheduler.add_task(task1);
 	test_scheduler.start(); //start main loop

@@ -22,7 +22,7 @@ struct periodic_task
 	 * \param rate cycle rate of the task in virtual time
 	 */
 	periodic_task(std::function<void(void)> job,
-			chrono::virtual_clock::duration rate) :
+			virtual_clock::duration rate) :
 				work_to_do(false),
 				cycle_rate(rate),
 				work(job)
@@ -39,7 +39,7 @@ struct periodic_task
 private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
-	chrono::virtual_clock::duration cycle_rate;
+	virtual_clock::duration cycle_rate;
 	/// work to be done every cycle
 	std::function<void(void)> work;
 };
@@ -52,8 +52,8 @@ private:
 class cycle_control
 {
 public:
-	static constexpr chrono::wall_clock::steady::duration min_tick_length =
-			chrono::wall_clock::steady::duration(std::chrono::milliseconds(10)); //todo specify correct time
+	static constexpr wall_clock::steady::duration min_tick_length =
+			wall_clock::steady::duration(std::chrono::milliseconds(10)); //todo specify correct time
 
 	cycle_control() = default;
 	~cycle_control();

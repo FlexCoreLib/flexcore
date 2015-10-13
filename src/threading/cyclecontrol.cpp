@@ -7,8 +7,8 @@ namespace fc
 namespace thread
 {
 
-using clock = chrono::virtual_clock::master;
-constexpr chrono::wall_clock::steady::duration cycle_control::min_tick_length;
+using clock = master_clock<std::centi>;
+constexpr wall_clock::steady::duration cycle_control::min_tick_length;
 
 struct out_of_time_exepction: std::runtime_error
 {
@@ -46,7 +46,7 @@ void cycle_control::main_loop()
 	while(keep_working)
 	{
 		std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
-		const auto now = chrono::wall_clock::steady::now();
+		const auto now = wall_clock::steady::now();
 		work();
 		main_loop_control.wait_until(
 				loop_lock, now + std::chrono::milliseconds(100));
