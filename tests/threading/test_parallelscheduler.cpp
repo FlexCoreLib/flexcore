@@ -73,9 +73,7 @@ BOOST_AUTO_TEST_CASE(test_single_execution)
 	}
 	test_scheduler.stop();
 	BOOST_CHECK_EQUAL(test_values_2.val, 1);
-
 	}
-
 }
 
 BOOST_AUTO_TEST_CASE(test_multiple_execution)

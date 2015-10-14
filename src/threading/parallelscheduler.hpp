@@ -45,7 +45,6 @@ private:
 	//might be worthwhile exchanging it for a lockfree one.
 	std::queue<task_t> task_queue;
 	std::mutex task_queue_mutex;
-	std::condition_variable jobs_available;
 	typedef std::unique_lock<std::mutex> queue_lock;
 };
 

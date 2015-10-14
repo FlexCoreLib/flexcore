@@ -31,9 +31,7 @@ parallel_scheduler::parallel_scheduler() :
 							{
 							job = task_queue.front();
 							task_queue.pop();
-							}
-							else
-								jobs_available.wait(lock); //todo currently sometimes deadlocks while waiting here
+							} // else do nothing
 						} //releases lock
 						if (job)
 							job();
@@ -44,18 +42,19 @@ parallel_scheduler::parallel_scheduler() :
 
 void parallel_scheduler::stop() noexcept
 {
+	//first stop the infinite loop in all threads
 	do_work = false;
-	queue_lock lock(task_queue_mutex);
-	jobs_available.notify_all();
+	//then stop all calculations and join threads
+	for (auto& thread : thread_pool)
+	{
+		if (thread.joinable())
+			thread.join();
+	}
 }
 
 parallel_scheduler::~parallel_scheduler()
 {
-	//first stop the infinite loop in all threads
 	stop();
-	//then stop all calculations and join threads
-	for (auto& thread : thread_pool)
-		thread.join(); //todo currently sometimes deadlocks while trying to join thread waiting in line 36
 }
 
 size_t parallel_scheduler::nr_of_waiting_jobs()
@@ -68,7 +67,6 @@ void parallel_scheduler::add_task(task_t new_task)
 {
 	queue_lock lock(task_queue_mutex);
 	task_queue.push(new_task);
-	jobs_available.notify_one();
 }
 
 
