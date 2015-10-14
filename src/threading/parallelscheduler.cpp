@@ -4,7 +4,7 @@ namespace fc
 {
 namespace thread
 {
-const int parallel_scheduler::num_threads = 1;//std::thread::hardware_concurrency();
+const int parallel_scheduler::num_threads =  std::thread::hardware_concurrency();
 
 parallel_scheduler::parallel_scheduler() :
 		thread_pool(),
@@ -27,7 +27,6 @@ parallel_scheduler::parallel_scheduler() :
 							queue_lock lock(task_queue_mutex);
 							if (!task_queue.empty())
 							{
-
 							job = task_queue.front();
 							task_queue.pop();
 							}
