@@ -4,7 +4,7 @@
 #include <functional>
 
 #include <ports/port_traits.hpp>
-#include <core/connection.hpp>
+#include <core/detail/connection.hpp>
 
 namespace fc
 {

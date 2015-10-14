@@ -105,6 +105,11 @@ struct virtual_clock
 	};
 };
 
+/**
+ * \brief controls the time of the two virtual clocks.
+ *
+ * \tparam period_t the period of a single tick. Is the smallest duration possible.
+ */
 template<class period_t>
 class master_clock
 {

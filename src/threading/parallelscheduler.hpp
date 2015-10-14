@@ -5,7 +5,6 @@
 #include <thread>
 #include <vector>
 #include <queue>
-#include <cassert>
 #include <condition_variable>
 #include <mutex>
 
@@ -29,17 +28,12 @@ public:
 	~parallel_scheduler();
 
 	///adds a new task and notifies waiting threads.
-	void add_task(task_t new_task)
-	{
-		queue_lock lock(task_queue_mutex);
-		task_queue.push(new_task);
-		jobs_available.notify_one();
-	}
+	void add_task(task_t new_task);
 
 	/// startes the work loop of all threads
 	void start() noexcept { do_work = true; }
 	/// stops the work loop of all threads
-	void stop() noexcept { do_work = false;}
+	void stop() noexcept;
 
 	size_t nr_of_waiting_jobs();
 

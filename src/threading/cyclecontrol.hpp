@@ -31,6 +31,7 @@ struct periodic_task
 
 	bool done() const { return !work_to_do; }
 	void set_work_to_do(bool todo) { work_to_do = todo; }
+	bool is_due(virtual_clock::duration time) const;
 	void operator()()
 	{
 		work_to_do = false;
@@ -53,7 +54,11 @@ class cycle_control
 {
 public:
 	static constexpr wall_clock::steady::duration min_tick_length =
-			wall_clock::steady::duration(std::chrono::milliseconds(10)); //todo specify correct time
+			wall_clock::steady::duration(std::chrono::milliseconds(10));
+
+	static constexpr virtual_clock::steady::duration fast_tick = min_tick_length;
+	static constexpr virtual_clock::steady::duration medium_tick = min_tick_length * 10;
+	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
 
 	cycle_control() = default;
 	~cycle_control();
@@ -69,7 +74,6 @@ public:
 	/**
 	 * \brief adds a new cyclic task.
 	 * \post list of tasks is not empty
-	 * todo: allow client code to specify cycle rate of task
 	 */
 	void add_task(periodic_task task);
 	size_t nr_of_tasks() { return scheduler.nr_of_waiting_jobs(); }
@@ -82,6 +86,7 @@ private:
 	bool keep_working = false;
 	std::condition_variable main_loop_control;
 	std::mutex main_loop_mutex;
+	std::mutex task_queue_mutex;
 	std::thread main_loop_thread;
 };
 

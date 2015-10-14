@@ -1,5 +1,7 @@
 #include "parallelscheduler.hpp"
 
+#include <cassert>
+
 namespace fc
 {
 namespace thread
@@ -31,7 +33,7 @@ parallel_scheduler::parallel_scheduler() :
 							task_queue.pop();
 							}
 							else
-								jobs_available.wait(lock);
+								jobs_available.wait(lock); //todo currently sometimes deadlocks while waiting here
 						} //releases lock
 						if (job)
 							job();
@@ -40,14 +42,20 @@ parallel_scheduler::parallel_scheduler() :
 	}
 }
 
+void parallel_scheduler::stop() noexcept
+{
+	do_work = false;
+	queue_lock lock(task_queue_mutex);
+	jobs_available.notify_all();
+}
+
 parallel_scheduler::~parallel_scheduler()
 {
 	//first stop the infinite loop in all threads
-	do_work = false;
-	jobs_available.notify_all();
+	stop();
 	//then stop all calculations and join threads
 	for (auto& thread : thread_pool)
-		thread.join();
+		thread.join(); //todo currently sometimes deadlocks while trying to join thread waiting in line 36
 }
 
 size_t parallel_scheduler::nr_of_waiting_jobs()
@@ -55,6 +63,14 @@ size_t parallel_scheduler::nr_of_waiting_jobs()
 	queue_lock lock(task_queue_mutex);
 	return task_queue.size();
 }
+
+void parallel_scheduler::add_task(task_t new_task)
+{
+	queue_lock lock(task_queue_mutex);
+	task_queue.push(new_task);
+	jobs_available.notify_one();
+}
+
 
 } /* namespace thread */
 } /* namespace fc */

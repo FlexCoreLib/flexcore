@@ -12,9 +12,8 @@ namespace chr = std::chrono;
 
 typedef master_clock<std::centi> master;
 
-static const virtual_clock::steady::duration one_tick
+static constexpr virtual_clock::steady::duration one_tick
 		= chr::duration_cast<virtual_clock::duration>(master::duration(1));
-
 
 BOOST_AUTO_TEST_CASE(test_example_uses)
 {
