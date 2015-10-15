@@ -21,7 +21,7 @@ template<class source_t, class sink_t>
 struct active_source_proxy
 {
 	typedef typename result_of<source_t>::type payload_t;
-	typedef typename result_of<sink_t>::type result_type;
+	typedef typename result_of<sink_t>::type result_t;
 
 	active_source_proxy(source_t source_, sink_t sink) :
 			source(source_),

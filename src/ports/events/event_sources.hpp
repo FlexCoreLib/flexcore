@@ -28,7 +28,7 @@ namespace fc
 template<class event_t>
 struct event_out_port
 {
-	typedef event_t result_type;
+	typedef event_t result_t;
 	typedef typename detail::handle_type<event_t>::type handler_t;
 
 	event_out_port() = default;

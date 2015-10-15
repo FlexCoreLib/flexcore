@@ -133,11 +133,11 @@ template<class T>
 static std::false_type has_result_impl(T*);
 
 template<class T>
-static std::true_type has_result_impl(typename T::result_type*);
+static std::true_type has_result_impl(typename T::result_t*);
 
 }
 
-/// Has result trait to check if a type has a nested type 'result_type'
+/// Has result trait to check if a type has a nested type 'result_t'
 template<class T>
 struct has_result : decltype(detail::has_result_impl<T>(nullptr))
 {
@@ -146,7 +146,7 @@ struct has_result : decltype(detail::has_result_impl<T>(nullptr))
 namespace detail{ template<class, bool> struct result_of_impl; }
 /// Trait for determining the result of a callable.
 /** Works on
- * - things that have a ::result_type member
+ * - things that have a ::result_t member
  * - std::function
  * - static & member functions
  * - boost::function
@@ -156,7 +156,7 @@ namespace detail{ template<class, bool> struct result_of_impl; }
  * template<>
  * struct result_of<MyType>
  * {
- *    typedef MyType::result_type
+ *    typedef MyType::result_t
  * }
  * @endcode */
 template<class Expr>
@@ -171,13 +171,13 @@ namespace detail
 template<class Expr>
 struct result_of_impl<Expr, false>
 {
-	typedef typename utils::function_traits<Expr>::result_type type;
+	typedef typename utils::function_traits<Expr>::result_t type;
 };
 
 template<class Expr>
 struct result_of_impl<Expr, true>
 {
-	typedef typename std::remove_reference<Expr>::type::result_type type;
+	typedef typename std::remove_reference<Expr>::type::result_t type;
 };
 } //namespace detail
 /// Trait for determining the type of a callables parameter.

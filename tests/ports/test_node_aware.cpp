@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	static_assert(is_passive_sink<test_in_port>::value, "");
 	static_assert(has_result<test_out_port>::value,
-			"its an out port, that has result_type defined");
+			"its an out port, that has result_t defined");
 
 	test_out >> test_in;
 
