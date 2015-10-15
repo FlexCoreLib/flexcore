@@ -144,4 +144,20 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(test_state_same_region)
+{
+	typedef region_aware<state_sink<int>> test_in_port;
+	typedef region_aware<state_source_with_setter<int>> test_out_port;
+	auto region_1 = std::make_shared<parallel_region>("r1");
+
+	test_out_port source(region_1,1);
+	test_in_port sink(region_1);
+
+	source >> sink;
+
+	//expect result to be available immediately without switch tick,
+	//since we are in the same region
+	BOOST_CHECK_EQUAL(sink.get(), 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END();
