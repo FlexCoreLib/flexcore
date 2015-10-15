@@ -85,6 +85,7 @@ private:
 	parallel_scheduler scheduler;
 	bool keep_working = false;
 	std::condition_variable main_loop_control;
+	//Todo refactor main loop and task queue to locked class together with their mutex
 	std::mutex main_loop_mutex;
 	std::mutex task_queue_mutex;
 	std::thread main_loop_thread;

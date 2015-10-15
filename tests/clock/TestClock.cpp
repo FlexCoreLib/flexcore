@@ -10,6 +10,8 @@
 using namespace fc;
 namespace chr = std::chrono;
 
+BOOST_AUTO_TEST_SUITE(test_clock)
+
 typedef master_clock<std::centi> master;
 
 static constexpr virtual_clock::steady::duration one_tick
@@ -40,6 +42,23 @@ BOOST_AUTO_TEST_CASE(test_advance)
 	BOOST_CHECK(tmp != now);
 }
 
+BOOST_AUTO_TEST_CASE(test_set_time)
+{
+	auto time_null = virtual_clock::system::time_point(
+			master::duration::zero());
+
+	master::set_time(time_null);
+
+	auto tmp = virtual_clock::system::now();
+
+	BOOST_CHECK_EQUAL(tmp.time_since_epoch().count(),
+			virtual_clock::duration::zero().count());
+
+	master::advance();
+	BOOST_CHECK_EQUAL((virtual_clock::system::now()-tmp).count(),
+			one_tick.count());
+}
+
 BOOST_AUTO_TEST_CASE(test_time_t_conversion)
 {
 	auto now = virtual_clock::system::now();
@@ -66,3 +85,5 @@ BOOST_AUTO_TEST_CASE(test_time_t_conversion)
 	BOOST_CHECK(chr::time_point_cast<chr::seconds>(now_2)
 			== chr::time_point_cast<chr::seconds>(back_converted));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
