@@ -62,7 +62,7 @@ struct connect_impl
 	>
 {
 	static_assert(is_callable<sink_t>::value, "trying to connect an active source to a sink, which is not callable."
-			"most likely the operator() is missing.");
+			" most likely the operator() is missing.");
 	active_source_proxy<source_t, sink_t> operator()(source_t source, sink_t sink)
 	{
 		return active_source_proxy<source_t, sink_t>(source, sink);
