@@ -6,7 +6,8 @@ namespace fc
 {
 namespace thread
 {
-const int parallel_scheduler::num_threads =  std::thread::hardware_concurrency();
+const int parallel_scheduler::num_threads =
+		std::max(1u ,std::thread::hardware_concurrency());
 
 parallel_scheduler::parallel_scheduler() :
 		thread_pool(),
