@@ -21,23 +21,23 @@ parallel_scheduler::parallel_scheduler() :
 	for (int i=0; i != num_threads(); ++i)
 	{
 		thread_pool.push_back(std::thread(
-				//infinite job loop for every thread,
-				//looks for jobs in task_queue and executes them
+				//infinite task loop for every thread,
+				//looks for tasks in task_queue and executes them
 				[this] ()
 				{
 					while(do_work)
 					{
-						task_t job;
+						task_t task;
 						{
 							queue_lock lock(task_queue_mutex);
 							if (!task_queue.empty())
 							{
-							job = task_queue.front();
-							task_queue.pop();
+								task = task_queue.front();
+								task_queue.pop();
 							} // else do nothing
 						} //releases lock
-						if (job)
-							job();
+						if (task)
+							task();
 					}
 				}));
 	}
@@ -60,7 +60,7 @@ parallel_scheduler::~parallel_scheduler()
 	stop();
 }
 
-size_t parallel_scheduler::nr_of_waiting_jobs()
+size_t parallel_scheduler::nr_of_waiting_tasks()
 {
 	queue_lock lock(task_queue_mutex);
 	return task_queue.size();
