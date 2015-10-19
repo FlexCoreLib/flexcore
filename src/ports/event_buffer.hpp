@@ -81,8 +81,6 @@ public:
 		return out_event_port;
 	}
 
-	event_buffer(const event_buffer&) = delete;
-
 protected:
 	void switch_buffers()
 	{
