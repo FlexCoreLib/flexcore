@@ -79,11 +79,8 @@ auto construct_state_buffer(const source_t& source, const sink_t& sink) ->
 	{
 		auto result_buffer = std::make_shared<state_buffer<payload_t>>();
 
-		sink.parent_region_info->switch_tick()
-				>> result_buffer->switch_tick();
-
-		source.parent_region_info->work_tick()
-				>> result_buffer->send_tick();
+		sink.parent_region_info->switch_tick() >> result_buffer->switch_tick();
+		source.parent_region_info->work_tick() >> result_buffer->send_tick();
 
 		return result_buffer;
 	}
