@@ -21,7 +21,7 @@ class parallel_scheduler
 public:
 	typedef std::function<void(void)> task_t;
 
-	static const int num_threads;
+	static int num_threads();
 
 	parallel_scheduler();
 	parallel_scheduler(const parallel_scheduler&) = delete;

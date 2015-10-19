@@ -9,6 +9,14 @@
 
 #include <core/traits.hpp>
 
+/*
+ * This class will be removed later, as it is not used currently.
+ * It serves as a nice showcase of boost conecpt and boost type erasure.
+ * It is thus still in the project as these tools will be used througout the library.
+ *
+ *
+ * \Todo: remove when its time has come.
+ */
 namespace fc
 {
 

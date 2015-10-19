@@ -53,10 +53,17 @@ public:
 	 */
 	event_out_port<void> work_tick() { return work; }
 
-	//todo add real functionality instead of only forwarding for example subsampling of work tick to get lower cycling rate.
-	auto in_switch_buffers() { return [this](){
-			return switch_buffers.fire();
-	};}
+	/**
+	 * \brief Buffers in region will be switched when event is received.
+	 * connect to scheduler.
+	 * expects event with no payload (void).
+	 */
+	auto in_switch_buffers() { return [this](){return switch_buffers.fire();};}
+	/**
+	 * \brief work ticks in region will be fired when event is received.
+	 * connect to scheduler.
+	 * expects event with no payload (void).
+	 */
 	auto in_work() { return [this](){ return work.fire(); };}
 
 	event_out_port<void> switch_buffers;
