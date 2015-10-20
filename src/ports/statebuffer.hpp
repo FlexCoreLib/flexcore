@@ -58,7 +58,7 @@ public:
 	// event in port of type void, switches buffers
 	auto switch_tick() { return in_switch_tick; };
 	// event in port of type void, pulls data at in_port
-	auto send_tick() { return in_work_tick; };
+	auto work_tick() { return in_work_tick; };
 
 	state_sink<T> in() override
 	{
@@ -75,7 +75,7 @@ protected:
 	{
 		using std::swap;
 		if (!already_switched)
-			swap(intern_buffer, extern_buffer);
+			*extern_buffer = *intern_buffer;
 		already_switched = true;
 	}
 

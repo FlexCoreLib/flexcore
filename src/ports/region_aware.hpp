@@ -12,40 +12,43 @@ namespace fc
 {
 
 /**
- * \brief A mixin for ports that are aware of the region, they belong to.
+ * \brief A mixin for elements that are aware of the region, they belong to.
+ * Used as mixin for ports and connections.
+ * \tparam base is type region_aware is mixed into.
+ *
+ * example:
+ * \code{
+ * typedef region_aware<event_in_port<int>> region_aware_event_port;
+ * }
  */
-template<class port_t>
-struct region_aware: public port_t
+template<class base>
+struct region_aware: public base
 {
+	static_assert(std::is_class<base>::value,
+			"can only be mixed into clases, not primitives");
 	//allows explicit access to base of this mixin.
-	typedef port_t base_t;
+	typedef base base_t;
 
 	template<class ... args>
-	region_aware(std::shared_ptr<region_info> region,
-	        const args& ... base_constructor_args) :
-			port_t(base_constructor_args...),
-			parent_region_info(region)
+	region_aware(std::shared_ptr<region_info> region_,
+		const args& ... base_constructor_args) :
+			base_t(base_constructor_args...),
+			region(region_)
 	{
 		assert(region);
 	}
 
-	std::shared_ptr<region_info> parent_region_info;
+	std::shared_ptr<region_info> region;
 };
 
-///factory method to get region_aware, mainly there to use template deduction from parameter.
-template<class port_t>
-region_aware<port_t> make_region_aware(const port_t& port, std::shared_ptr<region_info> region)
-{
-	return region_aware<port_t>(region, port);
-}
 
 ///checks if two region_aware connectables are from the same region
 template<class source_t, class sink_t>
 bool same_region(const region_aware<source_t>& source,
 		const region_aware<sink_t>& sink)
 {
-	return source.parent_region_info->get_id()
-	        == sink.parent_region_info->get_id();
+	return source.region->get_id()
+	        == sink.region->get_id();
 }
 /**
  * \brief factory method to construct buffer
@@ -60,8 +63,8 @@ auto construct_event_buffer(const source_t& source, const sink_t& sink) ->
 	{
 		auto result_buffer = std::make_shared<event_buffer<payload_t>>();
 
-		source.parent_region_info->switch_tick() >> result_buffer->switch_tick();
-		sink.parent_region_info->work_tick() >> result_buffer->send_tick();
+		source.region->switch_tick() >> result_buffer->switch_tick();
+		sink.region->work_tick() >> result_buffer->work_tick();
 
 		return result_buffer;
 	}
@@ -79,8 +82,8 @@ auto construct_state_buffer(const source_t& source, const sink_t& sink) ->
 	{
 		auto result_buffer = std::make_shared<state_buffer<payload_t>>();
 
-		sink.parent_region_info->switch_tick() >> result_buffer->switch_tick();
-		source.parent_region_info->work_tick() >> result_buffer->send_tick();
+		sink.region->switch_tick() >> result_buffer->switch_tick();
+		source.region->work_tick() >> result_buffer->work_tick();
 
 		return result_buffer;
 	}
@@ -88,13 +91,17 @@ auto construct_state_buffer(const source_t& source, const sink_t& sink) ->
 		return std::make_shared<state_no_buffer<payload_t>>();
 }
 
-/// mixin for connection that is aware of regions the connectables are from
+/**
+ * \brief Connection that contain a buffer, if source and sink are from different regions.
+ * \tparam base_connection connection type, the buffer is mixed into.
+ * \invariant buffer != null_ptr
+ */
 template<class base_connection>
-struct region_aware_event_connection : public base_connection
+struct buffered_event_connection : public base_connection
 {
 	typedef typename base_connection::payload_t payload_t;
 
-	region_aware_event_connection(std::shared_ptr<buffer_interface<payload_t>> new_buffer,
+	buffered_event_connection(std::shared_ptr<buffer_interface<payload_t>> new_buffer,
 			const base_connection& base) :
 				base_connection(base),
 				buffer(new_buffer)
@@ -104,6 +111,7 @@ struct region_aware_event_connection : public base_connection
 
 	void operator()(payload_t event)
 	{
+		assert(buffer);
 		buffer->in()(event);
 	}
 
@@ -111,13 +119,13 @@ private:
 	std::shared_ptr<buffer_interface<payload_t>> buffer;
 };
 
-//also remove this code duplication
+//also remove this code duplication, until then see buffered_event_connection
 template<class base_connection>
-struct region_aware_state_connection: public base_connection
+struct buffered_state_connection: public base_connection
 {
 	typedef typename base_connection::payload_t payload_t;
 
-	region_aware_state_connection(std::shared_ptr<state_buffer_interface<payload_t>> new_buffer,
+	buffered_state_connection(std::shared_ptr<state_buffer_interface<payload_t>> new_buffer,
 			const base_connection& base) :
 				base_connection(base),
 				buffer(new_buffer)
@@ -144,34 +152,66 @@ template<class T> struct is_passive_source<region_aware<T>> : public is_passive_
 namespace detail
 {
 
+/**
+ * \brief creates buffered_connection for events
+ * \param buffer the buffer used for the connection
+ * \pre buffer != null_ptr
+ * The buffer is owned by the active part of the connection
+ * This is the source, since event_sources are active
+ */
 template<class source_t, class sink_t, class buffer_t>
-auto make_region_aware_connection(
+auto make_buffered_connection(
 		std::shared_ptr<buffer_interface<buffer_t>> buffer,
 		const source_t& /*source*/, //only needed for type deduction
 		const sink_t& sink
 		)
 {
-	typedef port_connection<typename source_t::base_t,
-			typename sink_t::base_t> base_connection_t;
+	assert(buffer);
+	typedef port_connection
+			<
+			typename source_t::base_t,
+			typename sink_t::base_t
+			> base_connection_t;
 
 	connect(buffer->out(), static_cast<typename sink_t::base_t>(sink));
 
-	return region_aware_event_connection<base_connection_t>(buffer, base_connection_t());
+	return buffered_event_connection<base_connection_t>(buffer, base_connection_t());
 }
 
+/**
+ * \brief creates buffered_connection for states
+ * \param buffer the buffer used for the connection
+ * \pre buffer != null_ptr
+ * The buffer is owned by the active part of the connection
+ * This is the sink, since state_sinks are active
+ */
 template<class source_t, class sink_t, class buffer_t>
-auto make_region_aware_connection(
+auto make_buffered_connection(
 		std::shared_ptr<state_buffer_interface<buffer_t>> buffer,
 		const source_t& source,
 		const sink_t& /*sink*/ //only needed for type deduction
 		)
 {
-	typedef port_connection<typename source_t::base_t,
-			typename sink_t::base_t> base_connection_t;
+	assert(buffer);
+	typedef port_connection<
+			typename source_t::base_t,
+			typename sink_t::base_t
+			> base_connection_t;
 
 	connect(static_cast<typename source_t::base_t>(source), buffer->in());
 
-	return region_aware_state_connection<base_connection_t>(buffer, base_connection_t());
+	return buffered_state_connection<base_connection_t>(buffer, base_connection_t());
+}
+
+/**
+ * \brief factory method to wrap region_aware around a connection,
+ * Mainly there to use template deduction from parameter base.
+ * Thus client code doesn't need to get type connection_base_t by hand.
+ */
+template<class base_connection_t>
+region_aware<base_connection_t> make_region_aware(const base_connection_t& base, std::shared_ptr<region_info> region)
+{
+	return region_aware<base_connection_t>(region, base);
 }
 
 template<class source_t, class sink_t, class Enable = void>
@@ -192,7 +232,7 @@ struct region_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
-		return connect(static_cast<source_t>(source), detail::make_region_aware_connection(
+		return connect(static_cast<source_t>(source), detail::make_buffered_connection(
 				construct_event_buffer(source, sink),
 				source,
 				sink));
@@ -217,7 +257,7 @@ struct region_aware_connect_impl
 		//based on if source and sink are from same region
 		return make_region_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.parent_region_info);
+				source.region);
 	}
 };
 
@@ -236,7 +276,7 @@ struct region_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
-		return connect(detail::make_region_aware_connection(
+		return connect(detail::make_buffered_connection(
 				construct_state_buffer(source, sink),
 				source,
 				sink),
@@ -262,10 +302,9 @@ struct region_aware_connect_impl
 		//based on if source and sink are from same region
 		return make_region_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.parent_region_info);
+				source.region);
 	}
 };
-
 
 } //namesapce detail
 

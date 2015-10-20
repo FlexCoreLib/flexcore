@@ -9,18 +9,29 @@
 namespace fc
 {
 
+/**
+ * \brief common interface of nodes serving as buffers within connections.
+ * Classes implementing this are independent of the way they implement buffering.
+ * Classes might even directly forward events.
+ *
+ * \tparam event_t type of events passing through the buffer
+ */
 template<class event_t>
 struct buffer_interface
 {
 	buffer_interface() = default;
 	virtual ~buffer_interface() = default;
+
+	///input port for events, expects event_t
 	virtual event_in_port<event_t> in() = 0;
+	///output port for events, sends event_t
 	virtual event_out_port<event_t> out() = 0;
 
 	buffer_interface(const buffer_interface&) = delete;
 	buffer_interface& operator= (const buffer_interface &) = delete;
 };
 
+/// Implementation of buffer_interface, which directly forwards events.
 template<class event_t>
 class no_buffer : public buffer_interface<event_t>
 {
@@ -70,7 +81,7 @@ public:
 	// event in port of type void, switches buffers
 	auto switch_tick() { return in_switch_tick; };
 	// event in port of type void, fires external buffer
-	auto send_tick() { return in_send_tick; };
+	auto work_tick() { return in_send_tick; };
 
 	event_in_port<event_t> in() override
 	{

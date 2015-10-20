@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(test_event_buffer)
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_buffer.switch_tick()();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	test_buffer.send_tick()();
+	test_buffer.work_tick()();
 	BOOST_CHECK_EQUAL(test_value, 1);
 
 	//repeat process to check for buffer overflows
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_event_buffer)
 		BOOST_CHECK_EQUAL(test_value, i-1);
 		test_buffer.switch_tick()();
 		BOOST_CHECK_EQUAL(test_value, i-1);
-		test_buffer.send_tick()();
+		test_buffer.work_tick()();
 		BOOST_CHECK_EQUAL(test_value, i);
 	}
 }

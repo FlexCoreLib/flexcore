@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE( test_state_buffer )
 
 	BOOST_CHECK_EQUAL(sink.get(), 0);
 
-	test_buffer.send_tick()();
+	test_buffer.work_tick()();
 	test_buffer.switch_tick()();
 
 	BOOST_CHECK_EQUAL(sink.get(), 1);
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE( test_state_buffer )
 	test_buffer.switch_tick()();
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 
-	test_buffer.send_tick()();
+	test_buffer.work_tick()();
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 	test_buffer.switch_tick()();
 	BOOST_CHECK_EQUAL(sink.get(), 2);
