@@ -31,7 +31,7 @@ public:
 	void add_task(task_t new_task);
 
 	/// startes the work loop of all threads
-	void start() noexcept { do_work = true; }
+	void start() noexcept;
 	/// stops the work loop of all threads
 	void stop() noexcept;
 
@@ -39,13 +39,14 @@ public:
 
 private:
 	std::vector<std::thread> thread_pool;
-	std::atomic<bool> do_work; // flag indicates threads to keep working.
+	bool do_work; ///< flag indicates threads to keep working.
 
 	// current implementation is simple and based on locking the task_queue,
 	//might be worthwhile exchanging it for a lockfree one.
 	std::queue<task_t> task_queue;
 	std::mutex task_queue_mutex;
 	typedef std::unique_lock<std::mutex> queue_lock;
+	std::condition_variable thread_control;
 };
 
 } /* namespace thread */

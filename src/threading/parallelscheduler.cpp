@@ -13,9 +13,17 @@ int parallel_scheduler::num_threads()
 
 parallel_scheduler::parallel_scheduler() :
 		thread_pool(),
-		do_work(true),
+		do_work(false),
 		task_queue()
 {
+	start();
+}
+
+
+void parallel_scheduler::start() noexcept
+{
+	do_work = true;
+
 	//fill thread_pool in body of constructor,
 	//since otherwise threads would need to be copied
 	for (int i=0; i != num_threads(); ++i)
@@ -34,7 +42,15 @@ parallel_scheduler::parallel_scheduler() :
 							{
 								task = task_queue.front();
 								task_queue.pop();
-							} // else do nothing
+							}
+							else
+							{
+								//check flag again since it might have changed
+								//since we entered the loop
+								if (!do_work)
+									return;
+								thread_control.wait(lock);
+							}
 						} //releases lock
 						if (task)
 							task();
@@ -46,17 +62,25 @@ parallel_scheduler::parallel_scheduler() :
 void parallel_scheduler::stop() noexcept
 {
 	//first stop the infinite loop in all threads
+	{
+	//Acquire lock first, to stop work loops to enter while we set the flag.
+	queue_lock lock(task_queue_mutex);
 	do_work = false;
+	}
+	thread_control.notify_all();
 	//then stop all calculations and join threads
 	for (auto& thread : thread_pool)
 	{
 		if (thread.joinable())
+		{
 			thread.join();
+		}
 	}
 }
 
 parallel_scheduler::~parallel_scheduler()
 {
+	//first stop all threads, destroying running threads is illegal
 	stop();
 }
 
@@ -68,8 +92,11 @@ size_t parallel_scheduler::nr_of_waiting_tasks()
 
 void parallel_scheduler::add_task(task_t new_task)
 {
+	{
 	queue_lock lock(task_queue_mutex);
 	task_queue.push(new_task);
+	}
+	thread_control.notify_one();
 }
 
 
