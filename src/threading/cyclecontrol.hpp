@@ -1,10 +1,12 @@
 #ifndef SRC_THREADING_CYCLECONTROL_HPP_
 #define SRC_THREADING_CYCLECONTROL_HPP_
 
-#include "parallelscheduler.hpp"
-#include <clock/clock.hpp>
-
 #include <vector>
+
+#include <clock/clock.hpp>
+#include <ports/event_ports.hpp>
+
+#include "parallelscheduler.hpp"
 
 namespace fc
 {
@@ -32,6 +34,9 @@ struct periodic_task
 	bool done() const { return !work_to_do; }
 	void set_work_to_do(bool todo) { work_to_do = todo; }
 	bool is_due(virtual_clock::duration time) const;
+	void send_switch_tick() { switch_tick.fire(); }
+	auto out_switch_tick() { return switch_tick; }
+
 	void operator()()
 	{
 		work_to_do = false;
@@ -43,6 +48,9 @@ private:
 	virtual_clock::duration cycle_rate;
 	/// work to be done every cycle
 	std::function<void(void)> work;
+
+	//Todo refactor this intrusion of ports into otherwise independent code
+	event_out_port<void> switch_tick;
 };
 
 /**
@@ -77,6 +85,7 @@ public:
 	 */
 	void add_task(periodic_task task);
 	size_t nr_of_tasks() { return scheduler.nr_of_waiting_tasks(); }
+
 private:
 	/// contains the main loop, which is running as as long as it is not stopped
 	void main_loop();

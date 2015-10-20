@@ -37,6 +37,8 @@ struct expr_is_callable_impl<F(Args...), always_void<std::result_of<F(Args...)>>
  * \brief has_call_op trait, based on member_detector idiom
  *
  * Explanation found at: https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Member_Detector
+ *
+ * This trait is used by result_of metafunction to check if a type has operator().
  */
 template<class T>
 struct has_call_op

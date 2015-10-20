@@ -78,6 +78,7 @@ void cycle_control::run_periodic_tasks()
 		//		throw out_of_time_exepction();
 
 			task.set_work_to_do(true);
+			task.send_switch_tick();
 			scheduler.add_task(task);
 		}
 	}
