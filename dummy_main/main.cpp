@@ -16,7 +16,7 @@ int main()
 
 	std::cout << "build up infrastructure \n";
 	fc::thread::cycle_control thread_manager;
-	auto first_region = std::make_shared<fc::parallel_region>("region eins");
+	auto first_region = std::make_shared<fc::parallel_region>("region one");
 
 	auto tick_cycle = fc::thread::periodic_task(
 			[&first_region]()
@@ -46,7 +46,7 @@ int main()
 
 
 	//create a connection with region transition
-	auto second_region = std::make_shared<fc::parallel_region>("region zwei");
+	auto second_region = std::make_shared<fc::parallel_region>("region two");
 
 	auto second_tick_cycle = fc::thread::periodic_task(
 			[&second_region]()
@@ -62,10 +62,10 @@ int main()
 
 	fc::region_aware<fc::event_out_port<std::string>> string_source(first_region);
 	fc::region_aware<fc::event_in_port<std::string>> string_sink(second_region,
-			[](std::string in){std::cout << "second region received: " << in << "\n";});
+			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
 	string_source >> string_sink;
-	first_region->ticks.work_tick() >> [string_source]() mutable {string_source.fire("a magic string from the first region"); };
+	first_region->ticks.work_tick() >> [string_source, first_region]() mutable {string_source.fire("a magic string from " + first_region->get_id().key); };
 
 	thread_manager.start();
 
