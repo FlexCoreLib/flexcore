@@ -22,9 +22,11 @@ struct out_of_time_exepction: std::runtime_error
 	}
 };
 
-bool periodic_task::is_due(virtual_clock::duration time) const
+/// returns true if cycle _rate of task matches time and work of task is due.
+bool periodic_task::is_due(virtual_clock::steady::time_point now) const
 {
-	return (time % cycle_rate) == virtual_clock::duration::zero();
+	auto time = now .time_since_epoch();
+	return (time % interval) == virtual_clock::duration::zero();
 }
 
 void cycle_control::start()
@@ -72,7 +74,7 @@ void cycle_control::run_periodic_tasks()
 	std::lock_guard<std::mutex> lock(task_queue_mutex);
 	for (auto& task : tasks)
 	{
-		if (task.is_due(virtual_clock::steady::now().time_since_epoch()))
+		if (task.is_due(virtual_clock::steady::now()))
 		{
 		//	if (!task.done())  //todo specify error model
 		//		throw out_of_time_exepction();

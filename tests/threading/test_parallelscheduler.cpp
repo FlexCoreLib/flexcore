@@ -113,7 +113,9 @@ BOOST_AUTO_TEST_CASE(test_main_loop)
 
 	test_scheduler.add_task(task1);
 	test_scheduler.start(); //start main loop
-	sleep(1);
+	sleep(1); //todo remove this hack,
+	//currently needed because this function runs through
+	//while the task is being added to the working threads by the scheduler
 	while (test_scheduler.nr_of_tasks() != 0)
 	{
 		//do nothing but wait

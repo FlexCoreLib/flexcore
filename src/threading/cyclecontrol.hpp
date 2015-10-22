@@ -21,19 +21,19 @@ struct periodic_task
 	/**
 	 * \brief Constructor taking a job and the cycle rate.
 	 * \param job task which is to be executed every cycle
-	 * \param rate cycle rate of the task in virtual time
+	 * \param cycle_duration duration of one cycle of the task in virtual time
 	 */
 	periodic_task(std::function<void(void)> job,
-			virtual_clock::duration rate) :
+			virtual_clock::duration cycle_duration) :
 				work_to_do(false),
-				cycle_rate(rate),
+				interval(cycle_duration),
 				work(job)
 	{
 	}
 
 	bool done() const { return !work_to_do; }
 	void set_work_to_do(bool todo) { work_to_do = todo; }
-	bool is_due(virtual_clock::duration time) const;
+	bool is_due(virtual_clock::steady::time_point now) const;
 	void send_switch_tick() { switch_tick.fire(); }
 	auto out_switch_tick() { return switch_tick; }
 
@@ -45,7 +45,7 @@ struct periodic_task
 private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
-	virtual_clock::duration cycle_rate;
+	virtual_clock::duration interval;
 	/// work to be done every cycle
 	std::function<void(void)> work;
 
