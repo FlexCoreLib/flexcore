@@ -9,12 +9,15 @@ ADD_COMPILE_OPTIONS(
     "-Wall"
     "-Wextra"
     "-std=c++1y" 
+    "-pthread"
     $<$<BOOL:ENABLE_COVERAGE_ANALYSIS>:-fprofile-arcs>
     $<$<BOOL:ENABLE_COVERAGE_ANALYSIS>:-ftest-coverage> 
     )
 
 ADD_SUBDIRECTORY( src )
 ADD_SUBDIRECTORY( tests )
+ADD_SUBDIRECTORY( dummy_main )
+
 
 
 

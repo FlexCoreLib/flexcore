@@ -37,6 +37,8 @@ struct expr_is_callable_impl<F(Args...), always_void<std::result_of<F(Args...)>>
  * \brief has_call_op trait, based on member_detector idiom
  *
  * Explanation found at: https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Member_Detector
+ *
+ * This trait is used by result_of metafunction to check if a type has operator().
  */
 template<class T>
 struct has_call_op
@@ -71,10 +73,35 @@ public:
 	// this actually evaluates the test by building the derived type
 	// and evaluating the result type of test, either false_type or true_type
 	typedef decltype(test<derived>(nullptr)) type;
-
 };
 
-template<class> struct result_of;
+/// has_member check for method connect, see has_call_op for explanation
+template<class T>
+struct has_member_connect
+{
+private:
+	struct fallback
+	{
+		void connect();
+	};
+
+	struct derived : T, fallback
+	{
+	};
+
+	template<class U, U> struct check;
+
+	template<class to_test>
+	static std::false_type test(check<void (fallback::*)(), &to_test::connect>*);
+
+	template<class>
+	static std::true_type test(...);
+
+public:
+	typedef decltype(test<derived>(nullptr)) type;
+};
+
+
 template<class,int> struct argtype_of;
 template<class T>
 struct type_is_callable_impl : has_call_op<T>::type
@@ -108,19 +135,20 @@ template<class T>
 static std::false_type has_result_impl(T*);
 
 template<class T>
-static std::true_type has_result_impl(typename T::result_type*);
+static std::true_type has_result_impl(typename T::result_t*);
 
 }
 
-/// Has result trait to check if a type has a nested type 'result_type'
+/// Has result trait to check if a type has a nested type 'result_t'
 template<class T>
 struct has_result : decltype(detail::has_result_impl<T>(nullptr))
 {
 };
 
+namespace detail{ template<class, bool> struct result_of_impl; }
 /// Trait for determining the result of a callable.
 /** Works on
- * - things that have a ::result_type member
+ * - things that have a ::result_t member
  * - std::function
  * - static & member functions
  * - boost::function
@@ -130,21 +158,30 @@ struct has_result : decltype(detail::has_result_impl<T>(nullptr))
  * template<>
  * struct result_of<MyType>
  * {
- *    typedef MyType::result_type
+ *    typedef MyType::result_t
  * }
  * @endcode */
-template<class Expr, class enable = void>
+template<class Expr>
 struct result_of
 {
-	typedef  typename utils::function_traits<Expr>::result_type type;
+	typedef typename detail::result_of_impl<Expr,
+			has_result<typename std::remove_reference<Expr>::type>::value>::type type;
+};
+
+namespace detail
+{
+template<class Expr>
+struct result_of_impl<Expr, false>
+{
+	typedef typename utils::function_traits<Expr>::result_t type;
 };
 
 template<class Expr>
-struct result_of<typename std::enable_if<has_result<Expr>::value, void>>
+struct result_of_impl<Expr, true>
 {
-	typedef typename Expr::result_type type;
+	typedef typename std::remove_reference<Expr>::type::result_t type;
 };
-
+} //namespace detail
 /// Trait for determining the type of a callables parameter.
 /** Works on the same types as result_of.
  *
@@ -175,14 +212,12 @@ struct is_active_sink: public std::false_type
 };
 
 template<class T>
-struct is_passive_sink: public std::false_type
+struct is_active_connectable :
+		std::integral_constant<bool, detail::has_member_connect<T>::type::value
+		&& std::is_copy_constructible<T>::value>
 {
 };
 
-template<class T>
-struct is_active_source: public std::false_type
-{
-};
 
 template<class T, class enable = void>
 struct is_passive_source_impl: public std::false_type
@@ -195,6 +230,22 @@ struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::
 {
 };
 
+template<class T, class enable = void>
+struct is_passive_sink_impl: public std::false_type
+{
+};
+
+template<class T>
+struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+		: public std::integral_constant<bool, std::is_void<typename result_of<T>::type>::value>
+{
+};
+
+
+template<class T>
+struct is_passive_sink: public is_passive_sink_impl<T>
+{
+};
 template<class T>
 struct is_passive_source: is_passive_source_impl<T>
 {

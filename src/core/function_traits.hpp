@@ -35,13 +35,13 @@ namespace utils {
 
     Example::
 
-        DECLARE_HAS_TYPE_MEMBER(result_type)
+        DECLARE_HAS_TYPE_MEMBER(result_t)
 
         ...
 
-        printf("%d\n", has_result_type< std::plus<int> >::value);
+        printf("%d\n", has_result_t< std::plus<int> >::value);
         // ^ prints '1' (true)
-        printf("%d\n", has_result_type< double(*)() >::value);
+        printf("%d\n", has_result_t< double(*)() >::value);
         // ^ prints '0' (false)
 */
 #define DECLARE_HAS_TYPE_MEMBER(member_name) \
@@ -98,11 +98,11 @@ template <typename ReturnType, typename... Args>
 struct function_traits<ReturnType(Args...)>
 {
     /**
-    .. type:: type result_type
+    .. type:: type result_t
 
         The type returned by calling an instance of the function object type *F*.
     */
-    typedef ReturnType result_type;
+    typedef ReturnType result_t;
 
     /**
     .. type:: type function_type

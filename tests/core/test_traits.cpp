@@ -80,7 +80,7 @@ static bool StaticFunction(int)
 
 struct result_haver
 {
-	typedef int result_type; // has a result_type
+	typedef int result_t; // has a result_t
 };
 
 //////////////////////////////////////////////////
@@ -123,8 +123,10 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 		static_assert(is_connectable<decltype(con_lambda)>::value,
 				"lambda takes and returns int, is connectable");
 
-		static_assert(!has_result<CustomCallable>::value, "CustomCallable does not have a result_type");
-		static_assert(has_result<result_haver>::value, "result_haver has a result_type");
+		static_assert(!has_result<CustomCallable>::value, "CustomCallable does not have a result_t");
+		static_assert(has_result<result_haver>::value, "result_haver has a result_t");
+
+		static_assert(std::is_same<typename result_of<result_haver>::type, int>::value, "result_t is int");
 
 	}
 }

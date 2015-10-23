@@ -37,6 +37,9 @@ struct active_sink_proxy
 	{
 	}
 
+	typedef typename result_of<source_t>::type payload_t;
+
+
 	/**
 	 * \brief connects a connectable, which is not a source_port to the active_sink_proxy.
 	 *
@@ -87,11 +90,11 @@ template<class source_t, class sink_t>
 struct is_active_sink_proxy<active_sink_proxy<source_t, sink_t>> : std::true_type {};
 
 /// Specialization of connect to call member connect of active_sink_proxy.
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 struct connect_impl
 	<
-		sink_t,
 		source_t,
+		sink_t,
 		typename std::enable_if<is_active_sink_proxy<sink_t>::value>::type
 	>
 {
@@ -106,11 +109,11 @@ struct connect_impl
  * which is not a source_port to a sink_port.
  * \return a stream_proxy which contains the source and the sink.
  */
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 struct connect_impl
 	<
-		sink_t,
 		source_t,
+		sink_t,
 		typename std::enable_if
 			<
 				(not fc::is_passive_source<source_t>::value)
@@ -131,10 +134,10 @@ struct connect_impl
  * \post source is now connected to sink
  * \return nothing, the connection is complete
  */
-template<class sink_t, class source_t>
+template<class source_t, class sink_t>
 struct connect_impl
-	<	sink_t,
-		source_t,
+	<	source_t,
+		sink_t,
 		typename std::enable_if
 			<	fc::is_passive_source<source_t>::value
 			and fc::is_active_sink<sink_t>::value

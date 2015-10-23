@@ -8,12 +8,17 @@ ADD_EXECUTABLE( test_executable
 	core/test_connection.cpp
 	core/test_traits.cpp
 	clock/TestClock.cpp
+	ports/test_event_buffer.cpp
+	ports/test_node_aware.cpp
+	ports/test_state_buffer.cpp
  	ports/events/test_events.cpp
 	ports/states/test_node_with_lambda.cpp
 	ports/states/test_state_source_call_function.cpp
 	ports/states/test_state_source_with_setter.cpp
 	runner.cpp 
-	threading/test_scheduler.cpp )
+	threading/test_parallel_region.cpp
+	threading/test_minimalscheduler.cpp
+	threading/test_parallelscheduler.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}
