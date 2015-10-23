@@ -10,6 +10,7 @@
 #include <core/connection.hpp>
 
 #include <ports/port_traits.hpp>
+#include <core/detail/active_connection_proxy.hpp>
 
 #include <iostream>
 
