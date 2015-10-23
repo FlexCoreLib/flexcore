@@ -6,7 +6,7 @@
 #include <memory>
 
 // flexcore
-#include <core/traits.hpp>
+#include <ports/port_traits.hpp>
 #include <core/connection.hpp>
 
 namespace fc
@@ -33,15 +33,17 @@ public:
 	{
 		static_assert(is_callable<con_t>::value,
 				"only callables can be connected");
+
 		static_assert(std::is_same<data_t,
 				typename result_of<con_t>::type>::value,
 				"return value of connected needs to be data_t");
-//		static_assert(std::is_void<
-//				typename param_type<con_t>::type>::value,
-//				"no parameter allowed for objects to be connected");
+		static_assert(utils::function_traits<con_t>::arity == 0,
+				"no parameter allowed for objects to be connected");
 		(*con) = c;
+
 	}
 
+		typedef void result_t;
 private:
 	std::shared_ptr<std::function<data_t()>> con;
 };

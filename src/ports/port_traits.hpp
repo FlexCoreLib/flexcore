@@ -53,7 +53,6 @@ struct port_connection
 	typedef source source_t;
 	typedef sink sink_t;
 	typedef typename result_of<source_t>::type payload_t;
-
 };
 
 } //namespace fc
