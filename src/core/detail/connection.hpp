@@ -17,8 +17,6 @@ namespace fc
  * \result_void param_void is true if the result of operator() of sink_t is void
  * \payload_void param_void is true if the result of operator() of source_t is void
  * the return value of source_t needs to be convertible to the parameter of sink_t.
- *
- * TODO: warum brauchen wir die ..._void template args?
  */
 template<
 		class source_t,

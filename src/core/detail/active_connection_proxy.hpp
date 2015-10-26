@@ -3,14 +3,23 @@
 
 #include <functional>
 
-#include <ports/port_traits.hpp>
 #include <core/detail/connection.hpp>
+#include <core/ports.hpp>
 
 namespace fc
 {
 
 namespace detail
 {
+
+template<class T>
+struct is_active_source:
+		std::integral_constant<bool,
+		is_active_connectable<T>::value &&
+		is_port<T>::value>
+
+{
+};
 
 //policy classes for determining argument order in connect calls in the proxy
 struct active_sink_first
@@ -174,7 +183,7 @@ struct active_passive_connect_impl
 		typename std::enable_if
 			<
 			!is_instantiation_of< active_connection_proxy,active_t >::value
-			&& ((fc::is_active_source<active_t>::value
+			&& ((is_active_source<active_t>::value
 					&& !fc::is_passive_sink<passive_t>::value)
 			||(fc::is_active_sink<active_t>::value
 					&& !fc::is_passive_source<passive_t>::value))>::type
@@ -201,7 +210,7 @@ struct active_passive_connect_impl
 		argument_order,
 		typename std::enable_if
 			<	!is_instantiation_of< active_connection_proxy,active_t >::value
-			&& ((fc::is_active_source<active_t>::value
+			&& ((is_active_source<active_t>::value
 					&& fc::is_passive_sink<passive_t>::value)
 			||(fc::is_active_sink<active_t>::value
 					&& fc::is_passive_source<passive_t>::value))>::type

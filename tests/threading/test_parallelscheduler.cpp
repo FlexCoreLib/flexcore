@@ -125,31 +125,5 @@ BOOST_AUTO_TEST_CASE(test_main_loop)
 
 }
 
-BOOST_AUTO_TEST_CASE(dummy)
-{
-	class A {};
-	class B : public A {};
-	class D : public A {};
-	class E : public B {};
-
-
-	struct C
-	{
-		void foo(A& a) { std::cout << "Zonk A!\n"; }
-		void foo(B& b) { std::cout << "Zonk B!\n"; }
-	};
-
-	A a;
-	B b;
-	C c;
-	D d;
-	E e;
-
-	c.foo(a);
-	c.foo(b);
-	c.foo(d);
-	c.foo(e);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 

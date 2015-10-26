@@ -223,7 +223,7 @@ struct region_aware_connect_impl
 		sink_t,
         typename std::enable_if<
         	::fc::is_instantiation_of<region_aware, source_t>::value &&
-        	::fc::is_active_source<source_t>::value &&
+        	      is_active_source<source_t>::value &&
 			::fc::is_instantiation_of<region_aware, sink_t>::value &&
 			::fc::is_passive_sink<sink_t>::value
 			>::type
@@ -245,7 +245,7 @@ struct region_aware_connect_impl
 		sink_t,
         typename std::enable_if<
         	::fc::is_instantiation_of<region_aware, source_t>::value &&
-         	::fc::is_active_source<source_t>::value &&
+         	       is_active_source<source_t>::value &&
 			!::fc::is_instantiation_of<region_aware, sink_t>::value
 			>::type
 	>
