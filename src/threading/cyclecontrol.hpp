@@ -25,26 +25,26 @@ struct periodic_task
 	 */
 	periodic_task(std::function<void(void)> job,
 			virtual_clock::duration cycle_duration) :
-				work_to_do(false),
+				work_to_do(std::make_shared<bool>(false)),
 				interval(cycle_duration),
 				work(job)
 	{
 	}
 
-	bool done() const { return !work_to_do; }
-	void set_work_to_do(bool todo) { work_to_do = todo; }
+	bool done() const { return !(*work_to_do); }
+	void set_work_to_do(bool todo) { *work_to_do = todo; }
 	bool is_due(virtual_clock::steady::time_point now) const;
 	void send_switch_tick() { switch_tick.fire(); }
 	auto out_switch_tick() { return switch_tick; }
 
 	void operator()()
 	{
-		work_to_do = false;
 		work();
+		set_work_to_do(false);
 	}
 private:
 	/// flag to check if work has already been executed this cycle.
-	bool work_to_do;
+	std::shared_ptr<bool> work_to_do;
 	virtual_clock::duration interval;
 	/// work to be done every cycle
 	std::function<void(void)> work;
