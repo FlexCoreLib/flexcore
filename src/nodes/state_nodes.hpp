@@ -13,8 +13,16 @@ namespace fc
  * \brief merges all input states to one output state by given operation
  *
  * \tparam operation operation to apply to all inputs, returns desired output.
+ *
+ * example:
+ * \code{.cpp}
+ *	auto multiply = merge([](int a, int b){return a*b;});
+ *	[](){ return 3;} >> multiply.in<0>();
+ *	[](){ return 2;} >> multiply.in<1>();
+ *	BOOST_CHECK_EQUAL(multiply(), 6);
+ * \endcode
  */
-template<class... operation>
+template<class operation, class signature>
 struct merge_node
 {
 };
@@ -30,7 +38,8 @@ struct merge_node<operation, result (args...)>
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node wtih a function taking no arguments");
 
-	merge_node(operation op) :
+	explicit merge_node(operation op) :
+			in_ports(),
 			op(op)
 	{
 	}
@@ -42,10 +51,10 @@ struct merge_node<operation, result (args...)>
 	}
 
 	template<size_t i>
-	auto in() const { return std::get<i>(in_ports); }
+	auto in() const noexcept { return std::get<i>(in_ports); }
 
-	in_ports_t in_ports;
 protected:
+	in_ports_t in_ports;
 	operation op;
 
 private:

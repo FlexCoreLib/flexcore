@@ -9,9 +9,18 @@
 namespace fc
 {
 
+/**
+ * \brief generic unary node which applys transform with parameter to all inputs
+ *
+ * \tparam bin_op binary operator, argument is input of node, second is parameter
+ *
+ * \pre bin_op needs to be callable with two argments
+ */
 template<class bin_op>
 struct transform_node
 {
+	static_assert(utils::function_traits<bin_op>::arity == 2,
+			"operator in transform node needs to take two parameters");
 	typedef typename result_of<bin_op>::type result_type;
 	typedef typename argtype_of<bin_op,1>::type param_type;
 	typedef typename argtype_of<bin_op,0>::type data_t;
@@ -29,17 +38,12 @@ private:
 	bin_op op;
 };
 
+/// creates transform_node with op as operation.
 template<class bin_op>
 auto transform(bin_op op)
 {
 	return transform_node<bin_op>(op);
 }
-
-struct n_ary_switch
-{
-
-};
-
 }  // namespace fc
 
 #endif /* SRC_NODES_GENERIC_HPP_ */
