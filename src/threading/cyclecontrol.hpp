@@ -16,7 +16,7 @@ namespace thread
 /**
  * \brief class representing a periodic task with cycle rate
  */
-struct periodic_task
+struct periodic_task final
 {
 	/**
 	 * \brief Constructor taking a job and the cycle rate.

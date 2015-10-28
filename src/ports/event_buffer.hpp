@@ -33,7 +33,7 @@ struct buffer_interface
 
 /// Implementation of buffer_interface, which directly forwards events.
 template<class event_t>
-class no_buffer : public buffer_interface<event_t>
+class no_buffer final : public buffer_interface<event_t>
 {
 public:
 	no_buffer()

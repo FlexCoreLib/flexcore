@@ -27,6 +27,7 @@ public:
 	state_sink(const state_sink& other) : con(other.con) {  }
 
 	data_t get() { return (*con)(); }
+	data_t operator()() { return get(); }
 
 	template<class con_t>
 	void connect(con_t c)
