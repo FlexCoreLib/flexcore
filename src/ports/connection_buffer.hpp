@@ -1,5 +1,5 @@
-#ifndef SRC_PORTS_EVENT_BUFFER_HPP_
-#define SRC_PORTS_EVENT_BUFFER_HPP_
+#ifndef SRC_PORTS_CONNECTION_BUFFER_HPP_
+#define SRC_PORTS_CONNECTION_BUFFER_HPP_
 
 #include <functional>
 #include <memory>
@@ -36,10 +36,10 @@ struct buffer_interface
 
 /// Implementation of buffer_interface, which directly forwards events.
 template<class event_t, class tag = event_tag>
-class no_buffer final : public buffer_interface<event_t, tag>
+class event_no_buffer final : public buffer_interface<event_t, tag>
 {
 public:
-	no_buffer()	:
+	event_no_buffer()	:
 		in_event_port( [this](event_t in_event) { out_event_port.fire(in_event);})
 	{
 	}
@@ -134,6 +134,118 @@ protected:
 	buffer_t extern_buffer;
 };
 
+template<class data_t>
+class state_no_buffer : public buffer_interface<data_t, state_tag>
+{
+public:
+	state_no_buffer()
+	: 	out_port( [this]() { return in_port();})
+	{
+	}
+
+	state_sink<data_t> in() override
+	{
+		return in_port;
+	}
+	state_source_call_function<data_t> out() override
+	{
+		return out_port;
+	}
+
+private:
+	state_sink<data_t> in_port;
+	state_source_call_function<data_t> out_port;
+};
+
+template<class T>
+class state_buffer : public buffer_interface<T, state_tag>
+{
+public:
+	state_buffer();
+
+	// event in port of type void, switches buffers
+	auto switch_tick() { return in_switch_tick; };
+	// event in port of type void, pulls data at in_port
+	auto work_tick() { return in_work_tick; };
+
+	state_sink<T> in() override
+	{
+		return in_port;
+	}
+	state_source_call_function<T> out() override
+	{
+		return out_port;
+	}
+
+
+protected:
+	void switch_buffers()
+	{
+		using std::swap;
+		if (!already_switched)
+			*extern_buffer = *intern_buffer;
+		already_switched = true;
+	}
+
+	event_in_port<void> in_switch_tick;
+	event_in_port<void> in_work_tick;
+	state_sink<T> in_port;
+	state_source_call_function<T> out_port;
+private:
+	typedef T buffer_t;
+	std::shared_ptr<buffer_t> intern_buffer;
+	std::shared_ptr<buffer_t> extern_buffer;
+	bool already_switched = false;
+};
+
+
+template<class data_t, class tag>
+struct no_buffer {};
+
+template<class data_t>
+struct no_buffer<data_t, event_tag>
+{
+	typedef event_no_buffer<data_t> type;
+};
+
+template<class data_t>
+struct no_buffer<data_t, state_tag>
+{
+	typedef state_no_buffer<data_t> type;
+};
+
+template<class data_t, class tag>
+struct buffer {};
+
+template<class data_t>
+struct buffer<data_t, event_tag>
+{
+	typedef event_buffer<data_t> type;
+};
+
+template<class data_t>
+struct buffer<data_t, state_tag>
+{
+	typedef state_buffer<data_t> type;
+};
+
+
 } // namespace fc
 
-#endif /* SRC_PORTS_EVENT_BUFFER_HPP_ */
+/***************************** Implementation ********************************/
+template<class T>
+inline fc::state_buffer<T>::state_buffer() :
+		in_switch_tick( [this](){ switch_buffers(); } ),
+		in_work_tick([this]()
+				{
+					*intern_buffer = in_port();
+					already_switched = false;
+				}),
+		in_port(),
+		out_port([this](){ return *extern_buffer; }),
+		intern_buffer(std::make_shared<T>()), //todo, forces T to be default constructible, we should lift that restriction.
+		extern_buffer(std::make_shared<T>())
+{
+}
+
+#endif /* SRC_PORTS_CONNECTION_BUFFER_HPP_ */

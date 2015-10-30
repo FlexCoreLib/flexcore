@@ -2,11 +2,9 @@
 #define SRC_PORTS_REGION_AWARE_HPP_
 
 #include <ports/port_traits.hpp>
-#include <ports/event_buffer.hpp>
-#include <ports/statebuffer.hpp>
-
 #include <core/connection.hpp>
 #include <threading/parallelregion.hpp>
+#include "connection_buffer.hpp"
 
 namespace fc
 {
@@ -50,46 +48,33 @@ bool same_region(const region_aware<source_t>& source,
 	return source.region->get_id()
 	        == sink.region->get_id();
 }
+
 /**
  * \brief factory method to construct buffer
  * \returns either event_buffer or no_buffer.
  */
-template<class source_t, class sink_t>
-auto construct_event_buffer(const source_t& source, const sink_t& sink) ->
-		std::shared_ptr<buffer_interface<typename result_of<source_t>::type, event_tag>>
+template<class payload_t>
+struct buffer_factory
 {
-	typedef typename result_of<source_t>::type payload_t;
-	if (!same_region(source, sink))
+	template<class active_t, class passive_t, class tag>
+	static auto construct_buffer(const active_t& active, const passive_t& passive, tag) ->
+			std::shared_ptr<buffer_interface<payload_t, tag>>
 	{
-		auto result_buffer = std::make_shared<event_buffer<payload_t>>();
+		if (!same_region(active, passive))
+		{
+			auto result_buffer = std::make_shared<typename buffer<payload_t, tag>::type>();
 
-		source.region->switch_tick() >> result_buffer->switch_tick();
-		sink.region->work_tick() >> result_buffer->work_tick();
+			active.region->switch_tick() >> result_buffer->switch_tick();
+			passive.region->work_tick() >> result_buffer->work_tick();
 
-		return result_buffer;
+			return result_buffer;
+		}
+		else
+			return std::make_shared<typename no_buffer<payload_t, tag>::type>();
 	}
-	else
-		return std::make_shared<no_buffer<payload_t>>();
-}
+};
 
-//todo remove this really nasty code duplication
-template<class source_t, class sink_t>
-auto construct_state_buffer(const source_t& source, const sink_t& sink) ->
-		std::shared_ptr<buffer_interface<typename result_of<source_t>::type, state_tag>>
-{
-	typedef typename result_of<source_t>::type payload_t;
-	if (!same_region(source, sink))
-	{
-		auto result_buffer = std::make_shared<state_buffer<payload_t>>();
 
-		sink.region->switch_tick() >> result_buffer->switch_tick();
-		source.region->work_tick() >> result_buffer->work_tick();
-
-		return result_buffer;
-	}
-	else
-		return std::make_shared<state_no_buffer<payload_t>>();
-}
 
 /**
  * \brief Connection that contain a buffer, if source and sink are from different regions.
@@ -233,10 +218,13 @@ struct region_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
+		typedef typename result_of<source_t>::type payload_t;
 		return connect(static_cast<source_t>(source), detail::make_buffered_connection(
-				construct_event_buffer(source, sink),
-				source,
-				sink));
+				buffer_factory<payload_t>::construct_buffer(
+						source, //event source is active, thus first
+						sink, //event sink is passive thus second
+						event_tag()),
+				source, sink));
 	}
 };
 
@@ -277,10 +265,13 @@ struct region_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
+		typedef typename result_of<source_t>::type payload_t;
 		return connect(detail::make_buffered_connection(
-				construct_state_buffer(source, sink),
-				source,
-				sink),
+				buffer_factory<payload_t>::construct_buffer(
+						sink, //state sink is active thus first
+						source, //state source is passive thus second
+						state_tag()),
+				source, sink),
 				static_cast<typename sink_t::base_t>(sink));
 	}
 };
