@@ -15,6 +15,10 @@ namespace thread
 
 /**
  * \brief simple scheduler based on a threadpool
+ *
+ * Adds tasks a task queue. These tasks are then assigned to worker threads in a pool
+ *
+ * \invariant thread_pool.size() > 0
  */
 class parallel_scheduler
 {
@@ -46,6 +50,7 @@ private:
 	std::queue<task_t> task_queue;
 	std::mutex task_queue_mutex;
 	typedef std::unique_lock<std::mutex> queue_lock;
+	///used to notify worker threads if new tasks are available
 	std::condition_variable thread_control;
 };
 

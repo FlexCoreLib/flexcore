@@ -13,9 +13,12 @@ namespace fc
 {
 
 /**
- * Simple implementation for StreamSink.
+ * \brief Simple implementation for input port of states
+ *
  * Will pull data when get is called.
  * Is not a Connectable.
+ *
+ * \tparam data_t data type flowing through this port. Needs to fulfill copy_constructable
  */
 template<class data_t>
 class state_sink
@@ -26,9 +29,21 @@ public:
 	{ }
 	state_sink(const state_sink& other) : con(other.con) {  }
 
-	data_t get() { return (*con)(); }
-	data_t operator()() { return get(); }
+	/**
+	 * \brief pulls state from connection
+	 *
+	 * \returns current state available at this port.
+	 */
+	data_t get() const { return (*con)(); }
+	data_t operator()() const { return get();  }
 
+	/**
+	 * \brief Cconnects state source to sink.
+	 * Sink takes ownership of the connection
+	 *
+	 * \pre c needs to be connectable and passive_source
+	 * \post connection is not empty
+	 */
 	template<class con_t>
 	void connect(con_t c)
 	{
@@ -42,6 +57,8 @@ public:
 				"no parameter allowed for objects to be connected");
 		(*con) = c;
 
+		assert(con); //check postcondition
+		assert(*con);
 	}
 
 		typedef void result_t;

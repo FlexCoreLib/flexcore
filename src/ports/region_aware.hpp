@@ -17,9 +17,9 @@ namespace fc
  * \tparam base is type region_aware is mixed into.
  *
  * example:
- * \code{
+ * \code{cpp}
  * typedef region_aware<event_in_port<int>> region_aware_event_port;
- * }
+ * \endcode
  */
 template<class base>
 struct region_aware: public base
@@ -205,6 +205,7 @@ auto make_buffered_connection(
 
 /**
  * \brief factory method to wrap region_aware around a connection,
+ *
  * Mainly there to use template deduction from parameter base.
  * Thus client code doesn't need to get type connection_base_t by hand.
  */
@@ -308,6 +309,12 @@ struct region_aware_connect_impl
 
 } //namesapce detail
 
+/**
+ * \brief overload of connect with region_aware<>
+ * possibly adds buffer, then forwards connect call to source_t.
+ *
+ * \returns buffered connection with connection of source_t and sink_t mixed in.
+ */
 template<class source_t, class sink_t>
 auto connect(region_aware<source_t> source, region_aware<sink_t> sink)
 {

@@ -31,7 +31,7 @@ class state_no_buffer : public state_buffer_interface<data_t>
 {
 public:
 	state_no_buffer()
-	: 	out_port( [this]() { return in_port.get();})
+	: 	out_port( [this]() { return in_port();})
 	{
 	}
 
@@ -98,7 +98,7 @@ inline fc::state_buffer<T>::state_buffer() :
 		in_switch_tick( [this](){ switch_buffers(); } ),
 		in_work_tick([this]()
 				{
-					*intern_buffer = in_port.get();
+					*intern_buffer = in_port();
 					already_switched = false;
 				}),
 		in_port(),

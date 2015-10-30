@@ -117,7 +117,7 @@ struct active_connection_proxy
 		static_assert(is_passive<new_passive_t>::value,
 				"new_passive_t in proxy needs to be passive connectable");
 
-		auto tmp = connect_policy()(stored_passive, new_passive); //todo order of parameters
+		auto tmp = connect_policy()(stored_passive, new_passive);
 
 		return active.connect(tmp);
 	}
@@ -136,7 +136,7 @@ struct active_connection_proxy
 			>
 	auto connect(new_connectable_t new_connectable)
 	{
-		auto connection = connect_policy()(stored_passive, new_connectable); //todo order of parameters
+		auto connection = connect_policy()(stored_passive, new_connectable);
 		return active_connection_proxy<
 				active_t,
 				decltype(connection),

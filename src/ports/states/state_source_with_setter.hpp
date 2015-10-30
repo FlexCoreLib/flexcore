@@ -18,7 +18,7 @@ template<class data_t>
 class state_source_with_setter
 {
 public:
-	state_source_with_setter(data_t d_) : d(std::make_shared<data_t>(d_)){}
+	explicit state_source_with_setter(data_t d) : d(std::make_shared<data_t>(d)){}
 
 	/// pull data
 	data_t operator()() { return *d; }

@@ -27,7 +27,7 @@ template<
 struct connection;
 
 /**
- * metafunction which creates correct Connection type by checking
+ * \brief metafunction which creates correct Connection type by checking
  * if parameters or result types are void.
  */
 template<class source_t, class sink_t>
@@ -48,6 +48,7 @@ struct connection_trait
 		> type;
 };
 
+/// internals of flexcore, everything here can change any time.
 namespace detail
 {
 

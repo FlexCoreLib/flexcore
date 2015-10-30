@@ -57,6 +57,7 @@ void parallel_scheduler::start() noexcept
 					}
 				}));
 	}
+	assert(!thread_pool.empty()); //check invariant
 }
 
 void parallel_scheduler::stop() noexcept
@@ -76,6 +77,7 @@ void parallel_scheduler::stop() noexcept
 			thread.join();
 		}
 	}
+	assert(!thread_pool.empty()); //check invariant
 }
 
 parallel_scheduler::~parallel_scheduler()
@@ -97,6 +99,7 @@ void parallel_scheduler::add_task(task_t new_task)
 	task_queue.push(new_task);
 	}
 	thread_control.notify_one();
+	assert(!thread_pool.empty()); //check invariant
 }
 
 

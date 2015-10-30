@@ -44,6 +44,24 @@ auto transform(bin_op op)
 {
 	return transform_node<bin_op>(op);
 }
+
+//todo requires way to define state or event ports through template parameters
+//template<class data_t>
+//class n_ary_switch
+//{
+//
+//	state_sink<size_t> index;
+//	typedef void port_type;
+//
+//	std::vector<port_type> in_ports;
+//
+//	data_t operator()()
+//	{
+//		return in_ports.at(index())();
+//	}
+//
+//};
+
 }  // namespace fc
 
 #endif /* SRC_NODES_GENERIC_HPP_ */

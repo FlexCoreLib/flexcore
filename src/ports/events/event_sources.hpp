@@ -57,6 +57,7 @@ struct event_out_port
 	/**
 	 * \brief connects new connectable target to port.
 	 * \param new_handler the new target to be connected.
+	 * \pre new_handler is not empty function
 	 * \post event_handlers.empty() == false
 	 */
 	auto connect(handler_t new_handler)
