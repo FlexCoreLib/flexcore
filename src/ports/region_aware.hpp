@@ -56,7 +56,7 @@ bool same_region(const region_aware<source_t>& source,
  */
 template<class source_t, class sink_t>
 auto construct_event_buffer(const source_t& source, const sink_t& sink) ->
-		std::shared_ptr<buffer_interface<typename result_of<source_t>::type>>
+		std::shared_ptr<buffer_interface<typename result_of<source_t>::type, event_tag>>
 {
 	typedef typename result_of<source_t>::type payload_t;
 	if (!same_region(source, sink))
@@ -75,7 +75,7 @@ auto construct_event_buffer(const source_t& source, const sink_t& sink) ->
 //todo remove this really nasty code duplication
 template<class source_t, class sink_t>
 auto construct_state_buffer(const source_t& source, const sink_t& sink) ->
-		std::shared_ptr<state_buffer_interface<typename result_of<source_t>::type>>
+		std::shared_ptr<buffer_interface<typename result_of<source_t>::type, state_tag>>
 {
 	typedef typename result_of<source_t>::type payload_t;
 	if (!same_region(source, sink))
@@ -101,7 +101,7 @@ struct buffered_event_connection : public base_connection
 {
 	typedef typename base_connection::payload_t payload_t;
 
-	buffered_event_connection(std::shared_ptr<buffer_interface<payload_t>> new_buffer,
+	buffered_event_connection(std::shared_ptr<buffer_interface<payload_t, event_tag>> new_buffer,
 			const base_connection& base) :
 				base_connection(base),
 				buffer(new_buffer)
@@ -116,7 +116,7 @@ struct buffered_event_connection : public base_connection
 	}
 
 private:
-	std::shared_ptr<buffer_interface<payload_t>> buffer;
+	std::shared_ptr<buffer_interface<payload_t, event_tag>> buffer;
 };
 
 //also remove this code duplication, until then see buffered_event_connection
@@ -125,7 +125,7 @@ struct buffered_state_connection: public base_connection
 {
 	typedef typename base_connection::payload_t payload_t;
 
-	buffered_state_connection(std::shared_ptr<state_buffer_interface<payload_t>> new_buffer,
+	buffered_state_connection(std::shared_ptr<buffer_interface<payload_t, state_tag>> new_buffer,
 			const base_connection& base) :
 				base_connection(base),
 				buffer(new_buffer)
@@ -139,7 +139,7 @@ struct buffered_state_connection: public base_connection
 	}
 
 private:
-	std::shared_ptr<state_buffer_interface<payload_t>> buffer;
+	std::shared_ptr<buffer_interface<payload_t, state_tag>> buffer;
 };
 
 // TODO prefer to test this algorithmically
@@ -161,7 +161,7 @@ namespace detail
  */
 template<class source_t, class sink_t, class buffer_t>
 auto make_buffered_connection(
-		std::shared_ptr<buffer_interface<buffer_t>> buffer,
+		std::shared_ptr<buffer_interface<buffer_t, event_tag>> buffer,
 		const source_t& /*source*/, //only needed for type deduction
 		const sink_t& sink
 		)
@@ -187,7 +187,7 @@ auto make_buffered_connection(
  */
 template<class source_t, class sink_t, class buffer_t>
 auto make_buffered_connection(
-		std::shared_ptr<state_buffer_interface<buffer_t>> buffer,
+		std::shared_ptr<buffer_interface<buffer_t, state_tag>> buffer,
 		const source_t& source,
 		const sink_t& /*sink*/ //only needed for type deduction
 		)

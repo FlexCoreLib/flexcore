@@ -4,7 +4,7 @@
 #include <functional>
 #include <memory>
 
-#include "event_ports.hpp"
+#include "ports.hpp"
 
 namespace fc
 {
@@ -16,43 +16,46 @@ namespace fc
  *
  * \tparam event_t type of events passing through the buffer
  */
-template<class event_t>
+template<class event_t, class tag>
 struct buffer_interface
 {
+	typedef typename out_port<event_t, tag>::type out_port_t;
+	typedef typename in_port<event_t, tag>::type in_port_t;
+
 	buffer_interface() = default;
 	virtual ~buffer_interface() = default;
 
 	///input port for events, expects event_t
-	virtual event_in_port<event_t> in() = 0;
+	virtual in_port_t in() = 0;
 	///output port for events, sends event_t
-	virtual event_out_port<event_t> out() = 0;
+	virtual out_port_t out() = 0;
 
 	buffer_interface(const buffer_interface&) = delete;
 	buffer_interface& operator= (const buffer_interface &) = delete;
 };
 
 /// Implementation of buffer_interface, which directly forwards events.
-template<class event_t>
-class no_buffer final : public buffer_interface<event_t>
+template<class event_t, class tag = event_tag>
+class no_buffer final : public buffer_interface<event_t, tag>
 {
 public:
-	no_buffer()
-	: 	in_event_port( [this](event_t in_event) { out_event_port.fire(in_event);})
+	no_buffer()	:
+		in_event_port( [this](event_t in_event) { out_event_port.fire(in_event);})
 	{
 	}
 
-	event_in_port<event_t> in() override
+	typename in_port<event_t, tag>::type in() override
 	{
 		return in_event_port;
 	}
-	event_out_port<event_t> out() override
+	typename out_port<event_t, tag>::type out() override
 	{
 		return out_event_port;
 	}
 
 private:
-	event_in_port<event_t> in_event_port;
-	event_out_port<event_t> out_event_port;
+	typename in_port<event_t, tag>::type in_event_port;
+	typename out_port<event_t, tag>::type out_event_port;
 };
 
 /**
@@ -65,10 +68,9 @@ private:
  * Events from the external buffer are fired on receiving send tick.
  */
 template<class event_t>
-class event_buffer : public buffer_interface<event_t>
+class event_buffer : public buffer_interface<event_t, event_tag>
 {
 public:
-
 	event_buffer()
 		: in_switch_tick( [this](){ switch_buffers(); } )
 		, in_send_tick( [this](){ send_events(); } )
@@ -78,16 +80,19 @@ public:
 		{
 		}
 
+	typedef typename out_port<event_t, event_tag>::type out_port_t;
+	typedef typename in_port<event_t, event_tag>::type in_port_t;
+
 	// event in port of type void, switches buffers
 	auto switch_tick() { return in_switch_tick; };
 	// event in port of type void, fires external buffer
 	auto work_tick() { return in_send_tick; };
 
-	event_in_port<event_t> in() override
+	in_port_t in() override
 	{
 		return in_event_port;
 	}
-	event_out_port<event_t> out() override
+	out_port_t out() override
 	{
 		return out_event_port;
 	}
@@ -121,8 +126,8 @@ protected:
 
 	event_in_port<void> in_switch_tick;
 	event_in_port<void> in_send_tick;
-	event_in_port<event_t> in_event_port;
-	event_out_port<event_t> out_event_port;
+	in_port_t in_event_port;
+	out_port_t out_event_port;
 
 	typedef std::vector<event_t> buffer_t;
 	buffer_t intern_buffer;

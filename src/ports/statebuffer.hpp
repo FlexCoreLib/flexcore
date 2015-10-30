@@ -1,33 +1,14 @@
-/*
- * statebuffer.h
- *
- *  Created on: Oct 2, 2015
- *      Author: ckielwein
- */
-
 #ifndef SRC_PORTS_STATEBUFFER_HPP_
 #define SRC_PORTS_STATEBUFFER_HPP_
 
 #include "state_ports.hpp"
+#include "event_buffer.hpp"
 
 namespace fc
 {
 
-//todo merge with event_buffer to remove code duplication
 template<class data_t>
-struct state_buffer_interface
-{
-	state_buffer_interface() = default;
-	virtual ~state_buffer_interface() = default;
-	virtual state_sink<data_t> in() = 0;
-	virtual state_source_call_function<data_t> out() = 0;
-
-	state_buffer_interface(const state_buffer_interface&) = delete;
-	state_buffer_interface& operator= (const state_buffer_interface &) = delete;
-};
-
-template<class data_t>
-class state_no_buffer : public state_buffer_interface<data_t>
+class state_no_buffer : public buffer_interface<data_t, state_tag>
 {
 public:
 	state_no_buffer()
@@ -50,7 +31,7 @@ private:
 };
 
 template<class T>
-class state_buffer : public state_buffer_interface<T>
+class state_buffer : public buffer_interface<T, state_tag>
 {
 public:
 	state_buffer();
