@@ -74,8 +74,6 @@ struct buffer_factory
 	}
 };
 
-
-
 /**
  * \brief Connection that contain a buffer, if source and sink are from different regions.
  * \tparam base_connection connection type, the buffer is mixed into.

@@ -2,9 +2,10 @@
 #define SRC_NODES_GENERIC_HPP_
 
 #include <core/traits.hpp>
-#include <ports/states/state_sink.hpp>
+#include <ports/ports.hpp>
 
 #include <utility>
+#include <map>
 
 namespace fc
 {
@@ -45,22 +46,81 @@ auto transform(bin_op op)
 	return transform_node<bin_op>(op);
 }
 
-//todo requires way to define state or event ports through template parameters
-//template<class data_t>
-//class n_ary_switch
-//{
-//
-//	state_sink<size_t> index;
-//	typedef void port_type;
-//
-//	std::vector<port_type> in_ports;
-//
-//	data_t operator()()
-//	{
-//		return in_ports.at(index())();
-//	}
-//
-//};
+template<class data_t, class tag, class key_t = size_t> class n_ary_switch {};
+
+template<class data_t, class key_t>
+class n_ary_switch<data_t, state_tag, key_t>
+{
+public:
+	typedef typename in_port<data_t, state_tag>::type port_t;
+
+	n_ary_switch() :
+		index() ,
+		in_ports() ,
+		out_port([this](){return  in_ports.at(index())();})
+	{
+	}
+
+	auto in(key_t port) noexcept { return in_ports[port]; }
+	/// parameter port controlling the switch, expects state of key_t
+	auto control() const noexcept { return index; }
+	auto out() const noexcept { return out_port; }
+private:
+	state_sink<key_t> index;
+	std::map<key_t, port_t> in_ports;
+	state_source_call_function<data_t> out_port;
+};
+
+template<class data_t, class key_t>
+class n_ary_switch<data_t, event_tag, key_t>
+{
+public:
+	typedef typename in_port<data_t, event_tag>::type port_t;
+
+	/**
+	 * \brief Get port by key. Creates port if none was found for key.
+	 *
+	 *
+	 * \returns input port corresponding to key
+	 * \param port, key by which port is identified.
+	 * \post !in_ports.empty()
+	 *
+	 */
+	auto in(key_t port)
+	{
+		if (in_ports.find(port) == end(in_ports))
+		{
+			in_ports.emplace(std::make_pair(
+					port,
+					port_t([this, port](const data_t& in)
+							{ forward_call(in, port); }))
+			);
+		} //else the port already exists, we can just return it
+
+		assert(!in_ports.empty());
+		return in_ports.at(port);
+	};
+
+	/// output port of events of type data_t.
+	auto out() const noexcept { return out_port; }
+	/// parameter port controlling the switch, expects state of key_t
+	auto control() const noexcept { return index; }
+
+
+private:
+	state_sink<size_t> index;
+	event_out_port<data_t> out_port;
+	std::map<key_t, port_t> in_ports;
+	/// fires incoming event if and only if it is from the currently chosen port.
+	void forward_call(data_t event, key_t port)
+	{
+		assert(!in_ports.empty());
+		assert(in_ports.find(port) != end(in_ports));
+
+		if (port == index())
+			out().fire(event);
+	}
+};
 
 }  // namespace fc
 
