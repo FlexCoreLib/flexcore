@@ -30,7 +30,7 @@ struct transform_node
 
 	state_sink<param_type> param;
 
-	decltype(auto) operator()(data_t&& in)
+	decltype(auto) operator()(const data_t& in)
 	{
 		return op(in, param());
 	}
