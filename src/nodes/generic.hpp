@@ -46,6 +46,20 @@ auto transform(bin_op op)
 	return transform_node<bin_op>(op);
 }
 
+/**
+ * \brief n_ary_switch forwards one of n inputs to output
+ *
+ * Simply connect new input ports to add them to the set for the switch.
+ * The switch itself is controlled by the port "control" which needs to be connected
+ * to a state source of a type convertible to key_t.
+ * is specialized for state and events, as the implementations differ.
+ *
+ * \tparam data_t type of data flowing through the switch
+ * \tparam tag, either event_tag or state_tag to set switch to event handling
+ * or forwarding of state
+ *
+ * \key_t key for lookup of inputs in switch. needs to have operator < and ==
+ */
 template<class data_t, class tag, class key_t = size_t> class n_ary_switch {};
 
 template<class data_t, class key_t>
@@ -61,6 +75,13 @@ public:
 	{
 	}
 
+	/**
+	 * \brief input port for state of type data_t corresponding to key port.
+	 *
+	 * \returns input port corresponding to key
+	 * \param port, key by which port is identified.
+	 * \post !in_ports.empty()
+	 */
 	auto in(key_t port) noexcept { return in_ports[port]; }
 	/// parameter port controlling the switch, expects state of key_t
 	auto control() const noexcept { return index; }
@@ -80,11 +101,9 @@ public:
 	/**
 	 * \brief Get port by key. Creates port if none was found for key.
 	 *
-	 *
 	 * \returns input port corresponding to key
 	 * \param port, key by which port is identified.
 	 * \post !in_ports.empty()
-	 *
 	 */
 	auto in(key_t port)
 	{
