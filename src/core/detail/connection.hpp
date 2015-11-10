@@ -81,7 +81,7 @@ template
 	<	class source_t,
 		class sink_t
 	>
-auto connect(source_t source, sink_t sink)
+auto connect(const source_t& source, const sink_t& sink)
 {
 	return detail::connect_impl<source_t, sink_t>()(source, sink);
 }
