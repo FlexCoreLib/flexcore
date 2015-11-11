@@ -4,7 +4,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
-#include <vector>
+#include <list>
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
@@ -70,12 +70,12 @@ struct event_out_port
 		return port_connection<decltype(*this), handler_t>();
 	}
 
-private:
+protected:
 
 	// stores event_handlers in shared vector, since the port is stored in a node
 	// but will be copied, when it is connected. The node needs to send
 	// to all connected event_handlers, when an event is fired.
-	typedef std::vector<handler_t> handler_vector;
+	typedef std::list<handler_t> handler_vector;
 	std::shared_ptr<handler_vector> event_handlers = std::make_shared<handler_vector>(0);
 };
 
