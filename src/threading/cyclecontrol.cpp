@@ -60,7 +60,7 @@ void cycle_control::main_loop()
 		const auto now = wall_clock::steady::now();
 		work();
 		main_loop_control.wait_until(
-				loop_lock, now + std::chrono::milliseconds(100));
+				loop_lock, now + min_tick_length);
 	}
 }
 
@@ -76,8 +76,8 @@ void cycle_control::run_periodic_tasks()
 	{
 		if (task.is_due(virtual_clock::steady::now()))
 		{
-		//	if (!task.done())  //todo specify error model
-		//		throw out_of_time_exepction();
+			if (!task.done())  //todo specify error model
+				throw out_of_time_exepction();
 
 			task.set_work_to_do(true);
 			task.send_switch_tick();
