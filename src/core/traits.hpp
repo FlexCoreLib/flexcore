@@ -251,6 +251,21 @@ struct is_passive_source: is_passive_source_impl<T>
 {
 };
 
+
+//todo cleanup of diverse redundant traits
+template<class T>
+struct is_passive: std::integral_constant<bool,
+		is_passive_source<T>::value || is_passive_sink<T>::value>
+{
+};
+
+//todo cleanup of diverse redundant traits
+template<class T>
+struct is_active: std::integral_constant<bool,
+is_active_connectable<T>::value || is_active_sink<T>::value>
+{
+};
+
 template<template<class ...> class template_type, class T >
 struct is_instantiation_of : std::false_type
 {};

@@ -25,8 +25,18 @@ struct is_passive_sink<event_sink<T>> : public std::true_type
 
 BOOST_AUTO_TEST_CASE(test_event_connections)
 {
+	static_assert(is_active<event_out_port<int>>::value,
+			"event_out_port is active by definition");
+	static_assert(is_passive<event_in_port<int>>::value,
+			"event_in_port is passive by definition");
+	static_assert(!is_active<event_in_port<int>>::value,
+			"event_in_port is not active by definition");
+	static_assert(!is_passive<event_out_port<int>>::value,
+			"event_out_port is not passive by definition");
+
 	event_out_port<int> test_event;
 	event_sink<int> test_handler;
+
 
 	connect(test_event, test_handler);
 	test_event.fire(1);

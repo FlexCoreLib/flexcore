@@ -17,6 +17,10 @@ namespace fc
 //forward declaration for friend declartations in virtual_clock
 template<class T> class master_clock;
 
+/**
+ * \brief  Wall clock for measurements of system time.
+ * Timings in Solutions should pretty much always use virtual clock.
+ */
 struct wall_clock
 {
 	/// system_wall_clock is just a forward to std::system_clock
@@ -47,6 +51,11 @@ struct virtual_clock
 	typedef duration::rep rep; ///<storage format of the time
 	typedef duration::period period; ///<duration of a tick == smallest duration possible
 
+	/**
+	 * \brief virtual clock for measuring time points in simulation time
+	 *
+	 * Fulfills trivial_clock from std.
+	 */
 	class system
 	{
 	public:

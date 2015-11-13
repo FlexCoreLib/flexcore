@@ -40,6 +40,7 @@ private:
 
 };
 
+/// specialisation of event_in_port with void , necessary since operator() has no parameter.
 template<>
 struct event_in_port<void>
 {

@@ -10,11 +10,6 @@
 
 #include <ports/event_ports.hpp>
 
-namespace unit_test
-{
-struct parallel_tester; // Forward declaration for befriending
-}
-
 namespace fc
 {
 
@@ -42,7 +37,6 @@ protected:
 class tick_controller
 {
 public:
-	friend class ::unit_test::parallel_tester;
 	tick_controller() = default;
 
 	/// sends void event on the switch tick of the surrounding region
@@ -73,7 +67,6 @@ public:
 class parallel_region : public region_info
 {
 public:
-	friend class ::unit_test::parallel_tester;
 
 	virtual ~parallel_region() = default;
 	parallel_region();

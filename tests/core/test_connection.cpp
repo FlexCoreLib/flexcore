@@ -4,6 +4,9 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace fc;
+
+BOOST_AUTO_TEST_SUITE(test_connection)
+
 /**
  * Example test cases for core connections.
  * These this test shows how connections are used in general.
@@ -104,3 +107,23 @@ BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 	connect(do_nothing, increment_ref)();
 	BOOST_CHECK_EQUAL(capture_ref, 4);
 }
+
+BOOST_AUTO_TEST_CASE(test_move_only_token)
+{
+	//test if tokens, which cannot be copy constructed but move constructed
+	//are properly transmitted.
+	// also serves as a test if we don't do unnecessary copies
+	struct move_only
+	{
+		std::unique_ptr<int> val;
+	};
+
+	auto source = [](){ return move_only{ std::make_unique<int>(1)};};
+	auto increment = [](move_only in) { *(in.val) = *(in.val)+1; return in; };
+
+	auto connect = source >> increment;
+	auto result = connect();
+	BOOST_CHECK_EQUAL(*(result.val), 2);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

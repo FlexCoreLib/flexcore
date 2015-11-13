@@ -20,7 +20,16 @@ template<class data_t>
 class state_source_call_function
 {
 public:
-	state_source_call_function(std::function<data_t()> f) : call(f) {}
+	/**
+	 * \brief constructs state_source_function with function to call.
+	 *
+	 * \param f function which is called, when data is pulled from this source
+	 * \pre f needs to be non empty function.
+	 */
+	explicit state_source_call_function(std::function<data_t()> f) : call(f)
+	{
+		assert(call);
+	}
 
 	data_t operator()()
 	{
