@@ -14,10 +14,10 @@ namespace detail
 
 template<class T>
 struct is_active_source:
-		std::integral_constant<bool,
-		is_active_connectable<T>::value &&
-		is_port<T>::value>
-
+		std::integral_constant<	bool,
+									is_active_connectable<T>::value
+								and is_port<T>::value
+							  >
 {
 };
 
@@ -123,7 +123,8 @@ struct active_connection_proxy
 	}
 
 	/**
-	 * \brief connects a connectable, which is not a passive connectable to the active_connection_proxy.
+	 * \brief connects a connectable, which is not a passive connectable to the
+	 *        active_connection_proxy.
 	 *
 	 * connects the new_connectable to the current stored source
 	 *
@@ -140,8 +141,7 @@ struct active_connection_proxy
 		return active_connection_proxy<
 				active_t,
 				decltype(connection),
-				connect_policy>(
-						active, connection);
+				connect_policy>(active, connection);
 	}
 
 	active_t active;
@@ -176,17 +176,18 @@ struct active_passive_connect_impl
  */
 template<class active_t, class passive_t, class argument_order>
 struct active_passive_connect_impl
-	<
-		active_t,
+	<	active_t,
 		passive_t,
 		argument_order,
 		typename std::enable_if
-			<
-			!is_instantiation_of< active_connection_proxy,active_t >::value
-			&& ((is_active_source<active_t>::value
-					&& !fc::is_passive_sink<passive_t>::value)
-			||(fc::is_active_sink<active_t>::value
-					&& !fc::is_passive_source<passive_t>::value))>::type
+			<	not is_instantiation_of< active_connection_proxy,active_t >::value
+				and	(	(	is_active_source<active_t>::value
+						and !fc::is_passive_sink<passive_t>::value
+						)
+					or	(	fc::is_active_sink<active_t>::value
+						and !fc::is_passive_source<passive_t>::value
+						)
+					)>::type
 	>
 {
 	auto operator()(active_t active, passive_t passive)
@@ -209,11 +210,14 @@ struct active_passive_connect_impl
 		passive_t,
 		argument_order,
 		typename std::enable_if
-			<	!is_instantiation_of< active_connection_proxy,active_t >::value
-			&& ((is_active_source<active_t>::value
-					&& fc::is_passive_sink<passive_t>::value)
-			||(fc::is_active_sink<active_t>::value
-					&& fc::is_passive_source<passive_t>::value))>::type
+			<	not	is_instantiation_of< active_connection_proxy,active_t >::value
+				and	(	(	is_active_source<active_t>::value
+						and	fc::is_passive_sink<passive_t>::value
+						)
+					or	(	fc::is_active_sink<active_t>::value
+						and	fc::is_passive_source<passive_t>::value
+						)
+					)>::type
 	>
 {
 	auto operator()(active_t active, passive_t passive)
@@ -234,7 +238,7 @@ struct connect_impl
 	<	source_t,
 		sink_t,
 		typename std::enable_if
-			<fc::is_active<source_t>::value	>::type
+			<fc::is_active<source_t>::value>::type
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -249,7 +253,7 @@ struct connect_impl
 	<	source_t,
 		sink_t,
 		typename std::enable_if
-		<fc::is_active<sink_t>::value>::type
+			<fc::is_active<sink_t>::value>::type
 
 	>
 {
