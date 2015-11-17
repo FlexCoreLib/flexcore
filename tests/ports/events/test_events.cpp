@@ -15,15 +15,38 @@ struct event_sink
 	std::shared_ptr<T> storage = std::make_shared<T>();
 };
 
-namespace fc{
+namespace fc
+{
 
 template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
-{
-};
-}
+{};
 
-BOOST_AUTO_TEST_CASE(test_event_connections)
+} // namespace fc
+
+template<class T>
+struct event_vector_sink
+{
+	void operator()(T in)
+	{
+		storage->push_back(in);
+	}
+	std::shared_ptr<std::vector<T>> storage =
+			std::make_shared<std::vector<T>>();
+};
+
+namespace fc
+{
+
+template<class T>
+struct is_passive_sink<event_vector_sink<T>> : public std::true_type
+{};
+
+} // namespace fc
+
+BOOST_AUTO_TEST_SUITE( events )
+
+BOOST_AUTO_TEST_CASE( connections )
 {
 	static_assert(is_active<event_out_port<int>>::value,
 			"event_out_port is active by definition");
@@ -55,26 +78,7 @@ BOOST_AUTO_TEST_CASE(test_event_connections)
 	BOOST_CHECK_EQUAL(*(test_handler.storage), 4);
 }
 
-template<class T>
-struct event_vector_sink
-{
-	void operator()(T in)
-	{
-		storage->push_back(in);
-	}
-	std::shared_ptr<std::vector<T>> storage =
-			std::make_shared<std::vector<T>>();
-};
-
-namespace fc{
-
-template<class T>
-struct is_passive_sink<event_vector_sink<T>> : public std::true_type
-{
-};
-}
-
-BOOST_AUTO_TEST_CASE(merge_events)
+BOOST_AUTO_TEST_CASE( merge_events )
 {
 	event_out_port<int> test_event;
 	event_out_port<int> test_event_2;
@@ -95,7 +99,7 @@ BOOST_AUTO_TEST_CASE(merge_events)
 
 }
 
-BOOST_AUTO_TEST_CASE(split_events)
+BOOST_AUTO_TEST_CASE( split_events )
 {
 	event_out_port<int> test_event;
 	event_sink<int> test_handler_1;
@@ -109,7 +113,7 @@ BOOST_AUTO_TEST_CASE(split_events)
 	BOOST_CHECK_EQUAL(*(test_handler_2.storage), 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_event_in_port)
+BOOST_AUTO_TEST_CASE( in_port )
 {
 	int test_value = 0;
 
@@ -134,7 +138,7 @@ BOOST_AUTO_TEST_CASE(test_event_in_port)
 	BOOST_CHECK_EQUAL(test_value, 999);
 }
 
-BOOST_AUTO_TEST_CASE(test_event_lambda)
+BOOST_AUTO_TEST_CASE( lambda )
 {
 	int test_value = 0;
 
@@ -144,3 +148,54 @@ BOOST_AUTO_TEST_CASE(test_event_lambda)
 	void_out_2.fire();
 	BOOST_CHECK_EQUAL(test_value, 666);
 }
+
+/**
+ * Confirm that connecting ports and connectables
+ * does not depend on any particular order.
+ */
+BOOST_AUTO_TEST_CASE( associativity )
+{
+	int storage = 0;
+	auto c = [&](int i) { storage = i; return i; };
+	auto b = [](int i) -> int { return i + 1; };
+
+	{
+	event_out_port<int> a;
+	event_in_queue<int> d;
+	a >> b >> c >> d;
+	a.fire(2);
+	BOOST_CHECK_EQUAL(storage, 3);
+	BOOST_CHECK_EQUAL(d.get(), 3);
+	}
+
+	{
+	event_out_port<int> a;
+	event_in_queue<int> d;
+	(a >> b) >> (c >> d);
+	a.fire(2);
+	BOOST_CHECK_EQUAL(storage, 3);
+	BOOST_CHECK_EQUAL(d.get(), 3);
+	}
+
+	{
+	event_out_port<int> a;
+	event_in_queue<int> d;
+	a >> ((b >> c) >> d);
+	a.fire(2);
+	BOOST_CHECK_EQUAL(storage, 3);
+	BOOST_CHECK_EQUAL(d.get(), 3);
+	}
+
+	{
+	event_out_port<int> a;
+	event_in_queue<int> d;
+	(a >> (b >> c)) >> d;
+	a.fire(2);
+	BOOST_CHECK_EQUAL(storage, 3);
+	BOOST_CHECK_EQUAL(d.get(), 3);
+	}
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+

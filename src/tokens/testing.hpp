@@ -11,11 +11,11 @@ class move_token
 {
 public:
 	move_token(std::string v) noexcept : value_(v) {}
-	move_token() noexcept = default;
+	move_token() = default;
 	move_token(move_token&) = delete;
-	move_token(move_token&&) noexcept = default;
+	move_token(move_token&&) = default;
 	move_token& operator= (move_token&) = delete;
-	move_token& operator= (move_token&&) noexcept = default;
+	move_token& operator= (move_token&&) = default;
 
 	std::string& value() { return value_; }
 	const std::string& value() const { return value_; }

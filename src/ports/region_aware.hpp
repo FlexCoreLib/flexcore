@@ -92,7 +92,7 @@ struct buffered_event_connection : public base_connection
 		assert(buffer);
 	}
 
-	void operator()(payload_t event)
+	void operator()(const payload_t& event)
 	{
 		assert(buffer);
 		buffer->in()(event);

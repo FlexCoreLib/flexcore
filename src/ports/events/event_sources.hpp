@@ -35,16 +35,35 @@ struct event_out_port
 	event_out_port() = default;
 	event_out_port(const event_out_port&) = default;
 
-	template<class... T>
-	void fire(T... event)
+//	template<class... T>
+//	void fire(T ... event)
+//	{
+//		static_assert(sizeof...(T) == 0 || sizeof...(T) == 1,
+//				"we only allow single events, or void events atm");
+//		assert(event_handlers);
+//		for (auto& target : (*event_handlers))
+//		{
+//			assert(target);
+//			target(event...);
+//		}
+//	}
+	template<class T>
+	void fire(T&& event)
 	{
-		static_assert(sizeof...(T) == 0 || sizeof...(T) == 1,
-				"we only allow single events, or void events atm");
 		assert(event_handlers);
 		for (auto& target : (*event_handlers))
 		{
 			assert(target);
-			target(event...);
+			target(event);
+		}
+	}
+	void fire()
+	{
+		assert(event_handlers);
+		for (auto& target : (*event_handlers))
+		{
+			assert(target);
+			target();
 		}
 	}
 
