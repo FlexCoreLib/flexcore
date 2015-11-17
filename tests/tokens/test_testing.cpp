@@ -12,7 +12,7 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_tokens_testing)
 
-BOOST_AUTO_TEST_CASE( move_token )
+BOOST_AUTO_TEST_CASE( move_token_ )
 {
 	// no default constructor
 	// how to test for "does not compile"?
@@ -36,7 +36,8 @@ BOOST_AUTO_TEST_CASE( moving )
 	event_in_queue<move_token> sink;
 	source >> set_bar >> sink;
 	source.fire(move_token("foo"));
-	BOOST_CHECK_EQUAL(sink.get().value(), std::string("bar"));
+	move_token received(sink.get());
+	BOOST_CHECK_EQUAL(received.value(), std::string("bar"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

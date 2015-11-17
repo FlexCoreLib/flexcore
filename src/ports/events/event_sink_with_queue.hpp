@@ -31,13 +31,13 @@ struct event_in_queue
 	}
 
 	bool empty() { return queue->empty(); }
-	event_t get()
+	event_t&& get()
 	{
 		if (empty())
 			throw std::runtime_error("queue emtpy.");
 		event_t result = std::move(queue->front());
 		queue->pop();
-		return result;
+		return std::move(result);
 	}
 
 private:
