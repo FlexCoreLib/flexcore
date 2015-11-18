@@ -25,7 +25,7 @@ struct event_in_queue
 	{
 	}
 
-	void operator()(event_t&& in_event)
+	void operator()(const event_t& in_event)
 	{
 		queue->push(in_event);
 	}

@@ -78,6 +78,21 @@ BOOST_AUTO_TEST_CASE( connections )
 	BOOST_CHECK_EQUAL(*(test_handler.storage), 4);
 }
 
+BOOST_AUTO_TEST_CASE( queue_sink )
+{
+	auto inc = [](int i) { return i + 1; };
+//	auto set_bar = [](move_token&& t) { t.value() = "bar"; return std::move(t); };
+
+	event_out_port<int> source;
+	event_in_queue<int> sink;
+	source >> inc >> sink;
+	source.fire(4);
+	BOOST_CHECK_EQUAL(sink.empty(), false);
+	int received = sink.get();
+	BOOST_CHECK_EQUAL(received, 5);
+	BOOST_CHECK_EQUAL(sink.empty(), true);
+}
+
 BOOST_AUTO_TEST_CASE( merge_events )
 {
 	event_out_port<int> test_event;

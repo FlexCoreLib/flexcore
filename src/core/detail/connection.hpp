@@ -37,7 +37,6 @@ struct connection_trait
 	typedef typename result_of<sink_t>::type sink_result;
 
 	static const bool param_is_void = utils::function_traits<source_t>::arity == 0;
-	static const bool result_is_void = std::is_void<sink_result>::value;
 	static const bool payload_is_void = std::is_void<source_result>::value;
 
 	typedef connection
