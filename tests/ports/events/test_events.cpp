@@ -81,7 +81,6 @@ BOOST_AUTO_TEST_CASE( connections )
 BOOST_AUTO_TEST_CASE( queue_sink )
 {
 	auto inc = [](int i) { return i + 1; };
-//	auto set_bar = [](move_token&& t) { t.value() = "bar"; return std::move(t); };
 
 	event_out_port<int> source;
 	event_in_queue<int> sink;

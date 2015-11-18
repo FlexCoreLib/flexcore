@@ -20,10 +20,9 @@ namespace fc
 template<class event_t>
 struct event_in_queue
 {
-	explicit event_in_queue() :
-			queue(new std::queue<event_t>)
-	{
-	}
+	explicit event_in_queue()
+		: queue(new std::queue<event_t>)
+	{}
 
 	void operator()(const event_t& in_event)
 	{
@@ -31,13 +30,14 @@ struct event_in_queue
 	}
 
 	bool empty() { return queue->empty(); }
-	event_t&& get()
+
+	event_t get()
 	{
 		if (empty())
 			throw std::runtime_error("queue emtpy.");
-		event_t result { std::move(queue->front()) };
+		event_t result { queue->front() };
 		queue->pop();
-		return std::move(result);
+		return result;
 	}
 
 private:
