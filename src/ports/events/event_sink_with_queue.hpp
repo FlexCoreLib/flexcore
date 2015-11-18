@@ -35,7 +35,7 @@ struct event_in_queue
 	{
 		if (empty())
 			throw std::runtime_error("queue emtpy.");
-		event_t result = std::move(queue->front());
+		event_t result { std::move(queue->front()) };
 		queue->pop();
 		return std::move(result);
 	}

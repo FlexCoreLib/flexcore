@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE( associativity )
 {
 	int storage = 0;
 	auto c = [&](int i) { storage = i; return i; };
-	auto b = [](int i) -> int { return i + 1; };
+	auto b = [](int i) { return i + 1; };
 
 	{
 	event_out_port<int> a;
