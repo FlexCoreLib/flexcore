@@ -19,19 +19,23 @@ namespace fc
  * first for events only
  */
 template
-	<	class range_t,			// boost::begin/end works
+	<	class range_t,			 // boost::begin/end works
 		class predicate_result_t // todo
 	>
 class list_splitter
 {
 public:
+	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
+	typedef std::vector<value_t> out_range_t;
+
 	list_splitter(auto p)
-		: predicate(p)
-		, in( [&](const range_t& range){ this->receive(range); } )
+		: in( [&](const range_t& range){ this->receive(range); } )
+		, out_ports()
+		, predicate(p)
 	{}
 
 	event_in_port<range_t> in;
-	event_out_port<range_t> out(predicate_result_t value) { return out_ports[value]; }
+	event_out_port<out_range_t> out(predicate_result_t value) { return out_ports[value]; }
 
 private:
 	void receive(const range_t& range)
@@ -45,14 +49,13 @@ private:
 			result_map[predicate(*it)].push_back(*it);
 		for (auto& e : result_map)
 		{
-			auto it = out_ports.find(e->first);
-			if (it != result_map.end())
+			auto it = out_ports.find(e.first);
+			if (it != out_ports.end())
 				it->second.fire(e.second);
 		}
 	}
 
-	std::map<predicate_result_t, event_out_port<range_t>> out_ports;
-	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
+	std::map<predicate_result_t, event_out_port<out_range_t>> out_ports;
 	std::function<predicate_result_t(value_t)> predicate;
 };
 
