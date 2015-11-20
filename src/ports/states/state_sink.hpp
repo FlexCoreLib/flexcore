@@ -29,6 +29,8 @@ public:
 	{ }
 	state_sink(const state_sink& other) : con(other.con) {  }
 
+	//typedef data_t result_t;
+
 	/**
 	 * \brief pulls state from connection
 	 *
@@ -50,11 +52,11 @@ public:
 		static_assert(is_callable<con_t>::value,
 				"only callables can be connected");
 
-		static_assert(std::is_same<data_t,
-				typename result_of<con_t>::type>::value,
-				"return value of connected needs to be data_t");
-		static_assert(utils::function_traits<con_t>::arity == 0,
-				"no parameter allowed for objects to be connected");
+	//	static_assert(std::is_same<data_t,
+	//			typename result_of<con_t>::type>::value,
+	//			"return value of connected needs to be data_t");
+		//static_assert(utils::function_traits<con_t>::arity == 0,
+		//		"no parameter allowed for objects to be connected");
 		(*con) = c;
 
 		assert(con); //check postcondition

@@ -126,4 +126,13 @@ BOOST_AUTO_TEST_CASE(test_move_only_token)
 	BOOST_CHECK_EQUAL(*(result.val), 2);
 }
 
+BOOST_AUTO_TEST_CASE(test_polymorphic_lambda)
+{
+	auto give_one = [](void) ->int {return 1;}; //simply return 1, no parameter
+	auto poly_increment = [](auto i){ return ++i; };
+
+	auto one_plus_one = connect(give_one, poly_increment);
+	BOOST_CHECK(one_plus_one() == 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
