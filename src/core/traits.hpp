@@ -225,8 +225,26 @@ struct is_passive_source_impl: public std::false_type
 };
 
 template<class T>
-struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::type>
-		: public std::integral_constant<bool, utils::function_traits<T>::arity == 0>
+constexpr auto void_callable(int) -> decltype(std::declval<T>()(), bool())
+{
+	return true;
+}
+
+template<class T>
+constexpr bool void_callable(...)
+{
+	return false;
+}
+
+//template<class T>
+//struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+//		: public std::integral_constant<bool, void_callable<T>(0)>
+//{
+//};
+
+template<class T>
+struct is_passive_source_impl<T,typename std::enable_if<void_callable<T>(0)>::type>
+		: public std::integral_constant<bool, true>
 {
 };
 
@@ -236,7 +254,21 @@ struct is_passive_sink_impl: public std::false_type
 };
 
 template<class T>
-struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+constexpr auto overloaded(int) -> decltype(&T::operator(), bool())
+{
+	//in case operator() is overloaded decltype will fail, and this template will not be instantiated.
+	return false;
+}
+
+template<class T>
+constexpr bool overloaded(...)
+{
+	return true;
+}
+
+template<class T>
+struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value
+			&& !overloaded<T>(0)>::type>
 		: public std::integral_constant<bool, std::is_void<typename result_of<T>::type>::value>
 {
 };
@@ -247,7 +279,7 @@ struct is_passive_sink: public is_passive_sink_impl<T>
 {
 };
 template<class T>
-struct is_passive_source: is_passive_source_impl<T>
+struct is_passive_source: public is_passive_source_impl<T>
 {
 };
 

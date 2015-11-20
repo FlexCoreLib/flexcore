@@ -36,6 +36,8 @@ public:
 		return call();
 	}
 
+	typedef data_t result_t;
+
 private:
 	std::function<data_t()> call;
 };

@@ -67,7 +67,7 @@ struct event_out_port
 		event_handlers->push_back(new_handler);
 
 		assert(!event_handlers->empty());
-		return port_connection<decltype(*this), handler_t>();
+		return port_connection<decltype(*this), handler_t, result_t>();
 	}
 
 private:

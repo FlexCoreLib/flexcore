@@ -9,6 +9,72 @@
 namespace fc
 {
 
+namespace detail
+{
+
+enum void_flag
+{
+	payload_void,
+	payload_not_void,
+	invalid,
+};
+
+template<class source,class sink, class... P>
+constexpr auto void_check(int) ->  decltype(std::declval<sink>()(), std::declval<source>()(std::declval<P>()...), void_flag())
+{
+	return payload_void;
+}
+
+template<class source,class sink, class... P>
+constexpr auto void_check(int) ->  decltype(std::declval<sink>()(std::declval<source>()(std::declval<P>()...)), void_flag())
+{
+	return payload_not_void;
+}
+
+//template<class source,class sink, class... P>
+//constexpr auto void_check(int) ->  decltype(std::declval<sink>()(), std::declval<source>()(), void_flag())
+//{
+//	return payload_void;
+//}
+//
+//template<class source,class sink, class... P>
+//constexpr auto void_check(int) ->  decltype(std::declval<sink>()(std::declval<source>()()), void_flag())
+//{
+//	return payload_not_void;
+//}
+
+//template<class... P>
+//constexpr auto void_check(...)
+//{
+//	return invalid;
+//}
+
+template<void_flag vflag, class source_t, class sink_t, class... param>
+struct invoke_helper
+{
+};
+
+template<class source_t, class sink_t, class... param>
+struct invoke_helper<payload_void, source_t, sink_t, param...>
+{
+	auto operator()(source_t& source, sink_t& sink, const param&... p)
+	{
+		source(p...);
+		return sink();
+	}
+};
+
+template<class source_t, class sink_t, class... param>
+struct invoke_helper<payload_not_void, source_t, sink_t, param...>
+{
+	auto operator()(source_t& source, sink_t& sink, const param&... p)
+	{
+		return sink(source(p...));
+	}
+};
+
+} //namespace detail
+
 /**
  * \brief defines basic connection object, which is connectable.
  * \tparam source_t the source node of the connection, data flows from here to the sink.
@@ -20,11 +86,22 @@ namespace fc
  */
 template<
 		class source_t,
-		class sink_t,
-		bool param_void,
-		bool payload_void
+		class sink_t
 		>
-struct connection;
+struct connection
+{
+	source_t source;
+	sink_t sink;
+
+
+	template<class S = source_t, class T = sink_t, class... param>
+	auto operator()(const param&... p)
+	{
+		constexpr auto test = detail::void_check<S, T, param...>(0);
+		return detail::invoke_helper<test, S,T,param...>()(source,sink,p...);
+	}
+
+};
 
 /**
  * \brief metafunction which creates correct Connection type by checking
@@ -33,18 +110,16 @@ struct connection;
 template<class source_t, class sink_t>
 struct connection_trait
 {
-	typedef typename result_of<source_t>::type source_result;
-	typedef typename result_of<sink_t>::type sink_result;
-
-	static const bool param_is_void = utils::function_traits<source_t>::arity == 0;
-	static const bool result_is_void = std::is_void<sink_result>::value;
-	static const bool payload_is_void = std::is_void<source_result>::value;
+//	typedef typename result_of<source_t>::type source_result;
+//	typedef typename result_of<sink_t>::type sink_result;
+//
+//	static const bool param_is_void = utils::function_traits<source_t>::arity == 0;
+//
+//	static const bool payload_is_void = std::is_void<source_result>::value;
 
 	typedef connection
 		<	source_t,
-			sink_t,
-			param_is_void,
-			payload_is_void
+			sink_t
 		> type;
 };
 
@@ -96,74 +171,6 @@ auto operator >>(const source_t& source, const sink_t& sink)
 {
 	return connect(source, sink);
 }
-
-/***************** Implementation *********************************************
- *
- * Template specializations on param_is_void and payload_is_void.
- * These specializations are necessary since different parts of the function bodies
- * of operator() are ill formed if parameter or payload are void.
- * since return void is legal in generic code, we do not need to specialize on return type.
- *
- * std::enable_if on the operator() does not work in all cases, since the metafunctions
- * param_type can also be ill formed, when paramt_t is void.
- *
- */
-
-/// Specialization in case no value is void
-template<class source_t,class sink_t>
-struct connection<source_t, sink_t, false, false>
-{
-	source_t source;
-	sink_t sink;
-	typedef typename param_type<source_t>::type param_type;
-	auto operator()(const param_type& p)
-	{
-		// execute source with parameter and execute sink with result from source.
-		return sink(source(p));
-	}
-};
-
-/// Partial specialization no parameter
-template<class source_t,class sink_t>
-struct connection<source_t, sink_t, true, false>
-{
-	source_t source;
-	sink_t sink;
-	auto operator()()
-	{
-		// execute source and execute sink with result from source.
-		return sink(source());
-	}
-};
-
-/// partial specialization for no parameter and no payload
-template<class source_t, class sink_t>
-struct connection<source_t, sink_t, true, true>
-{
-	source_t source;
-	sink_t sink;
-	auto operator()()
-	{
-		// execute source and execute sink separately since source has no result.
-		source();
-		return sink();
-	}
-};
-
-/// Special case, when there is no payload in the connnection
-template<class source_t,class sink_t>
-struct connection<source_t, sink_t, false, true>
-{
-	source_t source;
-	sink_t sink;
-	typedef typename param_type<source_t>::type param_type;
-	auto operator()(const param_type& p)
-	{
-		// execute source and execute sink separately.
-		source(p);
-		return sink();
-	}
-};
 
 } //namespace fc
 

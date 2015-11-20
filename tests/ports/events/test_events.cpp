@@ -5,6 +5,7 @@
 
 using namespace fc;
 
+
 template<class T>
 struct event_sink
 {
@@ -21,8 +22,39 @@ template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
 {
 };
+
+template<class T>
+struct is_port<event_sink<T>> : public std::true_type
+{
+};
 }
 
+template<class T>
+struct event_vector_sink
+{
+	void operator()(T in)
+	{
+		storage->push_back(in);
+	}
+	std::shared_ptr<std::vector<T>> storage =
+			std::make_shared<std::vector<T>>();
+};
+
+namespace fc{
+
+template<class T>
+struct is_passive_sink<event_vector_sink<T>> : public std::true_type
+{
+};
+
+template<class T>
+struct is_port<event_vector_sink<T>> : public std::true_type
+{
+};
+}
+
+
+BOOST_AUTO_TEST_SUITE(test_events)
 BOOST_AUTO_TEST_CASE(test_event_connections)
 {
 	static_assert(is_active<event_out_port<int>>::value,
@@ -44,6 +76,9 @@ BOOST_AUTO_TEST_CASE(test_event_connections)
 
 
 	auto tmp_connection = test_event >> [](int i){return ++i;};
+	static_assert(is_instantiation_of<
+			detail::active_connection_proxy, decltype(tmp_connection)>::value,
+			"active port connected with standard connectable gets proxy");
 	tmp_connection >> test_handler;
 
 	test_event.fire(1);
@@ -55,24 +90,6 @@ BOOST_AUTO_TEST_CASE(test_event_connections)
 	BOOST_CHECK_EQUAL(*(test_handler.storage), 4);
 }
 
-template<class T>
-struct event_vector_sink
-{
-	void operator()(T in)
-	{
-		storage->push_back(in);
-	}
-	std::shared_ptr<std::vector<T>> storage =
-			std::make_shared<std::vector<T>>();
-};
-
-namespace fc{
-
-template<class T>
-struct is_passive_sink<event_vector_sink<T>> : public std::true_type
-{
-};
-}
 
 BOOST_AUTO_TEST_CASE(merge_events)
 {
@@ -144,3 +161,5 @@ BOOST_AUTO_TEST_CASE(test_event_lambda)
 	void_out_2.fire();
 	BOOST_CHECK_EQUAL(test_value, 666);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
