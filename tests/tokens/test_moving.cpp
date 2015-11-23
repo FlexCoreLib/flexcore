@@ -3,6 +3,8 @@
 #include "core/connection.hpp"
 #include "ports/events/event_sink_with_queue.hpp"
 #include "ports/event_ports.hpp"
+#include "ports/state_ports.hpp"
+
 #include <vector>
 #include <algorithm>
 #include "move_token.hpp"
@@ -26,7 +28,7 @@ BOOST_AUTO_TEST_CASE( move_token_ )
 	v.push_back(move_token("foo"));
 }
 
-BOOST_AUTO_TEST_CASE( moving )
+BOOST_AUTO_TEST_CASE( moving_events )
 {
 	auto set_bar = [](auto&& t) -> move_token&& { t.value() = "bar"; return std::move(t); };
 //	auto set_bar = [](move_token&& t) { t.value() = "bar"; return std::move(t); };
@@ -38,6 +40,18 @@ BOOST_AUTO_TEST_CASE( moving )
 	source >> set_bar >> bla;
 	source.fire(move_token("foo"));
 }
+
+BOOST_AUTO_TEST_CASE( moving_state )
+{
+	auto set_bar = [](auto&& t) -> move_token&& { t.value() = "bar"; return std::move(t); };
+	state_sink<move_token> sink;
+	state_source_call_function<move_token> source([](){ return move_token("foo"); });
+
+	source >> set_bar >> sink;
+	BOOST_CHECK_EQUAL(sink.get().value(), "bar");
+
+}
+
 
 //test case to make sure objects are not move if we don't want them to be
 BOOST_AUTO_TEST_CASE( non_moving )
