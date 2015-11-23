@@ -26,6 +26,7 @@ ADD_EXECUTABLE( test_executable
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}
 	"../src/" 
+	"../src/3rdparty/range-v3/include/"
 	"." )
 
 TARGET_LINK_LIBRARIES( test_executable
