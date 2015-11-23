@@ -94,8 +94,21 @@ struct connection
 	sink_t sink;
 
 
+	/**
+	 * \brief call operator, calls source and then sink with the result of source
+	 *
+	 * redundant return type specification is necessary at the moment,
+	 * as it causes missing operator() in source and sink to appear in function declaration
+	 * and thus be a substitution failure.
+	 */
 	template<class S = source_t, class T = sink_t, class... param>
 	auto operator()(const param&... p)
+	-> decltype(detail::invoke_helper
+			<
+				detail::void_check<S, T, param...>(0),
+				S,T,param...
+			>()
+			(source,sink,p...))
 	{
 		constexpr auto test = detail::void_check<S, T, param...>(0);
 		return detail::invoke_helper<test, S,T,param...>()(source,sink,p...);
