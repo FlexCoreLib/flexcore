@@ -27,7 +27,7 @@ struct event_in_port
 		assert(event_handler);
 	}
 
-	void operator()(event_t in_event)
+	void operator()(const event_t& in_event) // universal ref here?
 	{
 		assert(event_handler);
 		event_handler(in_event);
