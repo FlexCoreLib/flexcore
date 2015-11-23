@@ -31,43 +31,27 @@ constexpr auto void_check(int) ->  decltype(std::declval<sink>()(std::declval<so
 	return payload_not_void;
 }
 
-//template<class source,class sink, class... P>
-//constexpr auto void_check(int) ->  decltype(std::declval<sink>()(), std::declval<source>()(), void_flag())
-//{
-//	return payload_void;
-//}
-//
-//template<class source,class sink, class... P>
-//constexpr auto void_check(int) ->  decltype(std::declval<sink>()(std::declval<source>()()), void_flag())
-//{
-//	return payload_not_void;
-//}
-
-//template<class... P>
-//constexpr auto void_check(...)
-//{
-//	return invalid;
-//}
-
 template<void_flag vflag, class source_t, class sink_t, class... param>
 struct invoke_helper
 {
 };
 
-template<class source_t, class sink_t, class... param>
-struct invoke_helper<payload_void, source_t, sink_t, param...>
+template<class source_t, class sink_t>
+struct invoke_helper<payload_void, source_t, sink_t>
 {
-	auto operator()(source_t& source, sink_t& sink, const param&... p)
+	template<class... param>
+	decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p)
 	{
 		source(p...);
 		return sink();
 	}
 };
 
-template<class source_t, class sink_t, class... param>
-struct invoke_helper<payload_not_void, source_t, sink_t, param...>
+template<class source_t, class sink_t>
+struct invoke_helper<payload_not_void, source_t, sink_t>
 {
-	auto operator()(source_t& source, sink_t& sink, const param&... p)
+	template<class... param>
+	decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p)
 	{
 		return sink(source(p...));
 	}
@@ -102,38 +86,21 @@ struct connection
 	 * and thus be a substitution failure.
 	 */
 	template<class S = source_t, class T = sink_t, class... param>
-	auto operator()(const param&... p)
-	-> decltype(detail::invoke_helper
-			<
+	auto operator()(param&&... p)
+	-> decltype(detail::invoke_helper<
 				detail::void_check<S, T, param...>(0),
-				S,T,param...
+				S,T
 			>()
 			(source,sink,p...))
 	{
 		constexpr auto test = detail::void_check<S, T, param...>(0);
-		return detail::invoke_helper<test, S,T,param...>()(source,sink,p...);
+		return detail::invoke_helper<
+					test,
+					S,T
+				>()
+				(source,sink,p...);
 	}
 
-};
-
-/**
- * \brief metafunction which creates correct Connection type by checking
- * if parameters or result types are void.
- */
-template<class source_t, class sink_t>
-struct connection_trait
-{
-//	typedef typename result_of<source_t>::type source_result;
-//	typedef typename result_of<sink_t>::type sink_result;
-//
-//	static const bool param_is_void = utils::function_traits<source_t>::arity == 0;
-//
-//	static const bool payload_is_void = std::is_void<source_result>::value;
-
-	typedef connection
-		<	source_t,
-			sink_t
-		> type;
 };
 
 /// internals of flexcore, everything here can change any time.
@@ -143,10 +110,9 @@ namespace detail
 template<class source_t, class sink_t, class Enable = void>
 struct connect_impl
 {
-	typename connection_trait<source_t, sink_t>::type
-	operator()(const source_t& source, const sink_t& sink)
+	auto operator()(const source_t& source, const sink_t& sink)
 	{
-		return typename connection_trait<source_t, sink_t>::type {source, sink};
+		return connection<source_t, sink_t> {source, sink};
 	}
 };
 

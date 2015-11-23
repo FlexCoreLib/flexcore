@@ -72,5 +72,4 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 	auto two_stored_2 = increment >> tmp2;
 	source_3 >> two_stored_2;
 	BOOST_CHECK_EQUAL(sink.get(), 4);
-
 }
