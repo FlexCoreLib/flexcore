@@ -14,6 +14,10 @@ namespace fc
 /**
  * \brief minimal input port for events
  *
+ * Currently the port is only for use in the unittests.
+ * There is no check for the buffer size. If you want to use this port in
+ * production code, you need to add a size check!
+ *
  * fulfills passive_sink
  * \tparam event_t type of event expected, must be copy_constructable
  */

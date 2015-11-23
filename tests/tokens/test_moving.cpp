@@ -2,11 +2,9 @@
 
 #include "core/connection.hpp"
 #include "ports/event_ports.hpp"
-#include "tokens/testing.hpp"
-
-// std
 #include <vector>
 #include <algorithm>
+#include "move_token.hpp"
 
 using namespace fc;
 

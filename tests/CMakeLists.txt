@@ -22,7 +22,7 @@ ADD_EXECUTABLE( test_executable
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp
 	threading/test_parallelscheduler.cpp
-	tokens/test_testing.cpp )
+	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}

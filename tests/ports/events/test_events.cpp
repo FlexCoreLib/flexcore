@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ports/event_ports.hpp"
+#include "event_sink_with_queue.hpp"
 #include "core/connection.hpp"
 
 using namespace fc;
