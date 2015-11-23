@@ -50,6 +50,15 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
 	BOOST_CHECK((output.at(2) == std::vector<std::string>{"aa"}));
 	BOOST_CHECK((output.at(3) == std::vector<std::string>{"bbb"}));
 	BOOST_CHECK((output.at(4) == std::vector<std::string>{ }));
+
+	// send again
+	std::list<std::string> input2 { "a", "b", "cd" };
+	splitter.in(input2);
+
+	// check result
+	BOOST_CHECK((output.at(0) == std::vector<std::string>{ }));
+	BOOST_CHECK((output.at(1) == std::vector<std::string>{"a", "b"}));
+	BOOST_CHECK((output.at(2) == std::vector<std::string>{"cd"}));
 }
 
 /*
@@ -76,13 +85,6 @@ BOOST_AUTO_TEST_CASE( test_list_splitter_bool )
 
 	BOOST_CHECK((out_true  == std::vector<int>{ 1, 5, 1 }));
 	BOOST_CHECK((out_false == std::vector<int>{ -1, -6, -6}));
-}
-
-BOOST_AUTO_TEST_CASE( simple )
-{
-	event_out_port<int> p;
-	p >> [](const auto&){std::cout <<"BAR" << std::endl;};
-	p.fire(4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
