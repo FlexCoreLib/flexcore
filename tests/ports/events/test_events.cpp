@@ -162,4 +162,39 @@ BOOST_AUTO_TEST_CASE(test_event_lambda)
 	BOOST_CHECK_EQUAL(test_value, 666);
 }
 
+template<class operation>
+struct sink_t
+{
+	typedef void result_t;
+
+	void operator()(auto && in)
+	{
+		op(in);
+	}
+
+	operation op;
+};
+
+template<class operation>
+auto sink(const operation& op )
+{
+	return sink_t<operation>{op};
+}
+
+BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
+{
+	int test_value = 0;
+
+	event_out_port<int> p;
+	auto write = sink([&](auto in) {test_value = in;});
+
+	static_assert(is_passive_sink<decltype(write)>::value, "");
+
+	p >> write;
+	BOOST_CHECK_EQUAL(test_value, 0);
+	p.fire(4);
+	BOOST_CHECK_EQUAL(test_value, 4);
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
