@@ -20,7 +20,7 @@ namespace detail
 template<class event_t>
 struct handle_type
 {
-	typedef std::function<void(const event_t&)> type; // need rvalue ref here?
+	typedef std::function<void(event_t)> type; // need rvalue ref here?
 };
 
 template<>

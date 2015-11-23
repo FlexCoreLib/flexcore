@@ -175,6 +175,24 @@ BOOST_AUTO_TEST_CASE( lambda )
 	BOOST_CHECK_EQUAL(test_value, 666);
 }
 
+namespace
+{
+template<class T>
+void test_connection(const T& connection)
+{
+	int storage = 0;
+	event_out_port<int> a;
+	event_in_queue<int> d;
+	auto c = [&](int i) { storage = i; return i; };
+	auto b = [](int i) { return i + 1; };
+
+	connection(a,b,c,d);
+
+	a.fire(2);
+	BOOST_CHECK_EQUAL(storage, 3);
+	BOOST_CHECK_EQUAL(d.get(), 3);
+}
+}
 
 /**
  * Confirm that connecting ports and connectables
@@ -182,45 +200,25 @@ BOOST_AUTO_TEST_CASE( lambda )
  */
 BOOST_AUTO_TEST_CASE( associativity )
 {
-	int storage = 0;
-	auto c = [&](int i) { storage = i; return i; };
-	auto b = [](int i) { return i + 1; };
-
+	test_connection([](auto a, auto b, auto c, auto d)
 	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	a >> b >> c >> d;
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
-	}
+		a >> b >> c >> d;
+	});
 
+	test_connection([](auto a, auto b, auto c, auto d)
 	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	(a >> b) >> (c >> d);
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
-	}
+		(a >> b) >> (c >> d);
+	});
 
+	test_connection([](auto a, auto b, auto c, auto d)
 	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	a >> ((b >> c) >> d);
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
-	}
+		a >> ((b >> c) >> d);
+	});
 
+	test_connection([](auto a, auto b, auto c, auto d)
 	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	(a >> (b >> c)) >> d;
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
-	}
+		(a >> (b >> c)) >> d;
+	});
 }
 
 template<class operation>

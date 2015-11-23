@@ -29,14 +29,14 @@ namespace fc
 template<class event_t>
 struct event_out_port
 {
-	typedef event_t result_t;
-	typedef typename detail::handle_type<event_t>::type handler_t;
+	typedef typename std::remove_reference<event_t>::type result_t;
+	typedef typename detail::handle_type<result_t>::type handler_t;
 
 	event_out_port() = default;
 	event_out_port(const event_out_port&) = default;
 
 	template<class... T>
-	void fire(T... event)
+	void fire(T&&... event)
 	{
 		static_assert(sizeof...(T) == 0 || sizeof...(T) == 1,
 				"we only allow single events, or void events atm");
@@ -44,7 +44,7 @@ struct event_out_port
 		for (auto& target : (*event_handlers))
 		{
 			assert(target);
-			target(event...);
+			target(std::move(event)...);
 		}
 	}
 

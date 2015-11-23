@@ -224,7 +224,7 @@ struct active_passive_connect_impl
 					)>::type
 	>
 {
-	auto operator()(active_t active, const passive_t& passive)
+	auto operator()(active_t active, passive_t passive)
 	{
 		active.connect(passive);
 		typedef typename

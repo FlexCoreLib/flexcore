@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "core/connection.hpp"
+#include "ports/events/event_sink_with_queue.hpp"
 #include "ports/event_ports.hpp"
 #include <vector>
 #include <algorithm>
@@ -27,16 +28,15 @@ BOOST_AUTO_TEST_CASE( move_token_ )
 
 BOOST_AUTO_TEST_CASE( moving )
 {
-#warning re-enable test!
-//	auto set_bar = [](move_token&& t) -> move_token&& { t.value() = "bar"; return std::move(t); };
-////	auto set_bar = [](move_token&& t) { t.value() = "bar"; return std::move(t); };
-//
-//	event_out_port<move_token> source;
-//	event_in_queue<move_token> sink;
-//	source >> set_bar >> sink;
-//	source.fire(move_token("foo"));
-//	move_token received(sink.get());
-//	BOOST_CHECK_EQUAL(received.value(), std::string("bar"));
+	auto set_bar = [](auto&& t) -> move_token&& { t.value() = "bar"; return std::move(t); };
+//	auto set_bar = [](move_token&& t) { t.value() = "bar"; return std::move(t); };
+
+	event_out_port<move_token&&> source;
+	event_in_port<move_token> sink([](move_token&& t){ std::cout << "move: " << t.value() << "\n";});
+
+	std::function<void(move_token&&)> bla = sink;
+	source >> set_bar >> bla;
+	source.fire(move_token("foo"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

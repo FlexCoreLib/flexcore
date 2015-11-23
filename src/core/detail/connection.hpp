@@ -150,6 +150,11 @@ auto operator >>(const source_t& source, const sink_t& sink)
 	return connect(source, sink);
 }
 
+//todo: does not belong here
+template <class source_t, class sink_t>
+struct is_passive_sink<connection<source_t, sink_t>> : is_passive_sink<sink_t>
+{};
+
 } //namespace fc
 
 #endif /* SRC_CORE_CONNECTION_HPP_ */
