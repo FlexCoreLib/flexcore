@@ -22,11 +22,13 @@ ADD_EXECUTABLE( test_executable
 	runner.cpp 
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp
-	threading/test_parallelscheduler.cpp )
+	threading/test_parallelscheduler.cpp
+	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}
 	"../src/" 
+	"../src/3rdparty/range-v3/include/"
 	"." )
 
 TARGET_LINK_LIBRARIES( test_executable

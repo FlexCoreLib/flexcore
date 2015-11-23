@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ports/event_ports.hpp"
+#include "event_sink_with_queue.hpp"
 #include "core/connection.hpp"
 
 using namespace fc;
@@ -16,18 +17,20 @@ struct event_sink
 	std::shared_ptr<T> storage = std::make_shared<T>();
 };
 
-namespace fc{
+namespace fc
+{
 
 template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
-{
-};
+{};
+
 
 template<class T>
 struct is_port<event_sink<T>> : public std::true_type
 {
 };
-}
+
+} // namespace fc
 
 template<class T>
 struct event_vector_sink
@@ -40,22 +43,18 @@ struct event_vector_sink
 			std::make_shared<std::vector<T>>();
 };
 
-namespace fc{
+namespace fc
+{
 
 template<class T>
 struct is_passive_sink<event_vector_sink<T>> : public std::true_type
-{
-};
+{};
 
-template<class T>
-struct is_port<event_vector_sink<T>> : public std::true_type
-{
-};
-}
-
+} // namespace fc
 
 BOOST_AUTO_TEST_SUITE(test_events)
-BOOST_AUTO_TEST_CASE(test_event_connections)
+
+BOOST_AUTO_TEST_CASE( connections )
 {
 	static_assert(is_active<event_out_port<int>>::value,
 			"event_out_port is active by definition");
@@ -91,7 +90,21 @@ BOOST_AUTO_TEST_CASE(test_event_connections)
 }
 
 
-BOOST_AUTO_TEST_CASE(merge_events)
+BOOST_AUTO_TEST_CASE( queue_sink )
+{
+	auto inc = [](int i) { return i + 1; };
+
+	event_out_port<int> source;
+	event_in_queue<int> sink;
+	source >> inc >> sink;
+	source.fire(4);
+	BOOST_CHECK_EQUAL(sink.empty(), false);
+	int received = sink.get();
+	BOOST_CHECK_EQUAL(received, 5);
+	BOOST_CHECK_EQUAL(sink.empty(), true);
+}
+
+BOOST_AUTO_TEST_CASE( merge_events )
 {
 	event_out_port<int> test_event;
 	event_out_port<int> test_event_2;
@@ -112,7 +125,7 @@ BOOST_AUTO_TEST_CASE(merge_events)
 
 }
 
-BOOST_AUTO_TEST_CASE(split_events)
+BOOST_AUTO_TEST_CASE( split_events )
 {
 	event_out_port<int> test_event;
 	event_sink<int> test_handler_1;
@@ -126,7 +139,7 @@ BOOST_AUTO_TEST_CASE(split_events)
 	BOOST_CHECK_EQUAL(*(test_handler_2.storage), 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_event_in_port)
+BOOST_AUTO_TEST_CASE( in_port )
 {
 	int test_value = 0;
 
@@ -151,7 +164,7 @@ BOOST_AUTO_TEST_CASE(test_event_in_port)
 	BOOST_CHECK_EQUAL(test_value, 999);
 }
 
-BOOST_AUTO_TEST_CASE(test_event_lambda)
+BOOST_AUTO_TEST_CASE( lambda )
 {
 	int test_value = 0;
 
@@ -160,6 +173,52 @@ BOOST_AUTO_TEST_CASE(test_event_lambda)
 	void_out_2 >> write_666;
 	void_out_2.fire();
 	BOOST_CHECK_EQUAL(test_value, 666);
+}
+
+namespace
+{
+template<class T>
+void test_connection(const T& connection)
+{
+	int storage = 0;
+	event_out_port<int> a;
+	event_in_queue<int> d;
+	auto c = [&](int i) { storage = i; return i; };
+	auto b = [](int i) { return i + 1; };
+
+	connection(a,b,c,d);
+
+	a.fire(2);
+	BOOST_CHECK_EQUAL(storage, 3);
+	BOOST_CHECK_EQUAL(d.get(), 3);
+}
+}
+
+/**
+ * Confirm that connecting ports and connectables
+ * does not depend on any particular order.
+ */
+BOOST_AUTO_TEST_CASE( associativity )
+{
+	test_connection([](auto a, auto b, auto c, auto d)
+	{
+		a >> b >> c >> d;
+	});
+
+	test_connection([](auto a, auto b, auto c, auto d)
+	{
+		(a >> b) >> (c >> d);
+	});
+
+	test_connection([](auto a, auto b, auto c, auto d)
+	{
+		a >> ((b >> c) >> d);
+	});
+
+	test_connection([](auto a, auto b, auto c, auto d)
+	{
+		(a >> (b >> c)) >> d;
+	});
 }
 
 template<class operation>
