@@ -39,6 +39,27 @@ BOOST_AUTO_TEST_CASE( moving )
 	source.fire(move_token("foo"));
 }
 
+//test case to make sure objects are not move if we don't want them to be
+BOOST_AUTO_TEST_CASE( non_moving )
+{
+	typedef std::shared_ptr<int> non_move; //shared_ptr is nulled after move, so we can check
+	event_out_port<non_move> source;
+	bool moved = false;
+	event_in_port<non_move> sink([&moved](non_move&& t){ moved = !t.operator bool() ;});
+	event_in_port<non_move> sink2([&moved](non_move&& t){ moved = !t.operator bool() ;});
+
+	source >> sink;
+
+	source.fire(std::make_shared<int>(1));
+	BOOST_CHECK(!moved);
+
+	source >> sink2; //now we have two connections
+	source.fire(std::make_shared<int>(1));
+	BOOST_CHECK(!moved);
+
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

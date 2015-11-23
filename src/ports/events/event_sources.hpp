@@ -44,7 +44,7 @@ struct event_out_port
 		for (auto& target : (*event_handlers))
 		{
 			assert(target);
-			target(std::move(event)...);
+			target(static_cast<event_t>(event)...);
 		}
 	}
 
