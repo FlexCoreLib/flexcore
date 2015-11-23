@@ -100,7 +100,6 @@ struct connection
 				>()
 				(source,sink,p...);
 	}
-
 };
 
 /// internals of flexcore, everything here can change any time.
