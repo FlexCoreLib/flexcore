@@ -24,6 +24,12 @@ template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
 {};
 
+
+template<class T>
+struct is_port<event_sink<T>> : public std::true_type
+{
+};
+
 } // namespace fc
 
 template<class T>
@@ -37,37 +43,6 @@ struct event_vector_sink
 			std::make_shared<std::vector<T>>();
 };
 
-template<class T>
-struct is_port<event_sink<T>> : public std::true_type
-{
-};
-
-template<class T>
-struct event_vector_sink
-{
-	void operator()(T in)
-	{
-		storage->push_back(in);
-	}
-	std::shared_ptr<std::vector<T>> storage =
-			std::make_shared<std::vector<T>>();
-};
-
-namespace fc{
-
-template<class T>
-struct is_passive_sink<event_vector_sink<T>> : public std::true_type
-{
-};
-
-template<class T>
-struct is_port<event_vector_sink<T>> : public std::true_type
-{
-};
-}
-
-
-BOOST_AUTO_TEST_SUITE(test_events)
 namespace fc
 {
 
@@ -77,7 +52,7 @@ struct is_passive_sink<event_vector_sink<T>> : public std::true_type
 
 } // namespace fc
 
-BOOST_AUTO_TEST_SUITE( events )
+BOOST_AUTO_TEST_SUITE(test_events)
 
 BOOST_AUTO_TEST_CASE( connections )
 {
