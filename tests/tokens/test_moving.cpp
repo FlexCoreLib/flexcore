@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE( move_token_ )
 
 BOOST_AUTO_TEST_CASE( moving_events )
 {
-	auto set_bar = [](auto&& t) -> move_token&& { t.value() = "bar"; return std::move(t); };
+	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
 //	auto set_bar = [](move_token&& t) { t.value() = "bar"; return std::move(t); };
 
 	event_out_port<move_token&&> source;
@@ -43,13 +43,13 @@ BOOST_AUTO_TEST_CASE( moving_events )
 
 BOOST_AUTO_TEST_CASE( moving_state )
 {
-	auto set_bar = [](auto&& t) -> move_token&& { t.value() = "bar"; return std::move(t); };
+	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
 	state_sink<move_token> sink;
 	state_source_call_function<move_token> source([](){ return move_token("foo"); });
 
 	source >> set_bar >> sink;
-	BOOST_CHECK_EQUAL(sink.get().value(), "bar");
-
+	auto v = sink.get();
+	BOOST_CHECK_EQUAL(v.value(), "bar");
 }
 
 
@@ -70,15 +70,6 @@ BOOST_AUTO_TEST_CASE( non_moving )
 	source >> sink2; //now we have two connections
 	source.fire(std::make_shared<int>(1));
 	BOOST_CHECK(!moved);
-
 }
 
-
 BOOST_AUTO_TEST_SUITE_END()
-
-
-
-
-
-
-
