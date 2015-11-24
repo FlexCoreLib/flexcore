@@ -32,23 +32,27 @@ BOOST_AUTO_TEST_SUITE(test_event_wrappers)
 
 BOOST_AUTO_TEST_CASE(test_wrapper_callback)
 {
-	event_source_wrapper<event_out_port<int>> test_source;
 	event_sink_wrapper<wrapper_event_sink<int>> test_sink1;
-	event_sink_wrapper<wrapper_event_sink<int>> test_sink4;
-	test_source >> test_sink1;
-	test_source.fire(5);
 
 	{
-		event_sink_wrapper<wrapper_event_sink<int>> test_sink2;
-		event_sink_wrapper<wrapper_event_sink<int>> test_sink3;
-		test_source >> test_sink2;
-		test_source >> test_sink3;
-		test_source.fire(6);
-		test_source >> test_sink4;
-		test_source.fire(7);
-	}
+		event_source_wrapper<event_out_port<int>> test_source;
 
-	test_source.fire(8);
+		event_sink_wrapper<wrapper_event_sink<int>> test_sink4;
+		test_source >> test_sink1;
+		test_source.fire(5);
+
+		{
+			event_sink_wrapper<wrapper_event_sink<int>> test_sink2;
+			event_sink_wrapper<wrapper_event_sink<int>> test_sink3;
+			test_source >> test_sink2;
+			test_source >> test_sink3;
+			test_source.fire(6);
+			test_source >> test_sink4;
+			test_source.fire(7);
+		}
+
+		test_source.fire(8);
+	}
 
 }
 

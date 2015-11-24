@@ -19,7 +19,15 @@
 namespace fc
 {
 
-
+/**
+ * \brief A mixin for sources that provide callbacks to deregister sinks
+ * \tparam event_source_t is type of event source that event_source_wrapper is mixed into.
+ *
+ * example:
+ * \code{cpp}
+ * typedef event_source_wrapper<event_out_port<int>> observer_event_source;
+ * \endcode
+ */
 template<class event_source_t>
 struct event_source_wrapper: public event_source_t
 {
@@ -35,10 +43,21 @@ struct event_source_wrapper: public event_source_t
 	{
 	}
 
+	/**
+	 * \brief Creates a callback to deregister event sinks
+	 * \returns std::shared_ptr<std::function<void(void)>>, pointer to a callback method
+	 * \pre sink_callback != null_ptr
+	 * \pre event_source_t::event_handlers != null_ptr
+	 * \pre *event_source_t::event_handlers is container that does not invalidate its iterators (e.g. std::list)
+	 * \pre Method is not called in parallel i.e. sinks are connected in serial fashion
+	 * \post sink_callback->empty() == false
+	 */
 	auto create_callback_delete_handler()
 	{
-		//Assumes event_wrappers::connect is not called simultaneously; not thread-safe
-		//Assumes that event_handlers does not invalidate its iterators (i.e. type is std::list)
+		assert(this->event_handlers);
+		assert(sink_callback);
+
+		//Assumes event_wrappers::connect is not called simultaneously -> not thread safe!
 		auto handleIt = std::prev(this->event_handlers->end());
 
 		sink_callback->push_back(std::make_shared<void_fun>());
@@ -50,6 +69,8 @@ struct event_source_wrapper: public event_source_t
 					this->sink_callback->erase(callbackIt);
 				}
 			);
+
+		assert(!sink_callback->empty());
 		return sink_callback->back();
 	}
 
@@ -58,6 +79,15 @@ private:
 	std::shared_ptr<std::list<callback_fun_ptr_strong>> sink_callback = std::make_shared<std::list<callback_fun_ptr_strong>>();
 };
 
+/**
+ * \brief A mixin for sinks that implement observable pattern to deregister from sources
+ * \tparam event_sink_t is type of event sink that event_sink_wrapper is mixed into.
+ *
+ * example:
+ * \code{cpp}
+ * typedef event_sink_wrapper<event_in_port<int>> observable_event_sink;
+ * \endcode
+ */
 template<class event_sink_t>
 struct event_sink_wrapper: public event_sink_t
 {
@@ -81,25 +111,43 @@ struct event_sink_wrapper: public event_sink_t
 		deregister();
 	}
 
+	/**
+	 * \brief Registers the source to the sink
+	 * \pre fun != null_ptr
+	 * \post destruct_callback->expired() == false
+	 */
 	void register_callback(const std::shared_ptr<std::function<void(void)>>& fun)
 	{
+		assert(fun);
 		*destruct_callback = fun;
+		assert(!destruct_callback->expired());
 	}
 
+private:
+
+	/**
+	 * \brief Deregisters from the source
+	 * \pre destruct_callback != null_ptr
+	 */
 	void deregister()
 	{
+		assert(destruct_callback);
 		if(auto sharedCallbackPtr = destruct_callback->lock())
 		{
 			(*sharedCallbackPtr)();
 		}
 	}
 
-private:
-
 	std::shared_ptr<int> copy_ctr = std::make_shared<int>(0);
 	std::shared_ptr<callback_fun_ptr_weak> destruct_callback = std::make_shared<callback_fun_ptr_weak>();
 };
 
+/**
+ * \brief overload of connect with event_source_wrapper<> and event_sink_wrapper<>
+ * connects base objects normally and registers the callbacks
+ * \pre Previous calls to this method have finished; execution is serial
+ * \returns normal connection result of event_source_t and event_sink_t
+ */
 template<class event_source_t, class event_sink_t>
 auto connect(event_source_wrapper<event_source_t> source, event_sink_wrapper<event_sink_t> sink)
 {
