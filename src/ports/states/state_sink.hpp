@@ -19,6 +19,8 @@ namespace fc
  * Is not a Connectable.
  *
  * \tparam data_t data type flowing through this port. Needs to fulfill copy_constructable
+ *
+ * \invariant shared_ptr<> con != null_ptr
  */
 template<class data_t>
 class state_sink
@@ -27,7 +29,7 @@ public:
 	state_sink()
 		: con(std::make_shared<std::function<data_t()>>())
 	{ }
-	state_sink(const state_sink& other) : con(other.con) {  }
+	state_sink(const state_sink& other) : con(other.con) { assert(con); }
 
 	//typedef data_t result_t;
 
@@ -50,13 +52,10 @@ public:
 	void connect(con_t c)
 	{
 		static_assert(is_callable<con_t>::value,
-				"only callables can be connected");
+				"only callables can be connected to a state_sink");
+		static_assert(is_passive_source<con_t>::value,
+				"only passive sources can be connected to a state_sink");
 
-	//	static_assert(std::is_same<data_t,
-	//			typename result_of<con_t>::type>::value,
-	//			"return value of connected needs to be data_t");
-		//static_assert(utils::function_traits<con_t>::arity == 0,
-		//		"no parameter allowed for objects to be connected");
 		(*con) = c;
 
 		assert(con); //check postcondition

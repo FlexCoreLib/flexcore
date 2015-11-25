@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(test_algorithm)
 			>> sum(0)
 			>> [](int i){std::cout << "sum: " << i << "\n"; };
 	connection_2();
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
