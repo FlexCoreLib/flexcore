@@ -28,20 +28,21 @@ struct event_in_queue
 		: queue(new std::queue<event_t>)
 	{}
 
-	void operator()(auto&& in_event)
+	template<class T>
+	void operator()(T&& in_event)
 	{
-		queue->push(in_event);
+		queue->push(std::forward<T>(in_event));
 	}
 
 	bool empty() { return queue->empty(); }
 
-	auto&& get()
+	auto get()
 	{
 		if (empty())
 			throw std::runtime_error("queue emtpy.");
-		auto&& result { queue->front() };
+		auto result = std::move(queue->front());
 		queue->pop();
-		return std::move(result);
+		return result;
 	}
 
 private:
