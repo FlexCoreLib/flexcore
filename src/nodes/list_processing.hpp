@@ -24,7 +24,7 @@ public:
 	 * to be used by ports, should be considered private
 	 */
 	template<class tag_t, class event_t>
-	void detail_in(tag_t, const event_t& event)
+	void detail_in(const event_t& event)
 	{
 		size_t elems = std::distance(std::begin(event), std::end(event));
 		out.fire(static_cast<int>(elems));

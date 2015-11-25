@@ -6,7 +6,8 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
-
+#include "ports/detail/port_tags.hpp"
+#include "ports/detail/port_traits.hpp"
 
 namespace fc
 {
@@ -62,10 +63,6 @@ private:
 };
 
 /**
- */
-struct default_port_tag {};
-
-/**
  * \brief minimal input port for events with templated operator()
  *
  * fulfills passive_sink
@@ -75,7 +72,7 @@ struct default_port_tag {};
  *         so the implementation of the node can distinguish between different ports.
  *         The value is not used.
  */
-template<class node_t, class tag_t = default_port_tag>
+template<class node_t, class tag_t = detail::default_port_tag>
 class event_in_tmpl
 {
 public:
@@ -90,7 +87,7 @@ public:
 	template<class event_t>
 	void operator()(const event_t& in_event) // universal ref here?
 	{
-		node.detail_in(tag_t(), in_event);
+		node.template detail_in<tag_t, event_t>(in_event);
 	}
 
 private:
