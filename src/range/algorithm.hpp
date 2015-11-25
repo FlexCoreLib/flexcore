@@ -48,6 +48,8 @@ struct reduce_view
 	template<class in_range>
 	auto operator()(const in_range&& input)
 	{
+		using std::begin;
+		using std::end;
 		return std::accumulate(begin(input), end(input), init_value, op);
 	}
 	binop op;
