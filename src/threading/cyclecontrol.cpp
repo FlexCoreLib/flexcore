@@ -77,7 +77,14 @@ void cycle_control::run_periodic_tasks()
 		if (task.is_due(virtual_clock::steady::now()))
 		{
 			if (!task.done())  //todo specify error model
-				throw out_of_time_exepction();
+			{
+				std::exception_ptr ep = std::make_exception_ptr(out_of_time_exepction());
+				std::lock_guard<std::mutex> lock(task_exception_mutex);
+				task_exceptions.push_back(ep);
+				keep_working=false;
+				return;
+//				throw out_of_time_exepction();
+			}
 
 			task.set_work_to_do(true);
 			task.send_switch_tick();
@@ -91,6 +98,16 @@ void cycle_control::add_task(periodic_task task)
 	std::lock_guard<std::mutex> lock(task_queue_mutex);
 	tasks.push_back(task);
 	assert(!tasks.empty());
+}
+
+std::exception_ptr cycle_control::last_exception()
+{
+	std::lock_guard<std::mutex> lock(task_exception_mutex);
+	if(task_exceptions.empty())
+		return nullptr;
+	std::exception_ptr except = task_exceptions.back();
+	task_exceptions.pop_back();
+	return except;
 }
 
 } /* namespace thread */
