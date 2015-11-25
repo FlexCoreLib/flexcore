@@ -12,7 +12,7 @@ template<class predicate>
 struct filter_view
 {
 	template<class in_range>
-	auto operator()(const in_range& input)
+	auto operator()(const in_range&& input)
 	{
 		return boost::adaptors::filter(input, pred);
 	}
@@ -29,7 +29,7 @@ template<class operation>
 struct map_view
 {
 	template<class in_range>
-	auto operator()(const in_range& input)
+	auto operator()(const in_range&& input)
 	{
 		return boost::adaptors::transform(input, op);
 	}
@@ -46,7 +46,7 @@ template<class binop, class T>
 struct reduce_view
 {
 	template<class in_range>
-	auto operator()(const in_range& input)
+	auto operator()(const in_range&& input)
 	{
 		return std::accumulate(begin(input), end(input), init_value, op);
 	}
@@ -65,11 +65,6 @@ auto sum(T initial_value = T())
 {
 	return reduce(std::plus<>(), initial_value);
 }
-
-
-
-
-
 
 }  // namespace fc
 
