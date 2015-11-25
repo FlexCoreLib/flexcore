@@ -5,27 +5,36 @@
 // std
 #include <deque>
 #include <list>
+#include <forward_list>
 
 using namespace fc;
 
-BOOST_AUTO_TEST_SUITE( test_list_manipulation )
-
-template<class BLA>
-struct helper_sink
+namespace
 {
-	typedef void result_t;
-	void operator()(const auto& v)
+
+template<class left_t, class right_t>
+void range_compare(const left_t& left, const right_t& right)
+{
+	typedef decltype(std::begin(left)) left_iter_t;
+	typedef decltype(std::begin(right)) right_iter_t;
+	left_iter_t left_it = std::begin(left);
+	right_iter_t right_it = std::begin(right);
+
+	while	(	left_it != std::end(left)
+			and	right_it != std::end(right)
+			)
 	{
-		bla(v);
+		BOOST_CHECK_EQUAL(*left_it, *right_it);
+		++left_it;
+		++right_it;
 	}
-	BLA bla;
-};
-
-template<class FOO>
-auto helper_helper(FOO foo)
-{
-	return helper_sink<FOO>{foo};
+	BOOST_CHECK(left_it == std::end(left));
+	BOOST_CHECK(right_it == std::end(right));
 }
+
+} // unnamed namespace
+
+BOOST_AUTO_TEST_SUITE( test_list_manipulation )
 
 BOOST_AUTO_TEST_CASE( test_list_splitter )
 {
@@ -45,20 +54,20 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
 	splitter.in(input);
 
 	// check result
-	BOOST_CHECK((output.at(0) == std::vector<std::string>{ }));
-	BOOST_CHECK((output.at(1) == std::vector<std::string>{"c", "d"}));
-	BOOST_CHECK((output.at(2) == std::vector<std::string>{"aa"}));
-	BOOST_CHECK((output.at(3) == std::vector<std::string>{"bbb"}));
-	BOOST_CHECK((output.at(4) == std::vector<std::string>{ }));
+	range_compare(output.at(0), std::list<std::string>{ });
+	range_compare(output.at(1), std::list<std::string>{"c", "d"});
+	range_compare(output.at(2), std::list<std::string>{"aa"});
+	range_compare(output.at(3), std::list<std::string>{"bbb"});
+	range_compare(output.at(4), std::list<std::string>{ });
 
 	// send again
 	std::list<std::string> input2 { "a", "b", "cd" };
 	splitter.in(input2);
 
 	// check result
-	BOOST_CHECK((output.at(0) == std::vector<std::string>{ }));
-	BOOST_CHECK((output.at(1) == std::vector<std::string>{"a", "b"}));
-	BOOST_CHECK((output.at(2) == std::vector<std::string>{"cd"}));
+	range_compare(output.at(0), std::list<std::string>{ });
+	range_compare(output.at(1), std::list<std::string>{"a", "b"});
+	range_compare(output.at(2), std::list<std::string>{"cd"});
 }
 
 /*
@@ -83,8 +92,34 @@ BOOST_AUTO_TEST_CASE( test_list_splitter_bool )
 	std::list<int> input { 1, -1, 5, -6, -6, 1 };
 	splitter.in(input);
 
-	BOOST_CHECK((out_true  == std::vector<int>{ 1, 5, 1 }));
-	BOOST_CHECK((out_false == std::vector<int>{ -1, -6, -6}));
+	range_compare(out_true, std::vector<int>{ 1, 5, 1 });
+	range_compare(out_false, std::vector<int>{ -1, -6, -6});
+}
+
+BOOST_AUTO_TEST_CASE( test_list_collector )
+{
+	typedef list_splitter <std::list<int>, bool> splitter_t;
+	auto predicate = [](int) { return 0; }; // always return 0
+	splitter_t splitter(predicate);
+
+	typedef list_collector<decltype(splitter.out(0))::result_t> collector_t;
+	collector_t collector;
+
+	state_sink<decltype(collector.out)::result_t> sink;
+
+	splitter.out(0) >> collector.in;
+	collector.out >> sink;
+
+	// send data
+	splitter.in( std::list<int>{1, 2} );
+	splitter.in( std::list<int>{3} );
+
+	range_compare(sink.get(), std::forward_list<int>{ 1, 2, 3 });
+
+	splitter.in( std::list<int>{4, 5} );
+
+	range_compare(sink.get(), std::forward_list<int>{ 4, 5 });
+	range_compare(sink.get(), std::forward_list<int>{ });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

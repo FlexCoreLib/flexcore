@@ -18,7 +18,7 @@ ADD_EXECUTABLE( test_executable
 	ports/states/test_node_with_lambda.cpp
 	ports/states/test_state_source_call_function.cpp
 	ports/states/test_state_source_with_setter.cpp
-	range/test_range.cpp
+#	range/test_range.cpp
 	runner.cpp 
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp

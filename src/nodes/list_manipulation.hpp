@@ -8,8 +8,7 @@
 #include <map>
 
 // boost
-#include <boost/range/begin.hpp>
-#include <boost/range/end.hpp>
+#include <boost/range.hpp>
 
 namespace fc
 {
@@ -31,7 +30,7 @@ class list_splitter
 {
 public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
-	typedef std::vector<value_t> out_range_t;
+	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	list_splitter(auto p)
 		: in( [&](const range_t& range){ this->receive(range); } )
@@ -50,8 +49,8 @@ public:
 private:
 	void receive(const range_t& range)
 	{
-		auto begin = boost::begin(range);
-		auto end = boost::end(range);
+		auto begin = std::begin(range);
+		auto end = std::end(range);
 
 		for (auto it = begin; it != end; ++it)
 		{
@@ -66,7 +65,8 @@ private:
 		{
 			auto entry_it = entries.find(e.first);
 			if (entry_it != entries.end())
-				entry_it->second.port.fire(e.second.data);
+				entry_it->second.port.fire(boost::make_iterator_range( e.second.data.begin(),
+																	   e.second.data.end() ));
 			else
 				assert(false);
 			e.second.data.clear();
@@ -80,6 +80,41 @@ private:
 
 	std::map<predicate_result_t, entry_t> entries;
 	std::function<predicate_result_t(value_t)> predicate;
+};
+
+/**
+ * Collects list contents and store them into a buffer.
+ * Sends the buffer as state when pulled.
+ */
+template<class range_t>
+class list_collector
+{
+public:
+	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
+	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
+
+	list_collector()
+		: in( [&](const range_t& range){ this->receive(range); } )
+		, out( [&](){ return this->get_state(); } )
+	{}
+
+	event_in_port<range_t> in;
+	state_source_call_function<out_range_t> out;
+
+
+private:
+	void receive(const range_t& range)
+	{
+		buffer_collect.insert(buffer_collect.end(), std::begin(range), std::end(range));
+	}
+	out_range_t get_state()
+	{
+		buffer_state.clear();
+		buffer_state.swap(buffer_collect);
+		return boost::make_iterator_range(buffer_state.begin(), buffer_state.end());
+	}
+	std::vector<value_t> buffer_collect;
+	std::vector<value_t> buffer_state;
 };
 
 } // namespace fc
