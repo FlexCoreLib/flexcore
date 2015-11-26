@@ -20,6 +20,7 @@ ADD_EXECUTABLE( test_executable
 	ports/states/test_state_source_with_setter.cpp
 	range/test_range.cpp
 	runner.cpp 
+	threading/test_cyclecontrol.cpp
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp
 	threading/test_parallelscheduler.cpp
