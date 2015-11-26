@@ -153,7 +153,13 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
 	static_assert(is_instantiation_of<node_aware, test_out_port>::value, "");
 	static_assert(is_active_sink<test_in_port>::value, "");
+//	static_assert(not is_active_source<test_in_port>::value, "");
+//	static_assert(not is_passive_sink<test_in_port>::value, "");
+//	static_assert(not is_passive_source<test_in_port>::value, "");
 	static_assert(is_passive_source<test_out_port>::value, "");
+//	static_assert(not is_passive_sink<test_out_port>::value, "");
+//	static_assert(not is_active_source<test_out_port>::value, "");
+//	static_assert(not is_active_sink<test_out_port>::value, "");
 
 	static_assert(std::is_same<int,
 			typename result_of<test_out_port>::type>::value,
