@@ -35,7 +35,6 @@ public:
 	 * \returns current state available at this port.
 	 */
 	data_t get() const { return (*con)(); }
-	data_t operator()() const { return get();  }
 
 	/**
 	 * \brief Cconnects state source to sink.

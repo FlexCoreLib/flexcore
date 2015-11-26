@@ -62,7 +62,7 @@ private:
 	template<class tuple, std::size_t... index>
 	decltype(auto) invoke_helper(tuple&& tup, std::index_sequence<index...>)
 	{
-		return op(std::get<index>(std::forward<tuple>(tup))()...);
+		return op(std::get<index>(std::forward<tuple>(tup)).get()...);
 	}
 };
 

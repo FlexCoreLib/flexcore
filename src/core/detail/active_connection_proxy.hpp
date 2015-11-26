@@ -12,15 +12,6 @@ namespace fc
 namespace detail
 {
 
-template<class T>
-struct is_active_source:
-		std::integral_constant<	bool,
-									is_active_connectable<T>::value
-								and is_port<T>::value
-							  >
-{
-};
-
 //policy classes for determining argument order in connect calls in the proxy
 struct active_sink_first
 {
