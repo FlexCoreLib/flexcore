@@ -28,7 +28,6 @@ ADD_EXECUTABLE( test_executable
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}
 	"../src/" 
-	"../src/3rdparty/range-v3/include/"
 	"." )
 
 TARGET_LINK_LIBRARIES( test_executable
@@ -36,5 +35,3 @@ TARGET_LINK_LIBRARIES( test_executable
 
 # declares a test with our executable
 #ADD_TEST( NAME test WORKING_DIRECTORY "." COMMAND test_executable )
-
-
