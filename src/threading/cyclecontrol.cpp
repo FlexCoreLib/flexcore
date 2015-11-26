@@ -83,7 +83,6 @@ void cycle_control::run_periodic_tasks()
 				task_exceptions.push_back(ep);
 				keep_working=false;
 				return;
-//				throw out_of_time_exepction();
 			}
 
 			task.set_work_to_do(true);
