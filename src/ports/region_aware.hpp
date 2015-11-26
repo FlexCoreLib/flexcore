@@ -5,6 +5,7 @@
 #include <core/connection.hpp>
 #include <threading/parallelregion.hpp>
 #include "connection_buffer.hpp"
+#include "node_aware.hpp"
 
 namespace fc
 {
@@ -19,34 +20,34 @@ namespace fc
  * typedef region_aware<event_in_port<int>> region_aware_event_port;
  * \endcode
  */
-template<class base>
-struct region_aware: public base
-{
-	static_assert(std::is_class<base>::value,
-			"can only be mixed into clases, not primitives");
-	//allows explicit access to base of this mixin.
-	typedef base base_t;
-
-	template<class ... args>
-	region_aware(std::shared_ptr<region_info> region_,
-		const args& ... base_constructor_args) :
-			base_t(base_constructor_args...),
-			region(region_)
-	{
-		assert(region);
-	}
-
-	std::shared_ptr<region_info> region;
-};
+//template<class base>
+//struct region_aware: public base
+//{
+//	static_assert(std::is_class<base>::value,
+//			"can only be mixed into clases, not primitives");
+//	//allows explicit access to base of this mixin.
+//	typedef base base_t;
+//
+//	template<class ... args>
+//	region_aware(std::shared_ptr<region_info> region_,
+//		const args& ... base_constructor_args) :
+//			base_t(base_constructor_args...),
+//			region(region_)
+//	{
+//		assert(region);
+//	}
+//
+//	std::shared_ptr<region_info> region;
+//};
 
 
 ///checks if two region_aware connectables are from the same region
 template<class source_t, class sink_t>
-bool same_region(const region_aware<source_t>& source,
-		const region_aware<sink_t>& sink)
+bool same_region( const node_aware<source_t>& source,
+				  const node_aware<sink_t>& sink )
 {
-	return source.region->get_id()
-	        == sink.region->get_id();
+	return source.node->region().get_id()
+		  == sink.node->region().get_id();
 }
 
 /**
@@ -64,8 +65,8 @@ struct buffer_factory
 		{
 			auto result_buffer = std::make_shared<typename buffer<payload_t, tag>::type>();
 
-			active.region->switch_tick() >> result_buffer->switch_tick();
-			passive.region->work_tick() >> result_buffer->work_tick();
+			active.node->region().switch_tick() >> result_buffer->switch_tick();
+			passive.node->region().work_tick() >> result_buffer->work_tick();
 
 			return result_buffer;
 		}
@@ -124,13 +125,6 @@ struct buffered_state_connection: public base_connection
 private:
 	std::shared_ptr<buffer_interface<payload_t, state_tag>> buffer;
 };
-
-// TODO prefer to test this algorithmically
-template<class T> struct is_port<region_aware<T>> : public std::true_type {};
-template<class T> struct is_active_sink<region_aware<T>> : public is_active_sink<T> {};
-//template<class T> struct is_active_source<region_aware<T>> : public is_active_source<T> {};
-template<class T> struct is_passive_sink<region_aware<T>> : public is_passive_sink<T> {};
-template<class T> struct is_passive_source<region_aware<T>> : public is_passive_source<T> {};
 
 namespace detail
 {
@@ -193,22 +187,22 @@ auto make_buffered_connection(
  * Thus client code doesn't need to get type connection_base_t by hand.
  */
 template<class base_connection_t>
-region_aware<base_connection_t> make_region_aware(const base_connection_t& base, std::shared_ptr<region_info> region)
+node_aware<base_connection_t> make_region_aware(const base_connection_t& base, std::shared_ptr<region_info> region)
 {
-	return region_aware<base_connection_t>(region, base);
+	return node_aware<base_connection_t>(region, base);
 }
 
 template<class source_t, class sink_t, class Enable = void>
-struct region_aware_connect_impl;
+struct node_aware_connect_impl;
 
 template<class source_t, class sink_t>
-struct region_aware_connect_impl
+struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-        	::fc::is_instantiation_of<region_aware, source_t>::value &&
+        	::fc::is_instantiation_of<node_aware, source_t>::value &&
         	      is_active_source<source_t>::value &&
-			::fc::is_instantiation_of<region_aware, sink_t>::value &&
+			::fc::is_instantiation_of<node_aware, sink_t>::value &&
 			::fc::is_passive_sink<sink_t>::value
 			>::type
 	>
@@ -227,13 +221,13 @@ struct region_aware_connect_impl
 };
 
 template<class source_t, class sink_t>
-struct region_aware_connect_impl
+struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-        	::fc::is_instantiation_of<region_aware, source_t>::value &&
+        	::fc::is_instantiation_of<node_aware, source_t>::value &&
          	       is_active_source<source_t>::value &&
-			!::fc::is_instantiation_of<region_aware, sink_t>::value
+			!::fc::is_instantiation_of<node_aware, sink_t>::value
 			>::type
 	>
 {
@@ -250,12 +244,12 @@ struct region_aware_connect_impl
 
 
 template<class source_t, class sink_t>
-struct region_aware_connect_impl
+struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
 		typename std::enable_if<
-			::fc::is_instantiation_of<region_aware, source_t>::value &&
-			::fc::is_instantiation_of<region_aware, sink_t>::value &&
+			::fc::is_instantiation_of<node_aware, source_t>::value &&
+			::fc::is_instantiation_of<node_aware, sink_t>::value &&
 			::fc::is_active_sink<sink_t>::value
 		>::type
 	>
@@ -275,12 +269,12 @@ struct region_aware_connect_impl
 };
 
 template<class source_t, class sink_t>
-struct region_aware_connect_impl
+struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-				::fc::is_instantiation_of<region_aware, sink_t>::value &&
-				!::fc::is_instantiation_of<region_aware, sink_t>::value &&
+				::fc::is_instantiation_of<node_aware, sink_t>::value &&
+				!::fc::is_instantiation_of<node_aware, sink_t>::value &&
 				::fc::is_active_sink<source_t>::value
 		>::type
 	>
@@ -305,33 +299,33 @@ struct region_aware_connect_impl
  * \returns buffered connection with connection of source_t and sink_t mixed in.
  */
 template<class source_t, class sink_t>
-auto connect(region_aware<source_t> source, region_aware<sink_t> sink)
+auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 {
 	//construct region_aware_connection
 	//based on if source and sink are from same region
-	return detail::region_aware_connect_impl<
-			region_aware<source_t>,
-			region_aware<sink_t>>()(source, sink);
+	return detail::node_aware_connect_impl<
+			node_aware<source_t>,
+			node_aware<sink_t>>()(source, sink);
 }
 
 template<class source_t, class sink_t>
-auto connect(region_aware<source_t> source, sink_t sink)
+auto connect(node_aware<source_t> source, sink_t sink)
 {
 	//construct region_aware_connection
 	//based on if source and sink are from same region
-	return detail::region_aware_connect_impl<
-			region_aware<source_t>,
+	return detail::node_aware_connect_impl<
+			node_aware<source_t>,
 			sink_t>()(source, sink);
 }
 
 template<class source_t, class sink_t>
-auto connect(source_t source, region_aware<sink_t> sink)
+auto connect(source_t source, node_aware<sink_t> sink)
 {
 	//construct region_aware_connection
 	//based on if source and sink are from same region
-	return detail::region_aware_connect_impl<
+	return detail::node_aware_connect_impl<
 			source_t,
-			region_aware<sink_t>>()(source, sink);
+			node_aware<sink_t>>()(source, sink);
 }
 
 }  //namespace fc

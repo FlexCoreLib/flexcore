@@ -20,12 +20,6 @@ region_id parallel_region::get_id() const
 	return id;
 }
 
-parallel_region::parallel_region() :
-		ticks(),
-		id({"default"}) //todo
-{
-}
-
 parallel_region::parallel_region(std::string id_) :
 		ticks(),
 		id({id_})

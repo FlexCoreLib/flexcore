@@ -247,7 +247,7 @@ struct is_passive_sink: public is_passive_sink_impl<T>
 {
 };
 template<class T>
-struct is_passive_source: is_passive_source_impl<T>
+struct is_passive_source: public is_passive_source_impl<T>
 {
 };
 

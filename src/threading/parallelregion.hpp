@@ -67,18 +67,18 @@ public:
 class parallel_region : public region_info
 {
 public:
-
 	virtual ~parallel_region() = default;
-	parallel_region();
-	parallel_region(std::string id);
+	parallel_region(std::string id = "default");
 
 	region_id get_id() const override;
 	event_out_port<void> switch_tick() override;
 	event_out_port<void> work_tick() override;
+
 protected:
 	//copy constructor is protected to avoid slicing, since this is meant as base class
 	parallel_region(const parallel_region&) = default;
 	parallel_region& operator=(const parallel_region&) = default;
+
 public:
 	tick_controller ticks;
 	region_id id;
