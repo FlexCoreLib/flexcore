@@ -26,6 +26,10 @@ BOOST_AUTO_TEST_CASE(single_event_to_state)
 
 	buffer.swap_buffers()();
 	BOOST_CHECK(buffer.out()().empty());
+
+	buffer.swap_buffers()();
+	buffer.swap_buffers()();
+	BOOST_CHECK(buffer.out()().empty());
 }
 
 BOOST_AUTO_TEST_CASE(event_range_to_state)
@@ -44,6 +48,13 @@ BOOST_AUTO_TEST_CASE(event_range_to_state)
 
 	buffer.swap_buffers()();
 	BOOST_CHECK(!buffer.out()().empty());
+	BOOST_CHECK(buffer.out()().size() == static_cast<int>(vec.size()));
+
+	source.fire(int_range(vec.begin(), vec.end()));
+	source.fire(int_range(vec.begin(), vec.end()));
+	buffer.swap_buffers()();
+	BOOST_CHECK(buffer.out()().size() == static_cast<int>(vec.size())*2);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
