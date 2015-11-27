@@ -8,6 +8,7 @@ ADD_EXECUTABLE( test_executable
 	core/test_connection.cpp
 	core/test_traits.cpp
 	clock/TestClock.cpp
+	nodes/test_buffer.cpp
 	nodes/test_generic.cpp
 	nodes/test_state_nodes.cpp
 	ports/test_event_buffer.cpp
@@ -19,7 +20,7 @@ ADD_EXECUTABLE( test_executable
 	ports/states/test_state_source_call_function.cpp
 	ports/states/test_state_source_with_setter.cpp
 	ports/states/test_state_source_tmpl.cpp
-#	range/test_range.cpp
+	range/test_range.cpp
 	runner.cpp 
 	threading/test_cyclecontrol.cpp
 	threading/test_parallel_region.cpp
