@@ -2,6 +2,7 @@
 
 #include <nodes/buffer.hpp>
 #include <ports/events/event_sources.hpp>
+#include <ports/states/state_sink.hpp>
 
 using namespace fc;
 
@@ -55,6 +56,21 @@ BOOST_AUTO_TEST_CASE(event_range_to_state)
 	buffer.swap_buffers()();
 	BOOST_CHECK(buffer.out()().size() == static_cast<int>(vec.size())*2);
 
+}
+
+BOOST_AUTO_TEST_CASE(test_hold_last)
+{
+	hold_last<int> buffer;
+
+	event_out_port<int> source;
+	state_sink<int> sink;
+
+	source >> buffer.in();
+	buffer.out() >> sink;
+	BOOST_CHECK_EQUAL(sink.get(), 0);
+
+	source.fire(1);
+	BOOST_CHECK_EQUAL(sink.get(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

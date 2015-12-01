@@ -1,6 +1,8 @@
 #ifndef SRC_NODES_BUFFER_HPP_
 #define SRC_NODES_BUFFER_HPP_
 
+#include <core/traits.hpp>
+
 #include <ports/states/state_source_call_function.hpp>
 
 #include <boost/range.hpp>
@@ -78,6 +80,26 @@ private:
 
 		event_to_state* owner;
 	};
+};
+
+template<class data_t>
+class hold_last
+{
+public:
+	static_assert(!std::is_void<data_t>(),
+			"data stored in hold_last cannot be void");
+
+	explicit hold_last(const data_t& initial_value = data_t())
+		: storage(initial_value)
+	{
+	}
+
+	auto in() noexcept { return [&](data_t in){ storage = in; }; }
+	auto out() const noexcept { return [this](){ return storage;}; }
+
+
+private:
+	data_t storage;
 };
 
 }  // namespace fc

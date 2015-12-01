@@ -72,5 +72,25 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	BOOST_CHECK_EQUAL(check, 2);
 }
 
+BOOST_AUTO_TEST_CASE(watch_node)
+{
+	int test_value = 0;
+
+	auto watcher = watch([](int i){ return i < 0;}, int());
+
+	state_source_with_setter<int> source(1);
+	event_in_port<int> sink([&test_value](int i){test_value = i;});
+
+	source >> watcher.in();
+	watcher.out() >> sink;
+
+	watcher.check_tick()();
+
+	BOOST_CHECK_EQUAL(test_value, 0);
+	source.set(-1);
+
+	watcher.check_tick()();
+	BOOST_CHECK_EQUAL(test_value, -1);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

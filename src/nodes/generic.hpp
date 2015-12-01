@@ -11,11 +11,11 @@ namespace fc
 {
 
 /**
- * \brief generic unary node which applys transform with parameter to all inputs
+ * \brief generic unary node which applies transform with parameter to all inputs
  *
  * \tparam bin_op binary operator, argument is input of node, second is parameter
  *
- * \pre bin_op needs to be callable with two argments
+ * \pre bin_op needs to be callable with two arguments
  */
 template<class bin_op>
 struct transform_node
@@ -140,6 +140,40 @@ private:
 			out().fire(event);
 	}
 };
+
+template<class data_t, class predicate>
+class watch_node
+{
+public:
+	explicit watch_node(const predicate& pred)
+		: pred(pred)
+	{
+	}
+
+	auto in() noexcept { return in_port; }
+	auto out() noexcept { return out_port; }
+
+	auto check_tick()
+	{
+		return [this]()
+		{
+			const auto tmp = in_port.get();
+			if (pred(tmp))
+				out_port.fire(tmp);
+		};
+	}
+
+	predicate pred;
+private:
+	state_sink<data_t> in_port;
+	event_out_port<data_t> out_port;
+};
+
+template<class data_t, class predicate>
+auto watch(const predicate& pred, const data_t&)
+{
+	return watch_node<data_t, predicate>(pred);
+}
 
 }  // namespace fc
 
