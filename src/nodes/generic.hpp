@@ -127,7 +127,7 @@ public:
 
 
 private:
-	state_sink<size_t> index;
+	state_sink<key_t> index;
 	event_out_port<data_t> out_port;
 	std::map<key_t, port_t> in_ports;
 	/// fires incoming event if and only if it is from the currently chosen port.
