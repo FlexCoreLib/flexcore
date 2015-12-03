@@ -101,7 +101,6 @@ public:
 	typedef decltype(test<derived>(nullptr)) type;
 };
 
-
 template<class,int> struct argtype_of;
 template<class T>
 struct type_is_callable_impl : has_call_op<T>::type
@@ -217,13 +216,23 @@ struct is_active_sink: public std::false_type
 {
 };
 
+template<class T, class enable = void>
+struct is_active_connectable_impl : std::false_type
+{
+};
+
 template<class T>
-struct is_active_connectable :
+struct is_active_connectable_impl<
+	T, typename std::enable_if<std::is_class<T>::value>::type> :
 		std::integral_constant
 			<	bool,
 					detail::has_member_connect<T>::type::value
 				and	std::is_copy_constructible<T>::value
 			>
+{
+};
+template<class T>
+struct is_active_connectable : is_active_connectable_impl<T>
 {
 };
 
