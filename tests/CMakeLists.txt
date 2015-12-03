@@ -20,6 +20,7 @@ ADD_EXECUTABLE( test_executable
 	ports/states/test_state_source_with_setter.cpp
 	range/test_range.cpp
 	runner.cpp 
+	serialisation/test_configfile.cpp
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp
 	threading/test_parallelscheduler.cpp
@@ -28,6 +29,7 @@ ADD_EXECUTABLE( test_executable
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}
 	"../src/" 
+	"../src/3rdparty/cereal/include"
 	"." )
 
 TARGET_LINK_LIBRARIES( test_executable
