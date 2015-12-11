@@ -33,6 +33,9 @@ BOOST_AUTO_TEST_CASE( stream_query_node_simple_case )
 	node_class<int> node;
 	state_sink<int> sink;
 
+	static_assert(void_callable<decltype(node.port)>(0),"");
+	static_assert(is_passive_source<decltype(node.port)>::value ,"");
+
 	node.port >> sink;
 
 	BOOST_CHECK(sink.get() == 0);

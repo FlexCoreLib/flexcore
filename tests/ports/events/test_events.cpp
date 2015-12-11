@@ -6,6 +6,7 @@
 
 using namespace fc;
 
+
 template<class T>
 struct event_sink
 {
@@ -22,6 +23,12 @@ namespace fc
 template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
 {};
+
+
+template<class T>
+struct is_port<event_sink<T>> : public std::true_type
+{
+};
 
 } // namespace fc
 
@@ -45,7 +52,7 @@ struct is_passive_sink<event_vector_sink<T>> : public std::true_type
 
 } // namespace fc
 
-BOOST_AUTO_TEST_SUITE( events )
+BOOST_AUTO_TEST_SUITE(test_events)
 
 BOOST_AUTO_TEST_CASE( connections )
 {
@@ -68,6 +75,9 @@ BOOST_AUTO_TEST_CASE( connections )
 
 
 	auto tmp_connection = test_event >> [](int i){return ++i;};
+	static_assert(is_instantiation_of<
+			detail::active_connection_proxy, decltype(tmp_connection)>::value,
+			"active port connected with standard connectable gets proxy");
 	tmp_connection >> test_handler;
 
 	test_event.fire(1);
@@ -78,6 +88,7 @@ BOOST_AUTO_TEST_CASE( connections )
 	test_event.fire(1);
 	BOOST_CHECK_EQUAL(*(test_handler.storage), 4);
 }
+
 
 BOOST_AUTO_TEST_CASE( queue_sink )
 {
@@ -164,53 +175,85 @@ BOOST_AUTO_TEST_CASE( lambda )
 	BOOST_CHECK_EQUAL(test_value, 666);
 }
 
+namespace
+{
+template<class T>
+void test_connection(const T& connection)
+{
+	int storage = 0;
+	event_out_port<int> a;
+	event_in_queue<int> d;
+	auto c = [&](int i) { storage = i; return i; };
+	auto b = [](int i) { return i + 1; };
+
+	connection(a,b,c,d);
+
+	a.fire(2);
+	BOOST_CHECK_EQUAL(storage, 3);
+	BOOST_CHECK_EQUAL(d.get(), 3);
+}
+}
+
 /**
  * Confirm that connecting ports and connectables
  * does not depend on any particular order.
  */
 BOOST_AUTO_TEST_CASE( associativity )
 {
-	int storage = 0;
-	auto c = [&](int i) { storage = i; return i; };
-	auto b = [](int i) { return i + 1; };
-
+	test_connection([](auto a, auto b, auto c, auto d)
 	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	a >> b >> c >> d;
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
+		a >> b >> c >> d;
+	});
+
+	test_connection([](auto a, auto b, auto c, auto d)
+	{
+		(a >> b) >> (c >> d);
+	});
+
+	test_connection([](auto a, auto b, auto c, auto d)
+	{
+		a >> ((b >> c) >> d);
+	});
+
+	test_connection([](auto a, auto b, auto c, auto d)
+	{
+		(a >> (b >> c)) >> d;
+	});
+}
+
+template<class operation>
+struct sink_t
+{
+	typedef void result_t;
+
+	void operator()(auto && in)
+	{
+		op(in);
 	}
 
-	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	(a >> b) >> (c >> d);
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
-	}
+	operation op;
+};
 
-	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	a >> ((b >> c) >> d);
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
-	}
+template<class operation>
+auto sink(const operation& op )
+{
+	return sink_t<operation>{op};
+}
 
-	{
-	event_out_port<int> a;
-	event_in_queue<int> d;
-	(a >> (b >> c)) >> d;
-	a.fire(2);
-	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
-	}
+BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
+{
+	int test_value = 0;
+
+	event_out_port<int> p;
+	auto write = sink([&](auto in) {test_value = in;});
+
+	static_assert(is_passive_sink<decltype(write)>::value, "");
+
+	p >> write;
+	BOOST_CHECK_EQUAL(test_value, 0);
+	p.fire(4);
+	BOOST_CHECK_EQUAL(test_value, 4);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

@@ -36,5 +36,3 @@ TARGET_LINK_LIBRARIES( test_executable
 
 # declares a test with our executable
 #ADD_TEST( NAME test WORKING_DIRECTORY "." COMMAND test_executable )
-
-
