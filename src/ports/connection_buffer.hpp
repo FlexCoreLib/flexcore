@@ -139,7 +139,7 @@ class state_no_buffer : public buffer_interface<data_t, state_tag>
 {
 public:
 	state_no_buffer()
-	: 	out_port( [this]() { return in_port();})
+	: 	out_port( [this]() { return in_port.get();})
 	{
 	}
 
@@ -236,9 +236,9 @@ struct buffer<data_t, state_tag>
 template<class T>
 inline fc::state_buffer<T>::state_buffer() :
 		in_switch_tick( [this](){ switch_buffers(); } ),
-		in_work_tick([this]()
+		in_work_tick( [this]()
 				{
-					*intern_buffer = in_port();
+					*intern_buffer = in_port.get();
 					already_switched = false;
 				}),
 		in_port(),

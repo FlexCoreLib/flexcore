@@ -23,10 +23,4 @@ struct port_connection
 	typedef payload result_t;
 };
 
-///trait to define that a type is a port. Overload this for your own ports.
-template<class T>
-struct is_port : std::false_type
-{
-};
-
 } //namespace fc
