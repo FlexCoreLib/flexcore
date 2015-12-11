@@ -39,6 +39,8 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 {
 	typedef node_aware<event_in_port<int>> test_in_port;
 	typedef node_aware<event_out_port<int>> test_out_port;
+
+
 	auto region = std::make_shared<parallel_region>();
 	identidy_node identity(0, region);
 
@@ -55,6 +57,7 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	BOOST_CHECK_EQUAL(test_sink.size(), 0);
 	test_out.fire(1);
+	BOOST_CHECK_EQUAL(test_sink.size(), 1);
 	BOOST_CHECK_EQUAL(test_sink.at(0), 1);
 
 	auto tmp = test_out >> [](int i ){ return ++i;};

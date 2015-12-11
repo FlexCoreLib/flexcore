@@ -1,7 +1,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "core/connection.hpp"
+#include "ports/events/event_sink_with_queue.hpp"
 #include "ports/event_ports.hpp"
+#include "ports/state_ports.hpp"
+
 #include <vector>
 #include <algorithm>
 #include "move_token.hpp"
@@ -25,25 +28,51 @@ BOOST_AUTO_TEST_CASE( move_token_ )
 	v.push_back(move_token("foo"));
 }
 
-BOOST_AUTO_TEST_CASE( moving )
+BOOST_AUTO_TEST_CASE( moving_events )
 {
-#warning re-enable test!
-//	auto set_bar = [](move_token&& t) -> move_token&& { t.value() = "bar"; return std::move(t); };
-////	auto set_bar = [](move_token&& t) { t.value() = "bar"; return std::move(t); };
-//
-//	event_out_port<move_token> source;
-//	event_in_queue<move_token> sink;
-//	source >> set_bar >> sink;
-//	source.fire(move_token("foo"));
-//	move_token received(sink.get());
-//	BOOST_CHECK_EQUAL(received.value(), std::string("bar"));
+	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
+
+	event_out_port<move_token&&> source;
+
+	event_in_queue<move_token> sink;
+
+	std::function<void(move_token&&)> bla = sink;
+	source >> set_bar >> bla;
+	source.fire(move_token("foo"));
+
+	move_token tmp = sink.get();
+	BOOST_CHECK_EQUAL(tmp.value(), "bar");
+}
+
+BOOST_AUTO_TEST_CASE( moving_state )
+{
+	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
+	state_sink<move_token> sink;
+	state_source_call_function<move_token> source([](){ return move_token("foo"); });
+
+	source >> set_bar >> sink;
+	auto v = sink.get();
+	BOOST_CHECK_EQUAL(v.value(), "bar");
+}
+
+
+//test case to make sure objects are not move if we don't want them to be
+BOOST_AUTO_TEST_CASE( non_moving )
+{
+	typedef std::shared_ptr<int> non_move; //shared_ptr is nulled after move, so we can check
+	event_out_port<non_move> source;
+	bool moved = false;
+	event_in_port<non_move> sink([&moved](non_move t){ moved = !t.operator bool() ;});
+	event_in_port<non_move> sink2([&moved](non_move t){ moved = !t.operator bool() ;});
+
+	source >> sink;
+
+	source.fire(std::make_shared<int>(1));
+	BOOST_CHECK(!moved);
+
+	source >> sink2; //now we have two connections
+	source.fire(std::make_shared<int>(1));
+	BOOST_CHECK(!moved);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-
-
-
-
-

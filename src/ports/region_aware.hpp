@@ -54,16 +54,16 @@ bool same_region( const node_aware<source_t>& source,
  * \brief factory method to construct buffer
  * \returns either event_buffer or no_buffer.
  */
-template<class payload_t>
+template<class result_t>
 struct buffer_factory
 {
 	template<class active_t, class passive_t, class tag>
 	static auto construct_buffer(const active_t& active, const passive_t& passive, tag) ->
-			std::shared_ptr<buffer_interface<payload_t, tag>>
+			std::shared_ptr<buffer_interface<result_t, tag>>
 	{
 		if (!same_region(active, passive))
 		{
-			auto result_buffer = std::make_shared<typename buffer<payload_t, tag>::type>();
+			auto result_buffer = std::make_shared<typename buffer<result_t, tag>::type>();
 
 			active.node->region().switch_tick() >> result_buffer->switch_tick();
 			passive.node->region().work_tick() >> result_buffer->work_tick();
@@ -71,7 +71,7 @@ struct buffer_factory
 			return result_buffer;
 		}
 		else
-			return std::make_shared<typename no_buffer<payload_t, tag>::type>();
+			return std::make_shared<typename no_buffer<result_t, tag>::type>();
 	}
 };
 
@@ -83,9 +83,9 @@ struct buffer_factory
 template<class base_connection>
 struct buffered_event_connection : public base_connection
 {
-	typedef typename base_connection::payload_t payload_t;
+	typedef typename base_connection::result_t result_t;
 
-	buffered_event_connection(std::shared_ptr<buffer_interface<payload_t, event_tag>> new_buffer,
+	buffered_event_connection(std::shared_ptr<buffer_interface<result_t, event_tag>> new_buffer,
 			const base_connection& base) :
 				base_connection(base),
 				buffer(new_buffer)
@@ -93,23 +93,26 @@ struct buffered_event_connection : public base_connection
 		assert(buffer);
 	}
 
-	void operator()(payload_t event) // should this be payload_t&& ?
+	void operator()(const result_t& event)
 	{
 		assert(buffer);
 		buffer->in()(event);
 	}
 
 private:
-	std::shared_ptr<buffer_interface<payload_t, event_tag>> buffer;
+	std::shared_ptr<buffer_interface<result_t, event_tag>> buffer;
 };
+
+//todo hackhack
+template<class T> struct is_passive_sink<buffered_event_connection<T>> : public std::true_type {};
 
 //also remove this code duplication, until then see buffered_event_connection
 template<class base_connection>
 struct buffered_state_connection: public base_connection
 {
-	typedef typename base_connection::payload_t payload_t;
+	typedef typename base_connection::result_t result_t;
 
-	buffered_state_connection(std::shared_ptr<buffer_interface<payload_t, state_tag>> new_buffer,
+	buffered_state_connection(std::shared_ptr<buffer_interface<result_t, state_tag>> new_buffer,
 			const base_connection& base) :
 				base_connection(base),
 				buffer(new_buffer)
@@ -117,13 +120,13 @@ struct buffered_state_connection: public base_connection
 		assert(buffer);
 	}
 
-	payload_t operator()(void)
+	result_t operator()(void)
 	{
 		return buffer->out()();
 	}
 
 private:
-	std::shared_ptr<buffer_interface<payload_t, state_tag>> buffer;
+	std::shared_ptr<buffer_interface<result_t, state_tag>> buffer;
 };
 
 namespace detail
@@ -147,7 +150,8 @@ auto make_buffered_connection(
 	typedef port_connection
 			<
 			typename source_t::base_t,
-			typename sink_t::base_t
+			typename sink_t::base_t,
+			buffer_t
 			> base_connection_t;
 
 	connect(buffer->out(), static_cast<typename sink_t::base_t>(sink));
@@ -172,7 +176,8 @@ auto make_buffered_connection(
 	assert(buffer);
 	typedef port_connection<
 			typename source_t::base_t,
-			typename sink_t::base_t
+			typename sink_t::base_t,
+			buffer_t
 			> base_connection_t;
 
 	connect(static_cast<typename source_t::base_t>(source), buffer->in());
@@ -208,11 +213,11 @@ struct node_aware_connect_impl
 	>
 {
 
-	auto operator()(source_t source, sink_t sink)
+	auto operator()(const source_t& source, const sink_t& sink)
 	{
-		typedef typename result_of<source_t>::type payload_t;
-		return connect(static_cast<source_t>(source), detail::make_buffered_connection(
-				buffer_factory<payload_t>::construct_buffer(
+		typedef typename result_of<source_t>::type result_t;
+		return connect(static_cast<const typename source_t::base_t&>(source), detail::make_buffered_connection(
+				buffer_factory<result_t>::construct_buffer(
 						source, //event source is active, thus first
 						sink, //event sink is passive thus second
 						event_tag()),
@@ -257,9 +262,9 @@ struct node_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
-		typedef typename result_of<source_t>::type payload_t;
+		typedef typename result_of<source_t>::type result_t;
 		return connect(detail::make_buffered_connection(
-				buffer_factory<payload_t>::construct_buffer(
+				buffer_factory<result_t>::construct_buffer(
 						sink, //state sink is active thus first
 						source, //state source is passive thus second
 						state_tag()),
