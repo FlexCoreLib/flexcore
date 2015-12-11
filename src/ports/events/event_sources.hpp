@@ -29,22 +29,29 @@ namespace fc
 template<class event_t>
 struct event_out_port
 {
-	typedef event_t result_t;
-	typedef typename detail::handle_type<event_t>::type handler_t;
+	typedef typename std::remove_reference<event_t>::type result_t;
+	typedef typename detail::handle_type<result_t>::type handler_t;
 
 	event_out_port() = default;
 	event_out_port(const event_out_port&) = default;
 
 	template<class... T>
-	void fire(T... event)
+	void fire(T&&... event)
 	{
 		static_assert(sizeof...(T) == 0 || sizeof...(T) == 1,
 				"we only allow single events, or void events atm");
+
+		static_assert(std::is_void<event_t>() || std::is_constructible<
+				typename std::remove_reference<T>::type...,
+				typename std::remove_reference<event_t>::type>(),
+				"tried to call fire with a type, not implicitly convertible to type of port."
+				"If conversion is required, do the cast before calling fire.");
+
 		assert(event_handlers);
 		for (auto& target : (*event_handlers))
 		{
 			assert(target);
-			target(event...);
+			target(static_cast<event_t>(event)...);
 		}
 	}
 
@@ -67,7 +74,7 @@ struct event_out_port
 		event_handlers->push_back(new_handler);
 
 		assert(!event_handlers->empty());
-		return port_connection<decltype(*this), handler_t>();
+		return port_connection<decltype(*this), handler_t, result_t>();
 	}
 
 private:

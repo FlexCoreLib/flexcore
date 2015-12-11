@@ -12,15 +12,6 @@ namespace fc
 namespace detail
 {
 
-template<class T>
-struct is_active_source:
-		std::integral_constant<	bool,
-									is_active_connectable<T>::value
-								and is_port<T>::value
-							  >
-{
-};
-
 //policy classes for determining argument order in connect calls in the proxy
 struct active_sink_first
 {
@@ -28,7 +19,6 @@ struct active_sink_first
 	struct first
 	{
 		typedef sink_t type;
-		typedef typename result_of<sink_t>::type result_t;
 	};
 
 	template<class source_t, class sink_t>
@@ -50,14 +40,13 @@ struct active_source_first
 	struct first
 	{
 		typedef source_t type;
-		typedef void result_t;
 	};
 
 	template<class source_t, class sink_t>
 	struct second
 	{
 		typedef sink_t type;
-		typedef typename result_of<sink_t>::type result_t;
+		typedef typename result_of<source_t>::type result_t;
 	};
 	template<class source_t, class sink_t>
 	auto operator()(source_t source, sink_t sink)
@@ -91,9 +80,9 @@ struct active_connection_proxy
 			"active_t in proxy needs to be active connectable");
 
 	typedef typename
-			connect_policy::template first<active_t, passive_t>::result_t payload_t;
-	typedef typename
 			connect_policy::template second<active_t, passive_t>::result_t result_t;
+//	typedef typename
+//			connect_policy::template second<active_t, passive_t>::result_t result_t;
 
 	active_connection_proxy(active_t active_, passive_t passive) :
 			active(active_),
@@ -112,7 +101,10 @@ struct active_connection_proxy
 	 */
 	template<class new_passive_t, class enable = void>
 	auto connect(new_passive_t new_passive,
-			typename std::enable_if< is_passive<new_passive_t>::value>::type* = 0)
+			typename std::enable_if<
+							(is_passive_source<new_passive_t>::value
+									or is_passive_sink<new_passive_t>::value)
+											>::type* = 0)
 	{
 		static_assert(is_passive<new_passive_t>::value,
 				"new_passive_t in proxy needs to be passive connectable");
@@ -133,9 +125,12 @@ struct active_connection_proxy
 	 * \returns a active_connection_proxy, which contains the new_connectable in its connection.
 	 */
 	template<	class new_connectable_t,
-				class = typename std::enable_if< not is_passive<new_connectable_t>::value >::type
+				class = typename std::enable_if<
+				not (is_passive_source<new_connectable_t>::value
+						or is_passive_sink<new_connectable_t>::value)
+								>::type
 			>
-	auto connect(new_connectable_t new_connectable)
+	auto connect(const new_connectable_t& new_connectable)
 	{
 		auto connection = connect_policy()(stored_passive, new_connectable);
 		return active_connection_proxy<
@@ -163,7 +158,7 @@ struct active_passive_connect_impl
 			>::type
 	>
 {
-	auto operator()(active_t active, passive_t passive)
+	auto operator()(active_t active, const passive_t& passive)
 	{
 		return active.connect(passive);
 	}
@@ -190,7 +185,7 @@ struct active_passive_connect_impl
 					)>::type
 	>
 {
-	auto operator()(active_t active, passive_t passive)
+	auto operator()(const active_t& active, const passive_t& passive)
 	{
 		return active_connection_proxy<active_t, passive_t, argument_order>
 				(active, passive);
@@ -213,7 +208,7 @@ struct active_passive_connect_impl
 			<	not	is_instantiation_of< active_connection_proxy,active_t >::value
 				and	(	(	is_active_source<active_t>::value
 						and	fc::is_passive_sink<passive_t>::value
-						)
+					)
 					or	(	fc::is_active_sink<active_t>::value
 						and	fc::is_passive_source<passive_t>::value
 						)
@@ -229,7 +224,7 @@ struct active_passive_connect_impl
 		typedef typename
 				argument_order::template second<active_t, passive_t>
 				::type sink_t;
-		return port_connection<source_t, sink_t>();
+		return port_connection<source_t, sink_t, typename result_of<active_t>::type>();
 	}
 };
 
@@ -241,7 +236,7 @@ struct connect_impl
 			<fc::is_active<source_t>::value>::type
 	>
 {
-	auto operator()(source_t source, sink_t sink)
+	auto operator()(const source_t& source, const sink_t& sink)
 	{
 		// source is active, thus it is the first parameter
 		return active_passive_connect_impl<source_t, sink_t, active_source_first>()(source, sink);
@@ -257,7 +252,7 @@ struct connect_impl
 
 	>
 {
-	auto operator()(source_t source, sink_t sink)
+	auto operator()(const source_t& source, const sink_t& sink)
 	{
 		// sink is active, thus it is the first parameter
 		return active_passive_connect_impl<sink_t, source_t, active_sink_first>()(sink, source);

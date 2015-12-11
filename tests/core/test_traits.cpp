@@ -146,11 +146,11 @@ BOOST_AUTO_TEST_CASE( test_is_callable )
 	static_assert(!is_callable<int>::value,
 			"int is very much not callable");
 
-	static_assert(!is_callable<not_callable>::value,
-			"type is defined to be not callable");
-
 	static_assert(!is_passive<CustomCallableArg>::value,
 			"CusomtCallableArg returns bool and thus cannot be passive connectable");
+
+	static_assert(!is_callable<not_callable>::value,
+			"type is defined to be not callable");
 }
 
 //
