@@ -7,6 +7,8 @@
 #include "connection_buffer.hpp"
 #include "node_aware.hpp"
 
+#include <iostream>
+
 namespace fc
 {
 
@@ -20,25 +22,25 @@ namespace fc
  * typedef region_aware<event_in_port<int>> region_aware_event_port;
  * \endcode
  */
-//template<class base>
-//struct region_aware: public base
-//{
-//	static_assert(std::is_class<base>::value,
-//			"can only be mixed into clases, not primitives");
-//	//allows explicit access to base of this mixin.
-//	typedef base base_t;
-//
-//	template<class ... args>
-//	region_aware(std::shared_ptr<region_info> region_,
-//		const args& ... base_constructor_args) :
-//			base_t(base_constructor_args...),
-//			region(region_)
-//	{
-//		assert(region);
-//	}
-//
-//	std::shared_ptr<region_info> region;
-//};
+template<class base>
+struct node_aware: public base
+{
+	static_assert(std::is_class<base>::value,
+			"can only be mixed into clases, not primitives");
+	//allows explicit access to base of this mixin.
+	typedef base base_t;
+
+	template<class ... args>
+	node_aware( node_interface* node_ptr,
+				const args& ... base_constructor_args)
+		: base_t(base_constructor_args...)
+		, node(node_ptr)
+	{
+		assert(node_ptr);
+	}
+
+	node_interface* node;
+};
 
 
 ///checks if two region_aware connectables are from the same region
@@ -129,6 +131,13 @@ private:
 	std::shared_ptr<buffer_interface<result_t, state_tag>> buffer;
 };
 
+// TODO prefer to test this algorithmically
+template<class T> struct is_port<node_aware<T>> : public std::true_type {};
+template<class T> struct is_active_sink<node_aware<T>> : public is_active_sink<T> {};
+template<class T> struct is_active_source<node_aware<T>> : public is_active_source<T> {};
+template<class T> struct is_passive_sink<node_aware<T>> : public is_passive_sink<T> {};
+template<class T> struct is_passive_source<node_aware<T>> : public is_passive_source<T> {};
+
 namespace detail
 {
 
@@ -192,9 +201,9 @@ auto make_buffered_connection(
  * Thus client code doesn't need to get type connection_base_t by hand.
  */
 template<class base_connection_t>
-node_aware<base_connection_t> make_region_aware(const base_connection_t& base, std::shared_ptr<region_info> region)
+node_aware<base_connection_t> make_node_aware(const base_connection_t& base, node_interface* node_ptr)
 {
-	return node_aware<base_connection_t>(region, base);
+	return node_aware<base_connection_t>(node_ptr, base);
 }
 
 template<class source_t, class sink_t, class Enable = void>
@@ -205,16 +214,16 @@ struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-        	::fc::is_instantiation_of<node_aware, source_t>::value &&
-        	      is_active_source<source_t>::value &&
+			::fc::is_instantiation_of<node_aware, source_t>::value &&
+			::fc::is_active_source<source_t>::value &&
 			::fc::is_instantiation_of<node_aware, sink_t>::value &&
 			::fc::is_passive_sink<sink_t>::value
 			>::type
 	>
 {
-
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
+		std::cout << "full event node connection" << std::endl;
 		typedef typename result_of<source_t>::type result_t;
 		return connect(static_cast<const typename source_t::base_t&>(source), detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
@@ -231,19 +240,20 @@ struct node_aware_connect_impl
 		sink_t,
         typename std::enable_if<
         	::fc::is_instantiation_of<node_aware, source_t>::value &&
-         	       is_active_source<source_t>::value &&
-			!::fc::is_instantiation_of<node_aware, sink_t>::value
+			::fc::is_active_source<source_t>::value &&
+			not ::fc::is_instantiation_of<node_aware, sink_t>::value
 			>::type
 	>
 {
-
 	auto operator()(source_t source, sink_t sink)
 	{
+		std::cout << "half: source is node" << std::endl;
+
 		//construct region_aware_connection
 		//based on if source and sink are from same region
-		return make_region_aware(
+		return make_node_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.region);
+				source.node);
 	}
 };
 
@@ -262,6 +272,8 @@ struct node_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
+		std::cout << "full event node connection" << std::endl;
+
 		typedef typename result_of<source_t>::type result_t;
 		return connect(detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
@@ -278,20 +290,21 @@ struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
+				not ::fc::is_instantiation_of<node_aware, source_t>::value &&
 				::fc::is_instantiation_of<node_aware, sink_t>::value &&
-				!::fc::is_instantiation_of<node_aware, sink_t>::value &&
 				::fc::is_active_sink<source_t>::value
 		>::type
 	>
 {
-
 	auto operator()(source_t source, sink_t sink)
 	{
+		std::cout << "half: source is node" << std::endl;
+
 		//construct region_aware_connection
 		//based on if source and sink are from same region
 		return make_region_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.region);
+				source.node);
 	}
 };
 

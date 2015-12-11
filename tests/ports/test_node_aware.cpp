@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ports/ports.hpp>
-#include <ports/node_aware.hpp>
+#include <ports/region_aware.hpp>
 
 using namespace fc;
 
@@ -61,6 +61,19 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	BOOST_CHECK_EQUAL(test_sink.at(0), 1);
 
 	auto tmp = test_out >> [](int i ){ return ++i;};
+
+	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
+	static_assert(is_instantiation_of<node_aware, decltype(tmp)>::value, "");
+	static_assert(is_active_sink<test_in_port>::value, "");
+	static_assert(not is_active_source<test_in_port>::value, "");
+	static_assert(not is_passive_sink<test_in_port>::value, "");
+	static_assert(not is_passive_source<test_in_port>::value, "");
+	static_assert(is_passive_source<decltype(tmp)>::value, "");
+	static_assert(not is_passive_sink<decltype(tmp)>::value, "");
+	static_assert(not is_active_source<decltype(tmp)>::value, "");
+	static_assert(not is_active_sink<decltype(tmp)>::value, "");
+
+
 	tmp >> test_in;
 
 	test_out.fire(1);
