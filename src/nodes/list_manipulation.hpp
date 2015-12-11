@@ -52,6 +52,7 @@ private:
 		auto begin = std::begin(range);
 		auto end = std::end(range);
 
+		// sort elements by predicate
 		for (auto it = begin; it != end; ++it)
 		{
 			auto p = predicate(*it);
@@ -61,6 +62,7 @@ private:
 			else
 				++out_num_dropped.access();
 		}
+		// send sorted elements
 		for (auto& e : entries)
 		{
 			auto entry_it = entries.find(e.first);

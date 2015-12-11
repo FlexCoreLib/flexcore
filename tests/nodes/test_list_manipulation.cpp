@@ -12,6 +12,9 @@ using namespace fc;
 namespace
 {
 
+/*
+ * Helper for comparing thwo ranges
+ */
 template<class left_t, class right_t>
 void range_compare(const left_t& left, const right_t& right)
 {
