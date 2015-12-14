@@ -64,10 +64,13 @@ private:
 	handler_t event_handler;
 };
 
+/**
+ * TODO document this!
+ */
 template<class lambda_t>
-struct event_in_port2
+struct event_in_port_tmpl
 {
-	explicit event_in_port2(lambda_t h) :
+	explicit event_in_port_tmpl(lambda_t h) :
 			lambda(h)
 	{}
 
@@ -76,7 +79,7 @@ struct event_in_port2
 		lambda(std::move(in_event));
 	}
 
-	event_in_port2() = delete;
+	event_in_port_tmpl() = delete;
 
 	typedef void result_t;
 
@@ -85,17 +88,23 @@ private:
 };
 
 template<class lambda_t>
-auto make_event_in_port2(lambda_t h) { return event_in_port2<lambda_t>{h}; }
-#define IN_PORT(NAME, FUNCTION) \
+auto make_event_in_port_tmpl(lambda_t h) { return event_in_port_tmpl<lambda_t>{h}; }
+
+#define IN_PORT_TMPL_HELPER(NAME, FUNCTION) \
 	auto NAME()	\
-	{ return make_event_in_port2( [this](auto event){ this->FUNCTION(event); } ); } \
+	{ return make_event_in_port_tmpl( [this](auto event){ this->FUNCTION(event); } ); } \
+	template<class event_t> \
+	void FUNCTION(const event_t& event)
+
+
+#define IN_PORT_TMPL(NAME) IN_PORT_TMPL_HELPER( NAME, NAME##MEM_FUN )
 
 // traits
 template<class T> struct is_port<event_in_port<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<event_in_port<T>> : std::true_type {};
 //template<class T, class U> struct is_passive_sink<event_in_tmpl<T, U>> : std::true_type {};
-template<class T> struct is_port<event_in_port2<T>> : public std::true_type {};
-template<class T> struct is_passive_sink<event_in_port2<T>> : std::true_type {};
+template<class T> struct is_port<event_in_port_tmpl<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<event_in_port_tmpl<T>> : std::true_type {};
 
 } // namespace fc
 

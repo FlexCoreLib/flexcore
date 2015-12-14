@@ -16,17 +16,12 @@ public:
 	range_size()
 		: out()
 	{}
-	auto in()
-	{
-		return make_event_in_port2( [this](auto event){ this->detail_in(event); } );
-	}
 	event_out_port<int> out;
 
 	/**
 	 * to be used by ports, should be considered private
 	 */
-	template<class event_t>
-	void detail_in(const event_t& event)
+	IN_PORT_TMPL(in)
 	{
 		size_t elems = std::distance(std::begin(event), std::end(event));
 		out.fire(static_cast<int>(elems));

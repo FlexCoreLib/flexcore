@@ -54,20 +54,12 @@ class generic_input_node
 public:
 	generic_input_node() : value() {}
 
-	IN_PORT(in, foo)
-//	auto in()
-//	{
-//		return make_event_in_port2( [this](auto event){ this->foo(event); } );
-//	}
-
-	int value;
-
-private:
-	template<class event_t>
-	void foo(const event_t& event)
+	IN_PORT_TMPL(in)
 	{
 		value = event;
 	}
+
+	int value;
 };
 
 } // unnamed namespace
