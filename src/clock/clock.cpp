@@ -13,13 +13,13 @@ namespace fc
 namespace chr = std::chrono;
 
 std::atomic<virtual_clock::system::time_point>
-		virtual_clock::system::current_time(
+		virtual_clock::system::current_time((
 				virtual_clock::system::time_point(
-						virtual_clock::system::duration::zero()));
+						virtual_clock::system::duration::zero())));
 std::atomic<virtual_clock::steady::time_point>
-		virtual_clock::steady::current_time(
+		virtual_clock::steady::current_time((
 				virtual_clock::steady::time_point(
-						virtual_clock::steady::duration::zero()));
+						virtual_clock::steady::duration::zero())));
 
 virtual_clock::system::time_point virtual_clock::system::now() noexcept
 {

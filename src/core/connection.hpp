@@ -6,9 +6,6 @@
 
 namespace fc
 {
-
-
-
 } // namespace fc
 
 #endif /* SRC_CORE_CONNECTION_HPP_ */

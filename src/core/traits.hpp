@@ -101,7 +101,6 @@ public:
 	typedef decltype(test<derived>(nullptr)) type;
 };
 
-
 template<class,int> struct argtype_of;
 template<class T>
 struct type_is_callable_impl : has_call_op<T>::type
@@ -200,6 +199,12 @@ struct argtype_of
 	typedef typename utils::function_traits<Expr>::template arg<Arg>::type type;
 };
 
+///trait to define that a type is a port. Overload this for your own ports.
+template<class T>
+struct is_port : std::false_type
+{
+};
+
 template<class T>
 struct param_type
 {
@@ -211,13 +216,35 @@ struct is_active_sink: public std::false_type
 {
 };
 
-template<class T>
-struct is_active_connectable :
-		std::integral_constant<bool, detail::has_member_connect<T>::type::value
-		&& std::is_copy_constructible<T>::value>
+template<class T, class enable = void>
+struct is_active_connectable_impl : std::false_type
 {
 };
 
+template<class T>
+struct is_active_connectable_impl<
+	T, typename std::enable_if<std::is_class<T>::value>::type> :
+		std::integral_constant
+			<	bool,
+					detail::has_member_connect<T>::type::value
+				and	std::is_copy_constructible<T>::value
+			>
+{
+};
+template<class T>
+struct is_active_connectable : is_active_connectable_impl<T>
+{
+};
+
+template<class T>
+struct is_active_source:
+		std::integral_constant
+			<	bool,
+					is_active_connectable<T>::value
+				and is_port<T>::value
+			>
+{
+};
 
 template<class T, class enable = void>
 struct is_passive_source_impl: public std::false_type
@@ -225,8 +252,26 @@ struct is_passive_source_impl: public std::false_type
 };
 
 template<class T>
-struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::type>
-		: public std::integral_constant<bool, utils::function_traits<T>::arity == 0>
+constexpr auto void_callable(int) -> decltype(std::declval<T>()(), bool())
+{
+	return true;
+}
+
+template<class T>
+constexpr bool void_callable(...)
+{
+	return false;
+}
+
+//template<class T>
+//struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+//		: public std::integral_constant<bool, void_callable<T>(0)>
+//{
+//};
+
+template<class T>
+struct is_passive_source_impl<T,typename std::enable_if<void_callable<T>(0)>::type>
+		: public std::integral_constant<bool, true>
 {
 };
 
@@ -236,7 +281,29 @@ struct is_passive_sink_impl: public std::false_type
 };
 
 template<class T>
-struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+constexpr auto overloaded(int) -> decltype(&T::operator(), bool())
+{
+	//in case operator() is overloaded decltype will fail, and this template will not be instantiated.
+	return false;
+}
+
+template<class T>
+constexpr bool overloaded(...)
+{
+	return true;
+}
+
+template<class T>
+struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value
+			&& !overloaded<T>(0)>::type>
+		: public std::integral_constant<bool, std::is_void<typename result_of<T>::type>::value>
+{
+};
+
+template<class T>
+struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value
+			&& overloaded<T>(0)
+			&& has_result<T>::value>::type>
 		: public std::integral_constant<bool, std::is_void<typename result_of<T>::type>::value>
 {
 };
@@ -247,7 +314,7 @@ struct is_passive_sink: public is_passive_sink_impl<T>
 {
 };
 template<class T>
-struct is_passive_source: is_passive_source_impl<T>
+struct is_passive_source: public is_passive_source_impl<T>
 {
 };
 

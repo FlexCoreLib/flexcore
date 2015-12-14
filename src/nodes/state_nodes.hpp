@@ -36,7 +36,7 @@ struct merge_node<operation, result (args...)>
 	static constexpr auto nr_of_arguments = sizeof...(args);
 
 	static_assert(nr_of_arguments > 0,
-			"Tried to create merge_node wtih a function taking no arguments");
+			"Tried to create merge_node with a function taking no arguments");
 
 	explicit merge_node(operation op) :
 			in_ports(),
@@ -62,7 +62,7 @@ private:
 	template<class tuple, std::size_t... index>
 	decltype(auto) invoke_helper(tuple&& tup, std::index_sequence<index...>)
 	{
-		return op(std::get<index>(std::forward<tuple>(tup))()...);
+		return op(std::get<index>(std::forward<tuple>(tup)).get()...);
 	}
 };
 

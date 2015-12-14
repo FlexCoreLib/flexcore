@@ -23,7 +23,7 @@ int main()
 			{
 				first_region->ticks.in_work()();
 			},
-			fc::thread::cycle_control::fast_tick);
+			fc::thread::cycle_control::medium_tick);
 
 	tick_cycle.out_switch_tick() >> first_region->ticks.in_switch_buffers();
 	thread_manager.add_task(tick_cycle);
@@ -53,7 +53,7 @@ int main()
 			{
 				second_region->ticks.in_work()();
 			},
-			fc::thread::cycle_control::medium_tick);
+			fc::thread::cycle_control::slow_tick);
 
 	second_tick_cycle.out_switch_tick() >> second_region->ticks.in_switch_buffers();
 	thread_manager.add_task(second_tick_cycle);

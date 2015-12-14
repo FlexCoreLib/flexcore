@@ -4,6 +4,9 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace fc;
+
+BOOST_AUTO_TEST_SUITE(test_connection)
+
 /**
  * Example test cases for core connections.
  * These this test shows how connections are used in general.
@@ -104,3 +107,74 @@ BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 	connect(do_nothing, increment_ref)();
 	BOOST_CHECK_EQUAL(capture_ref, 4);
 }
+
+BOOST_AUTO_TEST_CASE(test_move_only_token)
+{
+	//test if tokens, which cannot be copy constructed but move constructed
+	//are properly transmitted.
+	// also serves as a test if we don't do unnecessary copies
+	struct move_only
+	{
+		std::unique_ptr<int> val;
+	};
+
+	auto source = [](){ return move_only{ std::make_unique<int>(1)};};
+	auto increment = [](move_only in) { *(in.val) = *(in.val)+1; return in; };
+
+	auto connect = source >> increment;
+	auto result = connect();
+	BOOST_CHECK_EQUAL(*(result.val), 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_polymorphic_lambda)
+{
+	auto give_one = [](void) ->int {return 1;}; //simply return 1, no parameter
+	auto poly_increment = [](auto i){ return ++i; };
+
+	auto one_plus_one = connect(give_one, poly_increment);
+	BOOST_CHECK(one_plus_one() == 2);
+}
+/**
+ * Confirm that connecting connectables
+ * does not depend on any particular order.
+ */
+BOOST_AUTO_TEST_CASE( associativity )
+{
+	// this variable is captures by lambdas
+	int tee_ref = 0;
+	int sink_ref = 0;
+	int source = 1;
+
+	//named differnt sources and sinks to make tests more readable
+	auto give_source = [&]() {return source; };
+	auto increment = [](int i) -> int { return i + 1; };
+	auto tee = [&](int i) { tee_ref = i; return i; };
+	auto write_param = [&](int i){ sink_ref = i; };
+
+	auto a = give_source;
+	auto b = increment;
+	auto c = tee;
+	auto d = write_param;
+
+	source = 10;
+	(a >> b >> c >> d)();
+	BOOST_CHECK_EQUAL(tee_ref, 11);
+	BOOST_CHECK_EQUAL(sink_ref, 11);
+
+	source = 20;
+	((a >> b) >> (c >> d))();
+	BOOST_CHECK_EQUAL(tee_ref, 21);
+	BOOST_CHECK_EQUAL(sink_ref, 21);
+
+	source = 50;
+	((a >> (b >> c)) >> d)();
+	BOOST_CHECK_EQUAL(tee_ref, 51);
+	BOOST_CHECK_EQUAL(sink_ref, 51);
+
+	source = 60;
+	(a >> ((b >> c) >> d))();
+	BOOST_CHECK_EQUAL(tee_ref, 61);
+	BOOST_CHECK_EQUAL(sink_ref, 61);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

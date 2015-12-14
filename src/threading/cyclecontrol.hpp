@@ -25,26 +25,26 @@ struct periodic_task final
 	 */
 	periodic_task(std::function<void(void)> job,
 			virtual_clock::duration cycle_duration) :
-				work_to_do(false),
+				work_to_do(std::make_shared<bool>(false)),
 				interval(cycle_duration),
 				work(job)
 	{
 	}
 
-	bool done() const { return !work_to_do; }
-	void set_work_to_do(bool todo) { work_to_do = todo; }
+	bool done() const { return !(*work_to_do); }
+	void set_work_to_do(bool todo) { *work_to_do = todo; }
 	bool is_due(virtual_clock::steady::time_point now) const;
 	void send_switch_tick() { switch_tick.fire(); }
 	auto out_switch_tick() { return switch_tick; }
 
 	void operator()()
 	{
-		work_to_do = false;
 		work();
+		set_work_to_do(false);
 	}
 private:
 	/// flag to check if work has already been executed this cycle.
-	bool work_to_do;
+	std::shared_ptr<bool> work_to_do;
 	virtual_clock::duration interval;
 	/// work to be done every cycle
 	std::function<void(void)> work;
@@ -86,6 +86,8 @@ public:
 	void add_task(periodic_task task);
 	size_t nr_of_tasks() { return scheduler.nr_of_waiting_tasks(); }
 
+	std::exception_ptr last_exception();
+
 private:
 	/// contains the main loop, which is running as as long as it is not stopped
 	void main_loop();
@@ -98,6 +100,10 @@ private:
 	std::mutex main_loop_mutex;
 	std::mutex task_queue_mutex;
 	std::thread main_loop_thread;
+
+	//Thread exception handling
+	std::mutex task_exception_mutex;
+	std::deque<std::exception_ptr> task_exceptions;
 };
 
 } /* namespace thread */

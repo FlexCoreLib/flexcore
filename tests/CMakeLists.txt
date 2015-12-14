@@ -15,14 +15,17 @@ ADD_EXECUTABLE( test_executable
 	ports/test_state_buffer.cpp
  	ports/events/test_events.cpp
  	ports/events/test_event_wrappers.cpp
+ 	ports/states/test_state_sinks.cpp
 	ports/states/test_node_with_lambda.cpp
 	ports/states/test_state_source_call_function.cpp
 	ports/states/test_state_source_with_setter.cpp
 	range/test_range.cpp
 	runner.cpp 
+	threading/test_cyclecontrol.cpp
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp
-	threading/test_parallelscheduler.cpp )
+	threading/test_parallelscheduler.cpp
+	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE ${BOOST_INCLUDE_DIRS}
@@ -34,5 +37,3 @@ TARGET_LINK_LIBRARIES( test_executable
 
 # declares a test with our executable
 #ADD_TEST( NAME test WORKING_DIRECTORY "." COMMAND test_executable )
-
-
