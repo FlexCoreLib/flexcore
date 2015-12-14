@@ -7,7 +7,7 @@
 
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
-#include <ports/region_aware.hpp>
+#include "../src/ports/node_aware.hpp"
 
 int main()
 {

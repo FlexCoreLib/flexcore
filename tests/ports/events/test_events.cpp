@@ -20,11 +20,12 @@ struct event_sink
 namespace fc
 {
 
+// TODO still needed?
 template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
 {};
 
-
+// TODO still needed?
 template<class T>
 struct is_port<event_sink<T>> : public std::true_type
 {
