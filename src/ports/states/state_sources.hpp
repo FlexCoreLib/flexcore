@@ -62,36 +62,60 @@ private:
 };
 
 /**
- * \brief minimal output port for states with templated operator()
- *
- * fulfills passive_source
- *
- * \tparam node_t type of owning node
- * \tparam tag_t is used as a template parameter for calling detail_out
- *         so the implementation of the node can distinguish between different ports.
- *         The value is not used.
+ * Universal type proxy
  */
-template<class node_t, class tag_t = detail::default_port_tag>
-class state_source_tmpl
+template<class T>
+struct Type {};
+
+/**
+ * \brief Templated state source port
+ *
+ * Call a (generic) lambda when a state is requested. This allows to defer
+ * the actual type of the token until the port is called and also allows it to be
+ * called for different types.
+ *
+ * When calling the lambda, you need to give the requested type as pseudo-parameter
+ * because there is no type inference based on the return type.
+ * The OUT_PORT_TMPL macro can be used to define a getter for the port and a header
+ * a node member in one go.
+ *
+ * see test_state_source_tmpl for an example.
+ *
+ * \tparam lambda_t Lambda to call for the state value
+ */
+template<class lambda_t>
+struct state_source_tmpl
 {
-public:
-	explicit state_source_tmpl(node_t& n)
-		: node(n)
+	explicit state_source_tmpl(lambda_t h)
+		: lambda(h)
 	{}
 
-	/**
-	 * \tparam token_t type of state expected
-	 */
 	template<class token_t>
-	token_t operator()() { return node.template detail_out<tag_t, token_t>(); }
+	auto operator()(Type<token_t> f) { return lambda(f); }
 
-private:
-	node_t& node;
+	state_source_tmpl() = delete;
+
+	lambda_t lambda;
 };
 
+/*
+ * Helper needed for type inference
+ */
+template<class lambda_t>
+auto make_state_source_tmpl(lambda_t h) { return state_source_tmpl<lambda_t>{h}; }
+
+#define OUT_PORT_TMPL_HELPER(NAME, FUNCTION) \
+	auto NAME() \
+	{ return make_state_source_tmpl( [this](auto f) -> auto { return this->FUNCTION(f); } ); } \
+	template<class state_t> \
+	state_t FUNCTION( Type<state_t> )
+
+#define OUT_PORT_TMPL(NAME) OUT_PORT_TMPL_HELPER( NAME, NAME##MEM_FUN )
+
 // traits
-template<class data_t> struct is_passive_source<state_source_with_setter<data_t>> : std::true_type {};
-template<class data_t> struct is_passive_source<state_source_call_function<data_t>> : std::true_type {};
+template<class T> struct is_passive_source<state_source_with_setter<T>> : std::true_type {};
+template<class T> struct is_passive_source<state_source_call_function<T>> : std::true_type {};
+template<class T> struct is_passive_source<state_source_tmpl<T>> : std::true_type {};
 
 } // namespace fc
 

@@ -65,13 +65,25 @@ private:
 };
 
 /**
- * TODO document this!
+ * \brief Templated event sink port
+ *
+ * Calls a (generic) lambda when an event is received. This allows to defer
+ * the actual type of the token until the port is called and also allows it
+ * to be called for diffent types.
+ *
+ * See test_events.cpp for example
+ *
+ * The IN_PORT_TMPL macro can be used to define a getter for the port and
+ * a declaration for the node member to be called in one go.
+ *
+ * \tparam lambda_t Lambda to call when event arrived.
  */
 template<class lambda_t>
 struct event_in_port_tmpl
 {
-	explicit event_in_port_tmpl(lambda_t h) :
-			lambda(h)
+public:
+	explicit event_in_port_tmpl(lambda_t h)
+		: lambda(h)
 	{}
 
 	void operator()(auto&& in_event) // universal ref here?
@@ -83,10 +95,12 @@ struct event_in_port_tmpl
 
 	typedef void result_t;
 
-private:
 	lambda_t lambda;
 };
 
+/*
+ * Helper needed for type inference
+ */
 template<class lambda_t>
 auto make_event_in_port_tmpl(lambda_t h) { return event_in_port_tmpl<lambda_t>{h}; }
 
@@ -95,7 +109,6 @@ auto make_event_in_port_tmpl(lambda_t h) { return event_in_port_tmpl<lambda_t>{h
 	{ return make_event_in_port_tmpl( [this](auto event){ this->FUNCTION(event); } ); } \
 	template<class event_t> \
 	void FUNCTION(const event_t& event)
-
 
 #define IN_PORT_TMPL(NAME) IN_PORT_TMPL_HELPER( NAME, NAME##MEM_FUN )
 

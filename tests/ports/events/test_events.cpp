@@ -49,11 +49,19 @@ struct is_passive_sink<event_vector_sink<T>> : public std::true_type
 namespace
 {
 
+/**
+ * Helper class for testing event_in_port_tmpl
+ */
 class generic_input_node
 {
 public:
 	generic_input_node() : value() {}
 
+	/*
+	 * Define a getter for the port named "in" and
+	 * Declare a member function to be called from the port.
+	 * The token type is available as "event_t" and the token as "event".
+	 */
 	IN_PORT_TMPL(in)
 	{
 		value = event;
@@ -66,7 +74,7 @@ public:
 
 BOOST_AUTO_TEST_SUITE(test_events)
 
-BOOST_AUTO_TEST_CASE( test_generic_input_node )
+BOOST_AUTO_TEST_CASE( test_event_in_port_tmpl )
 {
 	event_out_port<int> src_int;
 	event_out_port<double> src_double;
