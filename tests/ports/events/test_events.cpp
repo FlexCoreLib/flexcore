@@ -6,6 +6,8 @@
 
 using namespace fc;
 
+namespace fc
+{
 
 template<class T>
 struct event_sink
@@ -17,9 +19,6 @@ struct event_sink
 	std::shared_ptr<T> storage = std::make_shared<T>();
 };
 
-namespace fc
-{
-
 template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
 {};
@@ -29,8 +28,6 @@ template<class T>
 struct is_port<event_sink<T>> : public std::true_type
 {
 };
-
-} // namespace fc
 
 template<class T>
 struct event_vector_sink
@@ -43,16 +40,54 @@ struct event_vector_sink
 			std::make_shared<std::vector<T>>();
 };
 
-namespace fc
-{
-
 template<class T>
 struct is_passive_sink<event_vector_sink<T>> : public std::true_type
 {};
 
 } // namespace fc
 
+namespace
+{
+
+class generic_input_node
+{
+public:
+	generic_input_node() : value() {}
+
+	IN_PORT(in, foo)
+//	auto in()
+//	{
+//		return make_event_in_port2( [this](auto event){ this->foo(event); } );
+//	}
+
+	int value;
+
+private:
+	template<class event_t>
+	void foo(const event_t& event)
+	{
+		value = event;
+	}
+};
+
+} // unnamed namespace
+
 BOOST_AUTO_TEST_SUITE(test_events)
+
+BOOST_AUTO_TEST_CASE( test_generic_input_node )
+{
+	event_out_port<int> src_int;
+	event_out_port<double> src_double;
+	generic_input_node to;
+
+	src_int >> to.in();
+	src_double >> to.in();
+
+	src_int.fire(2);
+	BOOST_CHECK_EQUAL(to.value, 2);
+	src_int.fire(4.1);
+	BOOST_CHECK_EQUAL(to.value, 4);
+}
 
 BOOST_AUTO_TEST_CASE( connections )
 {

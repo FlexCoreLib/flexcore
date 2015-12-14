@@ -17,10 +17,10 @@ BOOST_AUTO_TEST_CASE( event_in_port_experimental )
 	int storage = 0;
 	get_size.out >> [&](int i) { storage = i; };
 
-	get_size.in(std::list<float>{1., 2., .3});
+	get_size.in()(std::list<float>{1., 2., .3});
 	BOOST_CHECK_EQUAL(storage, 3);
 
-	get_size.in(std::vector<int>{0, 1});
+	get_size.in()(std::vector<int>{0, 1});
 	BOOST_CHECK_EQUAL(storage, 2);
 }
 

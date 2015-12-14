@@ -64,42 +64,38 @@ private:
 	handler_t event_handler;
 };
 
-/**
- * \brief minimal input port for events with templated operator()
- *
- * fulfills passive_sink
- *
- * \tparam node_t type of owning node
- * \tparam tag_t is used as a template parameter for calling detail_in
- *         so the implementation of the node can distinguish between different ports.
- *         The value is not used.
- */
-template<class node_t, class tag_t = detail::default_port_tag>
-class event_in_tmpl
+template<class lambda_t>
+struct event_in_port2
 {
-public:
-	explicit event_in_tmpl(node_t& n) :
-			node(n)
+	explicit event_in_port2(lambda_t h) :
+			lambda(h)
 	{}
-	event_in_tmpl() = delete;
 
-	/**
-	 * \tparam event_t type of event expected
-	 */
-	template<class event_t>
-	void operator()(const event_t& in_event) // universal ref here?
+	void operator()(auto&& in_event) // universal ref here?
 	{
-		node.template detail_in<tag_t, event_t>(in_event);
+		lambda(std::move(in_event));
 	}
 
+	event_in_port2() = delete;
+
+	typedef void result_t;
+
 private:
-	node_t& node;
+	lambda_t lambda;
 };
+
+template<class lambda_t>
+auto make_event_in_port2(lambda_t h) { return event_in_port2<lambda_t>{h}; }
+#define IN_PORT(NAME, FUNCTION) \
+	auto NAME()	\
+	{ return make_event_in_port2( [this](auto event){ this->FUNCTION(event); } ); } \
 
 // traits
 template<class T> struct is_port<event_in_port<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<event_in_port<T>> : std::true_type {};
-template<class T, class U> struct is_passive_sink<event_in_tmpl<T, U>> : std::true_type {};
+//template<class T, class U> struct is_passive_sink<event_in_tmpl<T, U>> : std::true_type {};
+template<class T> struct is_port<event_in_port2<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<event_in_port2<T>> : std::true_type {};
 
 } // namespace fc
 

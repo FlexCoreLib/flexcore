@@ -14,16 +14,18 @@ struct range_size
 {
 public:
 	range_size()
-		: in(*this)
-		, out()
+		: out()
 	{}
-	event_in_tmpl<range_size> in;
+	auto in()
+	{
+		return make_event_in_port2( [this](auto event){ this->detail_in(event); } );
+	}
 	event_out_port<int> out;
 
 	/**
 	 * to be used by ports, should be considered private
 	 */
-	template<class tag_t, class event_t>
+	template<class event_t>
 	void detail_in(const event_t& event)
 	{
 		size_t elems = std::distance(std::begin(event), std::end(event));
