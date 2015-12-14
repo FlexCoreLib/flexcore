@@ -25,8 +25,8 @@ class region_info
 {
 public:
 	virtual region_id get_id() const = 0;
-	virtual event_out_port<void> switch_tick() = 0;
-	virtual event_out_port<void> work_tick() = 0;
+	virtual event_out_port<void> switch_tick() const = 0;
+	virtual event_out_port<void> work_tick() const = 0;
 
 protected:
 	//destructor is not public, as no ownership to regions is given through this.
@@ -40,12 +40,12 @@ public:
 	tick_controller() = default;
 
 	/// sends void event on the switch tick of the surrounding region
-	event_out_port<void> switch_tick() { return switch_buffers; }
+	event_out_port<void> switch_tick() const { return switch_buffers; }
 	/**
 	 * \brief  sends void event on the work tick of the surrounding region
 	 * connect nodes, that want to be triggered every cycle to this.
 	 */
-	event_out_port<void> work_tick() { return work; }
+	event_out_port<void> work_tick() const { return work; }
 
 	/**
 	 * \brief Buffers in region will be switched when event is received.
@@ -71,8 +71,8 @@ public:
 	parallel_region(std::string id = "default");
 
 	region_id get_id() const override;
-	event_out_port<void> switch_tick() override;
-	event_out_port<void> work_tick() override;
+	event_out_port<void> switch_tick() const override;
+	event_out_port<void> work_tick() const override;
 
 protected:
 	//copy constructor is protected to avoid slicing, since this is meant as base class

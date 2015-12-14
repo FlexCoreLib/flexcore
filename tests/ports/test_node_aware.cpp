@@ -64,13 +64,13 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
 	static_assert(is_instantiation_of<node_aware, decltype(tmp)>::value, "");
-	static_assert(is_active_sink<test_in_port>::value, "");
+	static_assert(not is_active_sink<test_in_port>::value, "");
 	static_assert(not is_active_source<test_in_port>::value, "");
-	static_assert(not is_passive_sink<test_in_port>::value, "");
+	static_assert(is_passive_sink<test_in_port>::value, "");
 	static_assert(not is_passive_source<test_in_port>::value, "");
-	static_assert(is_passive_source<decltype(tmp)>::value, "");
+	static_assert(not is_passive_source<decltype(tmp)>::value, "");
 	static_assert(not is_passive_sink<decltype(tmp)>::value, "");
-	static_assert(not is_active_source<decltype(tmp)>::value, "");
+	static_assert(is_active_source<decltype(tmp)>::value, "");
 	static_assert(not is_active_sink<decltype(tmp)>::value, "");
 
 
