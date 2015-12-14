@@ -98,17 +98,10 @@ struct event_sink_wrapper: public event_sink_t
 
 	template<class ... args>
 	event_sink_wrapper(const args& ... base_constructor_args) :
-		base_t(base_constructor_args...)
+		base_t(base_constructor_args...),
+		dereigsterer(std::make_shared<raii_deregister>(
+				[this](){deregister();}))
 	{
-		++(*copy_ctr);
-	}
-
-	~event_sink_wrapper()
-	{
-		--(*copy_ctr);
-		if (*copy_ctr == 0)
-			return;
-		deregister();
 	}
 
 	/**
@@ -124,6 +117,25 @@ struct event_sink_wrapper: public event_sink_t
 	}
 
 private:
+	/**
+	 * \brief raii wrapper arround derigister call
+	 *
+	 * Makes sure degister is only called, when the last copy of the port is destroyed
+	 */
+	struct raii_deregister
+	{
+		raii_deregister(const std::function<void(void)>& callback)
+			: deregister_callback(callback)
+		{
+		}
+
+		~raii_deregister()
+		{
+			deregister_callback();
+		}
+
+		std::function<void(void)> deregister_callback;
+	};
 
 	/**
 	 * \brief Deregisters from the source
@@ -138,7 +150,7 @@ private:
 		}
 	}
 
-	std::shared_ptr<int> copy_ctr = std::make_shared<int>(0);
+	std::shared_ptr<raii_deregister> dereigsterer;
 	std::shared_ptr<callback_fun_ptr_weak> destruct_callback = std::make_shared<callback_fun_ptr_weak>();
 };
 
