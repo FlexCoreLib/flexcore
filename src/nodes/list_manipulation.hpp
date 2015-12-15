@@ -19,7 +19,7 @@ namespace fc
  * out() generates a separate output port for every predicate
  * result value.
  *
- * \tparam range_t: any type for which boost::begin/end works (see also boost range)
+ * \tparam range_t: any type for which non member functions begin() and end() exist.
  * \tparam predicate_result_t: result type of predicate
  */
 template
