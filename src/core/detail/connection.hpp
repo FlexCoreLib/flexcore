@@ -144,7 +144,9 @@ auto connect(const source_t& source, const sink_t& sink)
  *
  * This operator is syntactic sugar for Connect.
  */
-template<class source_t, class sink_t>
+template<class source_t, class sink_t, class enable = typename std::enable_if<
+		(is_connectable<source_t>::value || is_active_connectable<source_t>::value)
+		&& (is_connectable<sink_t>::value || is_active_connectable<sink_t>::value)>::type>
 auto operator >>(const source_t& source, const sink_t& sink)
 {
 	return connect(source, sink);

@@ -32,7 +32,7 @@ struct transform_node
 
 	decltype(auto) operator()(const data_t& in)
 	{
-		return op(in, param());
+		return op(in, param.get());
 	}
 
 private:
@@ -71,7 +71,7 @@ public:
 	n_ary_switch() :
 		index() ,
 		in_ports() ,
-		out_port([this](){return  in_ports.at(index())();})
+		out_port([this](){return  in_ports.at(index.get()).get();})
 	{
 	}
 
@@ -127,7 +127,7 @@ public:
 
 
 private:
-	state_sink<size_t> index;
+	state_sink<key_t> index;
 	event_out_port<data_t> out_port;
 	std::map<key_t, port_t> in_ports;
 	/// fires incoming event if and only if it is from the currently chosen port.
@@ -136,7 +136,7 @@ private:
 		assert(!in_ports.empty());
 		assert(in_ports.find(port) != end(in_ports));
 
-		if (port == index())
+		if (port == index.get())
 			out().fire(event);
 	}
 };
