@@ -5,8 +5,6 @@
 #include <functional>
 #include <memory>
 
-#include "ports/detail/port_tags.hpp"
-
 namespace fc
 {
 

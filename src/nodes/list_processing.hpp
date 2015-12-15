@@ -8,7 +8,7 @@ namespace fc
 {
 
 /**
- * calculates the number of elements in a range
+ * \brief Node for calculating the number of elements in a range
  */
 struct range_size
 {
@@ -18,9 +18,6 @@ public:
 	{}
 	event_out_port<int> out;
 
-	/**
-	 * to be used by ports, should be considered private
-	 */
 	IN_PORT_TMPL(in)
 	{
 		size_t elems = std::distance(std::begin(event), std::end(event));

@@ -6,7 +6,6 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
-#include "ports/detail/port_tags.hpp"
 #include "ports/detail/port_traits.hpp"
 
 namespace fc
@@ -28,7 +27,7 @@ struct event_in_port
 		assert(event_handler);
 	}
 
-	void operator()(auto&& in_event) // universal ref here?
+	void operator()(auto&& in_event)
 	{
 		assert(event_handler);
 		event_handler(std::move(in_event));
