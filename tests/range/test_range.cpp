@@ -1,12 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
-//#include <3rdparty/range-v3/include/range/v3/all.hpp>
-
 #include <core/connection.hpp>
 #include <ports/state_ports.hpp>
 
 #include <range/algorithm.hpp>
 #include <boost/range/any_range.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 
 using namespace fc;
 
@@ -17,19 +16,12 @@ BOOST_AUTO_TEST_CASE(test_algorithm)
 	std::vector<int> vec {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
 	auto source = [&vec](){ return boost::make_iterator_range(std::begin(vec), std::end(vec)); };
-	auto sink = [](auto in){ for(int i : in) { std::cout << i << ", ";}};
 
 	auto connection = source
-				>> filter([](int i){ return i < 0;})
-				>> map([](int i) { return i*2;})
-				>> sink;
-	connection();
-
-	auto connection_2 = source
 			>> filter([](int i){ return i < 0;})
 			>> map([](int i){ return i*2;})
 			>> sum(0);
-	BOOST_CHECK_EQUAL(connection_2(), -20);
+	BOOST_CHECK_EQUAL(connection(), -20);
 }
 
 BOOST_AUTO_TEST_CASE(test_ports_with_ranges)
@@ -56,7 +48,11 @@ BOOST_AUTO_TEST_CASE(test_ports_with_ranges)
 		>> map([](int i) { return i*2;})
 		>> sink;
 
-	std::cout << sink.get() << "\n";
+	std::vector<int> correct_result = {-8,-6,-4,-2};
+	std::vector<int> result;
+	boost::push_back(result, sink.get());
+
+	BOOST_CHECK(result == correct_result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

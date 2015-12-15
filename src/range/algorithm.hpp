@@ -8,6 +8,15 @@
 
 namespace fc {
 
+/**
+ * \brief Higher order function filter as a connectable.
+ *
+ * \tparam predicate predicate to check if element of range passes filter.
+ * needs to be function taking object convertible from elements of range
+ * and return boolean.
+ *
+ * \see https://en.wikipedia.org/wiki/Filter_%28higher-order_function%29
+ */
 template<class predicate>
 struct filter_view
 {
@@ -19,12 +28,20 @@ struct filter_view
 	predicate pred;
 };
 
+/// Create connectable which performs higher order function filter.
 template<class predicate>
 auto filter(predicate pred)
 {
 	return filter_view<predicate>{pred};
 }
 
+/**
+ * \brief Higher order map aka transform filter as a connectable.
+ *
+ * \tparam operation operation to apply to each element of range.
+ *
+ * \see https://en.wikipedia.org/wiki/Map_%28higher-order_function%29
+ */
 template<class operation>
 struct map_view
 {
@@ -36,12 +53,20 @@ struct map_view
 	operation op;
 };
 
+/// Create connectable which performs higher order function map.
 template<class operation>
 auto map(operation op)
 {
 	return map_view<operation>{op};
 }
 
+/**
+ * \brief Higher order function reduce aka fold as a connectable.
+ *
+ * \tparam binop binary operation to repeatedly apply to the whole range.
+ *
+ * \see https://en.wikipedia.org/wiki/Fold_%28higher-order_function%29
+ */
 template<class binop, class T>
 struct reduce_view
 {
@@ -56,6 +81,7 @@ struct reduce_view
 	T init_value;
 };
 
+/// Create connectable which performs higher order function reduce.
 template<class binop, class T>
 auto reduce(binop op, T initial_value)
 {
