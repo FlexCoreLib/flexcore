@@ -67,7 +67,7 @@ private:
 };
 
 // traits
-template<class T> struct is_port<state_sink<T>> : public std::true_type {};
+//template<class T> struct is_port<state_sink<T>> : public std::true_type {};
 template<class T> struct is_active_sink<state_sink<T>> : public std::true_type {};
 
 }  // namespace fc

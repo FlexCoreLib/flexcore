@@ -134,7 +134,7 @@ private:
 // TODO prefer to test this algorithmically
 template<class T> struct is_port<node_aware<T>> : public std::true_type {};
 template<class T> struct is_active_sink<node_aware<T>> : public is_active_sink<T> {};
-template<class T> struct is_active_source<node_aware<T>> : public is_active_source<T> {}; // FIXME
+// template<class T> struct is_active_source<node_aware<T>> : public is_active_source<T> {}; // FIXME
 template<class T> struct is_passive_sink<node_aware<T>> : public is_passive_sink<T> {};
 template<class T> struct is_passive_source<node_aware<T>> : public is_passive_source<T> {};
 
