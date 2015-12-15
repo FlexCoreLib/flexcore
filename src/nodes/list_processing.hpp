@@ -18,10 +18,13 @@ public:
 	{}
 	event_out_port<int> out;
 
-	IN_PORT_TMPL(in)
+	auto in()
 	{
-		size_t elems = std::distance(std::begin(event), std::end(event));
-		out.fire(static_cast<int>(elems));
+		return ::fc::make_event_in_port_tmpl( [this](auto event)
+		{
+			size_t elems = std::distance(std::begin(event), std::end(event));
+			this->out.fire(static_cast<int>(elems));
+		} );
 	}
 };
 

@@ -21,12 +21,14 @@ public:
 	{}
 
 	/*
-	 * Defines getter for the port and member that is called for the value.
-	 * In the member function, the requested type is defined as state_t.
+	 * Converts two (2) to the type given and returns it as state.
 	 */
-	OUT_PORT_TMPL(out)
+	auto out()
 	{
-		return state_t(2);
+		return make_state_source_tmpl( [this](auto f) -> auto
+		{
+			return typename decltype(f)::type(2);
+		} );
 	}
 };
 } // unnamed namespace

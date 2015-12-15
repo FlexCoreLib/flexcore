@@ -103,14 +103,6 @@ public:
 template<class lambda_t>
 auto make_event_in_port_tmpl(lambda_t h) { return event_in_port_tmpl<lambda_t>{h}; }
 
-#define IN_PORT_TMPL_HELPER(NAME, FUNCTION) \
-	auto NAME()	\
-	{ return make_event_in_port_tmpl( [this](auto event){ this->FUNCTION(event); } ); } \
-	template<class event_t> \
-	void FUNCTION(const event_t& event)
-
-#define IN_PORT_TMPL(NAME) IN_PORT_TMPL_HELPER( NAME, NAME##MEM_FUN )
-
 // traits
 template<class T> struct is_port<event_in_port<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<event_in_port<T>> : std::true_type {};

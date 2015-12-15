@@ -62,9 +62,12 @@ public:
 	 * Declare a member function to be called from the port.
 	 * The token type is available as "event_t" and the token as "event".
 	 */
-	IN_PORT_TMPL(in)
+	auto in()
 	{
-		value = event;
+		return ::fc::make_event_in_port_tmpl( [this](auto event)
+		{
+			value = event;
+		} );
 	}
 
 	int value;

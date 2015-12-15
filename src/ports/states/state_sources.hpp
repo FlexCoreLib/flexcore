@@ -63,7 +63,10 @@ private:
  * Universal type proxy
  */
 template<class T>
-struct Type {};
+struct Type
+{
+	typedef T type;
+};
 
 /**
  * \brief Templated state source port
@@ -101,14 +104,6 @@ struct state_source_tmpl
  */
 template<class lambda_t>
 auto make_state_source_tmpl(lambda_t h) { return state_source_tmpl<lambda_t>{h}; }
-
-#define OUT_PORT_TMPL_HELPER(NAME, FUNCTION) \
-	auto NAME() \
-	{ return make_state_source_tmpl( [this](auto f) -> auto { return this->FUNCTION(f); } ); } \
-	template<class state_t> \
-	state_t FUNCTION( Type<state_t> )
-
-#define OUT_PORT_TMPL(NAME) OUT_PORT_TMPL_HELPER( NAME, NAME##MEM_FUN )
 
 // traits
 template<class T> struct is_passive_source<state_source_with_setter<T>> : std::true_type {};
