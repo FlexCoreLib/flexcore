@@ -32,7 +32,7 @@ public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	list_splitter(auto p)
+	explicit list_splitter(auto p)
 		: in( [&](const range_t& range){ this->receive(range); } )
 		, entries()
 		, predicate(p)
@@ -65,12 +65,8 @@ private:
 		// send sorted elements
 		for (auto& e : entries)
 		{
-			auto entry_it = entries.find(e.first);
-			if (entry_it != entries.end())
-				entry_it->second.port.fire(boost::make_iterator_range( e.second.data.begin(),
-																	   e.second.data.end() ));
-			else
-				assert(false);
+			e.second.port.fire(boost::make_iterator_range( e.second.data.begin(),
+														   e.second.data.end() ));
 			e.second.data.clear();
 		}
 	}
