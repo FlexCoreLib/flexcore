@@ -70,10 +70,7 @@ private:
  * the actual type of the token until the port is called and also allows it
  * to be called for diffent types.
  *
- * See test_events.cpp for example
- *
- * The IN_PORT_TMPL macro can be used to define a getter for the port and
- * a declaration for the node member to be called in one go.
+ * See tests/ports/events/test_events.cpp for example
  *
  * \tparam lambda_t Lambda to call when event arrived.
  */
