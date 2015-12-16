@@ -23,12 +23,6 @@ template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
 {};
 
-
-template<class T>
-struct is_port<event_sink<T>> : public std::true_type
-{
-};
-
 template<class T>
 struct event_vector_sink
 {
@@ -43,6 +37,27 @@ struct event_vector_sink
 template<class T>
 struct is_passive_sink<event_vector_sink<T>> : public std::true_type
 {};
+
+/**
+ * \brief Node for calculating the number of elements in a range
+ */
+struct range_size
+{
+public:
+	range_size()
+		: out()
+	{}
+	event_out_port<int> out;
+
+	auto in()
+	{
+		return ::fc::make_event_in_port_tmpl( [this](auto event)
+		{
+			size_t elems = std::distance(std::begin(event), std::end(event));
+			this->out.fire(static_cast<int>(elems));
+		} );
+	}
+};
 
 } // namespace fc
 
@@ -202,6 +217,19 @@ BOOST_AUTO_TEST_CASE( in_port )
 	BOOST_CHECK_EQUAL(test_value, 999);
 }
 
+BOOST_AUTO_TEST_CASE( test_event_out_port )
+{
+	range_size get_size;
+	int storage = 0;
+	get_size.out >> [&](int i) { storage = i; };
+
+	get_size.in()(std::list<float>{1., 2., .3});
+	BOOST_CHECK_EQUAL(storage, 3);
+
+	get_size.in()(std::vector<int>{0, 1});
+	BOOST_CHECK_EQUAL(storage, 2);
+}
+
 BOOST_AUTO_TEST_CASE( lambda )
 {
 	int test_value = 0;
@@ -291,7 +319,6 @@ BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
 	BOOST_CHECK_EQUAL(test_value, 0);
 	p.fire(4);
 	BOOST_CHECK_EQUAL(test_value, 4);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

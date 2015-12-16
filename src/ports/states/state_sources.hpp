@@ -36,6 +36,9 @@ private:
 	std::function<data_t()> call;
 };
 
+// traits
+template<class T> struct is_passive_source<state_source_call_function<T>> : std::true_type {};
+
 /**
  * Simple StreamSource implementation that holds a state_source_with_setter.
  * Can be connected to any number of SinkConnections.
@@ -110,8 +113,6 @@ template<class lambda_t>
 auto make_state_source_tmpl(lambda_t h) { return state_source_tmpl<lambda_t>{h}; }
 
 // traits
-template<class T> struct is_passive_source<state_source_with_setter<T>> : std::true_type {};
-template<class T> struct is_passive_source<state_source_call_function<T>> : std::true_type {};
 template<class T> struct is_passive_source<state_source_tmpl<T>> : std::true_type {};
 
 } // namespace fc
