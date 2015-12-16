@@ -54,10 +54,14 @@ public:
 
 	/// set current value
 	void set(data_t d_) { *d = d_; }
+	data_t& access() { return *d; }
 
 private:
 	std::shared_ptr<data_t> d;
 };
+
+// traits
+template<class data_t> struct is_passive_source<state_source_with_setter<data_t>> : std::true_type {};
 
 /**
  * Universal type proxy
