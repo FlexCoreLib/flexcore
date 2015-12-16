@@ -223,7 +223,6 @@ struct node_aware_connect_impl
 {
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
-		std::cout << "full event node connection" << std::endl;
 		typedef typename result_of<source_t>::type result_t;
 		return connect(static_cast<const typename source_t::base_t&>(source), detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
@@ -247,8 +246,6 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		std::cout << "half: source is node" << std::endl;
-
 		//construct region_aware_connection
 		//based on if source and sink are from same region
 		return make_node_aware(
@@ -272,8 +269,6 @@ struct node_aware_connect_impl
 
 	auto operator()(source_t source, sink_t sink)
 	{
-		std::cout << "full event node connection" << std::endl;
-
 		typedef typename result_of<source_t>::type result_t;
 		return connect(detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
@@ -298,8 +293,6 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		std::cout << "half: source is node" << std::endl;
-
 		//construct region_aware_connection
 		//based on if source and sink are from same region
 		return make_region_aware(
