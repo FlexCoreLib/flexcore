@@ -6,7 +6,8 @@
 
 #include <functional>
 
-namespace fc {
+namespace fc
+{
 
 /**
  * \brief Higher order function filter as a connectable.
@@ -32,7 +33,7 @@ struct filter_view
 template<class predicate>
 auto filter(predicate pred)
 {
-	return filter_view<predicate>{pred};
+	return filter_view<predicate> { pred };
 }
 
 /**
@@ -57,7 +58,7 @@ struct map_view
 template<class operation>
 auto map(operation op)
 {
-	return map_view<operation>{op};
+	return map_view<operation> { op };
 }
 
 /**
@@ -70,6 +71,11 @@ auto map(operation op)
 template<class binop, class T>
 struct reduce_view
 {
+	explicit reduce_view(const binop& op = binop(), const T&  init_value = T())
+		: op(op), init_value(init_value)
+	{
+	}
+
 	template<class in_range>
 	auto operator()(const in_range&& input)
 	{
@@ -85,7 +91,7 @@ struct reduce_view
 template<class binop, class T>
 auto reduce(binop op, T initial_value)
 {
-	return reduce_view<binop, T>{op, initial_value};
+	return reduce_view<binop, T> { op, initial_value };
 }
 
 ///alias of reduce for common case of using reduce to sum all elements
