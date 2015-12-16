@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <nodes/list_manipulation.hpp>
+#include <nodes/buffer.hpp>
 
 // std
 #include <deque>
@@ -109,13 +110,13 @@ BOOST_AUTO_TEST_CASE( test_list_collector )
 	auto predicate = [](int) { return 0; }; // always return 0
 	splitter_t splitter(predicate);
 
-	typedef list_collector<decltype(splitter.out(0))::result_t> collector_t;
+	typedef list_collector<int> collector_t;
 	collector_t collector;
 
-	state_sink<decltype(collector.out)::result_t> sink;
+	state_sink<collector_t::out_range_t> sink;
 
-	splitter.out(0) >> collector.in;
-	collector.out >> sink;
+	splitter.out(0) >> collector.in();
+	collector.out() >> sink;
 
 	// send data
 	splitter.in( std::list<int>{1, 2} );

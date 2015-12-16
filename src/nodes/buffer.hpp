@@ -4,6 +4,7 @@
 #include <core/traits.hpp>
 
 #include <ports/states/state_source_call_function.hpp>
+#include <ports/events/event_sinks.hpp>
 
 #include <boost/range.hpp>
 #include <vector>
@@ -12,54 +13,26 @@ namespace fc
 {
 
 template<class data_t>
-class event_to_state
+class base_event_to_state
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
 
-	event_to_state()
-		: out_port( [&]()
-				{
-					data_read = true;
-					return boost::make_iterator_range(
-							buffer_state.begin(),
-							buffer_state.end());
-				} )
-		, buffer_collect(std::make_shared<std::vector<data_t>>())
-	{}
-
-	auto in() noexcept
-	{
-		return collector{buffer_collect};
-	}
+	auto in() noexcept { return collector{buffer_collect}; }
 
 	auto out() noexcept { return out_port; }
 
-	auto swap_buffers() noexcept
+protected:
+	explicit base_event_to_state(const state_source_call_function<out_range_t>& out_port) :
+		buffer_collect(std::make_shared<std::vector<data_t>>()),
+		out_port(out_port)
 	{
-		return [this]()
-		{
-			if (data_read) //move data from collect buffer to output, and clear collect buffer
-			{
-				buffer_state.clear();
-				buffer_state.swap(*buffer_collect);
-				data_read = false;
-			}
-			else //just move data from collect buffer to output buffer
-			{
-				buffer_state.insert(end(*buffer_collect),
-						begin(*buffer_collect), end(*buffer_collect));
-				buffer_collect->clear();
-			}
-		};
 	}
-
-private:
-	state_source_call_function<out_range_t> out_port;
 
 	std::shared_ptr<std::vector<data_t>> buffer_collect;
 	std::vector<data_t> buffer_state;
-	bool data_read = false;
+
+	state_source_call_function<out_range_t> out_port;
 
 	struct collector
 	{
@@ -85,6 +58,72 @@ private:
 
 		std::weak_ptr<std::vector<data_t>> buffer;
 	};
+};
+
+template<class data_t>
+class event_to_state : public base_event_to_state<data_t>
+{
+public:
+	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
+	event_to_state()
+		: base_event_to_state<data_t>( state_source_call_function<out_range_t>([&]()
+				{
+					data_read = true;
+					return boost::make_iterator_range(
+							this->buffer_state.begin(),
+							this->buffer_state.end());
+				} ))
+	{}
+
+	auto swap_buffers() noexcept
+	{
+		return [this]()
+		{
+			if (data_read) //move data from collect buffer to output, and clear collect buffer
+			{
+				this->buffer_state.clear();
+				this->buffer_state.swap(*this->buffer_collect);
+				data_read = false;
+			}
+			else //just move data from collect buffer to output buffer
+			{
+				this->buffer_state.insert(end(*this->buffer_collect),
+						begin(*this->buffer_collect), end(*this->buffer_collect));
+				this->buffer_collect->clear();
+			}
+		};
+	}
+
+private:
+	bool data_read = false;
+};
+
+/**
+ * Collects list contents and store them into a buffer.
+ * Sends the buffer as state when pulled.
+ */
+template<class data_t>
+class list_collector : public base_event_to_state<data_t>
+{
+public:
+	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
+
+	list_collector()
+		: base_event_to_state<data_t>( state_source_call_function<out_range_t>([&]()
+				{
+					return this->get_state();
+				} ))
+	{}
+
+private:
+	out_range_t get_state()
+	{
+		this->buffer_state.clear();
+		this->buffer_state.swap(*this->buffer_collect);
+		return boost::make_iterator_range(
+				this->buffer_state.begin(),
+				this->buffer_state.end());
+	}
 };
 
 /**
@@ -114,7 +153,5 @@ private:
 };
 
 }  // namespace fc
-
-
 
 #endif /* SRC_NODES_BUFFER_HPP_ */

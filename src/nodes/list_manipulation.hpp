@@ -80,41 +80,6 @@ private:
 	std::function<predicate_result_t(value_t)> predicate;
 };
 
-/**
- * Collects list contents and store them into a buffer.
- * Sends the buffer as state when pulled.
- */
-template<class range_t>
-class list_collector
-{
-public:
-	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
-	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
-
-	list_collector()
-		: in( [&](const range_t& range){ this->receive(range); } )
-		, out( [&](){ return this->get_state(); } )
-	{}
-
-	event_in_port<range_t> in;
-	state_source_call_function<out_range_t> out;
-
-
-private:
-	void receive(const range_t& range)
-	{
-		buffer_collect.insert(buffer_collect.end(), std::begin(range), std::end(range));
-	}
-	out_range_t get_state()
-	{
-		buffer_state.clear();
-		buffer_state.swap(buffer_collect);
-		return boost::make_iterator_range(buffer_state.begin(), buffer_state.end());
-	}
-	std::vector<value_t> buffer_collect;
-	std::vector<value_t> buffer_state;
-};
-
 } // namespace fc
 
 #endif /* SRC_NODES_LIST_MANIPULATION_HPP_ */
