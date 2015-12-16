@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
 				{ output.at(i) = std::vector<std::string>(boost::begin(v), boost::end(v)); };
 
 	// send data
-	std::list<std::string> input { "aa", "bbb", "c", "d" };
+	std::list<std::string> input { "aa", "bbb", "c", "d", "too long 1", "too long 2  " };
 	splitter.in(input);
 
 	// check result
@@ -63,14 +63,18 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
 	range_compare(output.at(3), std::list<std::string>{"bbb"});
 	range_compare(output.at(4), std::list<std::string>{ });
 
+	BOOST_CHECK_EQUAL(splitter.out_num_dropped(), 2);
+
 	// send again
-	std::list<std::string> input2 { "a", "b", "cd" };
+	std::list<std::string> input2 { "a", "b", "cd", "too long 3" };
 	splitter.in(input2);
 
 	// check result
 	range_compare(output.at(0), std::list<std::string>{ });
 	range_compare(output.at(1), std::list<std::string>{"a", "b"});
 	range_compare(output.at(2), std::list<std::string>{"cd"});
+
+	BOOST_CHECK_EQUAL(splitter.out_num_dropped(), 3);
 }
 
 /*
