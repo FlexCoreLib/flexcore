@@ -25,11 +25,12 @@ public:
 							buffer_state.begin(),
 							buffer_state.end());
 				} )
+		, buffer_collect(std::make_shared<std::vector<data_t>>())
 	{}
 
 	auto in() noexcept
 	{
-		return collector{this};
+		return collector{buffer_collect};
 	}
 
 	auto out() noexcept { return out_port; }
@@ -41,14 +42,14 @@ public:
 			if (data_read) //move data from collect buffer to output, and clear collect buffer
 			{
 				buffer_state.clear();
-				buffer_state.swap(buffer_collect);
+				buffer_state.swap(*buffer_collect);
 				data_read = false;
 			}
 			else //just move data from collect buffer to output buffer
 			{
-				buffer_state.insert(end(buffer_collect),
-						begin(buffer_collect), end(buffer_collect));
-				buffer_collect.clear();
+				buffer_state.insert(end(*buffer_collect),
+						begin(*buffer_collect), end(*buffer_collect));
+				buffer_collect->clear();
 			}
 		};
 	}
@@ -56,7 +57,7 @@ public:
 private:
 	state_source_call_function<out_range_t> out_port;
 
-	std::vector<data_t> buffer_collect;
+	std::shared_ptr<std::vector<data_t>> buffer_collect;
 	std::vector<data_t> buffer_state;
 	bool data_read = false;
 
@@ -68,20 +69,29 @@ private:
 		{
 			using std::begin;
 			using std::end;
-			owner->buffer_collect.insert(
-					end(owner->buffer_collect), begin(range), end(range));
+			//check if the node owning the buffer has been deleted. which is a bug.
+			assert(!buffer.expired());
+			buffer.lock()->insert(
+					end(*buffer.lock()), begin(range), end(range));
 		};
 
 		void operator()(const data_t& single_input)
 		{
-			owner->buffer_collect.insert(
-					end(owner->buffer_collect), single_input);
+			//check if the node owning the buffer has been deleted. which is a bug.
+			assert(!buffer.expired());
+			buffer.lock()->insert(
+					end(*buffer.lock()), single_input);
 		}
 
-		event_to_state* owner;
+		std::weak_ptr<std::vector<data_t>> buffer;
 	};
 };
 
+/**
+ * \brief buffer which receives events and stores the last event received as state.
+ *
+ * \tparam data_t is type of token received as event and then stored.
+ */
 template<class data_t>
 class hold_last
 {
@@ -89,15 +99,16 @@ public:
 	static_assert(!std::is_void<data_t>(),
 			"data stored in hold_last cannot be void");
 
+	/// Constructs hold_last with initial state.
 	explicit hold_last(const data_t& initial_value = data_t())
 		: storage(initial_value)
 	{
 	}
 
-	auto in() noexcept { return [&](data_t in){ storage = in; }; }
+	/// Event in Port expecting data_t.
+	auto in() noexcept { return [this](data_t in){ storage = in; }; }
+	/// State out port supplying data_t.
 	auto out() const noexcept { return [this](){ return storage;}; }
-
-
 private:
 	data_t storage;
 };
