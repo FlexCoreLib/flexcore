@@ -88,6 +88,7 @@ auto reduce(binop op, T initial_value)
 	return reduce_view<binop, T>{op, initial_value};
 }
 
+///alias of reduce for common case of using reduce to sum all elements
 template<class T>
 auto sum(T initial_value = T())
 {
