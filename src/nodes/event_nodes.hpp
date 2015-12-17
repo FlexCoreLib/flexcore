@@ -18,10 +18,10 @@ class generic_event_node
 {
 public:
 	/**
-	 * \brief constructs generic_event_node with action to be excecuted
+	 * \brief constructs generic_event_node with action to be executed
 	 * when event is received.
 	 *
-	 * \param action action to excecute when an event is received at in().
+	 * \param action action to execute when an event is received at in().
 	 */
 	template<class action_t>
 	explicit generic_event_node(action_t&& action) :
