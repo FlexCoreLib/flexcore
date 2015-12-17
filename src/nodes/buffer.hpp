@@ -13,52 +13,7 @@ namespace fc
 {
 
 template<class data_t>
-class base_event_to_state
-{
-public:
-	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
-
-	auto in() noexcept { return collector{buffer_collect}; }
-
-	auto out() noexcept { return out_port; }
-
-protected:
-	explicit base_event_to_state(const state_source_call_function<out_range_t>& out_port) :
-		buffer_collect(std::make_shared<std::vector<data_t>>()),
-		out_port(out_port)
-	{
-	}
-
-	std::shared_ptr<std::vector<data_t>> buffer_collect;
-	std::vector<data_t> buffer_state;
-
-	state_source_call_function<out_range_t> out_port;
-
-	struct collector
-	{
-		typedef void result_t;
-
-		void operator() (const auto& range)
-		{
-			using std::begin;
-			using std::end;
-			//check if the node owning the buffer has been deleted. which is a bug.
-			assert(!buffer.expired());
-			buffer.lock()->insert(
-					end(*buffer.lock()), begin(range), end(range));
-		};
-
-		void operator()(const data_t& single_input)
-		{
-			//check if the node owning the buffer has been deleted. which is a bug.
-			assert(!buffer.expired());
-			buffer.lock()->insert(
-					end(*buffer.lock()), single_input);
-		}
-
-		std::weak_ptr<std::vector<data_t>> buffer;
-	};
-};
+class base_event_to_state;
 
 template<class data_t>
 class event_to_state : public base_event_to_state<data_t>
@@ -125,6 +80,55 @@ private:
 				this->buffer_state.end());
 	}
 };
+
+template<class data_t>
+class base_event_to_state
+{
+public:
+	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
+
+	auto in() noexcept { return collector{buffer_collect}; }
+
+	auto out() noexcept { return out_port; }
+
+protected:
+	explicit base_event_to_state(const state_source_call_function<out_range_t>& out_port) :
+		buffer_collect(std::make_shared<std::vector<data_t>>()),
+		out_port(out_port)
+	{
+	}
+
+	std::shared_ptr<std::vector<data_t>> buffer_collect;
+	std::vector<data_t> buffer_state;
+
+	state_source_call_function<out_range_t> out_port;
+
+	struct collector
+	{
+		typedef void result_t;
+
+		void operator() (const auto& range)
+		{
+			using std::begin;
+			using std::end;
+			//check if the node owning the buffer has been deleted. which is a bug.
+			assert(!buffer.expired());
+			buffer.lock()->insert(
+					end(*buffer.lock()), begin(range), end(range));
+		};
+
+		void operator()(const data_t& single_input)
+		{
+			//check if the node owning the buffer has been deleted. which is a bug.
+			assert(!buffer.expired());
+			buffer.lock()->insert(
+					end(*buffer.lock()), single_input);
+		}
+
+		std::weak_ptr<std::vector<data_t>> buffer;
+	};
+};
+
 
 /**
  * \brief buffer which receives events and stores the last event received as state.
