@@ -88,7 +88,7 @@ private:
 
 // traits
 // TODO prefer to test this algorithmically
-template<class T> struct is_port<event_out_port<T>> : public std::true_type {};
+template<class T> struct is_active_source<event_out_port<T>> : public std::true_type {};
 
 } // namespace fc
 

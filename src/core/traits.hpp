@@ -199,12 +199,6 @@ struct argtype_of
 	typedef typename utils::function_traits<Expr>::template arg<Arg>::type type;
 };
 
-///trait to define that a type is a port. Overload this for your own ports.
-template<class T>
-struct is_port : std::false_type
-{
-};
-
 template<class T>
 struct param_type
 {
@@ -213,6 +207,11 @@ struct param_type
 
 template<class T>
 struct is_active_sink: public std::false_type
+{
+};
+
+template<class T>
+struct is_active_source: public std::false_type
 {
 };
 
@@ -233,16 +232,6 @@ struct is_active_connectable_impl<
 };
 template<class T>
 struct is_active_connectable : is_active_connectable_impl<T>
-{
-};
-
-template<class T>
-struct is_active_source:
-		std::integral_constant
-			<	bool,
-					is_active_connectable<T>::value
-				and is_port<T>::value
-			>
 {
 };
 
