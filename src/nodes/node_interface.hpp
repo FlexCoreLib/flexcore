@@ -104,8 +104,10 @@ class root_node : public node_interface
 public:
 	root_node(	std::string n = "root",
 				std::shared_ptr<region_info> r = std::make_shared<parallel_region>("root")	)
-		: node_interface(n, r)
-	{}
+		: node_interface(this, n)
+	{
+		region(r);
+	}
 };
 
 } // namespace fc
