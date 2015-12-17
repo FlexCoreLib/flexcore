@@ -6,7 +6,7 @@
 #include <memory>
 
 // flexcore
-#include <ports/port_traits.hpp>
+#include <ports/detail/port_traits.hpp>
 #include <core/connection.hpp>
 
 namespace fc
