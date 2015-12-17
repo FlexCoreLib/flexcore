@@ -32,6 +32,8 @@ public:
 
 	data_t operator()() { return call(); }
 
+	typedef data_t result_t;
+
 private:
 	std::function<data_t()> call;
 };
@@ -50,6 +52,9 @@ class state_source_with_setter
 public:
 	explicit state_source_with_setter(data_t d)
 		: d(std::make_shared<data_t>(d))
+	{}
+	explicit state_source_with_setter()
+		: state_source_with_setter(data_t())
 	{}
 
 	/// pull data
