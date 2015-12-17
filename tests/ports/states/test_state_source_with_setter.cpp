@@ -11,15 +11,15 @@ using namespace fc;
 BOOST_AUTO_TEST_CASE( fetcher_ )
 {
 	std::function<int()> give_one = [](){return 1;};
-	state_sink<int> sink;
+	pure::state_sink<int> sink;
 	give_one >> sink;
 	BOOST_CHECK(sink.get() == 1);
 }
 
 BOOST_AUTO_TEST_CASE( state_fetcher_direct_connection )
 {
-	state_source_with_setter<int> source {1};
-	state_sink<int> sink;
+	pure::state_source_with_setter<int> source {1};
+	pure::state_sink<int> sink;
 	source >> sink;
 	BOOST_CHECK(sink.get() == 1);
 	source.set(2);
@@ -29,9 +29,9 @@ BOOST_AUTO_TEST_CASE( state_fetcher_direct_connection )
 BOOST_AUTO_TEST_CASE( state_multiple_fetchers_and_assignment )
 {
 	auto increment = [](int i) -> int {return i+1;};
-	state_source_with_setter<int> source {1};
-	state_sink<int> sink1;
-	state_sink<int> sink2;
+	pure::state_source_with_setter<int> source {1};
+	pure::state_sink<int> sink1;
+	pure::state_sink<int> sink2;
 	source >> increment >> sink1;
 	source >> increment >> increment >> sink2;
 	BOOST_CHECK(sink1.get() == 2);
@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE( state_multiple_fetchers_and_assignment )
 
 BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 {
-	state_source_with_setter<int> source {1};
+	pure::state_source_with_setter<int> source {1};
 	auto increment = [](int i) -> int {return i+1;};
-	state_sink<int> sink;
+	pure::state_sink<int> sink;
 
 	auto tmp = (increment >> sink);
 	static_assert(is_instantiation_of<
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 	source.set(2);
 	BOOST_CHECK(sink.get() == 3);
 
-	state_source_with_setter<int> source_2 {1};
+	pure::state_source_with_setter<int> source_2 {1};
 	auto tmp_connetion = (increment >> increment);
 
 	static_assert(!void_callable<decltype(increment)>(0), "");
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 	source_2 >> two_stored;
 	BOOST_CHECK_EQUAL(sink.get(), 3);
 
-	state_source_with_setter<int> source_3 {2};
+	pure::state_source_with_setter<int> source_3 {2};
 	auto tmp2 = (increment >> sink);
 	auto two_stored_2 = increment >> tmp2;
 	source_3 >> two_stored_2;

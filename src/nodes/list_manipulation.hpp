@@ -3,6 +3,8 @@
 
 #include <core/traits.hpp>
 #include <ports/ports.hpp>
+#include <nodes/node_interface.hpp>
+#include <ports/fancy_ports.hpp>
 
 // std
 #include <map>
@@ -26,20 +28,21 @@ template
 	<	class range_t,
 		class predicate_result_t
 	>
-class list_splitter
+class list_splitter : public node_interface
 {
 public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	explicit list_splitter(auto p)
-		: in( [&](const range_t& range){ this->receive(range); } )
+	explicit list_splitter(node_interface* p, std::string n, auto pred)
+		: node_interface(p, n)
+		, in( this, [&](const range_t& range){ this->receive(range); } )
 		, entries()
-		, predicate(p)
+		, predicate(pred)
 	{}
 
-	event_in_port<range_t> in;
-	event_out_port<out_range_t> out(predicate_result_t value) { return entries[value].port; }
+	event_sink<range_t> in;
+	event_source<out_range_t> out(predicate_result_t value) { return entries[value].port; }
 	/**
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
@@ -72,7 +75,7 @@ private:
 	}
 	struct entry_t
 	{
-		event_out_port<out_range_t> port;
+		event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};
 
@@ -85,18 +88,19 @@ private:
  * Sends the buffer as state when pulled.
  */
 template<class range_t>
-class list_collector
+class list_collector : public node_interface
 {
 public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	list_collector()
-		: in( [&](const range_t& range){ this->receive(range); } )
+	list_collector(node_interface* p, std::string n)
+		: node_interface(p, n)
+		, in( [&](const range_t& range){ this->receive(range); } )
 		, out( [&](){ return this->get_state(); } )
 	{}
 
-	event_in_port<range_t> in;
+	event_sink<range_t> in;
 	state_source_call_function<out_range_t> out;
 
 

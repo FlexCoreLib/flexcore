@@ -26,12 +26,12 @@ parallel_region::parallel_region(std::string id_) :
 {
 }
 
-event_out_port<void> parallel_region::switch_tick() const
+pure::event_source<void> parallel_region::switch_tick() const
 {
 	return ticks.switch_tick();
 }
 
-event_out_port<void> parallel_region::work_tick() const
+pure::event_source<void> parallel_region::work_tick() const
 {
 	return ticks.work_tick();
 }

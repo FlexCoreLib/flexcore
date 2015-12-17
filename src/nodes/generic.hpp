@@ -3,6 +3,7 @@
 
 #include <core/traits.hpp>
 #include <ports/ports.hpp>
+#include <ports/fancy_ports.hpp>
 
 #include <utility>
 #include <map>
@@ -18,7 +19,7 @@ namespace fc
  * \pre bin_op needs to be callable with two argments
  */
 template<class bin_op>
-struct transform_node
+struct transform_node : public node_interface
 {
 	static_assert(utils::function_traits<bin_op>::arity == 2,
 			"operator in transform node needs to take two parameters");
@@ -26,7 +27,9 @@ struct transform_node
 	typedef typename argtype_of<bin_op,1>::type param_type;
 	typedef typename argtype_of<bin_op,0>::type data_t;
 
-	explicit transform_node(bin_op op) : op(op) {}
+	explicit transform_node(node_interface* parent, std::string name, bin_op op)
+		: node_interface(parent, name)
+		, op(op) {}
 
 	state_sink<param_type> param;
 
@@ -41,9 +44,9 @@ private:
 
 /// creates transform_node with op as operation.
 template<class bin_op>
-auto transform(bin_op op)
+auto transform(node_interface* p, std::string n, bin_op op)
 {
-	return transform_node<bin_op>(op);
+	return transform_node<bin_op>(p, n, op);
 }
 
 /**
@@ -63,15 +66,16 @@ auto transform(bin_op op)
 template<class data_t, class tag, class key_t = size_t> class n_ary_switch {};
 
 template<class data_t, class key_t>
-class n_ary_switch<data_t, state_tag, key_t>
+class n_ary_switch<data_t, state_tag, key_t> : public node_interface
 {
 public:
 	typedef typename in_port<data_t, state_tag>::type port_t;
 
-	n_ary_switch() :
-		index() ,
-		in_ports() ,
-		out_port([this](){return  in_ports.at(index.get()).get();})
+	n_ary_switch(node_interface* p, std::string n)
+		: node_interface(p, n)
+		, index(this)
+		, in_ports(this)
+		, out_port([this](){return  in_ports.at(index.get()).get();})
 	{
 	}
 
@@ -98,6 +102,13 @@ class n_ary_switch<data_t, event_tag, key_t>
 public:
 	typedef typename in_port<data_t, event_tag>::type port_t;
 
+	n_ary_switch(node_interface* p, std::string n)
+		: node_interface(p, n)
+		, index(this)
+		, out_port(this)
+		, in_ports()
+	{}
+
 	/**
 	 * \brief Get port by key. Creates port if none was found for key.
 	 *
@@ -109,10 +120,11 @@ public:
 	{
 		if (in_ports.find(port) == end(in_ports))
 		{
-			in_ports.emplace(std::make_pair(
-					port,
-					port_t([this, port](const data_t& in)
-							{ forward_call(in, port); }))
+			in_ports.emplace(std::make_pair
+				(	port,
+					port_t(this,
+						  [this, port](const data_t& in){ forward_call(in, port); })
+				)
 			);
 		} //else the port already exists, we can just return it
 
@@ -128,7 +140,7 @@ public:
 
 private:
 	state_sink<key_t> index;
-	event_out_port<data_t> out_port;
+	event_source<data_t> out_port;
 	std::map<key_t, port_t> in_ports;
 	/// fires incoming event if and only if it is from the currently chosen port.
 	void forward_call(data_t event, key_t port)

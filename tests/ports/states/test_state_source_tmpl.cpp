@@ -17,15 +17,14 @@ namespace
 class gives_two
 {
 public:
-	gives_two()
-	{}
+	gives_two() {}
 
 	/*
 	 * Converts two (2) to the type given and returns it as state.
 	 */
 	auto out()
 	{
-		return make_state_source_tmpl( [this](auto f) -> auto
+		return pure::make_state_source_tmpl( [this](auto f) -> auto
 		{
 			return typename decltype(f)::type(2);
 		} );

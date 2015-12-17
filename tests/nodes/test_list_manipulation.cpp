@@ -41,9 +41,10 @@ BOOST_AUTO_TEST_SUITE( test_list_manipulation )
 
 BOOST_AUTO_TEST_CASE( test_list_splitter )
 {
+	root_node root;
 	typedef list_splitter <std::list<std::string>, size_t> splitter_t;
 	auto predicate = [](const std::string& s) { return s.size(); };
-	splitter_t splitter(predicate);
+	splitter_t splitter(&root, "", predicate);
 
 	std::vector<std::vector<std::string>> output(5);
 	typedef decltype(splitter.out(0))::result_t out_range_t;
@@ -84,7 +85,8 @@ BOOST_AUTO_TEST_CASE( test_list_splitter_bool )
 {
 	typedef list_splitter <std::list<int>, bool> splitter_t;
 	auto predicate = [](int v) { return v >= 0; };
-	splitter_t splitter(predicate);
+	root_node root;
+	splitter_t splitter(&root, "", predicate);
 
 	std::vector<int> out_true;
 	std::vector<int> out_false;
@@ -107,12 +109,13 @@ BOOST_AUTO_TEST_CASE( test_list_collector )
 {
 	typedef list_splitter <std::list<int>, bool> splitter_t;
 	auto predicate = [](int) { return 0; }; // always return 0
-	splitter_t splitter(predicate);
+	root_node root;
+	splitter_t splitter(&root, "", predicate);
 
 	typedef list_collector<decltype(splitter.out(0))::result_t> collector_t;
 	collector_t collector;
 
-	state_sink<decltype(collector.out)::result_t> sink;
+	pure::state_sink<decltype(collector.out)::result_t> sink;
 
 	splitter.out(0) >> collector.in;
 	collector.out >> sink;

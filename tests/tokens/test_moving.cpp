@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE( moving_events )
 {
 	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
 
-	event_out_port<move_token&&> source;
+	pure::event_source<move_token&&> source;
 
-	event_in_queue<move_token> sink;
+	pure::event_sink_queue<move_token> sink;
 
 	std::function<void(move_token&&)> bla = sink;
 	source >> set_bar >> bla;
@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE( moving_events )
 BOOST_AUTO_TEST_CASE( moving_state )
 {
 	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
-	state_sink<move_token> sink;
-	state_source_call_function<move_token> source([](){ return move_token("foo"); });
+	pure::state_sink<move_token> sink;
+	pure::state_source_call_function<move_token> source([](){ return move_token("foo"); });
 
 	source >> set_bar >> sink;
 	auto v = sink.get();
@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE( moving_state )
 BOOST_AUTO_TEST_CASE( non_moving )
 {
 	typedef std::shared_ptr<int> non_move; //shared_ptr is nulled after move, so we can check
-	event_out_port<non_move> source;
+	pure::event_source<non_move> source;
 	bool moved = false;
-	event_in_port<non_move> sink([&moved](non_move t){ moved = !t.operator bool() ;});
-	event_in_port<non_move> sink2([&moved](non_move t){ moved = !t.operator bool() ;});
+	pure::event_sink<non_move> sink([&moved](non_move t){ moved = !t.operator bool() ;});
+	pure::event_sink<non_move> sink2([&moved](non_move t){ moved = !t.operator bool() ;});
 
 	source >> sink;
 

@@ -12,11 +12,15 @@ class identidy_node : public node_interface
 public:
 	identidy_node( node_interface* p,
 				   std::shared_ptr<region_info> r = std::shared_ptr<region_info>() )
-		: node_interface(p, "identity", r)
-	{}
+		: node_interface(p, "identity")
+	{
+		region(r);
+	}
 	identidy_node( std::shared_ptr<region_info> r = std::shared_ptr<region_info>() )
-		: node_interface(std::make_shared<node_interface::forest_t>(), "identity", r)
-	{}
+		: node_interface(std::make_shared<node_interface::forest_t>(), "identity")
+	{
+		region(r);
+	}
 };
 } // namespace fc
 
@@ -24,13 +28,12 @@ BOOST_AUTO_TEST_SUITE(test_parallle_region);
 
 BOOST_AUTO_TEST_CASE(test_region_aware_node)
 {
-	auto region = std::make_shared<parallel_region>();
-	identidy_node identity(region);
-	typedef node_aware<event_in_port<int>> test_in_port;
+	root_node root;
+	typedef node_aware<event_sink<int>> test_in_port;
 
 	int test_value = 0;
 	auto write_param = [&](int i) {test_value = i;};
-	test_in_port test_in(&identity, write_param);
+	test_in_port test_in(&root, write_param);
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_in(1);
@@ -40,17 +43,15 @@ BOOST_AUTO_TEST_CASE(test_region_aware_node)
 
 BOOST_AUTO_TEST_CASE(test_same_region)
 {
-	typedef node_aware<event_in_port<int>> test_in_port;
-	typedef node_aware<event_out_port<int>> test_out_port;
+	typedef node_aware<event_sink<int>> test_in_port;
+	typedef node_aware<event_source<int>> test_out_port;
 
-
-	auto region = std::make_shared<parallel_region>();
-	identidy_node identity(region);
+	root_node root;
 
 	std::vector<int> test_sink;
 	auto write_param = [&](int i) {test_sink.push_back(i);};
-	test_in_port test_in(&identity, write_param);
-	test_out_port test_out(&identity);
+	test_in_port test_in(&root, write_param);
+	test_out_port test_out(&root);
 
 	static_assert(is_passive_sink<test_in_port>::value, "");
 	static_assert(has_result<test_out_port>::value,
@@ -85,17 +86,17 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 BOOST_AUTO_TEST_CASE(test_different_region)
 {
-	typedef node_aware<event_in_port<int>> test_in_port;
-	typedef node_aware<event_out_port<int>> test_out_port;
+	typedef node_aware<event_sink<int>> test_in_port;
+	typedef node_aware<event_source<int>> test_out_port;
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
-	identidy_node identity_1(region_1);
-	identidy_node identity_2(region_2);
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
-	test_in_port test_in(&identity_2, write_param);
-	test_out_port test_out(&identity_1);
+	test_in_port test_in(&root_2, write_param);
+	test_out_port test_out(&root_1);
 
 	test_out >> test_in;
 
@@ -112,17 +113,17 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 
 BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 {
-	typedef node_aware<event_in_port<int>> test_in_port;
-	typedef node_aware<event_out_port<int>> test_out_port;
+	typedef node_aware<event_sink<int>> test_in_port;
+	typedef node_aware<event_source<int>> test_out_port;
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
-	identidy_node identity_1(region_1);
-	identidy_node identity_2(region_2);
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
-	test_in_port test_in(&identity_2, write_param);
-	test_out_port test_out(&identity_1);
+	test_in_port test_in(&root_2, write_param);
+	test_out_port test_out(&root_1);
 
 	test_out >> [](int i){ return i+1;} >> test_in;
 
@@ -162,11 +163,11 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	typedef node_aware<state_source_with_setter<int>> test_out_port;
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
-	identidy_node identity_1(region_1);
-	identidy_node identity_2(region_2);
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
 
-	test_out_port source(&identity_1, 1);
-	test_in_port sink(&identity_2);
+	test_out_port source(&root_1, 1);
+	test_in_port sink(&root_2);
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
 	static_assert(is_instantiation_of<node_aware, test_out_port>::value, "");

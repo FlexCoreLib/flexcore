@@ -10,6 +10,8 @@
 
 namespace fc
 {
+namespace pure
+{
 
 /**
  * \brief minimal input port for events
@@ -22,9 +24,9 @@ namespace fc
  * \tparam event_t type of event expected, must be copy_constructable
  */
 template<class event_t>
-struct event_in_queue
+struct event_sink_queue
 {
-	explicit event_in_queue()
+	explicit event_sink_queue()
 		: queue(new std::queue<event_t>)
 	{}
 
@@ -49,9 +51,11 @@ private:
 	std::shared_ptr<std::queue<event_t>> queue;
 };
 
+} // namespace pure
+
 // traits
-template<class T> struct is_port<event_in_queue<T>> : public std::true_type {};
-template<class T> struct is_passive_sink<event_in_queue<T>> : public std::true_type {};
+//template<class T> struct is_port<pure::event_sink_queue<T>> : public std::true_type {}; // FIXME
+template<class T> struct is_passive_sink<pure::event_sink_queue<T>> : public std::true_type {};
 
 } // namespace fc
 

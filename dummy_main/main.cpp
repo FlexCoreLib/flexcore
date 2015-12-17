@@ -7,8 +7,9 @@
 
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
-#include "../src/ports/node_aware.hpp"
+#include <ports/node_aware.hpp>
 #include <nodes/node_interface.hpp>
+#include <ports/fancy_ports.hpp>
 
 int main()
 {
@@ -31,7 +32,7 @@ int main()
 	std::cout << "start building connections\n";
 
 	using time_point = fc::wall_clock::system::time_point;
-	fc::event_out_port<time_point> source;
+	fc::event_source<time_point> source;
 	first_region->ticks.work_tick()
 			>> [&source](){ source.fire(fc::wall_clock::system::now()); };
 
@@ -60,10 +61,13 @@ int main()
 
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
-	fc::node_interface node_a(std::make_shared<fc::node_interface::forest_t>(), "a", first_region);
-	fc::node_interface node_b(std::make_shared<fc::node_interface::forest_t>(), "b", second_region);
-	fc::node_aware<fc::event_out_port<std::string>> string_source(&node_a);
-	fc::node_aware<fc::event_in_port<std::string>> string_sink(&node_b,
+	fc::root_node root;
+	fc::node_interface node_a = fc::node_interface(&root, "a").region(first_region);
+	fc::node_interface node_b = fc::node_interface(&root, "b").region(second_region);
+	fc::node_aware<fc::pure::event_source<std::string>> string_source(&node_a);
+//	fc::node_aware<fc::event_in_port<std::string>> string_sink(&node_b,
+//			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
+	fc::fancy_event_in<std::string> string_sink(&node_b,
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
 	string_source >> string_sink;

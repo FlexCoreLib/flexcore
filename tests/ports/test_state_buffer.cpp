@@ -10,8 +10,8 @@ using namespace fc;
 BOOST_AUTO_TEST_CASE( test_state_buffer )
 {
 	state_buffer<int> test_buffer;
-	state_source_with_setter<int> source(1);
-	state_sink<int> sink;
+	pure::state_source_with_setter<int> source(1);
+	pure::state_sink<int> sink;
 
 	source >> test_buffer.in();
 	test_buffer.out() >> sink;

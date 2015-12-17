@@ -22,7 +22,7 @@ struct node_class
 
 	data_t get_value() { return value; }
 
-	typedef state_source_call_function<data_t> port_t;
+	typedef pure::state_source_call_function<data_t> port_t;
 	port_t port;
 
 	data_t value;
@@ -32,7 +32,7 @@ struct node_class
 BOOST_AUTO_TEST_CASE( stream_query_node_simple_case )
 {
 	node_class<int> node;
-	state_sink<int> sink;
+	pure::state_sink<int> sink;
 
 	static_assert(void_callable<decltype(node.port)>(0),"");
 	static_assert(is_passive_source<decltype(node.port)>::value ,"");
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE( stream_query_multiple_sinks )
 {
 	node_class<int> node;
 	auto increment = [](int i) -> int { return i+1; };
-	state_sink<int> sink1;
-	state_sink<int> sink2;
+	pure::state_sink<int> sink1;
+	pure::state_sink<int> sink2;
 
 	node.port >> increment >> sink1;
 	node.port >> increment >> sink2;
