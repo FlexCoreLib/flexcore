@@ -3,7 +3,7 @@
 
 #include <core/traits.hpp>
 
-#include <ports/states/state_source_call_function.hpp>
+#include <ports/states/state_sources.hpp>
 #include <ports/events/event_sinks.hpp>
 
 #include <boost/range.hpp>
