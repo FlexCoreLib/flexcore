@@ -15,14 +15,25 @@ namespace fc
 template<class data_t>
 class base_event_to_state;
 
+/**
+ * \brief Buffer that takes events and provides a range as state
+ *
+ * policy classes control when the buffer is cleared
+ * as well as how and when the state is available.
+ */
 template<class data_t, class buffer_policy>
 class list_collector;
 
-/// Buffer Policy to have buffers swapped on a tick and stored between ticks.
+/**
+ * Buffer Policy to have buffers swapped on a tick and stored between ticks.
+ * The state is constant between swap ticks.
+ * Events are available after the next swap tick.
+ */
 struct swap_on_tick {};
 /**
  * Buffer Policy to have buffers swapped on pull.
  * This means pulling the collector twice gives different results!
+ * New events are available as soon as they are received
  */
 struct swap_on_pull {};
 
