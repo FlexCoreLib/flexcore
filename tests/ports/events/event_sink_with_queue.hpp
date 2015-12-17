@@ -50,7 +50,6 @@ private:
 };
 
 // traits
-template<class T> struct is_port<event_in_queue<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<event_in_queue<T>> : public std::true_type {};
 
 } // namespace fc
