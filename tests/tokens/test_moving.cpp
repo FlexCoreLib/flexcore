@@ -2,8 +2,7 @@
 
 #include "core/connection.hpp"
 #include "ports/events/event_sink_with_queue.hpp"
-#include "ports/event_ports.hpp"
-#include "ports/state_ports.hpp"
+#include "ports/ports.hpp"
 
 #include <vector>
 #include <algorithm>

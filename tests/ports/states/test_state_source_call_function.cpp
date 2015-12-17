@@ -5,7 +5,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <core/connection.hpp>
-#include <ports/state_ports.hpp>
+#include <ports/states/state_sink.hpp>
+#include <ports/states/state_sources.hpp>
 
 using namespace fc;
 

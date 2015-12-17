@@ -6,7 +6,8 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
-#include "ports/detail/port_traits.hpp"
+//#include <ports/node_aware.hpp>
+#include <ports/detail/port_traits.hpp>
 
 namespace fc
 {
@@ -106,6 +107,14 @@ template<class T> struct is_passive_sink<event_in_port<T>> : std::true_type {};
 //template<class T, class U> struct is_passive_sink<event_in_tmpl<T, U>> : std::true_type {};
 template<class T> struct is_port<event_in_port_tmpl<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<event_in_port_tmpl<T>> : std::true_type {};
+
+// mixins
+
+//template<class port_t>
+//using default_mixin = fc::node_aware<port_t>;
+//
+//template<class data_t>
+//using fancy_port = fc::default_mixin<fc::event_in_port<data_t>>;
 
 } // namespace fc
 

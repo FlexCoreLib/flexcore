@@ -1,8 +1,10 @@
 #ifndef SRC_PORTS_PORTS_HPP_
 #define SRC_PORTS_PORTS_HPP_
 
-#include "event_ports.hpp"
-#include "state_ports.hpp"
+#include "events/event_sources.hpp"
+#include "events/event_sinks.hpp"
+#include "states/state_sink.hpp"
+#include "states/state_sources.hpp"
 
 namespace fc
 {

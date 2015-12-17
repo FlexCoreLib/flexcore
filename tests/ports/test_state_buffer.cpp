@@ -2,7 +2,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ports/ports.hpp>
-#include <ports/state_ports.hpp>
+#include <ports/ports.hpp>
 #include "../../src/ports/connection_buffer.hpp"
 
 using namespace fc;

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <clock/clock.hpp>
-#include <ports/event_ports.hpp>
+#include <ports/ports.hpp>
 
 #include "parallelscheduler.hpp"
 
