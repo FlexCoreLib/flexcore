@@ -7,6 +7,7 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
+#include <ports/fancy_ports.hpp>
 
 namespace fc
 {
@@ -56,6 +57,9 @@ private:
 // traits
 //template<class T> struct is_port<pure::event_sink_queue<T>> : public std::true_type {}; // FIXME
 template<class T> struct is_passive_sink<pure::event_sink_queue<T>> : public std::true_type {};
+
+template<class data_t>
+using event_sink_queue = default_mixin<pure::event_sink_queue<data_t>>;
 
 } // namespace fc
 

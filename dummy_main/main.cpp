@@ -11,8 +11,29 @@
 #include <nodes/node_interface.hpp>
 #include <ports/fancy_ports.hpp>
 
+using namespace fc;
+
+//struct base {};
+//
+//template<class T>
+//struct elem
+//{
+//	elem(base*){}
+//	elem() = delete;
+//};
+//
+//template<class... ARGS>
+//struct foo : base
+//{
+//	foo() : t( /* initialize all elems with this */) {}
+//	std::tuple<elem<ARGS>...> t;
+//};
+
+
 int main()
 {
+//	foo<int, double> f;
+
 	std::cout << "Starting Dummy Solution\n";
 
 	std::cout << "build up infrastructure \n";
@@ -32,7 +53,7 @@ int main()
 	std::cout << "start building connections\n";
 
 	using time_point = fc::wall_clock::system::time_point;
-	fc::event_source<time_point> source;
+	fc::pure::event_source<time_point> source;
 	first_region->ticks.work_tick()
 			>> [&source](){ source.fire(fc::wall_clock::system::now()); };
 
@@ -65,9 +86,7 @@ int main()
 	fc::node_interface node_a = fc::node_interface(&root, "a").region(first_region);
 	fc::node_interface node_b = fc::node_interface(&root, "b").region(second_region);
 	fc::node_aware<fc::pure::event_source<std::string>> string_source(&node_a);
-//	fc::node_aware<fc::event_in_port<std::string>> string_sink(&node_b,
-//			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
-	fc::fancy_event_in<std::string> string_sink(&node_b,
+	fc::event_sink<std::string> string_sink(&node_b,
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
 	string_source >> string_sink;

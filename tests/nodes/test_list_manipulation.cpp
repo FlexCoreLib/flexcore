@@ -113,9 +113,9 @@ BOOST_AUTO_TEST_CASE( test_list_collector )
 	splitter_t splitter(&root, "", predicate);
 
 	typedef list_collector<decltype(splitter.out(0))::result_t> collector_t;
-	collector_t collector;
+	collector_t collector(&root, "");
 
-	pure::state_sink<decltype(collector.out)::result_t> sink;
+	state_sink<decltype(collector.out)::result_t> sink(&root);
 
 	splitter.out(0) >> collector.in;
 	collector.out >> sink;

@@ -16,8 +16,8 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
 {
 	std::shared_ptr<node_interface::forest_t> forest = std::make_shared<node_interface::forest_t>();
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
-	node_interface root(forest, "root", region);
-	node_interface child(&root);
+	root_node root("root", region);
+	node_interface child(&root, "child");
 
 	BOOST_CHECK(child.region().get_id() == region->get_id());
 }
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
 	std::shared_ptr<node_interface::forest_t> forest = std::make_shared<node_interface::forest_t>();
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
-	node_interface root(forest, "root", region);
+	root_node root("root", region);
 	node_interface child1(&root, "1");
 	node_interface child2(&root, "2");
 	node_interface child1a(&child1, "a");

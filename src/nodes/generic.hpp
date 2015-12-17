@@ -4,6 +4,7 @@
 #include <core/traits.hpp>
 #include <ports/ports.hpp>
 #include <ports/fancy_ports.hpp>
+#include <ports/token_tags.hpp>
 
 #include <utility>
 #include <map>
@@ -29,6 +30,7 @@ struct transform_node : public node_interface
 
 	explicit transform_node(node_interface* parent, std::string name, bin_op op)
 		: node_interface(parent, name)
+		, param(this)
 		, op(op) {}
 
 	state_sink<param_type> param;
@@ -69,15 +71,12 @@ template<class data_t, class key_t>
 class n_ary_switch<data_t, state_tag, key_t> : public node_interface
 {
 public:
-	typedef typename in_port<data_t, state_tag>::type port_t;
-
 	n_ary_switch(node_interface* p, std::string n)
 		: node_interface(p, n)
 		, index(this)
-		, in_ports(this)
-		, out_port([this](){return  in_ports.at(index.get()).get();})
-	{
-	}
+		, in_ports()
+		, out_port(this, [this](){return in_ports.at(index.get()).get();} )
+	{}
 
 	/**
 	 * \brief input port for state of type data_t corresponding to key port.
@@ -86,22 +85,26 @@ public:
 	 * \param port, key by which port is identified.
 	 * \post !in_ports.empty()
 	 */
-	auto in(key_t port) noexcept { return in_ports[port]; }
+	auto in(key_t port) noexcept
+	{
+		auto it = in_ports.find(port);
+		if (it == in_ports.end())
+			it = in_ports.emplace(std::make_pair(port, state_sink<data_t>(this))).first;
+		return it->second;
+	}
 	/// parameter port controlling the switch, expects state of key_t
 	auto control() const noexcept { return index; }
 	auto out() const noexcept { return out_port; }
 private:
 	state_sink<key_t> index;
-	std::map<key_t, port_t> in_ports;
+	std::map<key_t, state_sink<data_t>> in_ports;
 	state_source_call_function<data_t> out_port;
 };
 
 template<class data_t, class key_t>
-class n_ary_switch<data_t, event_tag, key_t>
+class n_ary_switch<data_t, event_tag, key_t> : public node_interface
 {
 public:
-	typedef typename in_port<data_t, event_tag>::type port_t;
-
 	n_ary_switch(node_interface* p, std::string n)
 		: node_interface(p, n)
 		, index(this)
@@ -118,18 +121,18 @@ public:
 	 */
 	auto in(key_t port)
 	{
-		if (in_ports.find(port) == end(in_ports))
+		auto it = in_ports.find(port);
+		if (it == end(in_ports))
 		{
-			in_ports.emplace(std::make_pair
+			it = in_ports.emplace(std::make_pair
 				(	port,
-					port_t(this,
-						  [this, port](const data_t& in){ forward_call(in, port); })
+					event_sink<data_t>( this,
+										[this, port](const data_t& in){ forward_call(in, port); })
 				)
-			);
+			).first;
 		} //else the port already exists, we can just return it
 
-		assert(!in_ports.empty());
-		return in_ports.at(port);
+		return it->second;
 	};
 
 	/// output port of events of type data_t.
@@ -141,7 +144,7 @@ public:
 private:
 	state_sink<key_t> index;
 	event_source<data_t> out_port;
-	std::map<key_t, port_t> in_ports;
+	std::map<key_t, event_sink<data_t>> in_ports;
 	/// fires incoming event if and only if it is from the currently chosen port.
 	void forward_call(data_t event, key_t port)
 	{
