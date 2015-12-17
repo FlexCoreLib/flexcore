@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( test_list_collector )
 	auto predicate = [](int) { return 0; }; // always return 0
 	splitter_t splitter(predicate);
 
-	typedef list_collector<int> collector_t;
+	typedef list_collector<int, swap_on_pull> collector_t;
 	collector_t collector;
 
 	state_sink<collector_t::out_range_t> sink;

@@ -15,12 +15,23 @@ namespace fc
 template<class data_t>
 class base_event_to_state;
 
+template<class data_t, class buffer_policy>
+class list_collector;
+
+/// Buffer Policy to have buffers swapped on a tick and stored between ticks.
+struct swap_on_tick {};
+/**
+ * Buffer Policy to have buffers swapped on pull.
+ * This means pulling the collector twice gives different results!
+ */
+struct swap_on_pull {};
+
 template<class data_t>
-class event_to_state : public base_event_to_state<data_t>
+class list_collector<data_t, swap_on_tick> : public base_event_to_state<data_t>
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
-	event_to_state()
+	list_collector()
 		: base_event_to_state<data_t>( state_source_call_function<out_range_t>([&]()
 				{
 					data_read = true;
@@ -58,10 +69,11 @@ private:
  * Sends the buffer as state when pulled.
  */
 template<class data_t>
-class list_collector : public base_event_to_state<data_t>
+class list_collector<data_t, swap_on_pull> : public base_event_to_state<data_t>
 {
 public:
-	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
+	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator>
+			out_range_t;
 
 	list_collector()
 		: base_event_to_state<data_t>( state_source_call_function<out_range_t>([&]()
@@ -81,6 +93,7 @@ private:
 	}
 };
 
+/// Base class for nodes which take events and provide a range as state.
 template<class data_t>
 class base_event_to_state
 {

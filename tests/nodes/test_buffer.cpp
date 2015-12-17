@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_SUITE(test_buffers)
 
 BOOST_AUTO_TEST_CASE(single_event_to_state)
 {
-	event_to_state<int> buffer;
+	list_collector<int, swap_on_tick> buffer;
 
 	event_out_port<int> source;
 
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(single_event_to_state)
 
 BOOST_AUTO_TEST_CASE(event_range_to_state)
 {
-	event_to_state<int> buffer;
+	list_collector<int, swap_on_tick> buffer;
 	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
 	event_out_port<int_range> source;
 	std::vector<int> vec {1,2,3,4};

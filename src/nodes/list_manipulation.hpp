@@ -34,6 +34,7 @@ public:
 
 	explicit list_splitter(auto p)
 		: in( [&](const range_t& range){ this->receive(range); } )
+		, out_num_dropped(0)
 		, entries()
 		, predicate(p)
 	{}
