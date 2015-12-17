@@ -10,6 +10,7 @@ ADD_EXECUTABLE( test_executable
 	clock/TestClock.cpp
 	nodes/test_buffer.cpp
 	nodes/test_generic.cpp
+	nodes/test_event_nodes.cpp
 	nodes/test_state_nodes.cpp
 	ports/test_event_buffer.cpp
 	ports/test_node_aware.cpp
