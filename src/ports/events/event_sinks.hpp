@@ -6,7 +6,7 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
-#include <ports/port_traits.hpp>
+#include "ports/detail/port_traits.hpp"
 
 namespace fc
 {
@@ -27,7 +27,7 @@ struct event_in_port
 		assert(event_handler);
 	}
 
-	void operator()(auto&& in_event) // universal ref here?
+	void operator()(auto&& in_event)
 	{
 		assert(event_handler);
 		event_handler(std::move(in_event));
@@ -63,9 +63,49 @@ private:
 	handler_t event_handler;
 };
 
+/**
+ * \brief Templated event sink port
+ *
+ * Calls a (generic) lambda when an event is received. This allows to defer
+ * the actual type of the token until the port is called and also allows it
+ * to be called for diffent types.
+ *
+ * See tests/ports/events/test_events.cpp for example
+ *
+ * \tparam lambda_t Lambda to call when event arrived.
+ */
+template<class lambda_t>
+struct event_in_port_tmpl
+{
+public:
+	explicit event_in_port_tmpl(lambda_t h)
+		: lambda(h)
+	{}
+
+	void operator()(auto&& in_event) // universal ref here?
+	{
+		lambda(std::move(in_event));
+	}
+
+	event_in_port_tmpl() = delete;
+
+	typedef void result_t;
+
+	lambda_t lambda;
+};
+
+/*
+ * Helper needed for type inference
+ */
+template<class lambda_t>
+auto make_event_in_port_tmpl(lambda_t h) { return event_in_port_tmpl<lambda_t>{h}; }
+
 // traits
 template<class T> struct is_port<event_in_port<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<event_in_port<T>> : std::true_type {};
+//template<class T, class U> struct is_passive_sink<event_in_tmpl<T, U>> : std::true_type {};
+template<class T> struct is_port<event_in_port_tmpl<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<event_in_port_tmpl<T>> : std::true_type {};
 
 } // namespace fc
 

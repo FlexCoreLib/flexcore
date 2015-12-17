@@ -1,7 +1,7 @@
 #ifndef SRC_PORTS_NODE_AWARE_HPP_
 #define SRC_PORTS_NODE_AWARE_HPP_
 
-#include <ports/port_traits.hpp>
+#include <ports/detail/port_traits.hpp>
 #include <core/connection.hpp>
 #include <threading/parallelregion.hpp>
 #include "connection_buffer.hpp"
