@@ -141,6 +141,16 @@ private:
 	}
 };
 
+/**
+ * \brief node which observes a state and fires an event if the state matches a predicate.
+ *
+ * Needs to be connected to a tick, which triggers the check of the predicate on the state.
+ *
+ * \tparam data_t type of data watched by the watch_node.
+ * \tparam predicate predicate which is tested on the observed state
+ * predicate needs to be a callable which takes objects convertible from data_t
+ * and returns a bool.
+ */
 template<class data_t, class predicate>
 class watch_node
 {
@@ -150,9 +160,12 @@ public:
 	{
 	}
 
+	/// State input port, expects data_t.
 	auto in() noexcept { return in_port; }
+	/// Event Output port, fires data_t.
 	auto out() noexcept { return out_port; }
 
+	/// Event input port expects event of type void. Usually connected to a work_tick.
 	auto check_tick()
 	{
 		return [this]()
@@ -163,16 +176,36 @@ public:
 		};
 	}
 
-	predicate pred;
 private:
+	predicate pred;
 	state_sink<data_t> in_port;
 	event_out_port<data_t> out_port;
 };
 
+/// Creates a watch node with a predicate.
 template<class data_t, class predicate>
 auto watch(const predicate& pred, const data_t&)
 {
-	return watch_node<data_t, predicate>(pred);
+	return watch_node<data_t, predicate>{pred};
+}
+
+/**
+ * \brief Creates a watch_node, which fires an event, if the state changes.
+ *
+ *  Does not fire the first time the state is querried.
+ */
+template<class data_t>
+auto on_changed()
+{
+	std::shared_ptr<data_t> last = nullptr;
+	return watch(
+			[last](const data_t& in) mutable
+			{
+				bool check = last && (*last == in);
+				last = std::make_shared<data_t>(in);
+				return check;
+			},
+			data_t());
 }
 
 }  // namespace fc
