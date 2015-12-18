@@ -31,18 +31,20 @@ public:
 	node_interface(	node_interface* p,
 					std::string n = "" )
 		: forest_(p ? p->forest_ : throw std::invalid_argument("Parent is 0") )
-		, parent(p->self)
-		, self(forest_->insert(boost::next(parent), this))
+		, self(forest_->insert(boost::next(p->self), this))
 		, own_name_(n)
 		, region_()
 	{
 		assert(p);
+		assert(p->self != forest_->end());
 		region_ = p->region_;
 		update_name();
 	}
 
 	virtual ~node_interface()
 	{
+		if (adobe::child_begin(self) != adobe::child_end(self))
+			std::cout << "#### ORPHAN PANIC!!!" << std::endl;
 		forest_->erase(self);
 	}
 
@@ -74,14 +76,14 @@ private:
 	 */
 	node_interface(	std::string n, std::shared_ptr<region_info> r )
 		: forest_( std::make_shared<forest_t>() )
-		, parent( forest_->end() )
-		, self(forest_->insert(parent, this))
+		, self(forest_->insert(forest_->end(), this))
 		, own_name_(n)
 		, region_(r)
 	{}
 
 	void update_name()
 	{
+		auto parent = adobe::find_parent(self);
 		if (parent != forest_->end())
 			full_name_ = (*parent)->full_name() + "." + own_name_;
 		else
@@ -92,7 +94,6 @@ private:
 	}
 
 	std::shared_ptr<forest_t> forest_;
-	adobe::forest<node_interface*>::iterator parent;
 	adobe::forest<node_interface*>::iterator self;
 	std::string own_name_;
 	std::string full_name_;
@@ -104,9 +105,8 @@ class root_node : public node_interface
 public:
 	root_node(	std::string n = "root",
 				std::shared_ptr<region_info> r = std::make_shared<parallel_region>("root")	)
-		: node_interface(this, n)
+		: node_interface(n, r)
 	{
-		region(r);
 	}
 };
 
