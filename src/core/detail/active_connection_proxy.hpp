@@ -260,6 +260,13 @@ struct connect_impl
 };
 
 }  //namespace detail
+
+template<class T, class U> struct is_active_sink<
+	detail::active_connection_proxy<T, U, detail::active_sink_first>>
+		: public std::true_type {};
+template<class T, class U> struct is_active_source<
+	detail::active_connection_proxy<T, U, detail::active_source_first>>
+		: public std::true_type {};
 }  //namespace fc
 
 #endif /* SRC_PORTS_DETAIL_ACTIVE_SOURCE_PROXY_HPP_ */

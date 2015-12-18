@@ -6,6 +6,7 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
+//#include <ports/node_aware.hpp>
 #include <ports/detail/port_traits.hpp>
 
 namespace fc
@@ -105,10 +106,7 @@ auto make_event_sink_tmpl(lambda_t h) { return event_sink_tmpl<lambda_t>{h}; }
 } // namespace pure
 
 // traits
-template<class T> struct is_port<pure::event_sink<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<pure::event_sink<T>> : std::true_type {};
-//template<class T, class U> struct is_passive_sink<event_in_tmpl<T, U>> : std::true_type {};
-template<class T> struct is_port<pure::event_sink_tmpl<T>> : public std::true_type {};
 template<class T> struct is_passive_sink<pure::event_sink_tmpl<T>> : std::true_type {};
 
 } // namespace fc
