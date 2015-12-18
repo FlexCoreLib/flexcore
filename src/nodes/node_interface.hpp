@@ -26,7 +26,6 @@ public:
 	 *
 	 * @param p parent node (not 0)
 	 * @param r region_info object. Will be taken from parent if not given
-	 * TODO set region by region() member
 	 */
 	node_interface(	node_interface* p,
 					std::string n = "" )
@@ -43,8 +42,8 @@ public:
 
 	virtual ~node_interface()
 	{
-		if (adobe::child_begin(self) != adobe::child_end(self))
-			std::cout << "#### ORPHAN PANIC!!!" << std::endl;
+		if (adobe::has_children(self))
+			throw std::logic_error("Node may not leave orphans behind!");
 		forest_->erase(self);
 	}
 
@@ -72,20 +71,21 @@ private:
 	 *
 	 * @param p parent node (not 0)
 	 * @param r region_info object. Will be taken from parent if not given
-	 * TODO set region by region() member
 	 */
 	node_interface(	std::string n, std::shared_ptr<region_info> r )
 		: forest_( std::make_shared<forest_t>() )
 		, self(forest_->insert(forest_->end(), this))
 		, own_name_(n)
 		, region_(r)
-	{}
+	{
+		update_name();
+	}
 
 	void update_name()
 	{
 		auto parent = adobe::find_parent(self);
 		if (parent != forest_->end())
-			full_name_ = (*parent)->full_name() + "." + own_name_;
+			full_name_ = (*parent)->full_name() + "/" + own_name_;
 		else
 			full_name_ = own_name_;
 
@@ -103,11 +103,10 @@ private:
 class root_node : public node_interface
 {
 public:
-	root_node(	std::string n = "root",
+	root_node(	std::string n = "",
 				std::shared_ptr<region_info> r = std::make_shared<parallel_region>("root")	)
 		: node_interface(n, r)
-	{
-	}
+	{}
 };
 
 } // namespace fc

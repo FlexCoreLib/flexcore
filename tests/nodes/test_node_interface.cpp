@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 	node_interface child1a(&child1, "a");
 
 //	std::cout << "child1: " <<
-	BOOST_CHECK_EQUAL(child1.full_name(), "root.1");
-	BOOST_CHECK_EQUAL(child2.full_name(), "root.2");
-	BOOST_CHECK_EQUAL(child1a.full_name(), "root.1.a");
+	BOOST_CHECK_EQUAL(child1.full_name(), "root/1");
+	BOOST_CHECK_EQUAL(child2.full_name(), "root/2");
+	BOOST_CHECK_EQUAL(child1a.full_name(), "root/1/a");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
