@@ -43,7 +43,9 @@ struct merge_node<operation, result (args...)> : public node_interface
 			"Tried to create merge_node with a function taking no arguments");
 
     merge_node(operation o)
-    	: merge_node(o, std::make_index_sequence<sizeof...(args)>{})
+	: node_interface("merger")
+  	, in_ports(state_sink<args>(this)...)
+	, op(o)
 	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation
@@ -60,16 +62,6 @@ protected:
 	operation op;
 
 private:
-    template <std::size_t I>
-    node_interface* get_this() { return this; }
-
-    template <std::size_t... Is>
-    merge_node(operation o, std::index_sequence<Is...>)
-		: node_interface("merger")
-	  	, in_ports(get_this<Is>()...)
-		, op(o)
-    {}
-
 	///Helper function to get varargs index from nr of arguments by type deduction.
 	template<class tuple, std::size_t... index>
 	decltype(auto) invoke_helper(tuple&& tup, std::index_sequence<index...>)
