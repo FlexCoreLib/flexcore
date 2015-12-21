@@ -42,10 +42,10 @@ struct merge_node<operation, result (args...)> : public node_interface
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
-    merge_node(operation o)
-	: node_interface("merger")
-  	, in_ports(state_sink<args>(this)...)
-	, op(o)
+    explicit merge_node(operation o)
+		: node_interface("merger")
+  		, in_ports(state_sink<args>(this)...)
+		, op(o)
 	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation

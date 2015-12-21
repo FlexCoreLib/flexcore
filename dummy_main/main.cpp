@@ -7,32 +7,14 @@
 
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
-#include <ports/node_aware.hpp>
 #include <nodes/node_interface.hpp>
 #include <ports/fancy_ports.hpp>
 
 using namespace fc;
 
-//struct base {};
-//
-//template<class T>
-//struct elem
-//{
-//	elem(base*){}
-//	elem() = delete;
-//};
-//
-//template<class... ARGS>
-//struct foo : base
-//{
-//	foo() : t( /* initialize all elems with this */) {}
-//	std::tuple<elem<ARGS>...> t;
-//};
-
 
 int main()
 {
-//	foo<int, double> f;
 
 	std::cout << "Starting Dummy Solution\n";
 

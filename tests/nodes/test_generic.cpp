@@ -83,5 +83,4 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	BOOST_CHECK_EQUAL(buffer.empty(), true);
 }
 
-
 BOOST_AUTO_TEST_SUITE_END()

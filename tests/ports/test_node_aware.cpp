@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ports/ports.hpp>
-#include "../../src/ports/node_aware.hpp"
+#include <ports/node_aware.hpp>
 
 using namespace fc;
 
@@ -49,14 +49,14 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
 	static_assert(is_instantiation_of<node_aware, decltype(tmp)>::value, "");
-	static_assert(not is_active_sink<test_in_port>::value, "");
-	static_assert(not is_active_source<test_in_port>::value, "");
-	static_assert(is_passive_sink<test_in_port>::value, "");
+	static_assert(not is_active_sink   <test_in_port>::value, "");
+	static_assert(not is_active_source <test_in_port>::value, "");
+	static_assert(    is_passive_sink  <test_in_port>::value, "");
 	static_assert(not is_passive_source<test_in_port>::value, "");
 	static_assert(not is_passive_source<decltype(tmp)>::value, "");
-	static_assert(not is_passive_sink<decltype(tmp)>::value, "");
-	static_assert(is_active_source<decltype(tmp)>::value, "");
-	static_assert(not is_active_sink<decltype(tmp)>::value, "");
+	static_assert(not is_passive_sink  <decltype(tmp)>::value, "");
+	static_assert(    is_active_source <decltype(tmp)>::value, "");
+	static_assert(not is_active_sink   <decltype(tmp)>::value, "");
 
 	tmp >> test_in;
 
@@ -123,15 +123,15 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	root_node root_3("3", region_3);
 
 	test_in_port test_in_2(&root_3, write_param);
-	test_out >>
-			[](int i){ return i+1;} >>
-			[](int i){ return i*2;} >>
-			test_in_2;
+	test_out
+			>> [](int i){ return i+1;}
+			>> [](int i){ return i*2;}
+			>> test_in_2;
 
 	test_out.fire(1);
 	region_1->ticks.in_switch_buffers()();
 	region_2->ticks.in_work()();
-//wrong region ticked, expect no change
+	// wrong region ticked, expect no change
 	BOOST_CHECK_EQUAL(test_value, 2);
 
 	region_3->ticks.in_work()();
@@ -152,14 +152,14 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
 	static_assert(is_instantiation_of<node_aware, test_out_port>::value, "");
-	static_assert(is_active_sink<test_in_port>::value, "");
-//	static_assert(not is_active_source<test_in_port>::value, ""); // FIXME
-	static_assert(not is_passive_sink<test_in_port>::value, "");
+	static_assert(    is_active_sink   <test_in_port>::value, "");
+	static_assert(not is_active_source <test_in_port>::value, "");
+	static_assert(not is_passive_sink  <test_in_port>::value, "");
 	static_assert(not is_passive_source<test_in_port>::value, "");
-	static_assert(is_passive_source<test_out_port>::value, "");
-	static_assert(not is_passive_sink<test_out_port>::value, "");
-	static_assert(not is_active_source<test_out_port>::value, "");
-	static_assert(not is_active_sink<test_out_port>::value, "");
+	static_assert(    is_passive_source<test_out_port>::value, "");
+	static_assert(not is_passive_sink  <test_out_port>::value, "");
+	static_assert(not is_active_source <test_out_port>::value, "");
+	static_assert(not is_active_sink   <test_out_port>::value, "");
 
 	static_assert(std::is_same<int,
 			typename result_of<test_out_port>::type>::value,

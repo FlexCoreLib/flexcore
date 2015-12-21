@@ -34,7 +34,7 @@ public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	list_splitter(auto pred)
+	explicit list_splitter(auto pred)
 		: node_interface("splitter")
 		, in(this, [&](const range_t& range){ this->receive(range); } )
 		, out_num_dropped(this)
@@ -82,10 +82,7 @@ private:
 	}
 	struct entry_t
 	{
-		entry_t(node_interface* p)
-			: port(p)
-			, data()
-		{}
+		entry_t(node_interface* p) : port(p), data() {}
 		event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};

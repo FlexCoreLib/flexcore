@@ -68,7 +68,7 @@ class parallel_region : public region_info
 {
 public:
 	virtual ~parallel_region() = default;
-	parallel_region(std::string id = "default");
+	explicit parallel_region(std::string id = "default");
 
 	region_id get_id() const override;
 	pure::event_source<void> switch_tick() const override;
