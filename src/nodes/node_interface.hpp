@@ -58,21 +58,34 @@ public:
 		return child;
 	}
 
-	// TODO TEST!!!
-//	template<class node_t, class ... args_t>
-//	node_t make_child(args_t ... args)
-//	{
-//		auto child = new node_t(args...);
-//		add_child(child);
-//		return child;
-//	}
-//	template<class node_t, class ... args_t>
-//	node_t make_child_n(std::string n, args_t ... args)
-//	{
-//		auto child = new node_t(args...);
-//		add_child(n, child);
-//		return child;
-//	}
+	template<class node_t, class ... args_t>
+	node_t* make_child(args_t ... args)
+	{
+		auto child = new node_t(args...);
+		add_child(child);
+		return child;
+	}
+	template<class node_t, class ... args_t>
+	node_t* make_child_n(std::string n, args_t ... args)
+	{
+		auto child = new node_t(args...);
+		add_child(n, child);
+		return child;
+	}
+	template<template <typename ...> class node_t, class ... args_t>
+	node_t<args_t ...>* make_child(args_t ... args)
+	{
+		auto child = new node_t<args_t ...>(args...);
+		add_child(child);
+		return child;
+	}
+	template<template <typename ...> class node_t, class ... args_t>
+	node_t<args_t ...>* make_child_n(std::string n, args_t ... args)
+	{
+		auto child = new node_t<args_t ...>(args...);
+		add_child(n, child);
+		return child;
+	}
 
 	/**
 	 * Constructor taking a parent node
@@ -106,7 +119,6 @@ public:
 	}
 
 	const region_info& region() const { return *region_; }
-
 	node_interface* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
 
 //	const forest_t& forest() { return *forest_; }

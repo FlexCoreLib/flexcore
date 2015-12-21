@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_state)
 	state_source_with_setter<int> one(&root, 1);
 	state_source_with_setter<int> two(&root, 2);
 
-	auto test_switch = root.add_child(new n_ary_switch<int, state_tag>);
+	auto test_switch = root.make_child<n_ary_switch<int, state_tag>>();
 	state_source_with_setter<size_t> config(&root, 0);
 
 	one >> test_switch->in(0);
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	root_node root;
 	event_source<int> source_1(&root);
 	event_source<int> source_2(&root);
-	auto test_switch = root.add_child(new n_ary_switch<int, event_tag>);
+	auto test_switch = root.make_child<n_ary_switch<int, event_tag>>();
 	state_source_with_setter<size_t> config(&root, 0);
 	event_sink_queue<int> buffer(&root);
 

@@ -7,6 +7,27 @@
 
 using namespace fc;
 
+namespace // unnamed
+{
+template<class data_t>
+struct node_class : public node_interface
+{
+	node_class(data_t a)
+		: node_interface("test_node")
+		, value(a)
+	{}
+
+	data_t get_value() { return value; }
+
+	auto port()
+	{
+		return [this](){ return this->get_value(); };
+	}
+
+	data_t value;
+};
+} // unnamed namespace
+
 BOOST_AUTO_TEST_SUITE( test_node_interface )
 
 /*
@@ -39,6 +60,21 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 	BOOST_CHECK_EQUAL(child1a->full_name(), "root/1/a");
 }
 
+BOOST_AUTO_TEST_CASE( test_make_child )
+{
+	root_node root("root");
+	auto child1 = root.make_child<node_class<int>>(5);
+	auto child2 = root.make_child_n<node_class<int>>("name", 5);
+
+	BOOST_CHECK_EQUAL(child1->full_name(), "root/test_node");
+	BOOST_CHECK_EQUAL(child2->full_name(), "root/name");
+
+	auto child3 = root.make_child<node_class>(5);
+
+	BOOST_CHECK_EQUAL(child3->full_name(), "root/name");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
 
 
