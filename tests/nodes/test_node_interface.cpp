@@ -35,7 +35,6 @@ BOOST_AUTO_TEST_SUITE( test_node_interface )
  */
 BOOST_AUTO_TEST_CASE( test_region_propagation )
 {
-	std::shared_ptr<node_interface::forest_t> forest = std::make_shared<node_interface::forest_t>();
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
 	root_node root("root", region);
 	auto child = root.add_child("child", new null);
@@ -48,7 +47,6 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
  */
 BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
-	std::shared_ptr<node_interface::forest_t> forest = std::make_shared<node_interface::forest_t>();
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
 	root_node root("root", region);
 	auto child1 = root.add_child("1", new null);
