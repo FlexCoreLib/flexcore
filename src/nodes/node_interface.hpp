@@ -22,13 +22,21 @@ public:
 	virtual ~named() {}
 
 	virtual std::string own_name() const { return own_name_; }
-	virtual std::string full_name() const { return own_name(); }
+	std::string full_name() const
+	{
+		auto p = parent();
+		if (p)
+			return p->full_name() + "/" + own_name();
+		return this->own_name();
+	}
 
 	virtual named* name(const std::string& n)
 	{
 		own_name_ = n;
 		return this;
 	}
+
+	virtual named* parent() const { return 0; }
 
 private:
 	std::string own_name_;
@@ -108,20 +116,18 @@ public:
 		forest_->erase(self_);
 	}
 
-	std::string full_name() const
+	const region_info& region() const { return *region_; }
+	node_interface* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
+
+protected:
+	node_interface* parent() const
 	{
 		assert(forest_);
 		auto parent = adobe::find_parent(self_);
 		if (parent != forest_->end())
-			return (*parent)->full_name() + "/" + own_name();
-		else
-			return this->own_name();
+			return *parent;
+		return 0;
 	}
-
-	const region_info& region() const { return *region_; }
-	node_interface* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
-
-//	const forest_t& forest() { return *forest_; }
 
 private:
 	friend class root_node;

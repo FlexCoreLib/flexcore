@@ -70,8 +70,10 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	BOOST_CHECK_EQUAL(child2->full_name(), "root/name");
 
 	auto child3 = root.make_child<node_class>(5);
+	auto child4 = root.make_child_n<node_class>("foo", 5);
 
-	BOOST_CHECK_EQUAL(child3->full_name(), "root/name");
+	BOOST_CHECK_EQUAL(child3->full_name(), "root/test_node");
+	BOOST_CHECK_EQUAL(child4->full_name(), "root/foo");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

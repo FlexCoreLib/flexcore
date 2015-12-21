@@ -9,7 +9,6 @@ ADD_EXECUTABLE( test_executable
 	core/test_traits.cpp
 	clock/TestClock.cpp
 	nodes/test_generic.cpp
-	nodes/test_stuff.cpp
 	nodes/test_list_manipulation.cpp
 	nodes/test_node_interface.cpp
 	nodes/test_state_nodes.cpp
