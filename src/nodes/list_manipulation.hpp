@@ -34,8 +34,8 @@ public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	list_splitter(node_interface* p, std::string n, auto pred)
-		: node_interface(p, n)
+	list_splitter(auto pred)
+		: node_interface("splitter")
 		, in(this, [&](const range_t& range){ this->receive(range); } )
 		, out_num_dropped(this)
 		, entries()
@@ -105,8 +105,8 @@ public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	list_collector(node_interface* p, std::string n)
-		: node_interface(p, n)
+	list_collector()
+		: node_interface("list_collector")
 		, in( this, [&](const range_t& range){ this->receive(range); } )
 		, out( this, [&](){ return this->get_state(); } )
 	{}

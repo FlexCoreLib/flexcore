@@ -13,56 +13,99 @@
 namespace fc
 {
 
+class named
+{
+public:
+	explicit named(std::string n = "")
+		: own_name_(n)
+	{}
+
+	virtual std::string own_name() const { return own_name_; }
+	virtual std::string full_name() const { return own_name(); }
+
+	virtual named* name(const std::string& n)
+	{
+		own_name_ = n;
+		return this;
+	}
+
+private:
+	std::string own_name_;
+};
+
 /**
  * TODO
  */
-class node_interface
+class node_interface : public named
 {
 public:
 	typedef adobe::forest<node_interface*> forest_t;
 
+	template<class node_t>
+	node_t* add_child(node_t* child)
+	{
+		child->region_ = this->region_;
+		child->forest_ = this->forest_;
+		child->self_ = forest_->insert(boost::next(self_), child);
+		return child;
+	}
+	template<class node_t>
+	node_t* add_child(std::string n, node_t* child)
+	{
+		child->name(n);
+		add_child(child);
+		return child;
+	}
+
+	// TODO TEST!!!
+//	template<class node_t, class ... args_t>
+//	node_t make_child(args_t ... args)
+//	{
+//		auto child = new node_t(args...);
+//		add_child(child);
+//		return child;
+//	}
+//	template<class node_t, class ... args_t>
+//	node_t make_child_n(std::string n, args_t ... args)
+//	{
+//		auto child = new node_t(args...);
+//		add_child(n, child);
+//		return child;
+//	}
+
 	/**
 	 * Constructor taking a parent node
-	 *
-	 * @param p parent node (not 0)
-	 * @param r region_info object. Will be taken from parent if not given
 	 */
-	node_interface(	node_interface* p,
-					std::string n = "" )
-		: forest_(p ? p->forest_ : throw std::invalid_argument("Parent is 0") )
-		, self(forest_->insert(boost::next(p->self), this))
-		, own_name_(n)
+	node_interface(std::string n)
+		: named(n)
+		, forest_()
+		, self_()
 		, region_()
-	{
-		assert(p);
-		assert(p->self != forest_->end());
-		region_ = p->region_;
-		update_name();
-	}
+	{}
+
+	node_interface(const node_interface&) = delete;
 
 	virtual ~node_interface()
 	{
-		if (adobe::has_children(self))
-			throw std::logic_error("Node may not leave orphans behind!");
-		forest_->erase(self);
+		for (auto child = adobe::child_begin(self_); child != adobe::child_end(self_); ++child)
+			delete *child;
+		forest_->erase(self_);
 	}
 
-	node_interface& name(const std::string& n)
+	std::string full_name() const
 	{
-		own_name_ = n;
-		update_name();
-		return *this;
+		auto parent = adobe::find_parent(self_);
+		if (parent != forest_->end())
+			return (*parent)->full_name() + "/" + own_name();
+		else
+			return this->own_name();
 	}
-	std::string own_name() const { return own_name_; }
-	std::string full_name() const { return full_name_; }
 
-	/*
-	 * TODO expose access to parent, children and forest as needed
-	 */
 	const region_info& region() const { return *region_; }
-	node_interface& region(std::shared_ptr<region_info> r) { region_ = r; return *this; }
 
-	const forest_t& forest() { return *forest_; }
+	node_interface* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
+
+//	const forest_t& forest() { return *forest_; }
 
 private:
 	friend class root_node;
@@ -73,30 +116,14 @@ private:
 	 * @param r region_info object. Will be taken from parent if not given
 	 */
 	node_interface(	std::string n, std::shared_ptr<region_info> r )
-		: forest_( std::make_shared<forest_t>() )
-		, self(forest_->insert(forest_->end(), this))
-		, own_name_(n)
+		: named(n)
+		, forest_( std::make_shared<forest_t>() )
+		, self_(forest_->insert(forest_->end(), this))
 		, region_(r)
-	{
-		update_name();
-	}
-
-	void update_name()
-	{
-		auto parent = adobe::find_parent(self);
-		if (parent != forest_->end())
-			full_name_ = (*parent)->full_name() + "/" + own_name_;
-		else
-			full_name_ = own_name_;
-
-		for (auto child = adobe::child_begin(self); child != adobe::child_end(self); ++child)
-			(*child)->update_name();
-	}
+	{}
 
 	std::shared_ptr<forest_t> forest_;
-	adobe::forest<node_interface*>::iterator self;
-	std::string own_name_;
-	std::string full_name_;
+	adobe::forest<node_interface*>::iterator self_;
 	std::shared_ptr<region_info> region_;
 };
 
@@ -107,6 +134,11 @@ public:
 				std::shared_ptr<region_info> r = std::make_shared<parallel_region>("root")	)
 		: node_interface(n, r)
 	{}
+};
+
+struct null : public node_interface
+{
+	null(std::string n = "null") : node_interface(n) {}
 };
 
 } // namespace fc

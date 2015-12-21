@@ -83,10 +83,10 @@ int main()
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
 	fc::root_node root;
-	fc::node_interface node_a = fc::node_interface(&root, "a").region(first_region);
-	fc::node_interface node_b = fc::node_interface(&root, "b").region(second_region);
-	fc::node_aware<fc::pure::event_source<std::string>> string_source(&node_a);
-	fc::event_sink<std::string> string_sink(&node_b,
+	auto child_a = root.add_child(new fc::null("a"))->region(first_region);
+	auto child_b = root.add_child(new fc::null("b"))->region(second_region);
+	fc::node_aware<fc::pure::event_source<std::string>> string_source(child_a);
+	fc::event_sink<std::string> string_sink(child_b,
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
 	string_source >> string_sink;

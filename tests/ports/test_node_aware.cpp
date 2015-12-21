@@ -5,20 +5,6 @@
 
 using namespace fc;
 
-namespace fc
-{
-class identidy_node : public node_interface
-{
-public:
-	identidy_node( node_interface* p,
-				   std::shared_ptr<region_info> r = std::shared_ptr<region_info>() )
-		: node_interface(p, "identity")
-	{
-		region(r);
-	}
-};
-} // namespace fc
-
 BOOST_AUTO_TEST_SUITE(test_parallle_region);
 
 BOOST_AUTO_TEST_CASE(test_region_aware_node)

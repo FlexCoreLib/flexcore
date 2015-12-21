@@ -17,9 +17,9 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
 	std::shared_ptr<node_interface::forest_t> forest = std::make_shared<node_interface::forest_t>();
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
 	root_node root("root", region);
-	node_interface child(&root, "child");
+	auto child = root.add_child(new null("child"));
 
-	BOOST_CHECK(child.region().get_id() == region->get_id());
+	BOOST_CHECK(child->region().get_id() == region->get_id());
 }
 
 /*
@@ -42,14 +42,13 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 	std::shared_ptr<node_interface::forest_t> forest = std::make_shared<node_interface::forest_t>();
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
 	root_node root("root", region);
-	node_interface child1(&root, "1");
-	node_interface child2(&root, "2");
-	node_interface child1a(&child1, "a");
+	auto child1 = root.add_child(new null("1"));
+	auto child2 = root.add_child(new null("2"));
+	auto child1a = child1->add_child(new null("a"));
 
-//	std::cout << "child1: " <<
-	BOOST_CHECK_EQUAL(child1.full_name(), "root/1");
-	BOOST_CHECK_EQUAL(child2.full_name(), "root/2");
-	BOOST_CHECK_EQUAL(child1a.full_name(), "root/1/a");
+	BOOST_CHECK_EQUAL(child1->full_name(), "root/1");
+	BOOST_CHECK_EQUAL(child2->full_name(), "root/2");
+	BOOST_CHECK_EQUAL(child1a->full_name(), "root/1/a");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

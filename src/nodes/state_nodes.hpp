@@ -42,8 +42,8 @@ struct merge_node<operation, result (args...)> : public node_interface
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
-    merge_node(node_interface* p, std::string n, operation o)
-    	: merge_node(p, n, o, std::make_index_sequence<sizeof...(args)>{})
+    merge_node(operation o)
+    	: merge_node(o, std::make_index_sequence<sizeof...(args)>{})
 	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation
@@ -64,8 +64,8 @@ private:
     node_interface* get_this() { return this; }
 
     template <std::size_t... Is>
-    merge_node(node_interface* p, std::string n, operation o, std::index_sequence<Is...>)
-		: node_interface(p, n)
+    merge_node(operation o, std::index_sequence<Is...>)
+		: node_interface("merger")
 	  	, in_ports(get_this<Is>()...)
 		, op(o)
     {}
@@ -80,12 +80,12 @@ private:
 
 ///creats a merge node which applies the operation to all inputs and returns single state.
 template<class operation>
-auto merge(node_interface* p, std::string n, operation op)
+auto merge(operation op)
 {
-	return merge_node
+	return new merge_node
 		<	operation,
 			typename utils::function_traits<operation>::function_type
-		>(p, n, op);
+		>(op);
 }
 
 }  // namespace fc
