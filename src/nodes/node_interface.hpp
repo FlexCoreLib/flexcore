@@ -19,6 +19,7 @@ public:
 	explicit named(std::string n = "")
 		: own_name_(n)
 	{}
+	virtual ~named() {}
 
 	virtual std::string own_name() const { return own_name_; }
 	virtual std::string full_name() const { return own_name(); }
@@ -46,7 +47,7 @@ public:
 	{
 		child->region_ = this->region_;
 		child->forest_ = this->forest_;
-		child->self_ = forest_->insert(boost::next(self_), child);
+		child->self_ = adobe::trailing_of(forest_->insert(self_, child));
 		return child;
 	}
 	template<class node_t>
@@ -87,13 +88,16 @@ public:
 
 	virtual ~node_interface()
 	{
-		for (auto child = adobe::child_begin(self_); child != adobe::child_end(self_); ++child)
-			delete *child;
+		assert(forest_);
+		assert(region_);
+		while (adobe::child_begin(self_) != adobe::child_end(self_))
+			delete *adobe::child_begin(self_);
 		forest_->erase(self_);
 	}
 
 	std::string full_name() const
 	{
+		assert(forest_);
 		auto parent = adobe::find_parent(self_);
 		if (parent != forest_->end())
 			return (*parent)->full_name() + "/" + own_name();
@@ -118,7 +122,7 @@ private:
 	node_interface(	std::string n, std::shared_ptr<region_info> r )
 		: named(n)
 		, forest_( std::make_shared<forest_t>() )
-		, self_(forest_->insert(forest_->end(), this))
+		, self_(adobe::trailing_of(forest_->insert(forest_->begin(), this)))
 		, region_(r)
 	{}
 
@@ -134,11 +138,13 @@ public:
 				std::shared_ptr<region_info> r = std::make_shared<parallel_region>("root")	)
 		: node_interface(n, r)
 	{}
+
+	virtual ~root_node() {}
 };
 
 struct null : public node_interface
 {
-	null(std::string n = "null") : node_interface(n) {}
+	null() : node_interface("null") {}
 };
 
 } // namespace fc

@@ -108,9 +108,9 @@ BOOST_AUTO_TEST_CASE( test_list_splitter_bool )
 BOOST_AUTO_TEST_CASE( test_list_collector )
 {
 	typedef list_splitter <std::list<int>, bool> splitter_t;
-	auto predicate = [](int) { return 0; }; // always return 0
+//	auto predicate = ; // always return 0
 	root_node root;
-	auto splitter = root.add_child(new splitter_t(predicate));
+	auto splitter = root.add_child(new splitter_t( [](int) { return 0; } ));
 
 	typedef list_collector<decltype(splitter->out(0))::result_t> collector_t;
 	auto collector = root.add_child(new collector_t);
