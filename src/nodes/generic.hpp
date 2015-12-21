@@ -2,12 +2,13 @@
 #define SRC_NODES_GENERIC_HPP_
 
 #include <core/traits.hpp>
-#include <ports/ports.hpp>
-#include <ports/fancy_ports.hpp>
 #include <ports/token_tags.hpp>
 
 #include <utility>
 #include <map>
+
+#include "../ports/ports.hpp"
+#include "../ports/pure_ports.hpp"
 
 namespace fc
 {

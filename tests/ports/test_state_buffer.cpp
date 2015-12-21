@@ -1,9 +1,9 @@
 // boost
 #include <boost/test/unit_test.hpp>
 
-#include <ports/ports.hpp>
-#include <ports/ports.hpp>
 #include "../../src/ports/connection_buffer.hpp"
+#include "../../src/ports/pure_ports.hpp"
+#include "../../src/ports/pure_ports.hpp"
 
 using namespace fc;
 

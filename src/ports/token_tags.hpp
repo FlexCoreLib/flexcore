@@ -1,6 +1,8 @@
 #ifndef SRC_PORTS_TOKEN_TAGS_HPP_
 #define SRC_PORTS_TOKEN_TAGS_HPP_
 
+#include "pure_ports.hpp"
+
 namespace fc
 {
 

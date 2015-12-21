@@ -3,12 +3,12 @@
 
 #include <core/traits.hpp>
 #include <ports/states/state_sink.hpp>
-#include <ports/fancy_ports.hpp>
 #include <nodes/node_interface.hpp>
 
 #include <utility>
 #include <tuple>
 #include <cstddef>
+#include "../ports/ports.hpp"
 
 namespace fc
 {

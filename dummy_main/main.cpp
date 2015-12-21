@@ -8,7 +8,7 @@
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
 #include <nodes/node_interface.hpp>
-#include <ports/fancy_ports.hpp>
+#include "../src/ports/ports.hpp"
 
 using namespace fc;
 

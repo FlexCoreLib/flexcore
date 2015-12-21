@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
-#include <ports/ports.hpp>
 #include <ports/node_aware.hpp>
+#include "../../src/ports/pure_ports.hpp"
 
 using namespace fc;
 

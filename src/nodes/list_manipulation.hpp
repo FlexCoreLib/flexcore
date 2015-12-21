@@ -2,15 +2,14 @@
 #define SRC_NODES_LIST_MANIPULATION_HPP_
 
 #include <core/traits.hpp>
-#include <ports/ports.hpp>
 #include <nodes/node_interface.hpp>
-#include <ports/fancy_ports.hpp>
-
-// std
 #include <map>
 
 // boost
 #include <boost/range.hpp>
+
+#include "../ports/ports.hpp"
+#include "../ports/pure_ports.hpp"
 
 namespace fc
 {

@@ -2,10 +2,10 @@
 
 #include "core/connection.hpp"
 #include "ports/events/event_sink_with_queue.hpp"
-#include "ports/ports.hpp"
-
 #include <vector>
 #include <algorithm>
+
+#include "../../src/ports/pure_ports.hpp"
 #include "move_token.hpp"
 
 using namespace fc;
