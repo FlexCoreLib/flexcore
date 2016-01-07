@@ -158,15 +158,17 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 
 BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 {
-	typedef region_aware<event_in_port<int>> test_in_port;
-	typedef region_aware<event_out_port<int>> test_out_port;
+	typedef node_aware<event_in_port<int>> test_in_port;
+	typedef node_aware<event_out_port<int>> test_out_port;
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
+	identidy_node identity_1(region_1);
+	identidy_node identity_2(region_2);
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
-	test_in_port test_in(region_2, write_param);
-	test_out_port test_out(region_1);
+	test_in_port test_in(&identity_2, write_param);
+	test_out_port test_out(&identity_1);
 
 	auto inc = [](int i){ return i + 1; };
 
