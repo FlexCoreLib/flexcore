@@ -138,6 +138,38 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	BOOST_CHECK_EQUAL(test_value, 4);
 }
 
+BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
+{
+	typedef node_aware<pure::event_sink<int>> test_in_port;
+	typedef node_aware<pure::event_source<int>> test_out_port;
+	auto region_1 = std::make_shared<parallel_region>("r1");
+	auto region_2 = std::make_shared<parallel_region>("r2");
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
+
+	int test_value = 0;
+	auto write_param = [&test_value](int i) {test_value = i;};
+	test_in_port test_in(&root_2, write_param);
+	test_out_port test_out(&root_1);
+
+	auto inc = [](int i){ return i + 1; };
+
+#warning this does not compile
+#warning FIXME region connection limitations
+//	(test_out >> inc) >> inc >> (inc >> test_in);
+	test_out >> inc >> inc >> inc >> test_in;
+
+	BOOST_CHECK_EQUAL(test_value, 0);
+	test_out.fire(1);
+	//since we have a region transition, we need a switch tick
+	BOOST_CHECK_EQUAL(test_value, 0);
+
+	region_1->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(test_value, 0);
+	region_2->ticks.in_work()();
+	BOOST_CHECK_EQUAL(test_value, 4);
+}
+
 BOOST_AUTO_TEST_CASE(test_state_transition)
 {
 	typedef node_aware<pure::state_sink<int>> test_in_port;
