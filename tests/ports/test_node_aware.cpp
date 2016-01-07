@@ -136,10 +136,7 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 
 	auto inc = [](int i){ return i + 1; };
 
-#warning this does not compile
-#warning FIXME region connection limitations
-//	(test_out >> inc) >> inc >> (inc >> test_in);
-	test_out >> inc >> inc >> inc >> test_in;
+	(test_out >> inc) >> inc >> (inc >> test_in);
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_out.fire(1);

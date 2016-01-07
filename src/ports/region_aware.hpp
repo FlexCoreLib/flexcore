@@ -252,6 +252,28 @@ struct region_aware_connect_impl
 	}
 };
 
+template<class source_t, class sink_t>
+struct region_aware_connect_impl
+	<	source_t,
+		sink_t,
+        typename std::enable_if<
+        	!::fc::is_instantiation_of<region_aware, source_t>::value &&
+        	!is_active_source<source_t>::value &&
+			::fc::is_instantiation_of<region_aware, sink_t>::value &&
+			::fc::is_passive_sink<sink_t>::value
+			>::type
+	>
+{
+
+	auto operator()(source_t source, sink_t sink)
+	{
+		//construct region_aware_connection
+		//based on if source and sink are from same region
+		return make_region_aware(
+				connect(source, static_cast<typename sink_t::base_t>(sink)),
+				sink.region);
+	}
+};
 
 template<class source_t, class sink_t>
 struct region_aware_connect_impl
@@ -283,7 +305,7 @@ struct region_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-				::fc::is_instantiation_of<region_aware, sink_t>::value &&
+				::fc::is_instantiation_of<region_aware, source_t>::value &&
 				!::fc::is_instantiation_of<region_aware, sink_t>::value &&
 				::fc::is_active_sink<source_t>::value
 		>::type
