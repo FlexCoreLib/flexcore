@@ -39,6 +39,12 @@ private:
 // traits
 template<class T> struct is_passive_source<state_source_call_function<T>> : std::true_type {};
 
+template<class data_t, class sink_t>
+struct result_of<connection<state_source_call_function<data_t>, sink_t>>
+{
+	typedef data_t type;
+};
+
 /**
  * Simple StreamSource implementation that holds a state_source_with_setter.
  * Can be connected to any number of SinkConnections.
@@ -65,6 +71,13 @@ private:
 
 // traits
 template<class data_t> struct is_passive_source<state_source_with_setter<data_t>> : std::true_type {};
+
+template<class data_t, class sink_t>
+struct result_of<connection<state_source_with_setter<data_t>, sink_t>>
+{
+	typedef data_t type;
+};
+
 
 /**
  * Universal type proxy

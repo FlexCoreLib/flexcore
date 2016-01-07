@@ -77,7 +77,6 @@ struct connection
 	source_t source;
 	sink_t sink;
 
-
 	/**
 	 * \brief call operator, calls source and then sink with the result of source
 	 *

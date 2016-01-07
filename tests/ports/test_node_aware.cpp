@@ -147,6 +147,22 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
+
+	// check the same for states
+	typedef region_aware<state_sink<int>> test_in_state;
+	typedef region_aware<state_source_with_setter<int>> test_out_state;
+
+	test_out_state state_out{region_1, 1};
+	test_in_state state_in{region_2};
+
+	(state_out >> inc) >> inc >> (inc >> state_in);
+   //                          ^^^ buffer is here
+
+	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	region_1->ticks.in_work()();
+	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	region_2->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(state_in.get(), 4);
 }
 
 BOOST_AUTO_TEST_CASE(test_state_transition)

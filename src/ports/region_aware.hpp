@@ -134,6 +134,12 @@ template<class T> struct is_active_source<region_aware<T>> : public is_active_so
 template<class T> struct is_passive_sink<region_aware<T>> : public is_passive_sink<T> {};
 template<class T> struct is_passive_source<region_aware<T>> : public is_passive_source<T> {};
 
+template<class source_t, class sink_t>
+struct result_of<region_aware<connection<source_t, sink_t>>>
+{
+	typedef typename result_of<source_t>::type type;
+};
+
 namespace detail
 {
 
@@ -279,6 +285,29 @@ template<class source_t, class sink_t>
 struct region_aware_connect_impl
 	<	source_t,
 		sink_t,
+        typename std::enable_if<
+        	::fc::is_instantiation_of<region_aware, source_t>::value &&
+        	is_passive_source<source_t>::value &&
+			!::fc::is_instantiation_of<region_aware, sink_t>::value &&
+			!::fc::is_active_sink<sink_t>::value
+			>::type
+	>
+{
+
+	auto operator()(source_t source, sink_t sink)
+	{
+		//construct region_aware_connection
+		//based on if source and sink are from same region
+		return make_region_aware(
+				connect(static_cast<typename source_t::base_t>(source), sink),
+				source.region);
+	}
+};
+
+template<class source_t, class sink_t>
+struct region_aware_connect_impl
+	<	source_t,
+		sink_t,
 		typename std::enable_if<
 			::fc::is_instantiation_of<region_aware, source_t>::value &&
 			::fc::is_instantiation_of<region_aware, sink_t>::value &&
@@ -305,9 +334,9 @@ struct region_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-				::fc::is_instantiation_of<region_aware, source_t>::value &&
-				!::fc::is_instantiation_of<region_aware, sink_t>::value &&
-				::fc::is_active_sink<source_t>::value
+				!::fc::is_instantiation_of<region_aware, source_t>::value &&
+				::fc::is_instantiation_of<region_aware, sink_t>::value &&
+				::fc::is_active_sink<sink_t>::value
 		>::type
 	>
 {
@@ -317,8 +346,8 @@ struct region_aware_connect_impl
 		//construct region_aware_connection
 		//based on if source and sink are from same region
 		return make_region_aware(
-				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.region);
+				connect(source, static_cast<typename sink_t::base_t>(sink)),
+				sink.region);
 	}
 };
 
