@@ -29,7 +29,7 @@ public:
 		return this->own_name();
 	}
 
-	virtual named* name(const std::string& n)
+	virtual named* own_name(const std::string& n)
 	{
 		own_name_ = n;
 		return this; // return this for parameter chaining

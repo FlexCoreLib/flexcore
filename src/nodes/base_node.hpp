@@ -83,6 +83,32 @@ public:
 		return add_child_named(n, std::make_unique<node_t<args_t...>>(args...));
 	}
 
+	void erase_child(base_node* child)
+	{
+		for (auto c = adobe::child_begin(self_); c != adobe::child_end(self_); ++c)
+			if (*c == child)
+			{
+				delete child;
+				break;
+			}
+	}
+	size_t erase_children_by_name(const std::string& n)
+	{
+		size_t num_erased = 0;
+		auto c = adobe::child_begin(self_);
+		while (c != adobe::child_end(self_))
+		{
+			if ((*c)->own_name() == n)
+			{
+				delete *(c++);
+				++num_erased;
+			}
+			else
+				++c;
+		}
+		return num_erased;
+	}
+
 	base_node(const base_node&) = delete;
 
 	virtual ~base_node()
@@ -140,7 +166,7 @@ private:
 	template<class node_t>
 	node_t* add_child_named(std::string n, std::unique_ptr<node_t> child)
 	{
-		child->name(n);
+		child->own_name(n);
 		return add_child(std::move(child));
 	}
 	/**

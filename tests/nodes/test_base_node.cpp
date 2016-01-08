@@ -26,6 +26,21 @@ struct node_class : public base_node
 
 	data_t value;
 };
+template<class action>
+struct checked_destruction : public base_node
+{
+	checked_destruction(action a)
+		: base_node("checked_destruction")
+		, action_(a)
+	{}
+
+	virtual ~checked_destruction()
+	{
+		action_();
+	}
+
+	action action_;
+};
 } // unnamed namespace
 
 BOOST_AUTO_TEST_SUITE( test_base_node )
@@ -72,6 +87,45 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 
 	BOOST_CHECK_EQUAL(child3->full_name(), "root/test_node");
 	BOOST_CHECK_EQUAL(child4->full_name(), "root/foo");
+}
+
+void set_flag(bool& f)
+{
+	BOOST_CHECK_EQUAL(f, false);
+	f = true;
+}
+template<class T> using node_t = checked_destruction<T>;
+
+BOOST_AUTO_TEST_CASE( test_explicit_erase )
+{
+	root_node root("root");
+	bool flag_a    = false;
+	bool flag_b1   = false;
+	bool flag_b2   = false;
+	bool flag_b2_d = false;
+	bool flag_b2_b = false;
+	bool flag_c    = false;
+	bool flag_c_f  = false;
+	auto child_a    = root.     make_child_named<node_t>( "a", [&](){ set_flag(flag_a   ); } );
+					  root.     make_child_named<node_t>( "b", [&](){ set_flag(flag_b1  ); } );
+	auto child_b2   = root.     make_child_named<node_t>( "b", [&](){ set_flag(flag_b2  ); } );
+					  child_b2->make_child_named<node_t>( "d", [&](){ set_flag(flag_b2_d); } );
+					  child_b2->make_child_named<node_t>( "b", [&](){ set_flag(flag_b2_b); } );
+	auto child_c    = root.     make_child_named<node_t>( "c", [&](){ set_flag(flag_c   ); } );
+		    		  child_c-> make_child_named<node_t>( "f", [&](){ set_flag(flag_c_f ); } );
+
+	root.erase_child(child_a);
+	BOOST_CHECK_EQUAL(flag_a, true);
+
+	root.erase_children_by_name("b");
+	BOOST_CHECK_EQUAL(flag_b1, true);
+	BOOST_CHECK_EQUAL(flag_b2, true);
+	BOOST_CHECK_EQUAL(flag_b2_d, true);
+	BOOST_CHECK_EQUAL(flag_b2_b, true);
+
+	root.erase_child(child_c);
+	BOOST_CHECK_EQUAL(flag_c, true);
+	BOOST_CHECK_EQUAL(flag_c_f, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
