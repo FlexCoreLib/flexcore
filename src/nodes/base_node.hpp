@@ -20,7 +20,8 @@ namespace fc
  * It is possible to create nodes without setting a parent, but this is
  * strongly discouraged.
  *
- * Use add_child and make_child to insert a new node into the ownership tree.
+ * Use make_child/make_child_named to create a node already inserted into
+ * the ownership tree.
  *
  * Nodes are not copyable.
  * Deleting a node will delete any children.
@@ -28,25 +29,20 @@ namespace fc
  * Node creation examples:
  * <code>
  * root_node root;
- * // factory function
- * root.add_child(new node_making_fun(a, b));
- * root.add_child("name", new node_making_fun(a, b));
- *
  * // simple creation
  * root.make_child<node>();
- * root.make_child<node_tmpl<int>();
- * root.make_child_n<"name", node_tmpl<int>();
+ * root.make_child<node_tmpl<int>>();
+ * root.make_child_named<node_tmpl<int>>("name");
  *
  * // template with type deduction
  * root.make_child<node_tmpl>(5);
- * root.make_child_n<node_tmpl>("name", 5);
+ * root.make_child_named<node_tmpl>("name", 5);
  * </code>
  *
- * base_node is not copyable.
- *
- * TODO: how to deal with parentless nodes that are not root?
- *       are they valid or invalid?
- *       if valid, what is their region?
+ * TODO: - how to deal with parentless nodes that are not root?
+ *         are they valid or invalid?
+ *         if valid, what is their region?
+ *       - Is it possible to disallow the creation of parentless nodes
  */
 class base_node : public named
 {
@@ -110,6 +106,9 @@ protected:
 		, region_(std::make_shared<parallel_region>("invalid"))
 	{}
 
+	/**
+	 * Access to parent. Returns 0 if parent does not exist.
+	 */
 	base_node* parent() const
 	{
 		if (not forest_)
@@ -121,6 +120,7 @@ protected:
 	}
 
 private:
+	// -- construction --
 	/**
 	 * Takes ownership of child node and inserts into tree.
 	 * @return pointer to child node
@@ -148,27 +148,34 @@ private:
 	 * @return pointer to child node
 	 */
 
-	typedef adobe::forest<base_node*> forest_t;
-
-	friend class root_node;
+	// -- constructors --
 	/**
-	 * Constructor taking a parent node
-	 *
-	 * @param p parent node (not 0)
-	 * @param r region_info object. Will be taken from parent if not given
+	 * Constructor taking no parent - used for
+	 * creating a root_node
 	 */
-	base_node(	std::string n, std::shared_ptr<region_info> r )
+	base_node( std::string n, std::shared_ptr<region_info> r )
 		: named(n)
 		, forest_( std::make_shared<forest_t>() )
 		, self_(adobe::trailing_of(forest_->insert(forest_->begin(), this)))
 		, region_(r)
 	{}
 
+	// -- typedefs --
+	typedef adobe::forest<base_node*> forest_t;
+
+	// -- friends --
+	friend class root_node;
+
+	// -- members --
 	std::shared_ptr<forest_t> forest_;
 	adobe::forest<base_node*>::iterator self_;
 	std::shared_ptr<region_info> region_;
 };
 
+/**
+ * Root node for building node trees.
+ * The only type of node that is allowed to exist without parent
+ */
 class root_node : public base_node
 {
 public:
@@ -180,6 +187,10 @@ public:
 	virtual ~root_node() {}
 };
 
+/**
+ * Node without properties or purpose.
+ * Maily for testing purposes
+ */
 struct null : public base_node
 {
 	null() : base_node("null") {}
