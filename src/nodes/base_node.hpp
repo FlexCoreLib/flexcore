@@ -47,6 +47,7 @@ namespace fc
 class base_node : public named
 {
 public:
+	// -- child construction --
 	template<class node_t, class ... args_t>
 	node_t* make_child(args_t ... args)
 	{
@@ -83,15 +84,27 @@ public:
 		return add_child_named(n, std::make_unique<node_t<args_t...>>(args...));
 	}
 
+	// -- child destruction --
+	/**
+	 * Erase child
+	 * Erasing a child implies erasing its children recursively
+	 * Throws if child is not present
+	 */
 	void erase_child(base_node* child)
 	{
 		for (auto c = adobe::child_begin(self_); c != adobe::child_end(self_); ++c)
 			if (*c == child)
 			{
 				delete child;
-				break;
+				return;
 			}
+		throw std::runtime_error("Child not found");
 	}
+	/**
+	 * Erase all immediate children with matching name
+	 * Erasing a child implies erasing its children recursively
+	 * @return number of children erased
+	 */
 	size_t erase_children_by_name(const std::string& n)
 	{
 		size_t num_erased = 0;
@@ -109,6 +122,7 @@ public:
 		return num_erased;
 	}
 
+	// -- constructor & destructor --
 	base_node(const base_node&) = delete;
 
 	virtual ~base_node()
@@ -121,6 +135,7 @@ public:
 		}
 	}
 
+	// -- region handling --
 	const region_info& region() const { return *region_; }
 	base_node* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
 

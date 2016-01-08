@@ -91,11 +91,16 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 
 void set_flag(bool& f)
 {
+	// every node shall only be destroyed once!
 	BOOST_CHECK_EQUAL(f, false);
 	f = true;
 }
 template<class T> using node_t = checked_destruction<T>;
 
+/*
+ * confirm that erase_child and erase_children_by_name do
+ * what they are supposed to do.
+ */
 BOOST_AUTO_TEST_CASE( test_explicit_erase )
 {
 	root_node root("root");
@@ -114,15 +119,30 @@ BOOST_AUTO_TEST_CASE( test_explicit_erase )
 	auto child_c    = root.     make_child_named<node_t>( "c", [&](){ set_flag(flag_c   ); } );
 		    		  child_c-> make_child_named<node_t>( "f", [&](){ set_flag(flag_c_f ); } );
 
+	/*
+	 * confirm single child erasing works
+	 */
 	root.erase_child(child_a);
 	BOOST_CHECK_EQUAL(flag_a, true);
 
+	/*
+	 * confirm erasing by name works and grandchildren are also erased
+	 */
 	root.erase_children_by_name("b");
 	BOOST_CHECK_EQUAL(flag_b1, true);
 	BOOST_CHECK_EQUAL(flag_b2, true);
 	BOOST_CHECK_EQUAL(flag_b2_d, true);
 	BOOST_CHECK_EQUAL(flag_b2_b, true);
 
+	/*
+	 * confirm grandchildren with the mathing name are not erased
+	 */
+	root.erase_children_by_name("f");
+	BOOST_CHECK_EQUAL(flag_c_f, false);
+
+	/*
+	 * confirm erase_child also erased grandchildren
+	 */
 	root.erase_child(child_c);
 	BOOST_CHECK_EQUAL(flag_c, true);
 	BOOST_CHECK_EQUAL(flag_c_f, true);
