@@ -7,6 +7,7 @@
 
 #include <utility>
 #include <tuple>
+#include <memory>
 #include <cstddef>
 #include "../ports/ports.hpp"
 
@@ -74,10 +75,11 @@ private:
 template<class operation>
 auto merge(operation op)
 {
-	return new merge_node
-		<	operation,
-			typename utils::function_traits<operation>::function_type
-		>(op);
+	typedef merge_node
+			<	operation,
+				typename utils::function_traits<operation>::function_type
+			> node_t;
+	return std::make_unique<node_t>(op);
 }
 
 }  // namespace fc

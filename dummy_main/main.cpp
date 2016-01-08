@@ -65,8 +65,8 @@ int main()
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
 	fc::root_node root;
-	auto child_a = root.make_child_n<fc::null>("a")->region(first_region);
-	auto child_b = root.make_child_n<fc::null>("b")->region(second_region);
+	auto child_a = root.make_child_named<fc::null>("a")->region(first_region);
+	auto child_b = root.make_child_named<fc::null>("b")->region(second_region);
 	fc::node_aware<fc::pure::event_source<std::string>> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});

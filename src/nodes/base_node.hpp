@@ -56,23 +56,22 @@ public:
 	 * @return pointer to child node
 	 */
 	template<class node_t>
-	node_t* add_child(node_t* child)
+	node_t* add_child(std::unique_ptr<node_t> child)
 	{
 		child->region_ = this->region_;
 		child->forest_ = this->forest_;
-		child->self_ = adobe::trailing_of(forest_->insert(self_, child));
-		return child;
+		child->self_ = adobe::trailing_of(forest_->insert(self_, child.get()));
+		return child.release();
 	}
 	/**
 	 * Takes ownership of child node, sets name to n and inserts into tree.
 	 * @return pointer to child node
 	 */
 	template<class node_t>
-	node_t* add_child(std::string n, node_t* child)
+	node_t* add_child_named(std::string n, std::unique_ptr<node_t> child)
 	{
 		child->name(n);
-		add_child(child);
-		return child;
+		return add_child(std::move(child));
 	}
 	/**
 	 * Creates a new child node of type node_t from args and inserts into tree.
@@ -81,9 +80,7 @@ public:
 	template<class node_t, class ... args_t>
 	node_t* make_child(args_t ... args)
 	{
-		auto child = new node_t(args...);
-		add_child(child);
-		return child;
+		return add_child(std::make_unique<node_t>(args...));
 	}
 	/**
 	 * Creates a new child node of type node_t from args,
@@ -91,11 +88,9 @@ public:
 	 * @return pointer to child node
 	 */
 	template<class node_t, class ... args_t>
-	node_t* make_child_n(std::string n, args_t ... args)
+	node_t* make_child_named(std::string n, args_t ... args)
 	{
-		auto child = new node_t(args...);
-		add_child(n, child);
-		return child;
+		return add_child_named(n, std::make_unique<node_t>(args...));
 	}
 	/**
 	 * Creates a new child node of type node_t<args_t> from args
@@ -105,9 +100,7 @@ public:
 	template<template <typename ...> class node_t, class ... args_t>
 	node_t<args_t ...>* make_child(args_t ... args)
 	{
-		auto child = new node_t<args_t ...>(args...);
-		add_child(child);
-		return child;
+		return add_child(std::make_unique<node_t<args_t...>>(args...));
 	}
 	/**
 	 * Creates a new child node of type node_t<args_t> from args,
@@ -115,11 +108,9 @@ public:
 	 * @return pointer to child node
 	 */
 	template<template <typename ...> class node_t, class ... args_t>
-	node_t<args_t ...>* make_child_n(std::string n, args_t ... args)
+	node_t<args_t ...>* make_child_named(std::string n, args_t ... args)
 	{
-		auto child = new node_t<args_t ...>(args...);
-		add_child(n, child);
-		return child;
+		return add_child_named(n, std::make_unique<node_t<args_t...>>(args...));
 	}
 
 	base_node(std::string name)

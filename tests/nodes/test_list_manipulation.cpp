@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
 	root_node root;
 	typedef list_splitter <std::list<std::string>, size_t> splitter_t;
 	auto predicate = [](const std::string& s) { return s.size(); };
-	auto splitter = root.add_child(new splitter_t(predicate));
+	auto splitter = root.make_child<splitter_t>(predicate);
 
 	std::vector<std::vector<std::string>> output(5);
 	typedef decltype(splitter->out(0))::result_t out_range_t;
