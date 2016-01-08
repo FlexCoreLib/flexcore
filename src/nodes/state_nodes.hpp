@@ -72,16 +72,16 @@ private:
 };
 
 ///creats a merge node which applies the operation to all inputs and returns single state.
-template<class operation>
-auto merge(operation op)
+template<class parent_t, class operation>
+auto make_merge(parent_t& parent, operation op)
 {
 	typedef merge_node
 			<	operation,
 				typename utils::function_traits<operation>::function_type
 			> node_t;
-	return std::make_unique<node_t>(op);
+	return parent.template make_child<node_t>(op);
 }
 
-}  // namespace fc
+} // namespace fc
 
 #endif /* SRC_NODES_STATE_NODES_HPP_ */

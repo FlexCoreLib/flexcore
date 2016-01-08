@@ -37,8 +37,7 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
 {
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
 	root_node root("root", region);
-//	auto child = root.add_child_named("child", std::make_unique<null>());
-	auto child = root.add_child_named("child", std::unique_ptr<null>(new null));
+	auto child = root.make_child_named<null>("child");
 
 	BOOST_CHECK(child->region().get_id() == region->get_id());
 }
@@ -50,9 +49,9 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
 	root_node root("root", region);
-	auto child1 = root.add_child_named("1", std::make_unique<null>());
-	auto child2 = root.add_child_named("2", std::make_unique<null>());
-	auto child1a = child1->add_child_named("a", std::make_unique<null>());
+	auto child1 = root.make_child_named<null>("1");
+	auto child2 = root.make_child_named<null>("2");
+	auto child1a = child1->make_child_named<null>("a");
 
 	BOOST_CHECK_EQUAL(child1->full_name(), "root/1");
 	BOOST_CHECK_EQUAL(child2->full_name(), "root/2");

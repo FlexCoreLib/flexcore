@@ -51,32 +51,6 @@ namespace fc
 class base_node : public named
 {
 public:
-	/**
-	 * Takes ownership of child node and inserts into tree.
-	 * @return pointer to child node
-	 */
-	template<class node_t>
-	node_t* add_child(std::unique_ptr<node_t> child)
-	{
-		child->region_ = this->region_;
-		child->forest_ = this->forest_;
-		child->self_ = adobe::trailing_of(forest_->insert(self_, child.get()));
-		return child.release();
-	}
-	/**
-	 * Takes ownership of child node, sets name to n and inserts into tree.
-	 * @return pointer to child node
-	 */
-	template<class node_t>
-	node_t* add_child_named(std::string n, std::unique_ptr<node_t> child)
-	{
-		child->name(n);
-		return add_child(std::move(child));
-	}
-	/**
-	 * Creates a new child node of type node_t from args and inserts into tree.
-	 * @return pointer to child node
-	 */
 	template<class node_t, class ... args_t>
 	node_t* make_child(args_t ... args)
 	{
@@ -113,13 +87,6 @@ public:
 		return add_child_named(n, std::make_unique<node_t<args_t...>>(args...));
 	}
 
-	base_node(std::string name)
-		: named(name)
-		, forest_()
-		, self_()
-		, region_(std::make_shared<parallel_region>("invalid"))
-	{}
-
 	base_node(const base_node&) = delete;
 
 	virtual ~base_node()
@@ -136,6 +103,13 @@ public:
 	base_node* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
 
 protected:
+	base_node(std::string name)
+		: named(name)
+		, forest_()
+		, self_()
+		, region_(std::make_shared<parallel_region>("invalid"))
+	{}
+
 	base_node* parent() const
 	{
 		if (not forest_)
@@ -147,6 +121,33 @@ protected:
 	}
 
 private:
+	/**
+	 * Takes ownership of child node and inserts into tree.
+	 * @return pointer to child node
+	 */
+	template<class node_t>
+	node_t* add_child(std::unique_ptr<node_t> child)
+	{
+		child->region_ = this->region_;
+		child->forest_ = this->forest_;
+		child->self_ = adobe::trailing_of(forest_->insert(self_, child.get()));
+		return child.release();
+	}
+	/**
+	 * Takes ownership of child node, sets name to n and inserts into tree.
+	 * @return pointer to child node
+	 */
+	template<class node_t>
+	node_t* add_child_named(std::string n, std::unique_ptr<node_t> child)
+	{
+		child->name(n);
+		return add_child(std::move(child));
+	}
+	/**
+	 * Creates a new child node of type node_t from args and inserts into tree.
+	 * @return pointer to child node
+	 */
+
 	typedef adobe::forest<base_node*> forest_t;
 
 	friend class root_node;
