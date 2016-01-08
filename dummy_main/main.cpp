@@ -1,4 +1,5 @@
 
+#include <nodes/base_node.hpp>
 #include <iostream>
 #include <chrono>
 #include <iomanip>
@@ -7,7 +8,6 @@
 
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
-#include <nodes/node_interface.hpp>
 #include "../src/ports/ports.hpp"
 
 using namespace fc;

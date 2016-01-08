@@ -3,7 +3,7 @@
 
 #include <core/traits.hpp>
 #include <ports/states/state_sink.hpp>
-#include <nodes/node_interface.hpp>
+#include <nodes/base_node.hpp>
 
 #include <utility>
 #include <tuple>
@@ -27,12 +27,12 @@ namespace fc
  * \endcode
  */
 template<class operation, class signature>
-struct merge_node : public node_interface
+struct merge_node : public base_node
 {
 };
 
 template<class operation, class result, class... args>
-struct merge_node<operation, result (args...)> : public node_interface
+struct merge_node<operation, result (args...)> : public base_node
 {
 	typedef std::tuple<args...> arguments;
 	typedef std::tuple<state_sink<args> ...> in_ports_t;
@@ -43,7 +43,7 @@ struct merge_node<operation, result (args...)> : public node_interface
 			"Tried to create merge_node with a function taking no arguments");
 
     explicit merge_node(operation o)
-		: node_interface("merger")
+		: base_node("merger")
   		, in_ports(state_sink<args>(this)...)
 		, op(o)
 	{}

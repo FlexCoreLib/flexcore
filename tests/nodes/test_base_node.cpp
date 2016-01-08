@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/node_interface.hpp>
+#include <nodes/base_node.hpp>
 
 // std
 #include <memory>
@@ -10,10 +10,10 @@ using namespace fc;
 namespace // unnamed
 {
 template<class data_t>
-struct node_class : public node_interface
+struct node_class : public base_node
 {
 	node_class(data_t a)
-		: node_interface("test_node")
+		: base_node("test_node")
 		, value(a)
 	{}
 
@@ -28,7 +28,7 @@ struct node_class : public node_interface
 };
 } // unnamed namespace
 
-BOOST_AUTO_TEST_SUITE( test_node_interface )
+BOOST_AUTO_TEST_SUITE( test_base_node )
 
 /*
  * Confirm region propagation to child

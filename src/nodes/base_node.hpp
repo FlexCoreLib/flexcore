@@ -1,5 +1,5 @@
-#ifndef SRC_NODES_NODE_INTERFACE_HPP_
-#define SRC_NODES_NODE_INTERFACE_HPP_
+#ifndef SRC_NODES_BASE_NODE_HPP_
+#define SRC_NODES_BASE_NODE_HPP_
 
 #include <core/named.hpp>
 #include <threading/parallelregion.hpp>
@@ -42,13 +42,13 @@ namespace fc
  * root.make_child_n<node_tmpl>("name", 5);
  * </code>
  *
- * node_interface is not copyable.
+ * base_node is not copyable.
  *
  * TODO: how to deal with parentless nodes that are not root?
  *       are they valid or invalid?
  *       if valid, what is their region?
  */
-class node_interface : public named
+class base_node : public named
 {
 public:
 	/**
@@ -122,16 +122,16 @@ public:
 		return child;
 	}
 
-	node_interface(std::string name)
+	base_node(std::string name)
 		: named(name)
 		, forest_()
 		, self_()
 		, region_(std::make_shared<parallel_region>("invalid"))
 	{}
 
-	node_interface(const node_interface&) = delete;
+	base_node(const base_node&) = delete;
 
-	virtual ~node_interface()
+	virtual ~base_node()
 	{
 		if (forest_)
 		{
@@ -142,10 +142,10 @@ public:
 	}
 
 	const region_info& region() const { return *region_; }
-	node_interface* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
+	base_node* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
 
 protected:
-	node_interface* parent() const
+	base_node* parent() const
 	{
 		if (not forest_)
 			return 0;
@@ -156,7 +156,7 @@ protected:
 	}
 
 private:
-	typedef adobe::forest<node_interface*> forest_t;
+	typedef adobe::forest<base_node*> forest_t;
 
 	friend class root_node;
 	/**
@@ -165,7 +165,7 @@ private:
 	 * @param p parent node (not 0)
 	 * @param r region_info object. Will be taken from parent if not given
 	 */
-	node_interface(	std::string n, std::shared_ptr<region_info> r )
+	base_node(	std::string n, std::shared_ptr<region_info> r )
 		: named(n)
 		, forest_( std::make_shared<forest_t>() )
 		, self_(adobe::trailing_of(forest_->insert(forest_->begin(), this)))
@@ -173,26 +173,26 @@ private:
 	{}
 
 	std::shared_ptr<forest_t> forest_;
-	adobe::forest<node_interface*>::iterator self_;
+	adobe::forest<base_node*>::iterator self_;
 	std::shared_ptr<region_info> region_;
 };
 
-class root_node : public node_interface
+class root_node : public base_node
 {
 public:
 	root_node(	std::string n = "",
 				std::shared_ptr<region_info> r = std::make_shared<parallel_region>("root")	)
-		: node_interface(n, r)
+		: base_node(n, r)
 	{}
 
 	virtual ~root_node() {}
 };
 
-struct null : public node_interface
+struct null : public base_node
 {
-	null() : node_interface("null") {}
+	null() : base_node("null") {}
 };
 
 } // namespace fc
 
-#endif /* SRC_NODES_NODE_INTERFACE_HPP_ */
+#endif /* SRC_NODES_BASE_NODE_HPP_ */

@@ -1,6 +1,8 @@
 #ifndef SRC_CORE_NAMED_HPP_
 #define SRC_CORE_NAMED_HPP_
 
+#include <string>
+
 namespace fc
 {
 

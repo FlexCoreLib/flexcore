@@ -76,11 +76,11 @@ namespace fc
 template<class data_t, class tag, class key_t = size_t> class n_ary_switch {};
 
 template<class data_t, class key_t>
-class n_ary_switch<data_t, state_tag, key_t> : public node_interface
+class n_ary_switch<data_t, state_tag, key_t> : public base_node
 {
 public:
 	n_ary_switch()
-		: node_interface("switch")
+		: base_node("switch")
 		, index(this)
 		, in_ports()
 		, out_port(this, [this](){return in_ports.at(index.get()).get();} )
@@ -110,11 +110,11 @@ private:
 };
 
 template<class data_t, class key_t>
-class n_ary_switch<data_t, event_tag, key_t> : public node_interface
+class n_ary_switch<data_t, event_tag, key_t> : public base_node
 {
 public:
 	n_ary_switch()
-		: node_interface("switch")
+		: base_node("switch")
 		, index(this)
 		, out_port(this)
 		, in_ports()
