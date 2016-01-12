@@ -1,7 +1,6 @@
 #ifndef SRC_NODES_BASE_NODE_HPP_
 #define SRC_NODES_BASE_NODE_HPP_
 
-#include <core/named.hpp>
 #include <threading/parallelregion.hpp>
 #include <3rdparty/adobe/forest.hpp>
 
@@ -127,6 +126,12 @@ protected:
 	std::shared_ptr<region_info> region_;
 };
 
+/**
+ * \brief mixin to tree_base_node which creates an aggregate node.
+ *
+ * Adds several methods which allow adding new nodes as children.
+ * Does not add additional state.
+ */
 template<class base_t>
 struct node_owner : public base_t
 {
