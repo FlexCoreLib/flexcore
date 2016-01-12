@@ -26,6 +26,11 @@ struct node_class : public base_node
 
 	data_t value;
 };
+
+struct null : public base_node
+{
+	null() : base_node("null") {}
+};
 } // unnamed namespace
 
 BOOST_AUTO_TEST_SUITE( test_base_node )
@@ -74,7 +79,50 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	BOOST_CHECK_EQUAL(child4->full_name(), "root/foo");
 }
 
+namespace
+{
+class test_owning_node : public base_node
+{
+public:
+	test_owning_node() : base_node("test") {}
+	base_node::forest_t::iterator add_child()
+	{
+		make_child<test_owning_node>();
+		return ++adobe::trailing_of(adobe::child_begin(self_).base());
+	}
+
+	size_t nr_of_children()
+	{
+		return forest_->size() -2; //-1 for this. -1 for root node
+	}
+	base_node::forest_t& forest()
+	{
+		return *forest_;
+	}
+};
+}
+
+BOOST_AUTO_TEST_CASE( test_deletion )
+{
+	root_node root("root");
+
+	auto test_node = root.make_child<test_owning_node>();
+
+	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
+
+	auto temp_it = test_node->add_child();
+	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 1);
+
+	erase_with_subtree(test_node->forest(), temp_it);
+	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
+
+	auto temp_it_2 = test_node->add_child();
+	static_cast<test_owning_node*>(temp_it_2->get())->add_child();
+
+	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 2);
+	erase_with_subtree(test_node->forest(), temp_it);
+
+	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
-
-
-

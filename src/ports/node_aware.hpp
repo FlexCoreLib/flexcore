@@ -31,7 +31,7 @@ struct node_aware: public base
 	typedef base base_t;
 
 	template<class ... args>
-	node_aware( base_node* node_ptr,
+	node_aware( tree_base_node* node_ptr,
 				const args& ... base_constructor_args )
 		: base_t(base_constructor_args...)
 		, node(node_ptr)
@@ -39,7 +39,7 @@ struct node_aware: public base
 		assert(node_ptr);
 	}
 
-	base_node* node;
+	tree_base_node* node;
 };
 
 
@@ -196,7 +196,7 @@ auto make_buffered_connection(
  * Thus client code doesn't need to get type connection_base_t by hand.
  */
 template<class base_connection_t>
-node_aware<base_connection_t> make_node_aware(const base_connection_t& base, base_node* node_ptr)
+node_aware<base_connection_t> make_node_aware(const base_connection_t& base, tree_base_node* node_ptr)
 {
 	return node_aware<base_connection_t>(node_ptr, base);
 }
