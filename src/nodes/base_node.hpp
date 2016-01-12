@@ -1,7 +1,6 @@
 #ifndef SRC_NODES_BASE_NODE_HPP_
 #define SRC_NODES_BASE_NODE_HPP_
 
-#include <core/named.hpp>
 #include <threading/parallelregion.hpp>
 #include <3rdparty/adobe/forest.hpp>
 
@@ -63,7 +62,8 @@ public:
 	}
 
 	const region_info& region() const { return *region_; }
-	tree_base_node* region(std::shared_ptr<region_info> r) { region_ = r; return this; }
+	tree_base_node* region(std::shared_ptr<region_info> r)
+			{ region_ = r; return this; }
 
 
 	std::string own_name() const { return name; }
@@ -127,6 +127,12 @@ protected:
 	std::shared_ptr<region_info> region_;
 };
 
+/**
+ * \brief mixin to tree_base_node which creates an aggregate node.
+ *
+ * Adds several methods which allow adding new nodes as children.
+ * Does not add additional state.
+ */
 template<class base_t>
 struct node_owner : public base_t
 {
@@ -187,8 +193,10 @@ private:
 		child->region_ = this->region_;
 		child->forest_ = this->forest_;
 
-		//we need to store an iterator and then cast back to node_t* to avoid use after move on child.
-		forest_t::iterator child_it = adobe::trailing_of(this->forest_->insert(this->self_, std::move(child)));
+		//we need to store an iterator and then cast back to node_t*
+		//to avoid use after move on child.
+		forest_t::iterator child_it = adobe::trailing_of(
+				this->forest_->insert(this->self_, std::move(child)));
 		(*child_it)->self_ = child_it;
 
 		assert(adobe::find_parent(child_it) == this->self_);
@@ -218,10 +226,12 @@ class root_node : public base_node
 {
 public:
 	root_node(	std::string n = "",
-				std::shared_ptr<region_info> r = std::make_shared<parallel_region>("root")	)
+				std::shared_ptr<region_info> r =
+						std::make_shared<parallel_region>("root")	)
 		: base_node(n, r)
 	{
-		self_ = adobe::trailing_of(forest_->insert(forest_->begin(), std::make_unique<base_node>(n)));
+		self_ = adobe::trailing_of(forest_->insert(
+				forest_->begin(), std::make_unique<base_node>(n)));
 	}
 
 	virtual ~root_node() {}
