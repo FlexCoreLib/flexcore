@@ -40,6 +40,7 @@ BOOST_AUTO_TEST_CASE(test_wrapper_callback)
 		event_sink_wrapper<wrapper_event_sink<int>> test_sink4;
 		test_source >> test_sink1;
 		test_source.fire(5);
+		BOOST_CHECK_EQUAL(*(test_sink1.storage), 5);
 
 		{
 			event_sink_wrapper<wrapper_event_sink<int>> test_sink2;
@@ -47,13 +48,38 @@ BOOST_AUTO_TEST_CASE(test_wrapper_callback)
 			test_source >> test_sink2;
 			test_source >> test_sink3;
 			test_source.fire(6);
+			BOOST_CHECK_EQUAL(*(test_sink2.storage), 6);
+			BOOST_CHECK_EQUAL(*(test_sink3.storage), 6);
+
 			test_source >> test_sink4;
 			test_source.fire(7);
+			BOOST_CHECK_EQUAL(*(test_sink4.storage), 7);
 		}
 
+		// this primarily checks, that no exception is thrown
+		// since the connections from test_source to sink1-3 are deleted.
 		test_source.fire(8);
+		BOOST_CHECK_EQUAL(*(test_sink4.storage), 8);
 	}
 
+}
+
+BOOST_AUTO_TEST_CASE(test_lambda_in_connection)
+{
+	event_sink_wrapper<wrapper_event_sink<int>> test_sink;
+	event_sink_wrapper<wrapper_event_sink<int>> test_sink_2;
+
+	event_source_wrapper<event_out_port<int>> test_source;
+
+	(test_source >> [](int i){ return i+1; }) >> test_sink;
+
+	test_source >> [](int i){ return i+1; }
+		>> [](int i){ return i+1; }
+		>> test_sink_2;
+
+	test_source.fire(6);
+	BOOST_CHECK_EQUAL(*(test_sink.storage), 7);
+	BOOST_CHECK_EQUAL(*(test_sink_2.storage), 8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

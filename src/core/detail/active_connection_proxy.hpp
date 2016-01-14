@@ -81,8 +81,6 @@ struct active_connection_proxy
 
 	typedef typename
 			connect_policy::template second<active_t, passive_t>::result_t result_t;
-//	typedef typename
-//			connect_policy::template second<active_t, passive_t>::result_t result_t;
 
 	active_connection_proxy(active_t active_, passive_t passive) :
 			active(active_),
@@ -249,7 +247,6 @@ struct connect_impl
 		sink_t,
 		typename std::enable_if
 			<fc::is_active<sink_t>::value>::type
-
 	>
 {
 	auto operator()(const source_t& source, const sink_t& sink)

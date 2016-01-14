@@ -19,6 +19,9 @@
 namespace fc
 {
 
+template<class T>
+struct event_sink_wrapper;
+
 /**
  * \brief A mixin for sources that provide callbacks to deregister sinks
  * \tparam event_source_t is type of event source that event_source_wrapper is mixed into.
@@ -74,6 +77,21 @@ struct event_source_wrapper: public event_source_t
 		return sink_callback->back();
 	}
 
+	template<class event_sink_t>
+	auto connect(event_sink_wrapper<event_sink_t> sink)
+	{
+		auto connect_result = event_source_t::connect(
+				static_cast<event_sink_t>(sink));
+		sink.register_callback(this->create_callback_delete_handler());
+		return connect_result;
+	}
+
+	template<class sink_t>
+	auto connect(const sink_t& sink)
+	{
+		return event_source_t::connect(sink);
+	}
+
 private:
 
 	std::shared_ptr<std::list<callback_fun_ptr_strong>> sink_callback = std::make_shared<std::list<callback_fun_ptr_strong>>();
@@ -118,9 +136,9 @@ struct event_sink_wrapper: public event_sink_t
 
 private:
 	/**
-	 * \brief raii wrapper arround derigister call
+	 * \brief raii wrapper around deregister call
 	 *
-	 * Makes sure degister is only called, when the last copy of the port is destroyed
+	 * Makes sure deregister is only called, when the last copy of the port is destroyed
 	 */
 	struct raii_deregister
 	{
@@ -160,13 +178,55 @@ private:
  * \pre Previous calls to this method have finished; execution is serial
  * \returns normal connection result of event_source_t and event_sink_t
  */
-template<class event_source_t, class event_sink_t>
-auto connect(event_source_wrapper<event_source_t> source, event_sink_wrapper<event_sink_t> sink)
+//template<class event_source_t, class event_sink_t>
+//auto connect(
+//		event_source_wrapper<event_source_t> source,
+//		event_sink_wrapper<event_sink_t> sink)
+//{
+//	auto connect_result = connect(
+//			static_cast<event_source_t>(source),
+//			static_cast<event_sink_t>(sink));
+//	sink.register_callback(source.create_callback_delete_handler());
+//	return connect_result;
+//}
+
+template<class connection>
+struct deletable_connection : public connection
 {
-	auto connect_result = connect(static_cast<event_source_t>(source), static_cast<event_sink_t>(sink));
-	sink.register_callback(source.create_callback_delete_handler());
-	return connect_result;
+	explicit deletable_connection(const connection& con)
+		: connection(con)
+	{
+
+	}
+
+	void register_callback(
+			const std::shared_ptr<std::function<void(void)>>& fun)
+	{
+		this->sink.register_callback(fun);
+	}
+};
+
+template<class connection>
+deletable_connection<connection> make_deletable_connection(const connection& con)
+{
+	return deletable_connection<connection>(con);
 }
+
+template<class event_source_t, class event_sink_t>
+auto connect(
+		event_source_t source,
+		event_sink_wrapper<event_sink_t> sink)
+{
+	return make_deletable_connection(
+			connect(source, static_cast<event_sink_t>(sink)));
+}
+
+// TODO prefer to test this algorithmically
+template<class T> struct is_port<event_sink_wrapper<T>> : public std::true_type {};
+template<class T> struct is_port<event_source_wrapper<T>> : public std::true_type {};
+template<class T> struct is_active_source<event_source_wrapper<T>> : public is_active_source<T> {};
+template<class T> struct is_passive_sink<event_sink_wrapper<T>> : public is_passive_sink<T> {};
+
 
 } // namespace fc
 
