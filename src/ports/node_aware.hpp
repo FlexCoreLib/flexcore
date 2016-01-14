@@ -13,13 +13,13 @@ namespace fc
 {
 
 /**
- * \brief A mixin for elements that are aware of the region, they belong to.
+ * \brief A mixin for elements that are aware of the node they belong to.
  * Used as mixin for ports and connections.
- * \tparam base is type region_aware is mixed into.
+ * \tparam base is type node_aware is mixed into.
  *
  * example:
  * \code{cpp}
- * typedef region_aware<event_in_port<int>> region_aware_event_port;
+ * typedef node_aware<pure::event_in_port<int>> node_aware_event_port;
  * \endcode
  */
 template<class base>
@@ -33,7 +33,7 @@ struct node_aware: public base
 	template<class ... args>
 	node_aware( tree_base_node* node_ptr,
 				const args& ... base_constructor_args )
-		: base_t(base_constructor_args...)
+		: base_t(base_constructor_args ...)
 		, node(node_ptr)
 	{
 		assert(node_ptr);
@@ -43,7 +43,9 @@ struct node_aware: public base
 };
 
 
-///checks if two region_aware connectables are from the same region
+/**
+ * checks if two node_aware connectables are from the same region
+ */
 template<class source_t, class sink_t>
 bool same_region( const node_aware<source_t>& source,
 				  const node_aware<sink_t>& sink )
@@ -53,8 +55,9 @@ bool same_region( const node_aware<source_t>& source,
 }
 
 /**
- * \brief factory method to construct buffer
- * \returns either event_buffer or no_buffer.
+ * \brief factory method to construct a buffer
+ *
+ * \returns either buffer or no_buffer.
  */
 template<class result_t>
 struct buffer_factory
@@ -78,7 +81,12 @@ struct buffer_factory
 };
 
 /**
- * \brief Connection that contain a buffer, if source and sink are from different regions.
+ * \brief Connection that contain a buffer_interface
+ *
+ * Connection that contains a buffer_interface (see buffer_factory).
+ * This will be a buffer if source and sink are from different regions,
+ * a no_buffer otherwise.
+ *
  * \tparam base_connection connection type, the buffer is mixed into.
  * \invariant buffer != null_ptr
  */
@@ -108,7 +116,10 @@ private:
 //todo hackhack
 template<class T> struct is_passive_sink<buffered_event_connection<T>> : public std::true_type {};
 
-//also remove this code duplication, until then see buffered_event_connection
+/**
+ * see buffered_event_connection
+ * remove this code duplication if possible
+ */
 template<class base_connection>
 struct buffered_state_connection: public base_connection
 {
@@ -219,12 +230,18 @@ struct node_aware_connect_impl
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
 		typedef typename result_of<source_t>::type result_t;
-		return connect(static_cast<const typename source_t::base_t&>(source), detail::make_buffered_connection(
-				buffer_factory<result_t>::construct_buffer(
-						source, //event source is active, thus first
-						sink, //event sink is passive thus second
-						event_tag()),
-				source, sink));
+		return connect
+			(	static_cast<const typename source_t::base_t&>(source),
+				detail::make_buffered_connection
+					(	buffer_factory<result_t>::construct_buffer
+							(	source, // event source is active, thus first
+								sink, // event sink is passive thus second
+								event_tag()
+							),
+							source,
+							sink
+					)
+			);
 	}
 };
 
@@ -241,8 +258,8 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		//construct region_aware_connection
-		//based on if source and sink are from same region
+		// construct region_aware_connection
+		// based on if source and sink are from same region
 		return make_node_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
 				source.node);
@@ -267,8 +284,8 @@ struct node_aware_connect_impl
 		typedef typename result_of<source_t>::type result_t;
 		return connect(detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
-						sink, //state sink is active thus first
-						source, //state source is passive thus second
+						sink, // state sink is active thus first
+						source, // state source is passive thus second
 						state_tag()),
 				source, sink),
 				static_cast<typename sink_t::base_t>(sink));
@@ -288,8 +305,8 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		//construct region_aware_connection
-		//based on if source and sink are from same region
+		// construct region_aware_connection
+		// based on if source and sink are from same region
 		return make_region_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
 				source.node);
@@ -307,8 +324,8 @@ struct node_aware_connect_impl
 template<class source_t, class sink_t>
 auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 {
-	//construct region_aware_connection
-	//based on if source and sink are from same region
+	// construct region_aware_connection
+	// based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	node_aware<source_t>,
 			node_aware<sink_t>
@@ -318,8 +335,8 @@ auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 template<class source_t, class sink_t>
 auto connect(node_aware<source_t> source, sink_t sink)
 {
-	//construct region_aware_connection
-	//based on if source and sink are from same region
+	// construct region_aware_connection
+	// based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	node_aware<source_t>,
 			sink_t
@@ -329,8 +346,8 @@ auto connect(node_aware<source_t> source, sink_t sink)
 template<class source_t, class sink_t>
 auto connect(source_t source, node_aware<sink_t> sink)
 {
-	//construct region_aware_connection
-	//based on if source and sink are from same region
+	// construct region_aware_connection
+	// based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	source_t,
 			node_aware<sink_t>

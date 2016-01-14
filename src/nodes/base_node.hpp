@@ -19,7 +19,8 @@ namespace fc
  * It is possible to create nodes without setting a parent, but this is
  * strongly discouraged.
  *
- * Use add_child and make_child to insert a new node into the ownership tree.
+ * Use make_child/make_child_named to create a node already inserted into
+ * the ownership tree.
  *
  * Nodes are not copyable.
  * Deleting a node will delete any children.
@@ -27,25 +28,20 @@ namespace fc
  * Node creation examples:
  * <code>
  * root_node root;
- * // factory function
- * root.add_child(new node_making_fun(a, b));
- * root.add_child("name", new node_making_fun(a, b));
- *
  * // simple creation
  * root.make_child<node>();
- * root.make_child<node_tmpl<int>();
- * root.make_child_n<"name", node_tmpl<int>();
+ * root.make_child<node_tmpl<int>>();
+ * root.make_child_named<node_tmpl<int>>("name");
  *
  * // template with type deduction
  * root.make_child<node_tmpl>(5);
- * root.make_child_n<node_tmpl>("name", 5);
+ * root.make_child_named<node_tmpl>("name", 5);
  * </code>
  *
- * base_node is not copyable.
- *
- * TODO: how to deal with parentless nodes that are not root?
- *       are they valid or invalid?
- *       if valid, what is their region?
+ * TODO: - how to deal with parentless nodes that are not root?
+ *         are they valid or invalid?
+ *         if valid, what is their region?
+ *       - Is it possible to disallow the creation of parentless nodes
  *
  * \invariant forest != null_ptr
  * \invariant self_ is always valid
@@ -222,6 +218,10 @@ private:
 
 typedef node_owner<tree_base_node> base_node;
 
+/**
+ * Root node for building node trees.
+ * The only type of node that is allowed to exist without parent
+ */
 class root_node : public base_node
 {
 public:
