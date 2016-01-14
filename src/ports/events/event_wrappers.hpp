@@ -222,8 +222,6 @@ auto connect(
 }
 
 // TODO prefer to test this algorithmically
-template<class T> struct is_port<event_sink_wrapper<T>> : public std::true_type {};
-template<class T> struct is_port<event_source_wrapper<T>> : public std::true_type {};
 template<class T> struct is_active_source<event_source_wrapper<T>> : public is_active_source<T> {};
 template<class T> struct is_passive_sink<event_sink_wrapper<T>> : public is_passive_sink<T> {};
 

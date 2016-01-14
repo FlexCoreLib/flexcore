@@ -9,7 +9,7 @@
 #include <core/traits.hpp>
 #include <core/connection.hpp>
 
-#include <ports/port_traits.hpp>
+#include <ports/detail/port_traits.hpp>
 #include <core/detail/active_connection_proxy.hpp>
 
 #include <iostream>
@@ -88,7 +88,7 @@ protected:
 
 // traits
 // TODO prefer to test this algorithmically
-template<class T> struct is_port<event_out_port<T>> : public std::true_type {};
+template<class T> struct is_active_source<event_out_port<T>> : public std::true_type {};
 
 } // namespace fc
 

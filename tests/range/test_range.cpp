@@ -1,45 +1,58 @@
 #include <boost/test/unit_test.hpp>
 
-//#include <3rdparty/range-v3/include/range/v3/all.hpp>
-
 #include <core/connection.hpp>
+#include <ports/state_ports.hpp>
+
+#include <range/algorithm.hpp>
+#include <boost/range/any_range.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 
 using namespace fc;
-//using namespace ranges;
 
 BOOST_AUTO_TEST_SUITE(test_rage)
 
 BOOST_AUTO_TEST_CASE(test_algorithm)
 {
-//    auto tmp = view::ints(1)
-//                       | view::transform([](int i){return i*i;})
-//    				   | view::transform([](int i){return i*2;});
-//
-//    auto result = tmp | view::take(10);
-//
-//    std::cout << result << "\n";
-//
-//    std::vector<int> bla = {1, 2, 3, 4, 5} ;
-//
-//   std::vector<int> temp2 = std::move(bla) | action::transform([](int a){return a+1;});
-//
-//    for (auto a : bla)
-//    	std::cout << "bla: " << a << "\n";
-//
-//    for (auto a : temp2)
-//        	std::cout << "temp2: " << a << "\n";
+	std::vector<int> vec {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
+	auto source = [&vec](){ return boost::make_iterator_range(std::begin(vec), std::end(vec)); };
 
+	auto connection = source
+			>> filter([](int i){ return i < 0;})
+			>> map([](int i){ return i*2;})
+			>> sum(0);
+	BOOST_CHECK_EQUAL(connection(), -20);
+}
 
-    //auto connection = [](){ return view::ints(1); }
-    //		>> [](auto&& in ){ return view::transform([](int i){return i*i;})(in);};
-//    		>> [](auto&& in ){ return view::take(10)(in); }
-//    		>> [](auto&& in ){ std::cout << "range connection:\n" << in << "\n"; };
+BOOST_AUTO_TEST_CASE(test_ports_with_ranges)
+{
+	std::vector<int> vec {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
-    //auto blaasd = connect([](){ return view::ints(1); },  [](auto&& in ){ return view::transform([](int i){return i*i;})(in);} );
+	typedef boost::any_range<
+			int,
+			boost::single_pass_traversal_tag,
+			int,
+			std::ptrdiff_t
+			> any_int_range;
 
-    //connection();
-  //  blaasd();
+	state_source_call_function<any_int_range>
+		source([&vec]()
+		{
+			return boost::make_iterator_range(std::begin(vec), std::end(vec));
+		});
+
+	state_sink<any_int_range> sink;
+
+	source
+		>> filter([](int i){ return i < 0;})
+		>> map([](int i) { return i*2;})
+		>> sink;
+
+	std::vector<int> correct_result = {-8,-6,-4,-2};
+	std::vector<int> result;
+	boost::push_back(result, sink.get());
+
+	BOOST_CHECK(result == correct_result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

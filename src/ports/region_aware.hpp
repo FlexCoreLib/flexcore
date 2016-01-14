@@ -1,7 +1,7 @@
 #ifndef SRC_PORTS_REGION_AWARE_HPP_
 #define SRC_PORTS_REGION_AWARE_HPP_
 
-#include <ports/port_traits.hpp>
+#include <ports/detail/port_traits.hpp>
 #include <core/connection.hpp>
 #include <threading/parallelregion.hpp>
 #include "connection_buffer.hpp"
@@ -129,9 +129,8 @@ private:
 };
 
 // TODO prefer to test this algorithmically
-template<class T> struct is_port<region_aware<T>> : public std::true_type {};
 template<class T> struct is_active_sink<region_aware<T>> : public is_active_sink<T> {};
-//template<class T> struct is_active_source<region_aware<T>> : public is_active_source<T> {};
+template<class T> struct is_active_source<region_aware<T>> : public is_active_source<T> {};
 template<class T> struct is_passive_sink<region_aware<T>> : public is_passive_sink<T> {};
 template<class T> struct is_passive_source<region_aware<T>> : public is_passive_source<T> {};
 

@@ -20,7 +20,8 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_cyclecontrol)
 
-BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time) {
+BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time)
+{
 	fc::thread::cycle_control thread_manager;
 	std::atomic<bool> terminate_thread(false);
 	auto tick_cycle = fc::thread::periodic_task([&terminate_thread]()
@@ -31,19 +32,21 @@ BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time) {
 	thread_manager.add_task(tick_cycle);
 	thread_manager.start();
 
-	bool exception_thrown=false;
-	for (int i=0; i<300;++i)
+	bool exception_thrown = false;
+	for (int i = 0; i < 300; ++i)
 	{
-		if(auto except_ptr=thread_manager.last_exception()){
+		if (auto except_ptr = thread_manager.last_exception())
+		{
 			BOOST_CHECK_THROW(std::rethrow_exception(except_ptr), std::runtime_error);
-			exception_thrown=true;
-			terminate_thread=true;
+			exception_thrown = true;
+			terminate_thread = true;
 			break;
 		}
 		usleep(10000);
 	}
 
 	BOOST_CHECK(exception_thrown);
+	BOOST_CHECK(terminate_thread);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
