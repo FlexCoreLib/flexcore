@@ -3,8 +3,13 @@
 
 #include <core/traits.hpp>
 #include <ports/states/state_sink.hpp>
+#include <nodes/base_node.hpp>
 
 #include <utility>
+#include <tuple>
+#include <memory>
+#include <cstddef>
+#include "../ports/ports.hpp"
 
 namespace fc
 {
@@ -23,12 +28,12 @@ namespace fc
  * \endcode
  */
 template<class operation, class signature>
-struct merge_node
+struct merge_node : public base_node
 {
 };
 
 template<class operation, class result, class... args>
-struct merge_node<operation, result (args...)>
+struct merge_node<operation, result (args...)> : public base_node
 {
 	typedef std::tuple<args...> arguments;
 	typedef std::tuple<state_sink<args> ...> in_ports_t;
@@ -38,11 +43,11 @@ struct merge_node<operation, result (args...)>
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
-	explicit merge_node(operation op) :
-			in_ports(),
-			op(op)
-	{
-	}
+    explicit merge_node(operation o)
+		: base_node("merger")
+  		, in_ports(state_sink<args>(this)...)
+		, op(o)
+	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation
 	result_type operator()()
@@ -67,16 +72,16 @@ private:
 };
 
 ///creats a merge node which applies the operation to all inputs and returns single state.
-template<class operation>
-auto merge(operation op)
+template<class parent_t, class operation>
+auto make_merge(parent_t& parent, operation op)
 {
-	return merge_node<
-			operation,
-			typename utils::function_traits<operation>::function_type
-			>(op);
+	typedef merge_node
+			<	operation,
+				typename utils::function_traits<operation>::function_type
+			> node_t;
+	return parent.template make_child<node_t>(op);
 }
 
-
-}  // namespace fc
+} // namespace fc
 
 #endif /* SRC_NODES_STATE_NODES_HPP_ */

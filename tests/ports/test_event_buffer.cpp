@@ -12,8 +12,8 @@ BOOST_AUTO_TEST_CASE(test_event_buffer)
 
 	int test_value = 0;
 	auto write_param = [&](int i) {test_value = i;};
-	event_in_port<int> sink(write_param);
-	event_out_port<int> source;
+	pure::event_sink<int> sink(write_param);
+	pure::event_source<int> source;
 
 	source >> test_buffer.in();
 	test_buffer.out() >> sink;

@@ -4,7 +4,8 @@
 #include <functional>
 #include <memory>
 
-#include "ports.hpp"
+#include "pure_ports.hpp"
+#include "token_tags.hpp"
 
 namespace fc
 {
@@ -14,13 +15,13 @@ namespace fc
  * Classes implementing this are independent of the way they implement buffering.
  * Classes might even directly forward events.
  *
- * \tparam event_t type of events passing through the buffer
+ * \tparam event_t type of tokens passing through the buffer
  */
-template<class event_t, class tag>
+template<class token_t, class tag>
 struct buffer_interface
 {
-	typedef typename out_port<event_t, tag>::type out_port_t;
-	typedef typename in_port<event_t, tag>::type in_port_t;
+	typedef typename pure::out_port<token_t, tag>::type out_port_t;
+	typedef typename pure::in_port<token_t, tag>::type in_port_t;
 
 	buffer_interface() = default;
 	virtual ~buffer_interface() = default;
@@ -35,27 +36,27 @@ struct buffer_interface
 };
 
 /// Implementation of buffer_interface, which directly forwards events.
-template<class event_t, class tag = event_tag>
-class event_no_buffer final : public buffer_interface<event_t, tag>
+template<class token_t, class tag = event_tag>
+class event_no_buffer final : public buffer_interface<token_t, tag>
 {
 public:
 	event_no_buffer()	:
-		in_event_port( [this](event_t in_event) { out_event_port.fire(in_event);})
+		in_event_port( [this](token_t in_event) { out_event_port.fire(in_event);})
 	{
 	}
 
-	typename in_port<event_t, tag>::type in() override
+	typename pure::in_port<token_t, tag>::type in() override
 	{
 		return in_event_port;
 	}
-	typename out_port<event_t, tag>::type out() override
+	typename pure::out_port<token_t, tag>::type out() override
 	{
 		return out_event_port;
 	}
 
 private:
-	typename in_port<event_t, tag>::type in_event_port;
-	typename out_port<event_t, tag>::type out_event_port;
+	typename pure::in_port<token_t, tag>::type in_event_port;
+	typename pure::out_port<token_t, tag>::type out_event_port;
 };
 
 /**
@@ -80,8 +81,8 @@ public:
 		{
 		}
 
-	typedef typename out_port<event_t, event_tag>::type out_port_t;
-	typedef typename in_port<event_t, event_tag>::type in_port_t;
+	typedef typename pure::out_port<event_t, event_tag>::type out_port_t;
+	typedef typename pure::in_port<event_t, event_tag>::type in_port_t;
 
 	// event in port of type void, switches buffers
 	auto switch_tick() { return in_switch_tick; };
@@ -124,8 +125,8 @@ protected:
 		assert(extern_buffer.empty());
 	}
 
-	event_in_port<void> in_switch_tick;
-	event_in_port<void> in_send_tick;
+	pure::event_sink<void> in_switch_tick;
+	pure::event_sink<void> in_send_tick;
 	in_port_t in_event_port;
 	out_port_t out_event_port;
 
@@ -143,18 +144,18 @@ public:
 	{
 	}
 
-	state_sink<data_t> in() override
+	pure::state_sink<data_t> in() override
 	{
 		return in_port;
 	}
-	state_source_call_function<data_t> out() override
+	pure::state_source_call_function<data_t> out() override
 	{
 		return out_port;
 	}
 
 private:
-	state_sink<data_t> in_port;
-	state_source_call_function<data_t> out_port;
+	pure::state_sink<data_t> in_port;
+	pure::state_source_call_function<data_t> out_port;
 };
 
 template<class T>
@@ -168,11 +169,11 @@ public:
 	// event in port of type void, pulls data at in_port
 	auto work_tick() { return in_work_tick; };
 
-	state_sink<T> in() override
+	pure::state_sink<T> in() override
 	{
 		return in_port;
 	}
-	state_source_call_function<T> out() override
+	pure::state_source_call_function<T> out() override
 	{
 		return out_port;
 	}
@@ -187,10 +188,10 @@ protected:
 		already_switched = true;
 	}
 
-	event_in_port<void> in_switch_tick;
-	event_in_port<void> in_work_tick;
-	state_sink<T> in_port;
-	state_source_call_function<T> out_port;
+	pure::event_sink<void> in_switch_tick;
+	pure::event_sink<void> in_work_tick;
+	pure::state_sink<T> in_port;
+	pure::state_source_call_function<T> out_port;
 private:
 	typedef T buffer_t;
 	std::shared_ptr<buffer_t> intern_buffer;
