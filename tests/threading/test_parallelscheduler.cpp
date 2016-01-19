@@ -18,6 +18,8 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_scheduler)
 
+namespace
+{
 struct store
 {
 	int val = 0;
@@ -32,7 +34,7 @@ struct store
 		val = 2;
 	}
 };
-
+}
 BOOST_AUTO_TEST_CASE(test_single_execution)
 {
 	store test_values;
