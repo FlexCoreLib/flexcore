@@ -19,25 +19,6 @@ namespace fc
  * It is possible to create nodes without setting a parent, but this is
  * strongly discouraged.
  *
- * Use make_child/make_child_named to create a node already inserted into
- * the ownership tree.
- *
- * Nodes are not copyable.
- * Deleting a node will delete any children.
- *
- * Node creation examples:
- * <code>
- * root_node root;
- * // simple creation
- * root.make_child<node>();
- * root.make_child<node_tmpl<int>>();
- * root.make_child_named<node_tmpl<int>>("name");
- *
- * // template with type deduction
- * root.make_child<node_tmpl>(5);
- * root.make_child_named<node_tmpl>("name", 5);
- * </code>
- *
  * TODO: - how to deal with parentless nodes that are not root?
  *         are they valid or invalid?
  *         if valid, what is their region?
@@ -63,7 +44,7 @@ public:
 
 
 	std::string own_name() const { return name; }
-	std::string full_name()
+	std::string full_name() const //todo, extract fully to non_member method
 	{
 		assert(forest_); //check invariant
 
@@ -82,7 +63,7 @@ public:
 		std::string full_name;
 		while (!name_stack.empty())
 		{
-			full_name = full_name + name_stack.top() + "/";
+			full_name = full_name + name_stack.top() + name_seperator;
 			name_stack.pop();
 		}
 
@@ -121,13 +102,41 @@ protected:
 	public :forest_t::iterator self_;
 	protected:
 	std::shared_ptr<region_info> region_;
+
+private:
+	static constexpr auto name_seperator = "/";
 };
+
+inline std::string full_name(const tree_base_node& node)
+{
+	return node.full_name();
+}
 
 /**
  * \brief mixin to tree_base_node which creates an aggregate node.
  *
+ * Nodes of this type may have children nodes.
  * Adds several methods which allow adding new nodes as children.
  * Does not add additional state.
+ *
+ * Use make_child/make_child_named to create a node already inserted into
+ * the ownership tree.
+ *
+ * Nodes are not copyable.
+ * Deleting a node will delete any children.
+ *
+ * Node creation examples:
+ * \code{cpp}
+ * root_node root;
+ * // simple creation
+ * root.make_child<node>();
+ * root.make_child<node_tmpl<int>>();
+ * root.make_child_named<node_tmpl<int>>("name");
+ *
+ * // template with type deduction
+ * root.make_child<node_tmpl>(5);
+ * root.make_child_named<node_tmpl>("name", 5);
+ * \endcode
  */
 template<class base_t>
 struct node_owner : public base_t
@@ -140,6 +149,15 @@ struct node_owner : public base_t
 	{
 	}
 
+	/**
+	 * \brief creates child node of type node_t with constructor arguments args.
+	 *
+	 * Inserts new child into tree.
+	 * \tparam node_t type of node to be created
+	 * \param args constructor arguments passed to node_t
+	 * \return pointer to child node
+	 * \post nr of children > 0
+	 */
 	template<class node_t, class ... args_t>
 	node_t* make_child(args_t ... args)
 	{
@@ -147,8 +165,9 @@ struct node_owner : public base_t
 	}
 	/**
 	 * Creates a new child node of type node_t from args,
-	 * sets name to n and inserts into tree.
-	 * @return pointer to child node
+	 * sets name of child to n and inserts child into tree.
+	 * \return pointer to child node
+	 * \post nr of children > 0
 	 */
 	template<class node_t, class ... args_t>
 	node_t* make_child_named(std::string n, args_t ... args)
@@ -210,10 +229,6 @@ private:
 		child->name = n;
 		return add_child(std::move(child));
 	}
-	/**
-	 * Creates a new child node of type node_t from args and inserts into tree.
-	 * @return pointer to child node
-	 */
 };
 
 typedef node_owner<tree_base_node> base_node;
@@ -237,6 +252,16 @@ public:
 	virtual ~root_node() {}
 };
 
+/**
+ * \brief Erases node and together with all children.
+ *
+ * \param forest, forest to delete node from.
+ * \position iterator of forest pointing to node.
+ * \pre position must be in forest.
+ * \returns todo
+ *
+ * invalidates iterators pointing to deleted node.
+ */
 inline adobe::forest<std::unique_ptr<tree_base_node>>::iterator
 erase_with_subtree(
 		adobe::forest<std::unique_ptr<tree_base_node>>& forest,

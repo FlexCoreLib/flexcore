@@ -207,7 +207,7 @@ auto make_buffered_connection(
 }
 
 /**
- * \brief factory method to wrap region_aware around a connection,
+ * \brief factory method to wrap node_aware around a connection,
  *
  * Mainly there to use template deduction from parameter base.
  * Thus client code doesn't need to get type connection_base_t by hand.
@@ -288,7 +288,7 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		// construct region_aware_connection
+		// construct node_aware_connection
 		// based on if source and sink are from same region
 		return make_node_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
@@ -309,7 +309,7 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		// construct region_aware_connection
+		// construct node_aware_connection
 		// based on if source and sink are from same region
 		return make_node_aware(
 				connect(source, static_cast<typename sink_t::base_t>(sink)),
@@ -331,7 +331,7 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		//construct region_aware_connection
+		//construct node_aware_connection
 		//based on if source and sink are from same region
 		return make_node_aware(
 				connect(source, static_cast<typename sink_t::base_t>(sink)),
@@ -353,7 +353,7 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		//construct region_aware_connection
+		//construct node_aware_connection
 		//based on if source and sink are from same region
 		return make_node_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
@@ -364,7 +364,7 @@ struct node_aware_connect_impl
 } //namesapce detail
 
 /**
- * \brief overload of connect with region_aware<>
+ * \brief overload of connect with node_aware<>
  * possibly adds buffer, then forwards connect call to source_t.
  *
  * \returns buffered connection with connection of source_t and sink_t mixed in.
@@ -372,7 +372,7 @@ struct node_aware_connect_impl
 template<class source_t, class sink_t>
 auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 {
-	// construct region_aware_connection
+	// construct node_aware_connection
 	// based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	node_aware<source_t>,
@@ -383,7 +383,7 @@ auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 template<class source_t, class sink_t>
 auto connect(node_aware<source_t> source, sink_t sink)
 {
-	// construct region_aware_connection
+	// construct node_aware_connection
 	// based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	node_aware<source_t>,
@@ -394,7 +394,7 @@ auto connect(node_aware<source_t> source, sink_t sink)
 template<class source_t, class sink_t>
 auto connect(source_t source, node_aware<sink_t> sink)
 {
-	// construct region_aware_connection
+	// construct node_aware_connection
 	// based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	source_t,

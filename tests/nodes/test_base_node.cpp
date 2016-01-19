@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 	auto child2 = root.make_child_named<null>("2");
 	auto child1a = child1->make_child_named<null>("a");
 
-	BOOST_CHECK_EQUAL(child1->full_name(), "root/1");
-	BOOST_CHECK_EQUAL(child2->full_name(), "root/2");
-	BOOST_CHECK_EQUAL(child1a->full_name(), "root/1/a");
+	BOOST_CHECK_EQUAL(full_name(*child1), "root/1");
+	BOOST_CHECK_EQUAL(full_name(*child2), "root/2");
+	BOOST_CHECK_EQUAL(full_name(*child1a), "root/1/a");
 }
 
 BOOST_AUTO_TEST_CASE( test_make_child )
@@ -69,14 +69,14 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	auto child1 = root.make_child<node_class<int>>(5);
 	auto child2 = root.make_child_named<node_class<int>>("name", 5);
 
-	BOOST_CHECK_EQUAL(child1->full_name(), "root/test_node");
-	BOOST_CHECK_EQUAL(child2->full_name(), "root/name");
+	BOOST_CHECK_EQUAL(full_name(*child1), "root/test_node");
+	BOOST_CHECK_EQUAL(full_name(*child2), "root/name");
 
 	auto child3 = root.make_child<node_class>(5);
 	auto child4 = root.make_child_named<node_class>("foo", 5);
 
-	BOOST_CHECK_EQUAL(child3->full_name(), "root/test_node");
-	BOOST_CHECK_EQUAL(child4->full_name(), "root/foo");
+	BOOST_CHECK_EQUAL(full_name(*child3), "root/test_node");
+	BOOST_CHECK_EQUAL(full_name(*child4), "root/foo");
 }
 
 namespace
