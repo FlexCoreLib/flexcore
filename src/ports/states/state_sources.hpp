@@ -115,6 +115,12 @@ template<class T> struct is_passive_source<pure::state_source_call_function<T>> 
 template<class data_t> struct is_passive_source<pure::state_source_with_setter<data_t>> : std::true_type {};
 template<class T> struct is_passive_source<pure::state_source_tmpl<T>> : std::true_type {};
 
+template<class data_t, class sink_t>
+struct result_of<connection<pure::state_source_with_setter<data_t>, sink_t>>
+{
+	typedef data_t type;
+};
+
 } // namespace fc
 
 #endif /* SRC_PORTS_STREAM_SOURCES_STREAM_QUERY_FUNCTION_HPP_ */

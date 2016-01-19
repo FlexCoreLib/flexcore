@@ -147,6 +147,12 @@ template<class T> struct is_active_source<node_aware<T>> : public is_active_sour
 template<class T> struct is_passive_sink<node_aware<T>> : public is_passive_sink<T> {};
 template<class T> struct is_passive_source<node_aware<T>> : public is_passive_source<T> {};
 
+template<class source_t, class sink_t>
+struct result_of<node_aware<connection<source_t, sink_t>>>
+{
+	typedef typename result_of<source_t>::type type;
+};
+
 namespace detail
 {
 
@@ -249,28 +255,6 @@ template<class source_t, class sink_t>
 struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if
-        <	::fc::is_instantiation_of<node_aware, source_t>::value &&
-			::fc::is_active_source<source_t>::value &&
-			not ::fc::is_instantiation_of<node_aware, sink_t>::value
-		>::type
-	>
-{
-	auto operator()(source_t source, sink_t sink)
-	{
-		// construct region_aware_connection
-		// based on if source and sink are from same region
-		return make_node_aware(
-				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.node);
-	}
-};
-
-
-template<class source_t, class sink_t>
-struct node_aware_connect_impl
-	<	source_t,
-		sink_t,
 		typename std::enable_if
 		<	::fc::is_instantiation_of<node_aware, source_t>::value &&
 			::fc::is_instantiation_of<node_aware, sink_t>::value &&
@@ -278,7 +262,6 @@ struct node_aware_connect_impl
 		>::type
 	>
 {
-
 	auto operator()(source_t source, sink_t sink)
 	{
 		typedef typename result_of<source_t>::type result_t;
@@ -297,9 +280,9 @@ struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if
-        <		not ::fc::is_instantiation_of<node_aware, source_t>::value
-        	and	::fc::is_instantiation_of<node_aware, sink_t>::value
-			and ::fc::is_active_sink<source_t>::value
+        <	::fc::is_instantiation_of<node_aware, source_t>::value &&
+			::fc::is_active_source<source_t>::value &&
+			!::fc::is_instantiation_of<node_aware, sink_t>::value
 		>::type
 	>
 {
@@ -307,7 +290,72 @@ struct node_aware_connect_impl
 	{
 		// construct region_aware_connection
 		// based on if source and sink are from same region
-		return make_region_aware(
+		return make_node_aware(
+				connect(static_cast<typename source_t::base_t>(source), sink),
+				source.node);
+	}
+};
+
+template<class source_t, class sink_t>
+struct node_aware_connect_impl
+	<	source_t,
+		sink_t,
+        typename std::enable_if
+        <!::fc::is_instantiation_of<node_aware, source_t>::value &&
+         ::fc::is_instantiation_of<node_aware, sink_t>::value &&
+		 ::fc::is_active_sink<sink_t>::value
+		>::type
+	>
+{
+	auto operator()(source_t source, sink_t sink)
+	{
+		// construct region_aware_connection
+		// based on if source and sink are from same region
+		return make_node_aware(
+				connect(source, static_cast<typename sink_t::base_t>(sink)),
+						sink.node);
+	}
+};
+
+template<class source_t, class sink_t>
+struct node_aware_connect_impl
+	<	source_t,
+		sink_t,
+        typename std::enable_if<
+        	!::fc::is_instantiation_of<node_aware, source_t>::value &&
+        	!is_active_source<source_t>::value &&
+			::fc::is_instantiation_of<node_aware, sink_t>::value &&
+			::fc::is_passive_sink<sink_t>::value
+			>::type
+	>
+{
+	auto operator()(source_t source, sink_t sink)
+	{
+		//construct region_aware_connection
+		//based on if source and sink are from same region
+		return make_node_aware(
+				connect(source, static_cast<typename sink_t::base_t>(sink)),
+				sink.node);
+	}
+};
+
+template<class source_t, class sink_t>
+struct node_aware_connect_impl
+	<	source_t,
+		sink_t,
+        typename std::enable_if<
+        	::fc::is_instantiation_of<node_aware, source_t>::value &&
+        	is_passive_source<source_t>::value &&
+			!::fc::is_instantiation_of<node_aware, sink_t>::value &&
+			!::fc::is_active_sink<sink_t>::value
+			>::type
+	>
+{
+	auto operator()(source_t source, sink_t sink)
+	{
+		//construct region_aware_connection
+		//based on if source and sink are from same region
+		return make_node_aware(
 				connect(static_cast<typename source_t::base_t>(source), sink),
 				source.node);
 	}
