@@ -7,6 +7,8 @@
 #include "connection_buffer.hpp"
 #include <nodes/base_node.hpp>
 
+#include <graph/graph_interface.hpp>
+
 #include <iostream>
 
 namespace fc
@@ -37,6 +39,16 @@ struct node_aware: public base
 		, node(node_ptr)
 	{
 		assert(node_ptr);
+	}
+
+	auto node_info() const
+	{
+		return graph::graph_node_properties(node->own_name());
+	}
+
+	auto port_info() const
+	{
+		return graph::graph_port_information();
 	}
 
 	tree_base_node* node;
@@ -235,6 +247,9 @@ struct node_aware_connect_impl
 {
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
+		graph::ad_to_graph(source.node_info(), source.port_info(),
+				sink.node_info(), sink.port_info());
+
 		typedef typename result_of<source_t>::type result_t;
 		return connect
 			(	static_cast<const typename source_t::base_t&>(source),
@@ -257,6 +272,7 @@ struct node_aware_connect_impl
 		sink_t,
 		typename std::enable_if
 		<	::fc::is_instantiation_of<node_aware, source_t>::value &&
+			::fc::is_passive_source<source_t>::value &&
 			::fc::is_instantiation_of<node_aware, sink_t>::value &&
 			::fc::is_active_sink<sink_t>::value
 		>::type
@@ -264,6 +280,9 @@ struct node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
+		graph::ad_to_graph(source.node_info(), source.port_info(),
+				sink.node_info(), sink.port_info());
+
 		typedef typename result_of<source_t>::type result_t;
 		return connect(detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
