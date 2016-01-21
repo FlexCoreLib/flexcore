@@ -12,7 +12,7 @@
 namespace fc
 {
 
-template<class data_t>
+template<class data_t, template<class...> class container_t>
 class base_event_to_state;
 
 /**
@@ -38,18 +38,20 @@ struct swap_on_tick {};
 struct swap_on_pull {};
 
 template<class data_t>
-class list_collector<data_t, swap_on_tick> : public base_event_to_state<data_t>
+class list_collector<data_t, swap_on_tick> : public base_event_to_state<data_t, std::vector>
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
 	list_collector()
-		: base_event_to_state<data_t>( state_source_call_function<out_range_t>([&]()
-				{
-					data_read = true;
-					return boost::make_iterator_range(
-							this->buffer_state.begin(),
-							this->buffer_state.end());
-				} ))
+		: base_event_to_state<data_t, std::vector>(
+				state_source_call_function<out_range_t>(
+						[this]()
+						{
+							data_read = true;
+							return boost::make_iterator_range(
+									this->buffer_state.begin(),
+									this->buffer_state.end());
+						} ))
 	{}
 
 	auto swap_buffers() noexcept
@@ -80,17 +82,18 @@ private:
  * Sends the buffer as state when pulled.
  */
 template<class data_t>
-class list_collector<data_t, swap_on_pull> : public base_event_to_state<data_t>
+class list_collector<data_t, swap_on_pull> : public base_event_to_state<data_t, std::vector>
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator>
 			out_range_t;
 
 	list_collector()
-		: base_event_to_state<data_t>( state_source_call_function<out_range_t>([&]()
+		: base_event_to_state<data_t, std::vector>{
+				state_source_call_function<out_range_t>([&]()
 				{
 					return this->get_state();
-				} ))
+				} )}
 	{}
 
 private:
@@ -105,25 +108,25 @@ private:
 };
 
 /// Base class for nodes which take events and provide a range as state.
-template<class data_t>
+template<class data_t, template<class...> class container_t>
 class base_event_to_state
 {
 public:
-	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
+	typedef boost::iterator_range<typename container_t<data_t>::const_iterator> out_range_t;
 
-	auto in() noexcept { return collector{buffer_collect}; }
+	auto in() noexcept { return collector{buffer_collect.get()}; }
 
 	auto out() noexcept { return out_port; }
 
 protected:
 	explicit base_event_to_state(const state_source_call_function<out_range_t>& out_port) :
-		buffer_collect(std::make_shared<std::vector<data_t>>()),
+		buffer_collect(std::make_unique<std::vector<data_t>>()),
 		out_port(out_port)
 	{
 	}
 
-	std::shared_ptr<std::vector<data_t>> buffer_collect;
-	std::vector<data_t> buffer_state;
+	std::unique_ptr<container_t<data_t>> buffer_collect;
+	container_t<data_t> buffer_state;
 
 	state_source_call_function<out_range_t> out_port;
 
@@ -136,20 +139,18 @@ protected:
 			using std::begin;
 			using std::end;
 			//check if the node owning the buffer has been deleted. which is a bug.
-			assert(!buffer.expired());
-			buffer.lock()->insert(
-					end(*buffer.lock()), begin(range), end(range));
+			assert(buffer);
+			buffer->insert(end(*buffer), begin(range), end(range));
 		};
 
 		void operator()(const data_t& single_input)
 		{
 			//check if the node owning the buffer has been deleted. which is a bug.
-			assert(!buffer.expired());
-			buffer.lock()->insert(
-					end(*buffer.lock()), single_input);
+			assert(buffer);
+			buffer->insert(end(*buffer), single_input);
 		}
 
-		std::weak_ptr<std::vector<data_t>> buffer;
+		container_t<data_t>* buffer;
 	};
 };
 
