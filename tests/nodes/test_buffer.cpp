@@ -73,4 +73,48 @@ BOOST_AUTO_TEST_CASE(test_hold_last)
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(test_hold_n)
+{
+	hold_n<int> buffer{3};
+	event_out_port<int> source;
+	state_sink<hold_n<int>::out_range_t> sink;
+
+	source >> buffer.in();
+	buffer.out() >> sink;
+	BOOST_CHECK(sink.get().empty());
+
+	source.fire(1);
+	BOOST_CHECK_EQUAL(sink.get().size(), 1);
+
+	source.fire(1);
+	BOOST_CHECK_EQUAL(sink.get().size(), 2);
+	source.fire(1);
+	BOOST_CHECK_EQUAL(sink.get().size(), 3); //capacity reached
+
+	source.fire(1);
+	BOOST_CHECK_EQUAL(sink.get().size(), 3); //capacity reached
+}
+
+BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
+{
+	hold_n<int> buffer{5};
+	state_sink<hold_n<int>::out_range_t> sink;
+	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
+	event_out_port<int_range> source;
+	std::vector<int> vec {1,2,3,4};
+
+	source >> buffer.in();
+	buffer.out() >> sink;
+	BOOST_CHECK(sink.get().empty());
+
+	source.fire(int_range(vec.begin(), vec.end()));
+	//size is smaller then capacity
+	BOOST_CHECK_EQUAL(sink.get().size(), vec.size());
+
+	source.fire(int_range(vec.begin(), vec.end()));
+	BOOST_CHECK_EQUAL(sink.get().size(), 5); //capacity reached
+	source.fire(int_range(vec.begin(), vec.end()));
+	BOOST_CHECK_EQUAL(sink.get().size(), 5); //capacity reached
+}
+
 BOOST_AUTO_TEST_SUITE_END()

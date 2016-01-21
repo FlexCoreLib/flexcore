@@ -7,6 +7,7 @@
 #include <ports/events/event_sinks.hpp>
 
 #include <boost/range.hpp>
+#include <boost/circular_buffer.hpp>
 #include <vector>
 
 namespace fc
@@ -107,6 +108,33 @@ private:
 	}
 };
 
+namespace detail
+{
+template<class data_t, template<class...> class container_t>
+struct collector
+{
+	typedef void result_t;
+
+	void operator() (const auto& range)
+	{
+		using std::begin;
+		using std::end;
+		//check if the node owning the buffer has been deleted. which is a bug.
+		assert(buffer);
+		buffer->insert(end(*buffer), begin(range), end(range));
+	};
+
+	void operator()(const data_t& single_input)
+	{
+		//check if the node owning the buffer has been deleted. which is a bug.
+		assert(buffer);
+		buffer->insert(end(*buffer), single_input);
+	}
+
+	container_t<data_t>* buffer;
+};
+}
+
 /// Base class for nodes which take events and provide a range as state.
 template<class data_t, template<class...> class container_t>
 class base_event_to_state
@@ -114,7 +142,10 @@ class base_event_to_state
 public:
 	typedef boost::iterator_range<typename container_t<data_t>::const_iterator> out_range_t;
 
-	auto in() noexcept { return collector{buffer_collect.get()}; }
+	auto in() noexcept
+	{
+		return detail::collector<data_t, container_t>{buffer_collect.get()};
+	}
 
 	auto out() noexcept { return out_port; }
 
@@ -129,31 +160,7 @@ protected:
 	container_t<data_t> buffer_state;
 
 	state_source_call_function<out_range_t> out_port;
-
-	struct collector
-	{
-		typedef void result_t;
-
-		void operator() (const auto& range)
-		{
-			using std::begin;
-			using std::end;
-			//check if the node owning the buffer has been deleted. which is a bug.
-			assert(buffer);
-			buffer->insert(end(*buffer), begin(range), end(range));
-		};
-
-		void operator()(const data_t& single_input)
-		{
-			//check if the node owning the buffer has been deleted. which is a bug.
-			assert(buffer);
-			buffer->insert(end(*buffer), single_input);
-		}
-
-		container_t<data_t>* buffer;
-	};
 };
-
 
 /**
  * \brief buffer which receives events and stores the last event received as state.
@@ -179,6 +186,57 @@ public:
 	auto out() const noexcept { return [this](){ return storage;}; }
 private:
 	data_t storage;
+};
+
+/**
+ * \brief Simple circular buffer.
+ *
+ * hold_n accepts events of data_t and ranges of data_t as inputs
+ * and stores them in a circular buffer.
+ *
+ * \tparam data_t type of data stored in buffer
+ * \invariant capacity of buffer is > 0.
+ */
+template<class data_t>
+class hold_n
+{
+public:
+	typedef boost::circular_buffer<data_t> buffer_t;
+	typedef boost::iterator_range<
+			typename buffer_t::const_iterator> out_range_t;
+
+	static_assert(!std::is_void<data_t>(),
+			"data stored in hold_last cannot be void");
+
+	/**
+	 * \brief constructs circular_buffer with capacity parameter.
+	 * \param capacity sets the max nr of elements in the circular buffer.
+	 * \pre capacity > 0
+	 */
+	explicit hold_n(size_t capacity)
+		: storage(std::make_unique<buffer_t>(capacity))
+		, out_port(
+				[this]()
+				{
+					return boost::make_iterator_range(
+							storage->begin(),
+							storage->end());
+				} )
+		{
+			assert(capacity > 0); //precondition
+			assert(storage->capacity() > 0); //invariant
+		}
+
+	/// Event in Port expecting data_t or range of data_t.
+	auto in() noexcept
+	{
+		return detail::collector<data_t, boost::circular_buffer>{storage.get()};
+	}
+	/// State out port supplying range of data_t.
+	auto out() const noexcept { return out_port; }
+private:
+	std::unique_ptr<buffer_t> storage;
+	state_source_call_function<out_range_t> out_port;
 };
 
 }  // namespace fc
