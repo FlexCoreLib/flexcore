@@ -9,7 +9,9 @@ namespace fc
 {
 
 /**
- * \brief generic unary node which only handles events
+ * \brief Generic unary node which only handles events.
+ *
+ * Use this as baseclass to simply build nodes which handle events.
  *
  * \tparam event_t type of event handled by the node
  */
@@ -60,7 +62,8 @@ public:
 		{
 			if (pred(in))
 			this->out_port.fire(in);
-		}), pred(p)
+		}),
+		pred(p)
 	{
 	}
 
@@ -69,7 +72,9 @@ private:
 };
 
 /**
- * \brief forwards events if and only if the state at in_control is true.
+ * \brief Forwards events if and only if the state at in_control is true.
+ *
+ * State sink in_control must be connected when events are received!
  *
  * \tparam event_t type of event expected and forwarded
  */
