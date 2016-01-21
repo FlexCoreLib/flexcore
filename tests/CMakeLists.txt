@@ -14,7 +14,6 @@ ADD_EXECUTABLE( test_executable
 	ports/test_node_aware.cpp
 	ports/test_state_buffer.cpp
  	ports/events/test_events.cpp
- 	ports/events/test_event_wrappers.cpp
  	ports/states/test_state_sinks.cpp
 	ports/states/test_node_with_lambda.cpp
 	ports/states/test_state_source_call_function.cpp

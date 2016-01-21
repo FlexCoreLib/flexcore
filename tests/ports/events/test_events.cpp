@@ -321,4 +321,82 @@ BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
 	BOOST_CHECK_EQUAL(test_value, 4);
 }
 
+BOOST_AUTO_TEST_CASE(test_sink_has_callback)
+{
+	static_assert(has_register_function<event_in_port<void>>(0),
+				"type is defined with ability to register a callback");
+}
+
+template <class T>
+struct disconnecting_event_sink : public event_in_port<T>
+{
+	disconnecting_event_sink() :
+		event_in_port<T>(
+			[&](T in){
+				*storage = in;
+				std::cout<<"hello from sink with number "<<in<<"\n";
+			}
+		)
+	{
+
+	}
+
+	std::shared_ptr<T> storage = std::make_shared<T>();
+};
+
+BOOST_AUTO_TEST_CASE(test_sink_deleted_callback)
+{
+	std::cout<<"test_sink_deleted_callback\n";
+	disconnecting_event_sink<int> test_sink1;
+
+	{
+		event_out_port<int> test_source;
+
+		disconnecting_event_sink<int> test_sink4;
+		test_source >> test_sink1;
+		test_source.fire(5);
+		BOOST_CHECK_EQUAL(*(test_sink1.storage), 5);
+
+		{
+			disconnecting_event_sink<int> test_sink2;
+			disconnecting_event_sink<int> test_sink3;
+			test_source >> test_sink2;
+			test_source >> test_sink3;
+			test_source.fire(6);
+			BOOST_CHECK_EQUAL(*(test_sink2.storage), 6);
+			BOOST_CHECK_EQUAL(*(test_sink3.storage), 6);
+
+			test_source >> test_sink4;
+			test_source.fire(7);
+			BOOST_CHECK_EQUAL(*(test_sink4.storage), 7);
+		}
+
+		// this primarily checks, that no exception is thrown
+		// since the connections from test_source to sink1-3 are deleted.
+		test_source.fire(8);
+		BOOST_CHECK_EQUAL(*(test_sink4.storage), 8);
+	}
+
+}
+
+BOOST_AUTO_TEST_CASE(test_lambda_in_connection)
+{
+	std::cout<<"test_lambda_in_connection\n";
+	event_sink<int> test_sink;
+	event_sink<int> test_sink_2;
+
+	event_out_port<int> test_source;
+
+	(test_source >> [](int i){ return i+1; }) >> test_sink;
+
+	test_source >> [](int i){ return i+1; }
+		>> [](int i){ return i+1; }
+		>> test_sink_2;
+
+	test_source.fire(10);
+	BOOST_CHECK_EQUAL(*(test_sink.storage), 11);
+	BOOST_CHECK_EQUAL(*(test_sink_2.storage), 12);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -153,5 +153,24 @@ BOOST_AUTO_TEST_CASE( test_is_callable )
 			"type is defined to be not callable");
 }
 
+struct accepting_registration
+{
+	void register_callback(const std::shared_ptr<std::function<void(void)>>&)
+	{
+	}
+};
+
+struct not_accepting_registration
+{
+};
+
+BOOST_AUTO_TEST_CASE( test_has_register_function )
+{
+	static_assert(has_register_function<accepting_registration>(0),
+			"type is defined with ability to register a callback");
+	static_assert(!has_register_function<not_accepting_registration>(0),
+				"type is defined without ability to register a callback");
+}
+
 //
 // TestTraits.cpp ends here

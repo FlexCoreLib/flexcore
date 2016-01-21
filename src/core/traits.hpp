@@ -10,6 +10,7 @@
 
 #include <type_traits>
 #include <functional>
+#include <memory>
 
 #include "function_traits.hpp"
 
@@ -64,7 +65,7 @@ private:
 	template<class to_test>
 	static std::false_type test(check<void (fallback::*)(), &to_test::operator()>*);
 
-	// in all other caes, which means, T has operator() with any argument,
+	// in all other cases, which means, T has operator() with any argument,
 	// this overload will be chosen and the return is true_type.
 	template<class>
 	static std::true_type test(...);
@@ -248,6 +249,20 @@ constexpr auto void_callable(int) -> decltype(std::declval<T>()(), bool())
 
 template<class T>
 constexpr bool void_callable(...)
+{
+	return false;
+}
+
+template<class T>
+constexpr auto has_register_function(int) -> decltype(
+			std::declval<T>().register_callback(std::make_shared<std::function<void(void)>>()),
+		bool())
+{
+	return true;
+}
+
+template<class T>
+constexpr bool has_register_function(...)
 {
 	return false;
 }

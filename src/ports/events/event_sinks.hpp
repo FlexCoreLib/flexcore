@@ -8,8 +8,64 @@
 #include <core/connection.hpp>
 #include "ports/detail/port_traits.hpp"
 
+#include <iostream>
+
 namespace fc
 {
+
+/// Mixin for executing a callback to the source on deletion of the sink
+struct event_in_port_callback_mixin
+{
+	typedef std::weak_ptr<std::function<void(void)>> callback_fun_ptr_weak;
+	explicit event_in_port_callback_mixin() :
+		deregisterer(std::make_shared<scoped_deregister>())
+	{
+	}
+public:
+
+	/**
+	 * \brief Registers the source to the sink
+	 * \pre fun != null_ptr
+	 * \post destruct_callback->expired() == false
+	 */
+	void register_callback(const std::shared_ptr<std::function<void(void)>>& fun)
+	{
+		assert(fun);
+		deregisterer->destruct_callback = fun;
+		assert(!deregisterer->destruct_callback.expired());
+	}
+
+private:
+	/**
+	 * \brief scoped wrapper around deregister call
+	 *
+	 * Makes sure deregister is only called, when the last copy of the port is destroyed
+	 */
+	struct scoped_deregister
+	{
+		~scoped_deregister()
+		{
+			deregister();
+		}
+
+		/**
+		 * \brief Deregisters from the source
+		 * \pre destruct_callback != null_ptr
+		 */
+		void deregister()
+		{
+			if(destruct_callback.expired())
+				std::cout<<"destructCallback is expired\n";
+			if (auto sharedCallbackPtr = destruct_callback.lock())
+				(*sharedCallbackPtr)();
+		}
+
+		callback_fun_ptr_weak destruct_callback = callback_fun_ptr_weak();
+	};
+
+	std::shared_ptr<scoped_deregister> deregisterer;
+};
+
 
 /**
  * \brief minimal input port for events
@@ -18,9 +74,10 @@ namespace fc
  * \tparam event_t type of event expected, must be copy_constructable
  */
 template<class event_t>
-struct event_in_port
+struct event_in_port : public event_in_port_callback_mixin
 {
 	typedef typename detail::handle_type<event_t>::type handler_t;
+
 	explicit event_in_port(const handler_t& handler) :
 			event_handler(handler)
 	{
@@ -44,7 +101,7 @@ private:
 
 /// specialisation of event_in_port with void , necessary since operator() has no parameter.
 template<>
-struct event_in_port<void>
+struct event_in_port<void> : public event_in_port_callback_mixin
 {
 	typedef typename detail::handle_type<void>::type handler_t;
 	explicit event_in_port(handler_t handler) :
