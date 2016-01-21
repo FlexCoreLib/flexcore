@@ -13,11 +13,15 @@
 namespace fc
 {
 
+namespace detail
+{
 template<class data_t, template<class...> class container_t>
 class base_event_to_state;
-
+}
 /**
  * \brief Buffer that takes events and provides a range as state
+ *
+ * Accepts both single events and ranges of events as inputs.
  *
  * policy classes control when the buffer is cleared
  * as well as how and when the state is available.
@@ -26,25 +30,34 @@ template<class data_t, class buffer_policy>
 class list_collector;
 
 /**
- * Buffer Policy to have buffers swapped on a tick and stored between ticks.
+ * \brief Buffer Policy to have buffers swapped on a tick and stored between ticks.
+ *
  * The state is constant between swap ticks.
  * Events are available after the next swap tick.
  */
 struct swap_on_tick {};
 /**
- * Buffer Policy to have buffers swapped on pull.
+ * \brief Buffer Policy to have buffers swapped on pull.
+ *
  * This means pulling the collector twice gives different results!
  * New events are available as soon as they are received
  */
 struct swap_on_pull {};
 
+/**
+ * \brief Collects list contents and store them into a buffer.
+ *
+ * Sends the buffer as state when pulled.
+ * inputs are made available on tick received at port swap_buffers.
+ */
 template<class data_t>
-class list_collector<data_t, swap_on_tick> : public base_event_to_state<data_t, std::vector>
+class list_collector<data_t, swap_on_tick>
+		: public detail::base_event_to_state<data_t, std::vector>
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
 	list_collector()
-		: base_event_to_state<data_t, std::vector>(
+		: detail::base_event_to_state<data_t, std::vector>{
 				state_source_call_function<out_range_t>(
 						[this]()
 						{
@@ -52,7 +65,7 @@ public:
 							return boost::make_iterator_range(
 									this->buffer_state.begin(),
 									this->buffer_state.end());
-						} ))
+						} )}
 	{}
 
 	auto swap_buffers() noexcept
@@ -79,18 +92,20 @@ private:
 };
 
 /**
- * Collects list contents and store them into a buffer.
+ * \brief Collects list contents and store them into a buffer.
+ *
  * Sends the buffer as state when pulled.
  */
 template<class data_t>
-class list_collector<data_t, swap_on_pull> : public base_event_to_state<data_t, std::vector>
+class list_collector<data_t, swap_on_pull>
+		: public detail::base_event_to_state<data_t, std::vector>
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator>
 			out_range_t;
 
 	list_collector()
-		: base_event_to_state<data_t, std::vector>{
+		: detail::base_event_to_state<data_t, std::vector>{
 				state_source_call_function<out_range_t>([&]()
 				{
 					return this->get_state();
@@ -110,6 +125,7 @@ private:
 
 namespace detail
 {
+/// a port which receives both single events and ranges.
 template<class data_t, template<class...> class container_t>
 struct collector
 {
@@ -133,7 +149,6 @@ struct collector
 
 	container_t<data_t>* buffer;
 };
-}
 
 /// Base class for nodes which take events and provide a range as state.
 template<class data_t, template<class...> class container_t>
@@ -161,6 +176,7 @@ protected:
 
 	state_source_call_function<out_range_t> out_port;
 };
+} //namespace detail
 
 /**
  * \brief buffer which receives events and stores the last event received as state.
