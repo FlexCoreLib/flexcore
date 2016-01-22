@@ -14,6 +14,8 @@ namespace graph
 
 typedef int unique_id; //todo
 
+static unique_id unique_id_count_hack = 0; //todo terrible terrible hack
+
 /**
  * \brief Contains the information carried by a node of the dataflow graph
  */
@@ -22,13 +24,15 @@ class graph_node_properties
 public:
 	explicit graph_node_properties(const std::string name)
 		: human_readable_name(name)
+		, id(unique_id_count_hack++)
 	{
 	}
 
 	std::string name() const { return human_readable_name; }
+	unique_id get_id() const { return id; }
 private:
 	std::string human_readable_name;
-	unique_id id = 0;
+	unique_id id;
 };
 
 /**
@@ -38,25 +42,10 @@ private:
 class graph_port_information
 {
 public:
-
-//private:
+	unique_id get_id() const { return id; }
+private:
 	unique_id id = 0;
 };
-
-/**
- * \brief Adds a new edge to the graph representation.
- *
- * The edge is leading from source to sink through the two ports.
- */
-inline void ad_to_graph(const graph_node_properties& source_node,
-		const graph_port_information& source_port,
-		const graph_node_properties& sink_node,
-		const graph_port_information& sink_port)
-{
-	//ToDo guard with mutex and fill datastructure
-	std::cout << "Edge from: " << source_node.name() << "." << source_port.id;
-	std::cout << " to: " << sink_node.name() << "." << sink_port.id << "\n";
-}
 
 }  // namespace graph
 }  // namespace fc

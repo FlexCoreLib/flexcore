@@ -17,6 +17,25 @@ struct null : public base_node
 	null() : base_node("null") {}
 };
 
+auto setup_parallel_region(const std::string& name,
+		const virtual_clock::steady::duration& tick,
+		fc::thread::cycle_control& thread_manager)
+{
+	auto region = std::make_shared<fc::parallel_region>(name);
+
+	auto tick_cycle = fc::thread::periodic_task(
+			[&region]()
+			{
+				region->ticks.in_work()();
+			},
+			tick);
+
+	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
+	thread_manager.add_task(tick_cycle);
+
+	return region;
+}
+
 int main()
 {
 
@@ -24,17 +43,9 @@ int main()
 
 	std::cout << "build up infrastructure \n";
 	fc::thread::cycle_control thread_manager;
-	auto first_region = std::make_shared<fc::parallel_region>("region one");
-
-	auto tick_cycle = fc::thread::periodic_task(
-			[&first_region]()
-			{
-				first_region->ticks.in_work()();
-			},
-			fc::thread::cycle_control::medium_tick);
-
-	tick_cycle.out_switch_tick() >> first_region->ticks.in_switch_buffers();
-	thread_manager.add_task(tick_cycle);
+	auto first_region = setup_parallel_region("first_region",
+			fc::thread::cycle_control::medium_tick,
+			thread_manager);
 
 	std::cout << "start building connections\n";
 
@@ -46,31 +57,23 @@ int main()
 	source >> [](time_point t){ return fc::wall_clock::system::to_time_t(t); }
 		   >> [](time_t t) { std::cout << std::localtime(&t)->tm_sec << "\n"; };
 
-	unsigned int count = 0;
-
 	first_region->ticks.work_tick()
-			>> [&count](){return count++;}
+			>> [count = 0]() mutable {return count++;}
 			>> [](int i) { std::cout << "counted ticks: " << i << "\n"; };
 
 
 	//create a connection with region transition
-	auto second_region = std::make_shared<fc::parallel_region>("region two");
-
-	auto second_tick_cycle = fc::thread::periodic_task(
-			[&second_region]()
-			{
-				second_region->ticks.in_work()();
-			},
-			fc::thread::cycle_control::slow_tick);
-
-	second_tick_cycle.out_switch_tick() >> second_region->ticks.in_switch_buffers();
-	thread_manager.add_task(second_tick_cycle);
+	auto second_region = setup_parallel_region("region two",
+			fc::thread::cycle_control::slow_tick,
+			thread_manager);
 
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
 	fc::root_node root;
-	auto child_a = root.make_child_named<null>("a")->region(first_region);
-	auto child_b = root.make_child_named<null>("b")->region(second_region);
+	auto child_a = root.make_child_named<null>("source_a")->region(first_region);
+	auto child_b = root.make_child_named<null>("sink_b")->region(second_region);
+	auto child_c = root.make_child_named<null>("source_c")->region(second_region);
+
 	fc::node_aware<fc::pure::event_source<std::string>> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
@@ -81,6 +84,11 @@ int main()
 				{
 					string_source.fire("a magic string from " + first_region->get_id().key);
 				};
+
+	fc::node_aware<fc::pure::event_source<std::string>> string_source_2(child_c);
+	string_source_2 >> string_sink;
+
+	graph::print();
 
 	thread_manager.start();
 

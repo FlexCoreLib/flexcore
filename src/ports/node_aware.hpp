@@ -7,9 +7,7 @@
 #include "connection_buffer.hpp"
 #include <nodes/base_node.hpp>
 
-#include <graph/graph_interface.hpp>
-
-#include <iostream>
+#include <graph/graph.hpp>
 
 namespace fc
 {
