@@ -18,6 +18,7 @@ namespace fc
  * \brief A mixin for elements that are aware of the node they belong to.
  * Used as mixin for ports and connections.
  * \tparam base is type node_aware is mixed into.
+ * \invariant tree_base_node* node is always valid.
  *
  * example:
  * \code{cpp}
@@ -43,6 +44,7 @@ struct node_aware: public base
 
 	auto node_info() const
 	{
+		assert(node);
 		return graph::graph_node_properties(node->own_name());
 	}
 
@@ -227,20 +229,25 @@ auto make_buffered_connection(
 template<class base_connection_t>
 node_aware<base_connection_t> make_node_aware(const base_connection_t& base, tree_base_node* node_ptr)
 {
+	assert(node_ptr);
 	return node_aware<base_connection_t>(node_ptr, base);
 }
 
 template<class source_t, class sink_t, class Enable = void>
-struct node_aware_connect_impl;
+struct both_node_aware_connect_impl;
+
+template<class source_t, class sink_t, class Enable = void>
+struct source_node_aware_connect_impl;
+
+template<class source_t, class sink_t, class Enable = void>
+struct sink_node_aware_connect_impl;
 
 template<class source_t, class sink_t>
-struct node_aware_connect_impl
+struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if
-        <	::fc::is_instantiation_of<node_aware, source_t>::value &&
-			::fc::is_active_source<source_t>::value &&
-			::fc::is_instantiation_of<node_aware, sink_t>::value &&
+        typename std::enable_if<
+        	::fc::is_active_source<source_t>::value &&
 			::fc::is_passive_sink<sink_t>::value
 		>::type
 	>
@@ -251,11 +258,11 @@ struct node_aware_connect_impl
 				sink.node_info(), sink.port_info());
 
 		typedef typename result_of<source_t>::type result_t;
-		return connect
-			(	static_cast<const typename source_t::base_t&>(source),
-				detail::make_buffered_connection
-					(	buffer_factory<result_t>::construct_buffer
-							(	source, // event source is active, thus first
+		return connect(
+				static_cast<const typename source_t::base_t&>(source),
+				detail::make_buffered_connection(
+						buffer_factory<result_t>::construct_buffer(
+								source, // event source is active, thus first
 								sink, // event sink is passive thus second
 								event_tag()
 							),
@@ -267,13 +274,11 @@ struct node_aware_connect_impl
 };
 
 template<class source_t, class sink_t>
-struct node_aware_connect_impl
+struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-		typename std::enable_if
-		<	::fc::is_instantiation_of<node_aware, source_t>::value &&
+		typename std::enable_if<
 			::fc::is_passive_source<source_t>::value &&
-			::fc::is_instantiation_of<node_aware, sink_t>::value &&
 			::fc::is_active_sink<sink_t>::value
 		>::type
 	>
@@ -290,18 +295,17 @@ struct node_aware_connect_impl
 						source, // state source is passive thus second
 						state_tag()),
 				source, sink),
-				static_cast<typename sink_t::base_t>(sink));
+				static_cast<typename sink_t::base_t>(sink)
+				);
 	}
 };
 
 template<class source_t, class sink_t>
-struct node_aware_connect_impl
+struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if
-        <	::fc::is_instantiation_of<node_aware, source_t>::value &&
-			::fc::is_active_source<source_t>::value &&
-			!::fc::is_instantiation_of<node_aware, sink_t>::value
+        typename std::enable_if<
+        	::fc::is_active_source<source_t>::value
 		>::type
 	>
 {
@@ -316,14 +320,12 @@ struct node_aware_connect_impl
 };
 
 template<class source_t, class sink_t>
-struct node_aware_connect_impl
+struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if
-        <!::fc::is_instantiation_of<node_aware, source_t>::value &&
-         ::fc::is_instantiation_of<node_aware, sink_t>::value &&
-		 ::fc::is_active_sink<sink_t>::value
-		>::type
+        typename std::enable_if<
+        	::fc::is_active_sink<sink_t>::value
+        >::type
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -337,15 +339,13 @@ struct node_aware_connect_impl
 };
 
 template<class source_t, class sink_t>
-struct node_aware_connect_impl
+struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-        	!::fc::is_instantiation_of<node_aware, source_t>::value &&
         	!is_active_source<source_t>::value &&
-			::fc::is_instantiation_of<node_aware, sink_t>::value &&
 			::fc::is_passive_sink<sink_t>::value
-			>::type
+		>::type
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -359,15 +359,13 @@ struct node_aware_connect_impl
 };
 
 template<class source_t, class sink_t>
-struct node_aware_connect_impl
+struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
         typename std::enable_if<
-        	::fc::is_instantiation_of<node_aware, source_t>::value &&
         	is_passive_source<source_t>::value &&
-			!::fc::is_instantiation_of<node_aware, sink_t>::value &&
 			!::fc::is_active_sink<sink_t>::value
-			>::type
+		>::type
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -393,7 +391,7 @@ auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 {
 	// construct node_aware_connection
 	// based on if source and sink are from same region
-	return detail::node_aware_connect_impl
+	return detail::both_node_aware_connect_impl
 		<	node_aware<source_t>,
 			node_aware<sink_t>
 		> ()(source, sink);
@@ -404,7 +402,7 @@ auto connect(node_aware<source_t> source, sink_t sink)
 {
 	// construct node_aware_connection
 	// based on if source and sink are from same region
-	return detail::node_aware_connect_impl
+	return detail::source_node_aware_connect_impl
 		<	node_aware<source_t>,
 			sink_t
 		> ()(source, sink);
@@ -415,7 +413,7 @@ auto connect(source_t source, node_aware<sink_t> sink)
 {
 	// construct node_aware_connection
 	// based on if source and sink are from same region
-	return detail::node_aware_connect_impl
+	return detail::sink_node_aware_connect_impl
 		<	source_t,
 			node_aware<sink_t>
 		> ()(source, sink);
