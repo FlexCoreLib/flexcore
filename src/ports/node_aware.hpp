@@ -36,6 +36,8 @@ struct node_aware: public base
 				const args& ... base_constructor_args )
 		: base_t(base_constructor_args ...)
 		, node(node_ptr)
+		, node_graph_info{node->own_name()}
+		, graph_info()
 	{
 		assert(node_ptr);
 	}
@@ -43,15 +45,17 @@ struct node_aware: public base
 	auto node_info() const
 	{
 		assert(node);
-		return graph::graph_node_properties(node->own_name());
+		return node_graph_info;
 	}
 
 	auto port_info() const
 	{
-		return graph::graph_port_information();
+		return graph_info;
 	}
 
 	tree_base_node* node;
+	graph::graph_node_properties node_graph_info;
+	graph::graph_port_information graph_info;;
 };
 
 

@@ -42,9 +42,13 @@ private:
 class graph_port_information
 {
 public:
+	graph_port_information()
+		: id(unique_id_count_hack++)
+	{
+	}
 	unique_id get_id() const { return id; }
 private:
-	unique_id id = 0;
+	unique_id id;
 };
 
 }  // namespace graph

@@ -4,6 +4,7 @@
 #include <graph/graph_interface.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graphviz.hpp>
 
 #include <map>
 
@@ -24,8 +25,8 @@ struct edge
 	std::string name;
 };
 
-typedef boost::adjacency_list<boost::listS,          // Store out-edges of each vertex in a std::list
-                              boost::listS,          // Store vertex set in a std::list
+typedef boost::adjacency_list<boost::vecS,          // Store out-edges of each vertex in a std::list
+                              boost::vecS,          // Store vertex set in a std::list
                               boost::directedS, // The dataflow graph is directed
                               vertex,                // vertex properties
                               edge                   // edge properties
@@ -49,17 +50,22 @@ public:
 			const graph_port_information& sink_port)
 	{
 		//ToDo guard with mutex
-		vertex_map.emplace(
-				source_node.get_id(),
-				boost::add_vertex(vertex{source_node.name()}, dataflow_graph));
-		vertex_map.emplace(
-				sink_node.get_id(),
-				boost::add_vertex(vertex{sink_node.name()}, dataflow_graph));
+
+		//check if vertex is already included, as add_vertex would add it again.
+		if (vertex_map.find(source_node.get_id()) == vertex_map.end())
+			vertex_map.emplace(
+					source_node.get_id(),
+					boost::add_vertex(vertex{source_node.name()}, dataflow_graph));
+		if (vertex_map.find(sink_node.get_id()) == vertex_map.end())
+			vertex_map.emplace(
+					sink_node.get_id(),
+					boost::add_vertex(vertex{sink_node.name()}, dataflow_graph));
 		boost::add_edge(
 				vertex_map[source_node.get_id()],
 				vertex_map[sink_node.get_id()],
-				edge{std::to_string(source_port.get_id())
-						+ " ----> "
+				edge{"port: "
+						+ std::to_string(source_port.get_id())
+						+ " to port: "
 						+ std::to_string(sink_port.get_id())},
 				dataflow_graph);
 	}
@@ -95,14 +101,10 @@ inline void ad_to_graph(const graph_node_properties& source_node,
 
 inline void print()
 {
-	auto& graph = connection_graph::access().get_boost_graph();
-
-	for (auto e = boost::edges(graph).first; e != boost::edges(graph).second; ++e)
-	{
-		std::cout << graph[ boost::source(*e, graph)].name << " -> ";
-				std::cout << graph[*e].name << " -> ";
-				std::cout << graph[boost::target(*e, graph)].name << "\n";
-	}
+	const auto graph = connection_graph::access().get_boost_graph();
+	boost::write_graphviz(std::cout, graph,
+	     boost::make_label_writer(boost::get(&vertex::name, graph)),
+	     boost::make_label_writer(boost::get(&edge::name, graph)));
 }
 
 }  // namespace graph
