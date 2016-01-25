@@ -28,8 +28,7 @@ ADD_EXECUTABLE( test_executable
 	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
-	PRIVATE ${BOOST_INCLUDE_DIRS}
-	"../src/" 
+	PRIVATE "../src/"
 	"." )
 
 TARGET_LINK_LIBRARIES( test_executable
