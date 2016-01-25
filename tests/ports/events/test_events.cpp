@@ -294,9 +294,10 @@ struct sink_t
 {
 	typedef void result_t;
 
-	void operator()(auto && in)
+	template <class T>
+	void operator()(T&& in)
 	{
-		op(in);
+		op(std::forward<T>(in));
 	}
 
 	operation op;
