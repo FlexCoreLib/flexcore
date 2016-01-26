@@ -32,7 +32,7 @@ namespace
 #define ASSERT_RESULT_OF(expr, t)										\
 	{																	\
 		auto callable_fd3s81sdk = expr;									\
-		static_assert( (std::is_same< result_of< decltype(callable_fd3s81sdk) >::type, t >::value), \
+		static_assert( (std::is_same< result_of_t< decltype(callable_fd3s81sdk) >, t >::value), \
 					   "result_of should return type '" #t "' for '" #expr "'."); \
 	}
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 		static_assert(!has_result<CustomCallable>::value, "CustomCallable does not have a result_t");
 		static_assert(has_result<result_haver>::value, "result_haver has a result_t");
 
-		static_assert(std::is_same<typename result_of<result_haver>::type, int>::value, "result_t is int");
+		static_assert(std::is_same<result_of_t<result_haver>, int>::value, "result_t is int");
 
 	}
 }

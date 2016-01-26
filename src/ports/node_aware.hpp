@@ -171,7 +171,7 @@ template<class T> struct is_passive_source<node_aware<T>> : public is_passive_so
 template<class source_t, class sink_t>
 struct result_of<node_aware<connection<source_t, sink_t>>>
 {
-	typedef typename result_of<source_t>::type type;
+	using type = result_of_t<source_t>;
 };
 
 namespace detail
@@ -264,7 +264,7 @@ struct both_node_aware_connect_impl
 {
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
-		typedef typename result_of<source_t>::type result_t;
+		using result_t = result_of_t<source_t>;
 		return connect(
 				static_cast<const typename source_t::base_t&>(source),
 				detail::make_buffered_connection(
@@ -292,7 +292,7 @@ struct both_node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		typedef typename result_of<source_t>::type result_t;
+		using result_t = result_of_t<source_t>;
 		return connect(detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
 						sink, // state sink is active thus first

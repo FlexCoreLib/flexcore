@@ -166,6 +166,8 @@ struct result_of
 	typedef typename detail::result_of_impl<Expr,
 			has_result<typename std::remove_reference<Expr>::type>::value>::type type;
 };
+template <class Expr>
+using result_of_t = typename result_of<Expr>::type;
 
 namespace detail
 {
@@ -311,7 +313,7 @@ constexpr bool overloaded(...)
 template<class T>
 struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value
 			&& !overloaded<T>(0)>::type>
-		: public std::integral_constant<bool, std::is_void<typename result_of<T>::type>::value>
+		: public std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
 {
 };
 
@@ -319,7 +321,7 @@ template<class T>
 struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value
 			&& overloaded<T>(0)
 			&& has_result<T>::value>::type>
-		: public std::integral_constant<bool, std::is_void<typename result_of<T>::type>::value>
+		: public std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
 {
 };
 

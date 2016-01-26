@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	static_assert(not is_active_sink   <test_out_port>::value, "");
 
 	static_assert(std::is_same<int,
-			typename result_of<test_out_port>::type>::value,
+			result_of_t<test_out_port>>::value,
 			"return value of source is defined to be int");
 	source >> sink;
 

@@ -46,7 +46,7 @@ struct active_source_first
 	struct sink
 	{
 		typedef sink_t type;
-		typedef typename result_of<source_t>::type result_t;
+		typedef result_of_t<source_t> result_t;
 	};
 	template<class source_t, class sink_t>
 	auto operator()(source_t source, sink_t sink)
@@ -218,7 +218,7 @@ struct active_passive_connect_impl
 		active.connect(passive);
 		using source_t = typename argument_order::template source<active_t, passive_t>::type;
 		using sink_t = typename argument_order::template sink<active_t, passive_t>::type;
-		return port_connection<source_t, sink_t, typename result_of<active_t>::type>();
+		return port_connection<source_t, sink_t, result_of_t<active_t>>();
 	}
 };
 
