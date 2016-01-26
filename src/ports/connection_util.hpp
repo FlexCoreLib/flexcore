@@ -15,7 +15,7 @@ namespace fc
  */
 template <class T>
 auto get_source(const T& s)
-	-> const typename std::enable_if<!has_source<T>(0), T>::type&
+	-> const std::enable_if_t<!has_source<T>(0), T>&
 {
 	return s;
 }
@@ -24,8 +24,8 @@ auto get_source(const T& s)
  */
 template <class T>
 auto get_source(const T& c)
-	-> const typename std::enable_if<has_source<T>(0),
-			decltype(get_source(c.source))>::type&
+	-> const std::enable_if_t<has_source<T>(0),
+			decltype(get_source(c.source))>&
 {
 	return get_source(c.source);
 }
@@ -36,7 +36,7 @@ auto get_source(const T& c)
  */
 template <class T>
 auto get_sink(const T& s)
-	-> const typename std::enable_if<!has_sink<T>(0), T>::type&
+	-> const std::enable_if_t<!has_sink<T>(0), T>&
 {
 	return s;
 }
@@ -46,8 +46,8 @@ auto get_sink(const T& s)
  */
 template <class T>
 auto get_sink(const T& c)
-	-> const typename std::enable_if<has_sink<T>(0),
-			decltype(get_sink(c.sink))>::type&
+	-> const std::enable_if_t<has_sink<T>(0),
+			decltype(get_sink(c.sink))>&
 {
 	return get_sink(c.sink);
 }
@@ -67,7 +67,7 @@ struct get_source_t
  */
 template <class T>
 struct get_source_t<T,
-		typename std::enable_if< has_source<T>(0) >::type
+		std::enable_if_t< has_source<T>(0) >
 	>
 {
 	typedef typename get_source_t<decltype(std::declval<T>().source)>::value value;
@@ -88,7 +88,7 @@ struct get_sink_t
  */
 template <class T>
 struct get_sink_t<T,
-		typename std::enable_if< has_sink<T>(0) >::type
+		std::enable_if_t< has_sink<T>(0) >
 	>
 {
 	typedef typename get_sink_t<decltype(std::declval<T>().sink)>::value value;

@@ -256,10 +256,10 @@ template<class source_t, class sink_t>
 struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
+        std::enable_if_t<
         	::fc::is_active_source<source_t>::value &&
 			::fc::is_passive_sink<sink_t>::value
-		>::type
+		>
 	>
 {
 	auto operator()(const source_t& source, const sink_t& sink)
@@ -284,10 +284,10 @@ template<class source_t, class sink_t>
 struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-		typename std::enable_if<
+		std::enable_if_t<
 			::fc::is_passive_source<source_t>::value &&
 			::fc::is_active_sink<sink_t>::value
-		>::type
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -308,9 +308,9 @@ template<class source_t, class sink_t>
 struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
+        std::enable_if_t<
         	::fc::is_active_source<source_t>::value
-		>::type
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -327,9 +327,9 @@ template<class source_t, class sink_t>
 struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
+        std::enable_if_t<
         	::fc::is_active_sink<sink_t>::value
-        >::type
+        >
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -346,10 +346,10 @@ template<class source_t, class sink_t>
 struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
+        std::enable_if_t<
         	!is_active_source<source_t>::value &&
 			::fc::is_passive_sink<sink_t>::value
-		>::type
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -366,10 +366,10 @@ template<class source_t, class sink_t>
 struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
+        std::enable_if_t<
         	is_passive_source<source_t>::value &&
 			!::fc::is_active_sink<sink_t>::value
-		>::type
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)

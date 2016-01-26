@@ -112,11 +112,11 @@ struct type_is_callable_impl : has_call_op<T>::type
 /// Trait for determining if Expr is callable
 template<class Expr>
 struct is_callable:
-		std::conditional<
+		std::conditional_t<
 			std::is_class<Expr>::value,
 			detail::type_is_callable_impl<Expr>,
 			detail::expr_is_callable_impl<Expr>
-		>::type
+		>
 {
 };
 
@@ -163,8 +163,8 @@ namespace detail{ template<class, bool> struct result_of_impl; }
 template<class Expr>
 struct result_of
 {
-	typedef typename detail::result_of_impl<Expr,
-			has_result<typename std::remove_reference<Expr>::type>::value>::type type;
+	typedef typename detail::result_of_impl<
+	    Expr, has_result<std::remove_reference_t<Expr>>::value>::type type;
 };
 template <class Expr>
 using result_of_t = typename result_of<Expr>::type;
@@ -180,7 +180,7 @@ struct result_of_impl<Expr, false>
 template<class Expr>
 struct result_of_impl<Expr, true>
 {
-	typedef typename std::remove_reference<Expr>::type::result_t type;
+	typedef typename std::remove_reference_t<Expr>::result_t type;
 };
 } //namespace detail
 /// Trait for determining the type of a callables parameter.
@@ -224,12 +224,11 @@ struct is_active_connectable_impl : std::false_type
 
 template<class T>
 struct is_active_connectable_impl<
-	T, typename std::enable_if<std::is_class<T>::value>::type> :
+	T, std::enable_if_t<std::is_class<T>::value>> :
 		std::integral_constant
-			<	bool,
-					detail::has_member_connect<T>::type::value
-				and	std::is_copy_constructible<T>::value
-			>
+			<bool,
+			 detail::has_member_connect<T>::type::value
+			 and std::is_copy_constructible<T>::value>
 {
 };
 template<class T>
@@ -281,13 +280,13 @@ constexpr auto has_sink(int) -> decltype(
 };
 
 //template<class T>
-//struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::type>
+//struct is_passive_source_impl<T, std::enable_if_t<is_callable<T>::value>>
 //		: public std::integral_constant<bool, void_callable<T>(0)>
 //{
 //};
 
 template<class T>
-struct is_passive_source_impl<T,typename std::enable_if<void_callable<T>(0)>::type>
+struct is_passive_source_impl<T, std::enable_if_t<void_callable<T>(0)>>
 		: public std::integral_constant<bool, true>
 {
 };
@@ -311,16 +310,16 @@ constexpr bool overloaded(...)
 }
 
 template<class T>
-struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value
-			&& !overloaded<T>(0)>::type>
+struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>::value
+			&& !overloaded<T>(0)>>
 		: public std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
 {
 };
 
 template<class T>
-struct is_passive_sink_impl<T,typename std::enable_if<is_callable<T>::value
+struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>::value
 			&& overloaded<T>(0)
-			&& has_result<T>::value>::type>
+			&& has_result<T>::value>>
 		: public std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
 {
 };
