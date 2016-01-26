@@ -102,13 +102,13 @@ BOOST_AUTO_TEST_CASE( test_event_in_port_tmpl )
 
 BOOST_AUTO_TEST_CASE( connections )
 {
-	static_assert(is_active<pure::event_source<int>>::value,
+	static_assert(is_active<pure::event_source<int>>{},
 			"event_out_port is active by definition");
-	static_assert(is_passive<pure::event_sink<int>>::value,
+	static_assert(is_passive<pure::event_sink<int>>{},
 			"event_in_port is passive by definition");
-	static_assert(!is_active<pure::event_sink<int>>::value,
+	static_assert(!is_active<pure::event_sink<int>>{},
 			"event_in_port is not active by definition");
-	static_assert(!is_passive<pure::event_source<int>>::value,
+	static_assert(!is_passive<pure::event_source<int>>{},
 			"event_out_port is not passive by definition");
 
 	pure::event_source<int> test_event;
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE( connections )
 
 	auto tmp_connection = test_event >> [](int i){return ++i;};
 	static_assert(is_instantiation_of<
-			detail::active_connection_proxy, decltype(tmp_connection)>::value,
+			detail::active_connection_proxy, decltype(tmp_connection)>{},
 			"active port connected with standard connectable gets proxy");
 	tmp_connection >> test_handler;
 
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
 	pure::event_source<int> p;
 	auto write = sink([&](auto in) {test_value = in;});
 
-	static_assert(is_passive_sink<decltype(write)>::value, "");
+	static_assert(is_passive_sink<decltype(write)>{}, "");
 
 	p >> write;
 	BOOST_CHECK_EQUAL(test_value, 0);

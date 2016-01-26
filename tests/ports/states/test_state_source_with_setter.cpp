@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 
 	auto tmp = (increment >> sink);
 	static_assert(is_instantiation_of<
-			detail::active_connection_proxy, decltype(tmp)>::value,
+			detail::active_connection_proxy, decltype(tmp)>{},
 			"active sink connected with standard connectable gets proxy");
 	source >> tmp;
 

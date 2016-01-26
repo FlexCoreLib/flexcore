@@ -54,10 +54,10 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	state_source<size_t> config(&root, [&switch_param](){ return switch_param; });
 	event_sink_queue<int> buffer(&root);
 
-	static_assert(!is_active_sink   <event_source<int>>::value, "");
-	static_assert( is_active_source <event_source<int>>::value, "");
-	static_assert(!is_passive_sink  <event_source<int>>::value, "");
-	static_assert(!is_passive_source<event_source<int>>::value, "");
+	static_assert(!is_active_sink   <event_source<int>>{}, "");
+	static_assert( is_active_source <event_source<int>>{}, "");
+	static_assert(!is_passive_sink  <event_source<int>>{}, "");
+	static_assert(!is_passive_source<event_source<int>>{}, "");
 
 	source_1 >> test_switch->in(0);
 	source_2 >> test_switch->in(1);

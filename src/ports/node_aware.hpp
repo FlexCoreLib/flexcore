@@ -29,7 +29,7 @@ namespace fc
 template<class base>
 struct node_aware: public graph::graph_connectable<base>
 {
-	static_assert(std::is_class<base>::value,
+	static_assert(std::is_class<base>{},
 			"can only be mixed into clases, not primitives");
 	//allows explicit access to base of this mixin.
 	typedef base base_t;
@@ -256,9 +256,9 @@ template<class source_t, class sink_t>
 struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        std::enable_if_t<
-        	::fc::is_active_source<source_t>::value &&
-			::fc::is_passive_sink<sink_t>::value
+		std::enable_if_t<
+		::fc::is_active_source<source_t>{} &&
+			::fc::is_passive_sink<sink_t>{}
 		>
 	>
 {
@@ -285,8 +285,8 @@ struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
 		std::enable_if_t<
-			::fc::is_passive_source<source_t>::value &&
-			::fc::is_active_sink<sink_t>::value
+			::fc::is_passive_source<source_t>{} &&
+			::fc::is_active_sink<sink_t>{}
 		>
 	>
 {
@@ -308,8 +308,8 @@ template<class source_t, class sink_t>
 struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        std::enable_if_t<
-        	::fc::is_active_source<source_t>::value
+		std::enable_if_t<
+		::fc::is_active_source<source_t>{}
 		>
 	>
 {
@@ -327,9 +327,9 @@ template<class source_t, class sink_t>
 struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        std::enable_if_t<
-        	::fc::is_active_sink<sink_t>::value
-        >
+		std::enable_if_t<
+		::fc::is_active_sink<sink_t>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -346,9 +346,9 @@ template<class source_t, class sink_t>
 struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        std::enable_if_t<
-        	!is_active_source<source_t>::value &&
-			::fc::is_passive_sink<sink_t>::value
+		std::enable_if_t<
+			!is_active_source<source_t>{} &&
+			::fc::is_passive_sink<sink_t>{}
 		>
 	>
 {
@@ -366,9 +366,9 @@ template<class source_t, class sink_t>
 struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        std::enable_if_t<
-        	is_passive_source<source_t>::value &&
-			!::fc::is_active_sink<sink_t>::value
+		std::enable_if_t<
+			is_passive_source<source_t>{} &&
+			!::fc::is_active_sink<sink_t>{}
 		>
 	>
 {

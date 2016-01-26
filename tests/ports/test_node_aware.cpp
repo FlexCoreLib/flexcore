@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	test_in_port test_in(&root, write_param);
 	test_out_port test_out(&root);
 
-	static_assert(is_passive_sink<test_in_port>::value, "");
-	static_assert(has_result<test_out_port>::value,
+	static_assert(is_passive_sink<test_in_port>{}, "");
+	static_assert(has_result<test_out_port>{},
 			"its an out port, that has result_t defined");
 
 	test_out >> test_in;
@@ -47,16 +47,16 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
-	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
-	static_assert(is_instantiation_of<node_aware, decltype(tmp)>::value, "");
-	static_assert(not is_active_sink   <test_in_port>::value, "");
-	static_assert(not is_active_source <test_in_port>::value, "");
-	static_assert(    is_passive_sink  <test_in_port>::value, "");
-	static_assert(not is_passive_source<test_in_port>::value, "");
-	static_assert(not is_passive_source<decltype(tmp)>::value, "");
-	static_assert(not is_passive_sink  <decltype(tmp)>::value, "");
-	static_assert(    is_active_source <decltype(tmp)>::value, "");
-	static_assert(not is_active_sink   <decltype(tmp)>::value, "");
+	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
+	static_assert(is_instantiation_of<node_aware, decltype(tmp)>{}, "");
+	static_assert(not is_active_sink   <test_in_port>{}, "");
+	static_assert(not is_active_source <test_in_port>{}, "");
+	static_assert(    is_passive_sink  <test_in_port>{}, "");
+	static_assert(not is_passive_source<test_in_port>{}, "");
+	static_assert(not is_passive_source<decltype(tmp)>{}, "");
+	static_assert(not is_passive_sink  <decltype(tmp)>{}, "");
+	static_assert(    is_active_source <decltype(tmp)>{}, "");
+	static_assert(not is_active_sink   <decltype(tmp)>{}, "");
 
 	tmp >> test_in;
 
@@ -195,19 +195,19 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	test_out_port source(&root_1, [](){ return 1; });
 	test_in_port sink(&root_2);
 
-	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
-	static_assert(is_instantiation_of<node_aware, test_out_port>::value, "");
-	static_assert(    is_active_sink   <test_in_port>::value, "");
-	static_assert(not is_active_source <test_in_port>::value, "");
-	static_assert(not is_passive_sink  <test_in_port>::value, "");
-	static_assert(not is_passive_source<test_in_port>::value, "");
-	static_assert(    is_passive_source<test_out_port>::value, "");
-	static_assert(not is_passive_sink  <test_out_port>::value, "");
-	static_assert(not is_active_source <test_out_port>::value, "");
-	static_assert(not is_active_sink   <test_out_port>::value, "");
+	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
+	static_assert(is_instantiation_of<node_aware, test_out_port>{}, "");
+	static_assert(    is_active_sink   <test_in_port>{}, "");
+	static_assert(not is_active_source <test_in_port>{}, "");
+	static_assert(not is_passive_sink  <test_in_port>{}, "");
+	static_assert(not is_passive_source<test_in_port>{}, "");
+	static_assert(    is_passive_source<test_out_port>{}, "");
+	static_assert(not is_passive_sink  <test_out_port>{}, "");
+	static_assert(not is_active_source <test_out_port>{}, "");
+	static_assert(not is_active_sink   <test_out_port>{}, "");
 
 	static_assert(std::is_same<int,
-			result_of_t<test_out_port>>::value,
+			result_of_t<test_out_port>>{},
 			"return value of source is defined to be int");
 	source >> sink;
 
