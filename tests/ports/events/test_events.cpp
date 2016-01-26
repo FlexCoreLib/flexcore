@@ -330,12 +330,13 @@ BOOST_AUTO_TEST_CASE(test_sink_has_callback)
 template <class T>
 struct disconnecting_event_sink : public event_in_port<T>
 {
-	disconnecting_event_sink() :
+	disconnecting_event_sink(const std::string& name) :
 		event_in_port<T>(
 			[&](T in){
 				*storage = in;
 				std::cout<<"hello from sink with number "<<in<<"\n";
 			}
+	, name
 		)
 	{
 
@@ -346,20 +347,20 @@ struct disconnecting_event_sink : public event_in_port<T>
 
 BOOST_AUTO_TEST_CASE(test_sink_deleted_callback)
 {
-	std::cout<<"test_sink_deleted_callback\n";
-	disconnecting_event_sink<int> test_sink1;
+	std::cout<<"###################test_sink_deleted_callback###################\n";
+	disconnecting_event_sink<int> test_sink1("sink 1");
 
 	{
 		event_out_port<int> test_source;
 
-		disconnecting_event_sink<int> test_sink4;
+		disconnecting_event_sink<int> test_sink4("sink 4");
 		test_source >> test_sink1;
 		test_source.fire(5);
 		BOOST_CHECK_EQUAL(*(test_sink1.storage), 5);
 
 		{
-			disconnecting_event_sink<int> test_sink2;
-			disconnecting_event_sink<int> test_sink3;
+			disconnecting_event_sink<int> test_sink2("sink 2");
+			disconnecting_event_sink<int> test_sink3("sink 3");
 			test_source >> test_sink2;
 			test_source >> test_sink3;
 			test_source.fire(6);
@@ -381,21 +382,25 @@ BOOST_AUTO_TEST_CASE(test_sink_deleted_callback)
 
 BOOST_AUTO_TEST_CASE(test_lambda_in_connection)
 {
-	std::cout<<"test_lambda_in_connection\n";
-	event_sink<int> test_sink;
-	event_sink<int> test_sink_2;
+	std::cout<<"###################test_lambda_in_connection###################\n";
+	disconnecting_event_sink<int> test_sink("zonk 1");
 
 	event_out_port<int> test_source;
 
 	(test_source >> [](int i){ return i+1; }) >> test_sink;
 
-	test_source >> [](int i){ return i+1; }
-		>> [](int i){ return i+1; }
-		>> test_sink_2;
+	{
+		disconnecting_event_sink<int> test_sink_2("zonk 2");
+		test_source >> [](int i){ return i+1; }
+				>> [](int i){ return i+1; }
+				>> test_sink_2;
+				test_source.fire(10);
+				BOOST_CHECK_EQUAL(*(test_sink_2.storage), 12);
+	}
 
-	test_source.fire(10);
-	BOOST_CHECK_EQUAL(*(test_sink.storage), 11);
-	BOOST_CHECK_EQUAL(*(test_sink_2.storage), 12);
+
+	test_source.fire(11);
+	BOOST_CHECK_EQUAL(*(test_sink.storage), 12);
 }
 
 

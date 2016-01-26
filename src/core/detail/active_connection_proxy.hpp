@@ -81,6 +81,7 @@ struct active_connection_proxy
 
 	typedef typename
 			connect_policy::template second<active_t, passive_t>::result_t result_t;
+	typedef passive_t passive_type;
 
 	active_connection_proxy(active_t active_, passive_t passive) :
 			active(active_),

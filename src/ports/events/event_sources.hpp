@@ -102,24 +102,24 @@ struct event_out_port
 		return sink_callbacks->back();
 	}
 
-//	/**
-//	 * \brief connects new connectable target to port.
-//	 * \param new_handler the new target to be connected.
-//	 * \pre new_handler is not empty function
-//	 * \post event_handlers.empty() == false
-//	 */
-//	auto connect(handler_t new_handler)
-//	{
-//		assert(event_handlers);
-//		assert(new_handler); //connecting empty functions is illegal
-//		event_handlers->push_back(new_handler);
-//
-//		assert(!event_handlers->empty());
-//		return port_connection<decltype(*this), handler_t, result_t>();
-//	}
+	/**
+	 * \brief default implementation of connect(source_t, sink_t)
+	 * \param sink the new target to be connected.
+	 * \pre sink is not empty function
+	 * \pre sink not of type event_sink
+	 * \post event_handlers.empty() == false
+	 */
+	template<class source_t, class sink_t, class Enable = void>
+	struct connect_impl {
+		auto operator()(const source_t source, const sink_t sink)
+		{
+			assert(source.event_handlers);
+			source.add_handler(handler_t(sink));
 
-	template<class source_ptr_t, class sink_t, class Enable = void>
-	struct connect_impl {};
+			assert(!source.event_handlers->empty());
+			return port_connection<decltype(this), sink_t, result_t>();
+		}
+	};
 
 	/**
 	 * \brief specialization for connection with event_sink
@@ -128,9 +128,9 @@ struct event_out_port
 	 * \pre sink of type event_sink
 	 * \post event_handlers.empty() == false
 	 */
-	template <class source_ptr_t, class sink_t>
+	template <class source_t, class sink_t>
 	struct connect_impl
-		<	source_ptr_t,
+		<	source_t,
 			sink_t,
 			typename std::enable_if
 				<
@@ -138,70 +138,57 @@ struct event_out_port
 				>::type
 		>
 	{
-		typedef typename std::remove_pointer<source_ptr_t>::type source_t;
-
-		auto operator()(const source_ptr_t source, sink_t sink)
+		auto operator()(const source_t source, sink_t sink)
 		{
-			assert(source->event_handlers);
-//			assert(sink); //connecting empty functions is illegal
-			source->add_handler(typename source_t::handler_t(sink));
+			std::cout<<"called connect without proxy\n";
+			assert(source.event_handlers);
 
-			sink.register_callback(source->create_callback_delete_handler());
+			source.add_handler(sink);
 
-			assert(!source->event_handlers->empty());
+			sink.register_callback(source.create_callback_delete_handler());
+
+			assert(!source.event_handlers->empty());
 			return port_connection<decltype(*this), sink_t, result_t>();
 		}
 	};
 
 	/**
-	 * \brief specialization for connection with event_sink
-	 * \param sink the new target to be connected.
-	 * \pre sink is not empty function
-	 * \pre sink not of type event_sink
-	 * \post event_handlers.empty() == false
-	 */
-	template <class source_ptr_t, class sink_t>
-	struct connect_impl
-		<	source_ptr_t,
-			sink_t,
-			typename std::enable_if
+		 * \brief specialization for connection with event_sink
+		 * \param sink the new target to be connected.
+		 * \pre sink is not empty function
+		 * \pre sink of type event_sink
+		 * \post event_handlers.empty() == false
+		 */
+		template <class source_t, class sink_t>
+		struct connect_impl
+			<	source_t,
+				sink_t,
+				typename std::enable_if
 				<
-				!has_register_function<sink_t>(0)
+				is_instantiation_of<connection, sink_t>::value
+				and has_register_function<decltype(sink_t::sink)>(0)
 				>::type
-		>
-	{
-		typedef typename std::remove_pointer<source_ptr_t>::type source_t;
-
-		auto operator()(const source_ptr_t source, const sink_t sink)
+			>
 		{
-			assert(source->event_handlers);
-//			assert(sink); //connecting empty functions is illegal
-			source->add_handler(typename source_t::handler_t(sink));
+			auto operator()(const source_t source, sink_t sink)
+			{
+				std::cout<<"called connect with proxy\n";
+				assert(source.event_handlers);
 
-			assert(!source->event_handlers->empty());
-			return port_connection<decltype(this), sink_t, result_t>();
-		}
-	};
+				source.add_handler(sink);
+
+				sink.sink.register_callback(source.create_callback_delete_handler());
+
+				assert(!source.event_handlers->empty());
+				return port_connection<decltype(*this), sink_t, result_t>();
+			}
+		};
 
 	template <class sink_t>
 	auto connect(sink_t sink)
 	{
-		return connect_impl<decltype(this), sink_t>()(this, sink);
+		return connect_impl<decltype(*this), sink_t>()(*this, sink);
 	}
-
-//	auto connect(handler_t new_handler)
-//	{
-//		return connect_impl<decltype(this), handler_t>()(this, new_handler);
-//	}
-
-
-//	template<class event_sink_t>
-//	auto connect(event_sink_t sink)
-//	{
-//		auto connect_result = connect(sink);
-//		sink.register_callback(create_callback_delete_handler());
-//		return connect_result;
-//	}
 
 protected:
 

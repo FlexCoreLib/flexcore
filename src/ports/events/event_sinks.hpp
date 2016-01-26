@@ -21,6 +21,7 @@ struct event_in_port_callback_mixin
 		deregisterer(std::make_shared<scoped_deregister>())
 	{
 	}
+
 public:
 
 	/**
@@ -33,6 +34,11 @@ public:
 		assert(fun);
 		deregisterer->destruct_callback = fun;
 		assert(!deregisterer->destruct_callback.expired());
+	}
+
+	long int numRefs()
+	{
+		return deregisterer.use_count();
 	}
 
 private:
@@ -78,11 +84,20 @@ struct event_in_port : public event_in_port_callback_mixin
 {
 	typedef typename detail::handle_type<event_t>::type handler_t;
 
-	explicit event_in_port(const handler_t& handler) :
+	explicit event_in_port(const handler_t& handler, const std::string& name = "default sink") :
+			mName(name),
 			event_handler(handler)
 	{
 		assert(event_handler);
+		std::cout<<mName<<" ctor called, "<<numRefs()<<" refs\n";
 	}
+
+	~event_in_port()
+	{
+		std::cout<<mName<<" dtor called, "<<numRefs()<<" refs left\n";
+	}
+
+	std::string mName;
 
 	void operator()(auto&& in_event)
 	{
