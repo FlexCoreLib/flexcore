@@ -31,7 +31,7 @@ struct region_aware: public base
 	region_aware(std::shared_ptr<region_info> region_,
 		const args& ... base_constructor_args) :
 			base_t(base_constructor_args...),
-			region(region_)
+			region(std::move(region_))
 	{
 		assert(region);
 	}
