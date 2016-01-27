@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <clock/clock.hpp>
-#include "../ports/pure_ports.hpp"
+#include <ports/pure_ports.hpp>
 #include "parallelscheduler.hpp"
 
 namespace fc

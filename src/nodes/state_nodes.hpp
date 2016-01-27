@@ -2,14 +2,13 @@
 #define SRC_NODES_STATE_NODES_HPP_
 
 #include <core/traits.hpp>
-#include <ports/states/state_sink.hpp>
+#include <ports/ports.hpp>
 #include <nodes/base_node.hpp>
 
 #include <utility>
 #include <tuple>
 #include <memory>
 #include <cstddef>
-#include "../ports/ports.hpp"
 
 namespace fc
 {

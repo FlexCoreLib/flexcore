@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../src/ports/connection_buffer.hpp"
+#include <ports/connection_buffer.hpp>
 
 using namespace fc;
 

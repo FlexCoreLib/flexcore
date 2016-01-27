@@ -8,8 +8,7 @@
 // boost
 #include <boost/range.hpp>
 
-#include "../ports/ports.hpp"
-#include "../ports/pure_ports.hpp"
+#include <ports/ports.hpp>
 
 namespace fc
 {
