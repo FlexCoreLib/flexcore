@@ -45,7 +45,6 @@ struct node_aware: public graph::graph_connectable<base>
 		assert(node_ptr);
 	}
 
-
 	auto node_info() const
 	{
 		assert(node);
@@ -427,10 +426,13 @@ auto connect(node_aware<source_t> source, graph::graph_connectable<sink_t> sink)
 	ad_to_graph(source.graph_info, sink.graph_info);
 	// construct node_aware_connection
 	// based on if source and sink are from same region
-	return detail::source_node_aware_connect_impl
+	auto result = detail::source_node_aware_connect_impl
 		<	node_aware<source_t>,
 			sink_t
 		> ()(source, sink);
+
+	result.graph_info = sink.graph_info;
+	return result;
 }
 
 template<class source_t, class sink_t>
@@ -439,10 +441,13 @@ auto connect(graph::graph_connectable<source_t> source, node_aware<sink_t> sink)
 	ad_to_graph(source.graph_info, sink.graph_info);
 	// construct node_aware_connection
 	// based on if source and sink are from same region
-	return detail::sink_node_aware_connect_impl
+	auto result =  detail::sink_node_aware_connect_impl
 		<	source_t,
 			node_aware<sink_t>
 		> ()(source, sink);
+
+	result.graph_info = source.graph_info;
+	return result;
 }
 
 }  //namespace fc

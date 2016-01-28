@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	source_1.out() >> [](int i){ return i; } >> intermediate.in();
 	source_2.out() >> (graph::named([](int i){ return i; }, "incr") >> intermediate.in());
 	intermediate.out() >>
-	(graph::named([](int i){ return i; }, "foo") >>
-	graph::named([](int i){ return i; }, "bar")) >> sink.in();
+			graph::named([](int i){ return i; }, "foo") >>
+			graph::named([](int i){ return i; }, "bar") >> sink.in();
 
 	graph::print();
 

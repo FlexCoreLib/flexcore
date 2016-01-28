@@ -87,7 +87,7 @@ public:
 		boost::add_edge(
 				vertex_map[source_node.get_id()],
 				vertex_map[sink_node.get_id()],
-				edge{" to: "},
+				edge{""},
 				dataflow_graph);
 	}
 
