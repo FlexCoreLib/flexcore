@@ -32,12 +32,12 @@ public:
 	}
 
 	/// Event Sink expecting event_t.
-	auto in() noexcept
+	auto& in() noexcept
 	{
 		return in_port;
 	}
 	/// Event Source firing event_t.
-	auto out() noexcept
+	auto& out() noexcept
 	{
 		return out_port;
 	}
@@ -92,7 +92,7 @@ public:
 	}
 
 	/// State sink expecting bool. Events are forwarded if this state is true.
-	auto in_control() const noexcept { return control; }
+	auto& in_control() noexcept { return control; }
 
 private:
 	state_sink<bool> control;

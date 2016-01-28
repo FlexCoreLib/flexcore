@@ -19,10 +19,8 @@ namespace
 template<class left_t, class right_t>
 void range_compare(const left_t& left, const right_t& right)
 {
-	typedef decltype(std::begin(left)) left_iter_t;
-	typedef decltype(std::begin(right)) right_iter_t;
-	left_iter_t left_it = std::begin(left);
-	right_iter_t right_it = std::begin(right);
+	auto left_it = std::begin(left);
+	auto right_it = std::begin(right);
 
 	while	(	left_it != std::end(left)
 			and	right_it != std::end(right)
@@ -47,11 +45,10 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
 	splitter_t splitter(predicate);
 
 	std::vector<std::vector<std::string>> output(5);
-	typedef decltype(splitter.out(0))::result_t out_range_t;
 
 	for (size_t i = 0; i < 5; ++i)
-		splitter.out(i) >> [&output, i](const out_range_t& v) // [&output, i](const auto& v)
-				{ output.at(i) = std::vector<std::string>(boost::begin(v), boost::end(v)); };
+		splitter.out(i) >> [&output, i](const typename splitter_t::out_range_t& v)
+				{ output.at(i) = std::vector<std::string>(std::begin(v), std::end(v)); };
 
 	// send data
 	std::list<std::string> input { "aa", "bbb", "c", "d", "too long 1", "too long 2  " };
@@ -89,11 +86,10 @@ BOOST_AUTO_TEST_CASE( test_list_splitter_bool )
 
 	std::vector<int> out_true;
 	std::vector<int> out_false;
-	typedef decltype(splitter.out(0))::result_t out_range_t;
 
-	splitter.out(true) >> [&out_true](const out_range_t& v)
+	splitter.out(true) >> [&out_true](const typename splitter_t::out_range_t& v)
 			{ out_true = std::vector<int>(boost::begin(v), boost::end(v)); };
-	splitter.out(false) >> [&out_false](const out_range_t& v)
+	splitter.out(false) >> [&out_false](const typename splitter_t::out_range_t& v)
 			{ out_false = std::vector<int>(boost::begin(v), boost::end(v)); };
 
 	// send data

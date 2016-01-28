@@ -54,7 +54,7 @@ struct merge_node<operation, result (args...)>
 	}
 
 	template<size_t i>
-	auto in() const noexcept { return std::get<i>(in_ports); }
+	auto& in() noexcept { return std::get<i>(in_ports); }
 
 protected:
 	in_ports_t in_ports;
@@ -100,11 +100,11 @@ public:
 	}
 
 	///events to this port trigger the node to pull its inputs. expects void
-	auto pull() noexcept { return pull_tick; }
+	auto& pull() noexcept { return pull_tick; }
 	///State Input Port of type data_t
-	auto in() noexcept { return in_port; }
+	auto& in() noexcept { return in_port; }
 	///State Output Port of type data_t
-	auto out() noexcept { return out_port; }
+	auto& out() noexcept { return out_port; }
 
 private:
 	event_in_port<void> pull_tick;
@@ -140,7 +140,7 @@ public:
 	}
 
 	///State Input Port of type data_t
-	auto in() noexcept { return in_port; }
+	auto& in() noexcept { return in_port; }
 
 	///events to this port mark the cache as dirty. Expects events of type void.
 	auto switch_tick() noexcept { return [this](){ load_new = true; }; }

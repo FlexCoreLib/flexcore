@@ -161,9 +161,9 @@ public:
 	}
 
 	/// State input port, expects data_t.
-	auto in() noexcept { return in_port; }
+	auto& in() noexcept { return in_port; }
 	/// Event Output port, fires data_t.
-	auto out() noexcept { return out_port; }
+	auto& out() noexcept { return out_port; }
 
 	/// Event input port expects event of type void. Usually connected to a work_tick.
 	auto check_tick()

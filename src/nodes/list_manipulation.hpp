@@ -29,7 +29,7 @@ template
 class list_splitter
 {
 public:
-	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
+	typedef typename std::iterator_traits<decltype(std::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	explicit list_splitter(auto p)
@@ -40,7 +40,7 @@ public:
 	{}
 
 	event_in_port<range_t> in;
-	event_out_port<out_range_t> out(predicate_result_t value) { return entries[value].port; }
+	event_out_port<out_range_t>& out(predicate_result_t value) { return entries[value].port; }
 	/**
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
