@@ -91,7 +91,7 @@ public:
 	 * \param port, key by which port is identified.
 	 * \post !in_ports.empty()
 	 */
-	auto in(key_t port) noexcept
+	auto& in(key_t port) noexcept
 	{
 		auto it = in_ports.find(port);
 		if (it == in_ports.end())
@@ -99,8 +99,8 @@ public:
 		return it->second;
 	}
 	/// parameter port controlling the switch, expects state of key_t
-	auto control() const noexcept { return index; }
-	auto out() const noexcept { return out_port; }
+	auto& control() noexcept { return index; }
+	auto& out() noexcept { return out_port; }
 private:
 	state_sink<key_t> index;
 	std::map<key_t, state_sink<data_t>> in_ports;
@@ -125,7 +125,7 @@ public:
 	 * \param port, key by which port is identified.
 	 * \post !in_ports.empty()
 	 */
-	auto in(key_t port)
+	auto& in(key_t port)
 	{
 		auto it = in_ports.find(port);
 		if (it == end(in_ports))
@@ -142,9 +142,9 @@ public:
 	};
 
 	/// output port of events of type data_t.
-	auto out() const noexcept { return out_port; }
+	auto& out() noexcept { return out_port; }
 	/// parameter port controlling the switch, expects state of key_t
-	auto control() const noexcept { return index; }
+	auto& control() noexcept { return index; }
 
 
 private:
