@@ -8,6 +8,8 @@
 #include <nodes/base_node.hpp>
 
 #include <graph/graph.hpp>
+#include <graph/graph_connectable.hpp>
+
 
 namespace fc
 {
@@ -24,7 +26,7 @@ namespace fc
  * \endcode
  */
 template<class base>
-struct node_aware: public base
+struct node_aware: public graph::graph_connectable<base>
 {
 	static_assert(std::is_class<base>::value,
 			"can only be mixed into clases, not primitives");
@@ -34,28 +36,29 @@ struct node_aware: public base
 	template<class ... args>
 	node_aware( tree_base_node* node_ptr,
 				const args& ... base_constructor_args )
-		: base_t(base_constructor_args ...)
+		: graph::graph_connectable<base>(
+			graph::graph_node_properties{node_ptr->graph_info()}
+			, base_constructor_args ...)
 		, node(node_ptr)
-		, node_graph_info{node->own_name()}
-		, graph_info()
+		, graph_port_info()
 	{
 		assert(node_ptr);
 	}
 
+
 	auto node_info() const
 	{
 		assert(node);
-		return node_graph_info;
+		return this->graph_info;
 	}
 
 	auto port_info() const
 	{
-		return graph_info;
+		return graph_port_info;
 	}
 
 	tree_base_node* node;
-	graph::graph_node_properties node_graph_info;
-	graph::graph_port_information graph_info;;
+	graph::graph_port_information graph_port_info;
 };
 
 
@@ -256,8 +259,6 @@ struct both_node_aware_connect_impl
 {
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
-		graph::ad_to_graph(source.node_info(), source.port_info(),
-				sink.node_info(), sink.port_info());
 
 		typedef typename result_of<source_t>::type result_t;
 		return connect(
@@ -287,9 +288,6 @@ struct both_node_aware_connect_impl
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		graph::ad_to_graph(source.node_info(), source.port_info(),
-				sink.node_info(), sink.port_info());
-
 		typedef typename result_of<source_t>::type result_t;
 		return connect(detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
@@ -391,6 +389,8 @@ struct source_node_aware_connect_impl
 template<class source_t, class sink_t>
 auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 {
+	graph::ad_to_graph(source.node_info(), source.port_info(),
+			sink.node_info(), sink.port_info());
 	// construct node_aware_connection
 	// based on if source and sink are from same region
 	return detail::both_node_aware_connect_impl
@@ -413,6 +413,30 @@ auto connect(node_aware<source_t> source, sink_t sink)
 template<class source_t, class sink_t>
 auto connect(source_t source, node_aware<sink_t> sink)
 {
+	// construct node_aware_connection
+	// based on if source and sink are from same region
+	return detail::sink_node_aware_connect_impl
+		<	source_t,
+			node_aware<sink_t>
+		> ()(source, sink);
+}
+
+template<class source_t, class sink_t>
+auto connect(node_aware<source_t> source, graph::graph_connectable<sink_t> sink)
+{
+	ad_to_graph(source.graph_info, sink.graph_info);
+	// construct node_aware_connection
+	// based on if source and sink are from same region
+	return detail::source_node_aware_connect_impl
+		<	node_aware<source_t>,
+			sink_t
+		> ()(source, sink);
+}
+
+template<class source_t, class sink_t>
+auto connect(graph::graph_connectable<source_t> source, node_aware<sink_t> sink)
+{
+	ad_to_graph(source.graph_info, sink.graph_info);
 	// construct node_aware_connection
 	// based on if source and sink are from same region
 	return detail::sink_node_aware_connect_impl

@@ -103,7 +103,7 @@ struct active_connection_proxy
 	auto connect(new_passive_t new_passive,
 			typename std::enable_if<
 							(is_passive_source<new_passive_t>::value
-									or is_passive_sink<new_passive_t>::value)
+									|| is_passive_sink<new_passive_t>::value)
 											>::type* = 0)
 	{
 		static_assert(is_passive<new_passive_t>::value,
@@ -126,8 +126,8 @@ struct active_connection_proxy
 	 */
 	template<	class new_connectable_t,
 				class = typename std::enable_if<
-				not (is_passive_source<new_connectable_t>::value
-						or is_passive_sink<new_connectable_t>::value)
+				!(is_passive_source<new_connectable_t>::value
+						|| is_passive_sink<new_connectable_t>::value)
 								>::type
 			>
 	auto connect(const new_connectable_t& new_connectable)
@@ -175,12 +175,12 @@ struct active_passive_connect_impl
 		passive_t,
 		argument_order,
 		typename std::enable_if
-			<	not is_instantiation_of< active_connection_proxy,active_t >::value
-				and	(	(	is_active_source<active_t>::value
-						and !fc::is_passive_sink<passive_t>::value
+			<	!is_instantiation_of< active_connection_proxy,active_t >::value
+				&&	(	(	is_active_source<active_t>::value
+						&& !fc::is_passive_sink<passive_t>::value
 						)
-					or	(	fc::is_active_sink<active_t>::value
-						and !fc::is_passive_source<passive_t>::value
+					||	(	fc::is_active_sink<active_t>::value
+						&& !fc::is_passive_source<passive_t>::value
 						)
 					)>::type
 	>
@@ -206,11 +206,11 @@ struct active_passive_connect_impl
 		argument_order,
 		typename std::enable_if
 			<	not	is_instantiation_of< active_connection_proxy,active_t >::value
-				and	(	(	is_active_source<active_t>::value
-						and	fc::is_passive_sink<passive_t>::value
+				&&	(	(	is_active_source<active_t>::value
+						&&	fc::is_passive_sink<passive_t>::value
 					)
-					or	(	fc::is_active_sink<active_t>::value
-						and	fc::is_passive_source<passive_t>::value
+					||	(	fc::is_active_sink<active_t>::value
+						&&	fc::is_passive_source<passive_t>::value
 						)
 					)>::type
 	>

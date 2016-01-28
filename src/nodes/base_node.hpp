@@ -2,6 +2,7 @@
 #define SRC_NODES_BASE_NODE_HPP_
 
 #include <threading/parallelregion.hpp>
+#include <graph/graph_interface.hpp>
 #include <3rdparty/adobe/forest.hpp>
 
 #include <cassert>
@@ -43,7 +44,7 @@ public:
 			{ region_ = r; return this; }
 
 
-	std::string own_name() const { return name; }
+	std::string own_name() const { return graph_info_.name(); }
 	std::string full_name() const //todo, extract fully to non_member method
 	{
 		assert(forest_); //check invariant
@@ -71,8 +72,12 @@ public:
 		return full_name;
 	}
 
+	void set_name(std::string name) { graph_info_.name() = name; }
+
+	graph::graph_node_properties graph_info() { return graph_info_; }
+
 	tree_base_node(std::string name)
-		: name(name)
+		: graph_info_(name)
 		, forest_( std::make_shared<forest_t>() )
 		, self_(forest_->end())
 		, region_(std::make_shared<parallel_region>("invalid"))
@@ -88,8 +93,8 @@ protected:
 	 * @param p parent node (not 0)
 	 * @param r region_info object. Will be taken from parent if not given
 	 */
-	tree_base_node(	std::string n, std::shared_ptr<region_info> r )
-		: name(n)
+	tree_base_node(	std::string name, std::shared_ptr<region_info> r )
+		: graph_info_(name)
 		, forest_( std::make_shared<forest_t>() )
 		, self_(forest_->end())
 		, region_(r)
@@ -97,8 +102,9 @@ protected:
 		assert(forest_); //check invariant
 	}
 
-	std::string name;
+	graph::graph_node_properties graph_info_;
 	std::shared_ptr<forest_t> forest_;
+
 	public :forest_t::iterator self_;
 	protected:
 	std::shared_ptr<region_info> region_;
@@ -226,7 +232,7 @@ private:
 	template<class node_t>
 	node_t* add_child_named(const std::string& n, std::unique_ptr<node_t> child)
 	{
-		child->name = n;
+		child->set_name(n);
 		return add_child(std::move(child));
 	}
 };

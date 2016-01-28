@@ -12,14 +12,9 @@ namespace graph
 template<class base>
 struct graph_connectable : public base
 {
-	explicit graph_connectable(const base& args)
-		: base(args)
-		, graph_info("Todo")
-	{
-	}
-
-	graph_connectable(const base& args, const graph_node_properties& graph_info)
-		: base(args)
+	template<class... cstr_args>
+	graph_connectable(const graph_node_properties& graph_info, const cstr_args&... args)
+		: base(args...)
 		, graph_info(graph_info)
 	{
 	}
@@ -31,13 +26,13 @@ template<class base_t>
 auto make_graph_connectable(const base_t& base,
 		const graph_node_properties& graph_info)
 {
-	return graph_connectable<base_t>{base, graph_info};
+	return graph_connectable<base_t>{graph_info, base};
 }
 
 template<class connectable>
 auto named(const connectable& con, const std::string& name)
 {
-	return graph_connectable<connectable>{con, graph_node_properties{name}};
+	return graph_connectable<connectable>{graph_node_properties{name}, con};
 }
 
 template<class source_base, class sink_t>
@@ -65,7 +60,13 @@ auto connect(graph_connectable<source_base> source,
 	return ::fc::connect<source_base, sink_base>(source, sink);
 }
 
+
 }  // namespace graph
+template<class source_t, class sink_t>
+struct result_of<graph::graph_connectable<connection<source_t, sink_t>>>
+{
+	typedef typename result_of<source_t>::type type;
+};
 }  // namespace fc
 
 #endif /* SRC_GRAPH_GRAPH_CONNECTABLE_HPP_ */

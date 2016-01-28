@@ -147,8 +147,8 @@ template
 	<	class source_t,
 		class sink_t,
 		class enable = typename std::enable_if
-		<		(is_connectable<source_t>::value or is_active_connectable<source_t>::value)
-			and	(is_connectable<sink_t  >::value or is_active_connectable<sink_t  >::value)
+		<		(is_connectable<source_t>::value || is_active_connectable<source_t>::value)
+			&&	(is_connectable<sink_t  >::value || is_active_connectable<sink_t  >::value)
 		>::type
 	>
 auto operator >>(const source_t& source, const sink_t& sink)

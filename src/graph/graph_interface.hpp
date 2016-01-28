@@ -29,6 +29,7 @@ public:
 	}
 
 	std::string name() const { return human_readable_name; }
+	std::string& name() { return human_readable_name; }
 	unique_id get_id() const { return id; }
 private:
 	std::string human_readable_name;
