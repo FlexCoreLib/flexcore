@@ -9,6 +9,13 @@ namespace fc
 namespace graph
 {
 
+/**
+ * \brief Mixin for connectables which adds additional information for abstract graph.
+ *
+ * Connections of graph_connectables will be added to the global abstract graph.
+ *
+ * \tparam base any connectable to wrap graph_connectable around.
+ */
 template<class base>
 struct graph_connectable : public base
 {
@@ -29,6 +36,7 @@ auto make_graph_connectable(const base_t& base,
 	return graph_connectable<base_t>{graph_info, base};
 }
 
+///Creates a graph_connectable with a human readable name.
 template<class connectable>
 auto named(const connectable& con, const std::string& name)
 {

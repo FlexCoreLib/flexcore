@@ -13,6 +13,7 @@
 namespace fc
 {
 
+/// identifier of a parallel region
 struct region_id
 {
 	std::string key;
@@ -21,6 +22,7 @@ struct region_id
 
 bool operator==(const region_id& lhs, const region_id& rhs);
 
+/// Interface of parallel regions
 class region_info
 {
 public:
@@ -29,7 +31,7 @@ public:
 	virtual pure::event_source<void> work_tick() const = 0;
 
 protected:
-	//destructor is not public, as no ownership to regions is given through this.
+	///destructor is not public, as no ownership to regions is given through this.
 	~region_info() = default;
 };
 
@@ -64,6 +66,12 @@ public:
 	pure::event_source<void> work;
 };
 
+/**
+ * \brief Class defining a single parallel region.
+ *
+ * Provides switch ticks and work ticks for all nodes contained in the region.
+ * \see https://gitlab-test.site.x/flexcore/flexcore/wikis/ParallelRegion
+ */
 class parallel_region : public region_info
 {
 public:
@@ -82,7 +90,6 @@ protected:
 public:
 	tick_controller ticks;
 	region_id id;
-
 };
 
 } /* namespace fc */

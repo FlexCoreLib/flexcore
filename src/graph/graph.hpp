@@ -10,6 +10,10 @@
 
 namespace fc
 {
+/**
+ * \brief Contains all classes and functions to access
+ * and read the abstract connection graph of a flexcore application.
+ */
 namespace graph
 {
 
@@ -32,10 +36,19 @@ typedef boost::adjacency_list<boost::vecS,          // Store out-edges of each v
                               edge                   // edge properties
                               > dataflow_graph_t;
 
-
+/**
+ * \brief The abstract connection graph of a flexcore application.
+ *
+ * Contains all nodes which where declared with the additional information
+ * and edges between these nodes.
+ * Currently implemented as a global singleton.
+ *
+ * \invariant Number of vertices/nodes in dataflow_graph == vertex_map.size().
+ */
 class connection_graph
 {
 public:
+	/// Static access to the singleton.
 	static connection_graph& access()
 	{
 	     static connection_graph s;
@@ -44,6 +57,7 @@ public:
 
 	connection_graph(const connection_graph&) = delete;
 
+	/// Adds a new Connection containing two nodes and their ports to the graph.
 	void add_connection(const graph_node_properties& source_node,
 			const graph_port_information& source_port,
 			const graph_node_properties& sink_node,
@@ -70,6 +84,7 @@ public:
 				dataflow_graph);
 	}
 
+	/// Adds a new Connection without ports to the graph.
 	void add_connection(const graph_node_properties& source_node,
 			const graph_node_properties& sink_node)
 	{
@@ -94,9 +109,7 @@ public:
 	dataflow_graph_t& get_boost_graph() { return dataflow_graph; }
 
 private:
-	connection_graph()
-	{
-	}
+	connection_graph() = default;
 
 	dataflow_graph_t dataflow_graph;
 	std::map<unique_id, dataflow_graph_t::vertex_descriptor> vertex_map;
@@ -133,6 +146,7 @@ inline void ad_to_graph(const graph_node_properties& source_node,
 			sink_node);
 }
 
+/// Prints current state of the abstract graph in graphviz format.
 inline void print()
 {
 	const auto graph = connection_graph::access().get_boost_graph();

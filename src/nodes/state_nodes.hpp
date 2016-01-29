@@ -27,12 +27,10 @@ namespace fc
  * \endcode
  */
 template<class operation, class signature>
-struct merge_node : public base_node
-{
-};
+struct merge_node;
 
 template<class operation, class result, class... args>
-struct merge_node<operation, result (args...)> : public base_node
+struct merge_node<operation, result (args...)> : public tree_base_node
 {
 	typedef std::tuple<args...> arguments;
 	typedef std::tuple<state_sink<args> ...> in_ports_t;
@@ -43,7 +41,7 @@ struct merge_node<operation, result (args...)> : public base_node
 			"Tried to create merge_node with a function taking no arguments");
 
     explicit merge_node(operation o)
-		: base_node("merger")
+		: tree_base_node("merger")
   		, in_ports(state_sink<args>(this)...)
 		, op(o)
 	{}

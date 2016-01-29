@@ -71,14 +71,14 @@ auto transform(bin_op op)
  *
  * \key_t key for lookup of inputs in switch. needs to have operator < and ==
  */
-template<class data_t, class tag, class key_t = size_t> class n_ary_switch {};
+template<class data_t, class tag, class key_t = size_t> class n_ary_switch;
 
 template<class data_t, class key_t>
-class n_ary_switch<data_t, state_tag, key_t> : public base_node
+class n_ary_switch<data_t, state_tag, key_t> : public tree_base_node
 {
 public:
 	n_ary_switch()
-		: base_node("switch")
+		: tree_base_node("switch")
 		, index(this)
 		, in_ports()
 		, out_port(this, [this](){return in_ports.at(index.get()).get();} )
@@ -108,11 +108,11 @@ private:
 };
 
 template<class data_t, class key_t>
-class n_ary_switch<data_t, event_tag, key_t> : public base_node
+class n_ary_switch<data_t, event_tag, key_t> : public tree_base_node
 {
 public:
 	n_ary_switch()
-		: base_node("switch")
+		: tree_base_node("switch")
 		, index(this)
 		, out_port(this)
 		, in_ports()

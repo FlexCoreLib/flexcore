@@ -26,14 +26,14 @@ template
 	<	class range_t,
 		class predicate_result_t
 	>
-class list_splitter : public base_node
+class list_splitter : public tree_base_node
 {
 public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	explicit list_splitter(auto pred)
-		: base_node("splitter")
+		: tree_base_node("splitter")
 		, in(this, [&](const range_t& range){ this->receive(range); } )
 		, out_num_dropped(this)
 		, entries()
@@ -80,7 +80,7 @@ private:
 	}
 	struct entry_t
 	{
-		entry_t(base_node* p) : port(p), data() {}
+		entry_t(list_splitter* p) : port(p), data() {}
 		event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};
@@ -94,14 +94,14 @@ private:
  * Sends the buffer as state when pulled.
  */
 template<class range_t>
-class list_collector : public base_node
+class list_collector : public tree_base_node
 {
 public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	list_collector()
-		: base_node("list_collector")
+		: tree_base_node("list_collector")
 		, in( this, [&](const range_t& range){ this->receive(range); } )
 		, out( this, [&](){ return this->get_state(); } )
 	{}

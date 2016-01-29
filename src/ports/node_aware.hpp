@@ -42,15 +42,17 @@ struct node_aware: public graph::graph_connectable<base>
 		, node(node_ptr)
 		, graph_port_info()
 	{
-		assert(node_ptr);
+		assert(node);
 	}
 
+	/// getter for information about the node of this port in the abstract graph.
 	auto node_info() const
 	{
 		assert(node);
 		return this->graph_info;
 	}
 
+	/// getter for information about this port in the abstract graph.
 	auto port_info() const
 	{
 		return graph_port_info;
@@ -68,8 +70,8 @@ template<class source_t, class sink_t>
 bool same_region( const node_aware<source_t>& source,
 				  const node_aware<sink_t>& sink )
 {
-	return source.node->region().get_id()
-		  == sink.node->region().get_id();
+	return source.node->region()->get_id()
+		  == sink.node->region()->get_id();
 }
 
 /**
@@ -88,8 +90,8 @@ struct buffer_factory
 		{
 			auto result_buffer = std::make_shared<typename buffer<result_t, tag>::type>();
 
-			active.node->region().switch_tick() >> result_buffer->switch_tick();
-			passive.node->region().work_tick() >> result_buffer->work_tick();
+			active.node->region()->switch_tick() >> result_buffer->switch_tick();
+			passive.node->region()->work_tick() >> result_buffer->work_tick();
 
 			return result_buffer;
 		}
@@ -237,12 +239,15 @@ node_aware<base_connection_t> make_node_aware(const base_connection_t& base, tre
 	return node_aware<base_connection_t>(node_ptr, base);
 }
 
+/// Implementation of connect when both sides are node_aware.
 template<class source_t, class sink_t, class Enable = void>
 struct both_node_aware_connect_impl;
 
+/// Implementation of connect, where only the source is node_aware.
 template<class source_t, class sink_t, class Enable = void>
 struct source_node_aware_connect_impl;
 
+/// Implementation of connect where only the sink is node_aware.
 template<class source_t, class sink_t, class Enable = void>
 struct sink_node_aware_connect_impl;
 
@@ -258,7 +263,6 @@ struct both_node_aware_connect_impl
 {
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
-
 		typedef typename result_of<source_t>::type result_t;
 		return connect(
 				static_cast<const typename source_t::base_t&>(source),

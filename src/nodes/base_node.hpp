@@ -13,6 +13,8 @@
 namespace fc
 {
 
+static constexpr auto name_seperator = "/";
+
 /**
  * \brief base class for nodes.
  *
@@ -39,39 +41,16 @@ public:
 	{
 	}
 
-	const region_info& region() const { return *region_; }
+	const std::shared_ptr<region_info>& region() const { return region_; }
+	std::shared_ptr<region_info>& region() { return region_; }
+
+	std::shared_ptr<forest_t>& set_forest() { return forest_; }
+	const std::shared_ptr<forest_t>& forest() const { return forest_; }
+
 	tree_base_node* region(std::shared_ptr<region_info> r)
 			{ region_ = r; return this; }
 
-
 	std::string own_name() const { return graph_info_.name(); }
-	std::string full_name() const //todo, extract fully to non_member method
-	{
-		assert(forest_); //check invariant
-
-		if (self_ == forest_->end())
-			return own_name();
-
-		//push names of parent / grandparent ... to stack to later reverse order.
-		std::stack<std::string> name_stack;
-		for (auto parent =  adobe::find_parent(self_);
-				parent != forest_->end();
-				parent =  adobe::find_parent(parent))
-		{
-			name_stack.emplace((*parent)->own_name());
-		}
-
-		std::string full_name;
-		while (!name_stack.empty())
-		{
-			full_name = full_name + name_stack.top() + name_seperator;
-			name_stack.pop();
-		}
-
-		full_name += own_name();
-		return full_name;
-	}
-
 	void set_name(std::string name) { graph_info_.name() = name; }
 
 	graph::graph_node_properties graph_info() { return graph_info_; }
@@ -85,8 +64,6 @@ public:
 		assert(forest_); //check invariant
 	}
 protected:
-
-	friend class root_node;
 	/**
 	 * Constructor taking a parent node
 	 *
@@ -105,21 +82,13 @@ protected:
 	graph::graph_node_properties graph_info_;
 	std::shared_ptr<forest_t> forest_;
 
-	public :forest_t::iterator self_;
+	public: forest_t::iterator self_;
 	protected:
 	std::shared_ptr<region_info> region_;
-
-private:
-	static constexpr auto name_seperator = "/";
 };
 
-inline std::string full_name(const tree_base_node& node)
-{
-	return node.full_name();
-}
-
 /**
- * \brief mixin to tree_base_node which creates an aggregate node.
+ * \brief extension of tree_base_node which creates an aggregate node.
  *
  * Nodes of this type may have children nodes.
  * Adds several methods which allow adding new nodes as children.
@@ -144,14 +113,13 @@ inline std::string full_name(const tree_base_node& node)
  * root.make_child_named<node_tmpl>("name", 5);
  * \endcode
  */
-template<class base_t>
-struct node_owner : public base_t
+struct node_owner : public tree_base_node
 {
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
 	template<class... arg_types>
 	node_owner(const arg_types&... args)
-			: base_t(args...)
+			: tree_base_node(args...)
 	{
 	}
 
@@ -176,9 +144,9 @@ struct node_owner : public base_t
 	 * \post nr of children > 0
 	 */
 	template<class node_t, class ... args_t>
-	node_t* make_child_named(std::string n, args_t ... args)
+	node_t* make_child_named(std::string name, args_t ... args)
 	{
-		return add_child_named(n, std::make_unique<node_t>(args...));
+		return add_child_named(name, std::make_unique<node_t>(args...));
 	}
 	/**
 	 * Creates a new child node of type node_t<args_t> from args
@@ -188,7 +156,7 @@ struct node_owner : public base_t
 	template<template <typename ...> class node_t, class ... args_t>
 	node_t<args_t ...>* make_child(args_t ... args)
 	{
-		return add_child(std::make_unique<node_t<args_t...>>(args...));
+		return make_child<node_t<args_t...>>(args...);
 	}
 	/**
 	 * Creates a new child node of type node_t<args_t> from args,
@@ -196,9 +164,9 @@ struct node_owner : public base_t
 	 * @return pointer to child node
 	 */
 	template<template <typename ...> class node_t, class ... args_t>
-	node_t<args_t ...>* make_child_named(std::string n, args_t ... args)
+	node_t<args_t ...>* make_child_named(std::string name, args_t ... args)
 	{
-		return add_child_named(n, std::make_unique<node_t<args_t...>>(args...));
+		return make_child_named<node_t<args_t...>>(name, args...);
 	}
 
 private:
@@ -211,8 +179,8 @@ private:
 	{
 		assert(this->forest_); //check invariant
 
-		child->region_ = this->region_;
-		child->forest_ = this->forest_;
+		child->region() = this->region_;
+		child->set_forest() = this->forest_;
 
 		//we need to store an iterator and then cast back to node_t*
 		//to avoid use after move on child.
@@ -237,7 +205,7 @@ private:
 	}
 };
 
-typedef node_owner<tree_base_node> base_node;
+typedef node_owner base_node;
 
 /**
  * Root node for building node trees.
@@ -276,6 +244,40 @@ erase_with_subtree(
 	return forest.erase(
 			adobe::child_begin(position).base(),
 			adobe::child_end(position).base());
+}
+
+inline std::string
+full_name(
+		const adobe::forest<std::unique_ptr<tree_base_node>>& forest,
+		adobe::forest<std::unique_ptr<tree_base_node>>::iterator position)
+{
+
+	if (position == forest.end())
+		return (*position)->own_name();
+
+	//push names of parent / grandparent ... to stack to later reverse order.
+	std::stack<std::string> name_stack;
+	for (auto parent =  adobe::find_parent(position);
+			parent != forest.end();
+			parent =  adobe::find_parent(parent))
+	{
+		name_stack.emplace((*parent)->own_name());
+	}
+
+	std::string full_name;
+	while (!name_stack.empty())
+	{
+		full_name = full_name + name_stack.top() + name_seperator;
+		name_stack.pop();
+	}
+
+	full_name += (*position)->own_name();
+	return full_name;
+}
+
+inline std::string full_name(const tree_base_node& node)
+{
+	return full_name(*(node.forest()), node.self_);
 }
 
 } // namespace fc
