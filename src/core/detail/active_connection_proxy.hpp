@@ -15,16 +15,16 @@ namespace detail
 //policy classes for determining argument order in connect calls in the proxy
 struct active_sink_first
 {
-	template<class source_t, class sink_t>
-	struct first
-	{
-		typedef sink_t type;
-	};
-
-	template<class source_t, class sink_t>
-	struct second
+	template<class sink_t, class source_t>
+	struct source
 	{
 		typedef source_t type;
+	};
+
+	template<class sink_t, class source_t>
+	struct sink
+	{
+		typedef sink_t type;
 		typedef void result_t;
 	};
 
@@ -37,13 +37,13 @@ struct active_sink_first
 struct active_source_first
 {
 	template<class source_t, class sink_t>
-	struct first
+	struct source
 	{
 		typedef source_t type;
 	};
 
 	template<class source_t, class sink_t>
-	struct second
+	struct sink
 	{
 		typedef sink_t type;
 		typedef typename result_of<source_t>::type result_t;
@@ -80,9 +80,7 @@ struct active_connection_proxy
 			"active_t in proxy needs to be active connectable");
 
 	typedef typename
-			connect_policy::template second<active_t, passive_t>::result_t result_t;
-//	typedef typename
-//			connect_policy::template second<active_t, passive_t>::result_t result_t;
+			connect_policy::template sink<active_t, passive_t>::result_t result_t;
 
 	active_connection_proxy(active_t active_, passive_t passive) :
 			active(active_),
@@ -218,12 +216,8 @@ struct active_passive_connect_impl
 	auto operator()(active_t active, passive_t passive)
 	{
 		active.connect(passive);
-		typedef typename
-				argument_order::template first<active_t, passive_t>
-				::type source_t;
-		typedef typename
-				argument_order::template second<active_t, passive_t>
-				::type sink_t;
+		using source_t = typename argument_order::template source<active_t, passive_t>::type;
+		using sink_t = typename argument_order::template sink<active_t, passive_t>::type;
 		return port_connection<source_t, sink_t, typename result_of<active_t>::type>();
 	}
 };
