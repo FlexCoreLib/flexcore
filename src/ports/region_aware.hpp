@@ -221,7 +221,7 @@ struct region_aware_connect_impl
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
 		typedef typename result_of<source_t>::type result_t;
-		return connect(static_cast<const typename source_t::base_t&>(source), detail::make_buffered_connection(
+		return connect(static_cast<typename source_t::base_t>(source), detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
 						source, //event source is active, thus first
 						sink, //event sink is passive thus second

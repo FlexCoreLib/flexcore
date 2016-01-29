@@ -76,7 +76,7 @@ struct active_source_first
 template<class active_t, class passive_t, class connect_policy>
 struct active_connection_proxy
 {
-	static_assert(is_active<active_t>::value,
+	static_assert(is_active<std::decay_t<active_t>>{},
 			"active_t in proxy needs to be active connectable");
 
 	typedef typename
@@ -144,7 +144,7 @@ struct active_connection_proxy
 };
 
 template<class active_t, class passive_t, class argument_order, class Enable = void>
-struct active_passive_connect_impl {};
+struct active_passive_connect_impl;
 
 /// Specialization of connect to call member connect of stream_proxy.
 template<class active_t, class passive_t, class argument_order>
@@ -152,15 +152,12 @@ struct active_passive_connect_impl
 	<	active_t,
 		passive_t,
 		argument_order,
-        typename std::enable_if
-			<	is_instantiation_of< active_connection_proxy,
-									 active_t >::value
-			>::type
+		std::enable_if_t<is_instantiation_of<active_connection_proxy, std::decay_t<active_t>>{}>
 	>
 {
-	auto operator()(active_t active, const passive_t& passive)
+	auto operator()(active_t&& active, passive_t&& passive)
 	{
-		return active.connect(passive);
+		return active.connect(std::forward<passive_t>(passive));
 	}
 };
 
@@ -174,21 +171,21 @@ struct active_passive_connect_impl
 	<	active_t,
 		passive_t,
 		argument_order,
-		typename std::enable_if
-			<	not is_instantiation_of< active_connection_proxy,active_t >::value
-				and	(	(	is_active_source<active_t>::value
-						and !fc::is_passive_sink<passive_t>::value
+		std::enable_if_t
+			<	not is_instantiation_of< active_connection_proxy,std::decay_t<active_t>>{}
+				and	(	(	is_active_source<std::decay_t<active_t>>{}
+						and !fc::is_passive_sink<std::decay_t<passive_t>>{}
 						)
-					or	(	fc::is_active_sink<active_t>::value
-						and !fc::is_passive_source<passive_t>::value
+					or	(	fc::is_active_sink<std::decay_t<active_t>>{}
+						and !fc::is_passive_source<std::decay_t<passive_t>>{}
 						)
-					)>::type
+					)>
 	>
 {
-	auto operator()(const active_t& active, const passive_t& passive)
+	auto operator()(active_t&& active, passive_t&& passive)
 	{
 		return active_connection_proxy<active_t, passive_t, argument_order>
-				(active, passive);
+				(std::forward<active_t>(active), std::forward<passive_t>(passive));
 	}
 };
 
@@ -204,20 +201,20 @@ struct active_passive_connect_impl
 	<	active_t,
 		passive_t,
 		argument_order,
-		typename std::enable_if
-			<	not	is_instantiation_of< active_connection_proxy,active_t >::value
-				and	(	(	is_active_source<active_t>::value
-						and	fc::is_passive_sink<passive_t>::value
+		std::enable_if_t
+			<	not	is_instantiation_of< active_connection_proxy, std::decay_t<active_t>>{}
+				and	(	(	is_active_source<std::decay_t<active_t>>{}
+						and	fc::is_passive_sink<std::decay_t<passive_t>>{}
 					)
-					or	(	fc::is_active_sink<active_t>::value
-						and	fc::is_passive_source<passive_t>::value
+					or	(	fc::is_active_sink<std::decay_t<active_t>>{}
+						and	fc::is_passive_source<std::decay_t<passive_t>>{}
 						)
-					)>::type
+					)>
 	>
 {
-	auto operator()(active_t active, passive_t passive)
+	auto operator()(active_t&& active, passive_t&& passive)
 	{
-		active.connect(passive);
+		active.connect(std::forward<passive_t>(passive));
 		typedef typename
 				argument_order::template first<active_t, passive_t>
 				::type source_t;
@@ -232,14 +229,14 @@ template<class source_t, class sink_t>
 struct connect_impl
 	<	source_t,
 		sink_t,
-		typename std::enable_if
-			<fc::is_active<source_t>::value>::type
+		std::enable_if_t<fc::is_active<std::decay_t<source_t>>{}>
 	>
 {
-	auto operator()(const source_t& source, const sink_t& sink)
+	auto operator()(source_t&& source, sink_t&& sink)
 	{
 		// source is active, thus it is the first parameter
-		return active_passive_connect_impl<source_t, sink_t, active_source_first>()(source, sink);
+		return active_passive_connect_impl<source_t, sink_t, active_source_first>()
+		    (std::forward<source_t>(source), std::forward<sink_t>(sink));
 	}
 };
 
@@ -247,15 +244,14 @@ template<class source_t, class sink_t>
 struct connect_impl
 	<	source_t,
 		sink_t,
-		typename std::enable_if
-			<fc::is_active<sink_t>::value>::type
-
+		std::enable_if_t<fc::is_active<std::decay_t<sink_t>>{}>
 	>
 {
-	auto operator()(const source_t& source, const sink_t& sink)
+	auto operator()(source_t&& source, sink_t&& sink)
 	{
 		// sink is active, thus it is the first parameter
-		return active_passive_connect_impl<sink_t, source_t, active_sink_first>()(sink, source);
+		return active_passive_connect_impl<sink_t, source_t, active_sink_first>()
+				(std::forward<sink_t>(sink), std::forward<source_t>(source));
 	}
 };
 
