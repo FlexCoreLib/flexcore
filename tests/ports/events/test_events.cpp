@@ -280,6 +280,8 @@ BOOST_AUTO_TEST_CASE( associativity )
 	});
 }
 
+namespace
+{
 template<class operation>
 struct sink_t
 {
@@ -292,6 +294,7 @@ template<class operation>
 auto sink(const operation& op )
 {
 	return sink_t<operation>{op};
+}
 }
 
 BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
