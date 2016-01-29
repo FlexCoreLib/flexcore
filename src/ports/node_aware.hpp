@@ -137,7 +137,7 @@ private:
 template<class T> struct is_passive_sink<buffered_event_connection<T>> : public std::true_type {};
 
 /**
- * see buffered_event_connection
+ * \see buffered_event_connection
  * remove this code duplication if possible
  */
 template<class base_connection>

@@ -1,6 +1,9 @@
 #ifndef SRC_GRAPH_GRAPH_INTERFACE_HPP_
 #define SRC_GRAPH_GRAPH_INTERFACE_HPP_
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+
 /**
  * This file contains the classes which define the interface between
  * the flexcore connection logic with its connectables, ports and nodes on one side
@@ -12,10 +15,6 @@ namespace fc
 namespace graph
 {
 
-typedef int unique_id; //todo
-
-static unique_id unique_id_count_hack = 0; //todo terrible terrible hack
-
 /**
  * \brief Contains the information carried by a node of the dataflow graph
  */
@@ -24,9 +23,11 @@ class graph_node_properties
 public:
 	explicit graph_node_properties(const std::string name)
 		: human_readable_name(name)
-		, id(unique_id_count_hack++)
+		, id(boost::uuids::random_generator()())
 	{
 	}
+
+	typedef boost::uuids::uuid unique_id;
 
 	std::string name() const { return human_readable_name; }
 	std::string& name() { return human_readable_name; }
@@ -44,9 +45,12 @@ class graph_port_information
 {
 public:
 	graph_port_information()
-		: id(unique_id_count_hack++)
+		: id(boost::uuids::random_generator()())
 	{
 	}
+
+	typedef boost::uuids::uuid unique_id;
+
 	unique_id get_id() const { return id; }
 private:
 	unique_id id;

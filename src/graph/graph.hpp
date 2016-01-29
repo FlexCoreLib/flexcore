@@ -77,10 +77,12 @@ public:
 		boost::add_edge(
 				vertex_map[source_node.get_id()],
 				vertex_map[sink_node.get_id()],
-				edge{"port: "
-						+ std::to_string(source_port.get_id())
+				graph::edge{"port: "
+						+ std::to_string(
+								boost::uuids::hash_value(source_port.get_id()))
 						+ " to port: "
-						+ std::to_string(sink_port.get_id())},
+						+ std::to_string(
+								boost::uuids::hash_value(sink_port.get_id()))},
 				dataflow_graph);
 	}
 
@@ -112,7 +114,8 @@ private:
 	connection_graph() = default;
 
 	dataflow_graph_t dataflow_graph;
-	std::map<unique_id, dataflow_graph_t::vertex_descriptor> vertex_map;
+	std::map<graph_node_properties::unique_id,
+			dataflow_graph_t::vertex_descriptor> vertex_map;
 
 };
 
