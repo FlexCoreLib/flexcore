@@ -86,6 +86,8 @@ public:
 	void add_task(periodic_task task);
 	size_t nr_of_tasks() { return scheduler.nr_of_waiting_tasks(); }
 
+	std::exception_ptr last_exception();
+
 private:
 	/// contains the main loop, which is running as as long as it is not stopped
 	void main_loop();
@@ -98,6 +100,10 @@ private:
 	std::mutex main_loop_mutex;
 	std::mutex task_queue_mutex;
 	std::thread main_loop_thread;
+
+	//Thread exception handling
+	std::mutex task_exception_mutex;
+	std::deque<std::exception_ptr> task_exceptions;
 };
 
 } /* namespace thread */

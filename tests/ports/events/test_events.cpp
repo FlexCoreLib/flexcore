@@ -6,6 +6,8 @@
 
 using namespace fc;
 
+namespace fc
+{
 
 template<class T>
 struct event_sink
@@ -17,20 +19,9 @@ struct event_sink
 	std::shared_ptr<T> storage = std::make_shared<T>();
 };
 
-namespace fc
-{
-
 template<class T>
 struct is_passive_sink<event_sink<T>> : public std::true_type
 {};
-
-
-template<class T>
-struct is_port<event_sink<T>> : public std::true_type
-{
-};
-
-} // namespace fc
 
 template<class T>
 struct event_vector_sink
@@ -43,16 +34,78 @@ struct event_vector_sink
 			std::make_shared<std::vector<T>>();
 };
 
-namespace fc
-{
-
 template<class T>
 struct is_passive_sink<event_vector_sink<T>> : public std::true_type
 {};
 
+/**
+ * \brief Node for calculating the number of elements in a range
+ */
+struct range_size
+{
+public:
+	range_size()
+		: out()
+	{}
+	event_out_port<int> out;
+
+	auto in()
+	{
+		return ::fc::make_event_in_port_tmpl( [this](auto event)
+		{
+			size_t elems = std::distance(std::begin(event), std::end(event));
+			this->out.fire(static_cast<int>(elems));
+		} );
+	}
+};
+
 } // namespace fc
 
+namespace
+{
+
+/**
+ * Helper class for testing event_in_port_tmpl
+ */
+class generic_input_node
+{
+public:
+	generic_input_node() : value() {}
+
+	/*
+	 * Define a getter for the port named "in" and
+	 * Declare a member function to be called from the port.
+	 * The token type is available as "event_t" and the token as "event".
+	 */
+	auto in()
+	{
+		return ::fc::make_event_in_port_tmpl( [this](auto event)
+		{
+			value = event;
+		} );
+	}
+
+	int value;
+};
+
+} // unnamed namespace
+
 BOOST_AUTO_TEST_SUITE(test_events)
+
+BOOST_AUTO_TEST_CASE( test_event_in_port_tmpl )
+{
+	event_out_port<int> src_int;
+	event_out_port<double> src_double;
+	generic_input_node to;
+
+	src_int >> to.in();
+	src_double >> to.in();
+
+	src_int.fire(2);
+	BOOST_CHECK_EQUAL(to.value, 2);
+	src_int.fire(4.1);
+	BOOST_CHECK_EQUAL(to.value, 4);
+}
 
 BOOST_AUTO_TEST_CASE( connections )
 {
@@ -164,6 +217,19 @@ BOOST_AUTO_TEST_CASE( in_port )
 	BOOST_CHECK_EQUAL(test_value, 999);
 }
 
+BOOST_AUTO_TEST_CASE( test_event_out_port )
+{
+	range_size get_size;
+	int storage = 0;
+	get_size.out >> [&](int i) { storage = i; };
+
+	get_size.in()(std::list<float>{1., 2., .3});
+	BOOST_CHECK_EQUAL(storage, 3);
+
+	get_size.in()(std::vector<int>{0, 1});
+	BOOST_CHECK_EQUAL(storage, 2);
+}
+
 BOOST_AUTO_TEST_CASE( lambda )
 {
 	int test_value = 0;
@@ -221,6 +287,8 @@ BOOST_AUTO_TEST_CASE( associativity )
 	});
 }
 
+namespace
+{
 template<class operation>
 struct sink_t
 {
@@ -239,6 +307,7 @@ auto sink(const operation& op )
 {
 	return sink_t<operation>{op};
 }
+}
 
 BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
 {
@@ -253,7 +322,6 @@ BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
 	BOOST_CHECK_EQUAL(test_value, 0);
 	p.fire(4);
 	BOOST_CHECK_EQUAL(test_value, 4);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
