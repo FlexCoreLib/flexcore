@@ -252,6 +252,32 @@ constexpr bool void_callable(...)
 	return false;
 }
 
+template <class T>
+constexpr bool has_source(...)
+{
+	return false;
+}
+
+template <class T>
+constexpr auto has_source(int) -> decltype(
+		std::declval<T>().source, bool())
+{
+	return true;
+};
+
+template <class T>
+constexpr bool has_sink(...)
+{
+	return false;
+}
+
+template <class T>
+constexpr auto has_sink(int) -> decltype(
+		std::declval<T>().sink, bool())
+{
+	return true;
+};
+
 //template<class T>
 //struct is_passive_source_impl<T,typename std::enable_if<is_callable<T>::value>::type>
 //		: public std::integral_constant<bool, void_callable<T>(0)>

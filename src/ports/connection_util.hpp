@@ -10,20 +10,33 @@ namespace fc
 {
 
 /**
+ * \brief generalization of get_source
+ * Stopping criterion for recursion
+ */
+template <class T>
+auto get_source(T s)
+	-> typename std::enable_if<!has_source<T>(0), T>::type
+
+{
+	return s;
+}
+/**
  * \brief recursively extracts the source of a connection
  */
-template <class source_t, class sink_t>
-auto get_source(connection<source_t, sink_t> c)
+template <class T>
+auto get_source(T c)
+	-> typename std::enable_if<has_source<T>(0), decltype(get_source(c.source))>::type
 {
 	return get_source(c.source);
 }
 
 /**
- * \brief generalization of get_source
+ * \brief generalization of get_sink
  * Stopping criterion for recursion
  */
-template <class source_t>
-auto get_source(source_t s)
+template <class T>
+auto get_sink(T s)
+	-> typename std::enable_if<!has_sink<T>(0), T>::type
 {
 	return s;
 }
@@ -36,17 +49,6 @@ auto get_sink(T c)
 	-> typename std::enable_if<has_sink<T>(0), decltype(get_sink(c.sink))>::type
 {
 	return get_sink(c.sink);
-}
-
-/**
- * \brief generalization of get_sink
- * Stopping criterion for recursion
- */
-template <class T>
-auto get_sink(T s)
-	-> typename std::enable_if<!has_sink<T>(0), T>::type
-{
-	return s;
 }
 
 /**

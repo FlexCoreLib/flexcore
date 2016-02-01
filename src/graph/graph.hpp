@@ -43,6 +43,9 @@ typedef boost::adjacency_list<boost::vecS,          // Store out-edges of each v
  * and edges between these nodes.
  * Currently implemented as a global singleton.
  *
+ * \Todo Access to this class is currently not threadsafe
+ * As mutable access is not guarded by mutexes.
+ *
  * \invariant Number of vertices/nodes in dataflow_graph == vertex_map.size().
  */
 class connection_graph

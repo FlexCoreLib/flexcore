@@ -2,6 +2,7 @@
 #define SRC_PORTS_NODE_AWARE_HPP_
 
 #include <ports/detail/port_traits.hpp>
+#include <ports/connection_util.hpp>
 #include <core/connection.hpp>
 #include <threading/parallelregion.hpp>
 #include "connection_buffer.hpp"
@@ -439,6 +440,28 @@ auto connect(node_aware<source_t> source, graph::graph_connectable<sink_t> sink)
 	return result;
 }
 
+/*
+ * overload for special case, where right hand side (sink) is connection
+ * and the sink of that connection is graph_connectable.
+ * This should be refactored out.
+ */
+template<class source_t, class S, class T>
+auto connect(node_aware<source_t> source,
+		graph::graph_connectable<connection<S,
+		graph::graph_connectable<T>>> sink) //hackhack
+{
+	ad_to_graph(source.graph_info, sink.graph_info);
+	// construct node_aware_connection
+	// based on if source and sink are from same region
+	auto result = detail::source_node_aware_connect_impl
+		<	node_aware<source_t>,
+			connection<S,T>
+		> ()(source, sink);
+
+	result.graph_info = get_source(sink).graph_info;
+	return result;
+}
+
 template<class source_t, class sink_t>
 auto connect(graph::graph_connectable<source_t> source, node_aware<sink_t> sink)
 {
@@ -450,7 +473,7 @@ auto connect(graph::graph_connectable<source_t> source, node_aware<sink_t> sink)
 			node_aware<sink_t>
 		> ()(source, sink);
 
-	result.graph_info = source.graph_info;
+	result.graph_info = get_sink(source).graph_info;
 	return result;
 }
 

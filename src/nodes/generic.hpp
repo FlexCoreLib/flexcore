@@ -13,11 +13,11 @@
 namespace fc
 {
 /**
- * \brief generic unary node which applys transform with parameter to all inputs
+ * \brief generic unary node which applies transform with parameter to all inputs
  *
  * \tparam bin_op binary operator, argument is input of node, second is parameter
  *
- * \pre bin_op needs to be callable with two argments
+ * \pre bin_op needs to be callable with two arguments
  */
 template<class bin_op>
 struct transform_node// : public node_interface

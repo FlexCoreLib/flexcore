@@ -3,6 +3,7 @@
 
 #include <graph/graph.hpp>
 #include <core/connection.hpp>
+#include <ports/connection_util.hpp>
 
 namespace fc
 {
@@ -64,8 +65,10 @@ auto connect(graph_connectable<source_base> source,
 		graph_connectable<sink_base> sink)
 {
 	//add edge to graph with node info of source and sink
-	ad_to_graph(source.graph_info, sink.graph_info);
-	return ::fc::connect<source_base, sink_base>(source, sink);
+	ad_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
+	return make_graph_connectable(
+			::fc::connect<source_base, sink_base>(source, sink),
+			 get_sink(source).graph_info);
 }
 
 
