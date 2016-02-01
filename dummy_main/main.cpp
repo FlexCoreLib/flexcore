@@ -74,7 +74,7 @@ int main()
 	auto child_b = root.make_child_named<null>("sink_b")->region(second_region);
 	auto child_c = root.make_child_named<null>("source_c")->region(second_region);
 
-	fc::node_aware<fc::pure::event_source<std::string>> string_source(child_a);
+	event_source<std::string> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
@@ -85,7 +85,7 @@ int main()
 					string_source.fire("a magic string from " + first_region->get_id().key);
 				};
 
-	fc::node_aware<fc::pure::event_source<std::string>> string_source_2(child_c);
+	event_source<std::string> string_source_2(child_c);
 	string_source_2 >> string_sink;
 
 	graph::print();

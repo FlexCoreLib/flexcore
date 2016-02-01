@@ -12,13 +12,6 @@
 
 namespace fc
 {
-
-/*
- * TODO
- * node ownership model conflicts with copyability
- * nodes cannot be a connectable, because this would imply copying the node
- */
-
 /**
  * \brief generic unary node which applys transform with parameter to all inputs
  *
