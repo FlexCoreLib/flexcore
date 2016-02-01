@@ -2,7 +2,7 @@
 #define SRC_NODES_BASE_NODE_HPP_
 
 #include <threading/parallelregion.hpp>
-#include <graph/graph_interface.hpp>
+#include <graph/graph.hpp>
 #include <3rdparty/adobe/forest.hpp>
 
 #include <cassert>

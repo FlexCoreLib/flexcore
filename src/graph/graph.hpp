@@ -1,10 +1,11 @@
 #ifndef SRC_GRAPH_GRAPH_HPP_
 #define SRC_GRAPH_GRAPH_HPP_
 
-#include <graph/graph_interface.hpp>
-
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
+
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 #include <map>
 
@@ -16,6 +17,47 @@ namespace fc
  */
 namespace graph
 {
+
+/**
+ * \brief Contains the information carried by a node of the dataflow graph
+ */
+class graph_node_properties
+{
+public:
+	explicit graph_node_properties(const std::string name)
+		: human_readable_name(name)
+		, id(boost::uuids::random_generator()())
+	{
+	}
+
+	typedef boost::uuids::uuid unique_id;
+
+	const std::string& name() const { return human_readable_name; }
+	std::string& name() { return human_readable_name; }
+	unique_id get_id() const { return id; }
+private:
+	std::string human_readable_name;
+	unique_id id;
+};
+
+/**
+ * \brief Contains the information carried by ports
+ * which are connected in the dataflow graph.
+ */
+class graph_port_information
+{
+public:
+	graph_port_information()
+		: id(boost::uuids::random_generator()())
+	{
+	}
+
+	typedef boost::uuids::uuid unique_id;
+
+	unique_id get_id() const { return id; }
+private:
+	unique_id id;
+};
 
 /// Class containing the information of a node/vertex in the boost graph.
 struct vertex
