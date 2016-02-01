@@ -60,8 +60,6 @@ private:
 		 */
 		void deregister()
 		{
-			if(destruct_callback.expired())
-				std::cout<<"destructCallback is expired\n";
 			if (auto sharedCallbackPtr = destruct_callback.lock())
 				(*sharedCallbackPtr)();
 		}
@@ -84,20 +82,11 @@ struct event_in_port : public event_in_port_callback_mixin
 {
 	typedef typename detail::handle_type<event_t>::type handler_t;
 
-	explicit event_in_port(const handler_t& handler, const std::string& name = "default sink") :
-			mName(name),
+	explicit event_in_port(const handler_t& handler) :
 			event_handler(handler)
 	{
 		assert(event_handler);
-		std::cout<<mName<<" ctor called, "<<numRefs()<<" refs\n";
 	}
-
-	~event_in_port()
-	{
-		std::cout<<mName<<" dtor called, "<<numRefs()<<" refs left\n";
-	}
-
-	std::string mName;
 
 	void operator()(auto&& in_event)
 	{

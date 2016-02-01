@@ -9,6 +9,7 @@
 #include <core/traits.hpp>
 #include <core/connection.hpp>
 
+#include <ports/connection_util.hpp>
 #include <ports/detail/port_traits.hpp>
 #include <core/detail/active_connection_proxy.hpp>
 
@@ -98,7 +99,6 @@ struct event_out_port
 
 		assert(!sink_callbacks->empty());
 
-		std::cout<<"callback created, num of callbacks is "<<sink_callbacks->size()<<"\n";
 		return sink_callbacks->back();
 	}
 
@@ -122,67 +122,34 @@ struct event_out_port
 	};
 
 	/**
-	 * \brief specialization for connection with event_sink
+	 * \brief specialization for connection with connection struct
 	 * \param sink the new target to be connected.
 	 * \pre sink is not empty function
-	 * \pre sink of type event_sink
+	 * \pre sink of type connection
+	 * \pre sink.sink.(...).sink has register function
 	 * \post event_handlers.empty() == false
 	 */
 	template <class source_t, class sink_t>
 	struct connect_impl
 		<	source_t,
 			sink_t,
-			typename std::enable_if
-				<
-				has_register_function<sink_t>(0)
-				>::type
+			typename std::enable_if <
+				has_register_function<typename get_sink_t<sink_t>::value>(0)
+			>::type
 		>
 	{
 		auto operator()(const source_t source, sink_t sink)
 		{
-			std::cout<<"called connect without proxy\n";
 			assert(source.event_handlers);
 
 			source.add_handler(sink);
 
-			sink.register_callback(source.create_callback_delete_handler());
+			get_sink(sink).register_callback(source.create_callback_delete_handler());
 
 			assert(!source.event_handlers->empty());
 			return port_connection<decltype(*this), sink_t, result_t>();
 		}
 	};
-
-	/**
-		 * \brief specialization for connection with event_sink
-		 * \param sink the new target to be connected.
-		 * \pre sink is not empty function
-		 * \pre sink of type event_sink
-		 * \post event_handlers.empty() == false
-		 */
-		template <class source_t, class sink_t>
-		struct connect_impl
-			<	source_t,
-				sink_t,
-				typename std::enable_if
-				<
-				is_instantiation_of<connection, sink_t>::value
-				and has_register_function<decltype(sink_t::sink)>(0)
-				>::type
-			>
-		{
-			auto operator()(const source_t source, sink_t sink)
-			{
-				std::cout<<"called connect with proxy\n";
-				assert(source.event_handlers);
-
-				source.add_handler(sink);
-
-				sink.sink.register_callback(source.create_callback_delete_handler());
-
-				assert(!source.event_handlers->empty());
-				return port_connection<decltype(*this), sink_t, result_t>();
-			}
-		};
 
 	template <class sink_t>
 	auto connect(sink_t sink)
