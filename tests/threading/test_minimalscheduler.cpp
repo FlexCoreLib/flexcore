@@ -19,6 +19,8 @@
 
 using namespace fc;
 
+namespace
+{
 class IncOp
 {
 public:
@@ -35,6 +37,7 @@ private:
 
 static void IncOpFn(size_t& val, int delta = 3) { val += delta; }
 
+}
 
 BOOST_AUTO_TEST_CASE( test_scheduler_possible_callables)
 { // test what can be inserted as a task

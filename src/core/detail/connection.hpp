@@ -77,7 +77,6 @@ struct connection
 	source_t source;
 	sink_t sink;
 
-
 	/**
 	 * \brief call operator, calls source and then sink with the result of source
 	 *
@@ -125,8 +124,8 @@ struct connect_impl
  * \returns connection object which has its type determined by the source_t and sink_t.
  *
  * If source_t and sink_t fulfill connectable, the result is connectable.
- * If one of source_t and sink_t fulfills receive_connectable and the other fulfills send_connectable,
- * the result is not non_connectable.
+ * If one of source_t and sink_t fulfills receive_connectable and the other
+ * fulfills send_connectable, the result is not non_connectable.
  * If either source_t or sink_t fulfill send_connectable, the result is send_connectable.
  * If either source_t or sink_t fulfill receive_connectable, the result is receive_connectable.
  */
@@ -144,9 +143,14 @@ auto connect(const source_t& source, const sink_t& sink)
  *
  * This operator is syntactic sugar for Connect.
  */
-template<class source_t, class sink_t, class enable = typename std::enable_if<
-		(is_connectable<source_t>::value || is_active_connectable<source_t>::value)
-		&& (is_connectable<sink_t>::value || is_active_connectable<sink_t>::value)>::type>
+template
+	<	class source_t,
+		class sink_t,
+		class enable = typename std::enable_if
+		<		(is_connectable<source_t>::value || is_active_connectable<source_t>::value)
+			&&	(is_connectable<sink_t  >::value || is_active_connectable<sink_t  >::value)
+		>::type
+	>
 auto operator >>(const source_t& source, const sink_t& sink)
 {
 	return connect(source, sink);

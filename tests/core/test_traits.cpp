@@ -20,6 +20,11 @@
 
 using namespace fc;
 
+BOOST_AUTO_TEST_SUITE(test_fc_traits)
+
+namespace
+{
+
 //////////////////////////////////////////////////
 /// MACROS
 
@@ -83,6 +88,7 @@ struct result_haver
 	typedef int result_t; // has a result_t
 };
 
+} //namespace
 //////////////////////////////////////////////////
 /// Actual tests
 
@@ -131,10 +137,13 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 	}
 }
 
+namespace
+{
 struct not_callable
 {
 	//note the absence of operator()
 };
+}
 
 BOOST_AUTO_TEST_CASE( test_is_callable )
 {
@@ -153,5 +162,6 @@ BOOST_AUTO_TEST_CASE( test_is_callable )
 			"type is defined to be not callable");
 }
 
-//
+BOOST_AUTO_TEST_SUITE_END()
+
 // TestTraits.cpp ends here

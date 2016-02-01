@@ -16,6 +16,8 @@
 
 namespace fc
 {
+namespace pure
+{
 
 /**
  * \brief minimal output port for events.
@@ -27,13 +29,13 @@ namespace fc
  * \invariant shared pointer event_handlers != 0.
  */
 template<class event_t>
-struct event_out_port
+struct event_source
 {
 	typedef typename std::remove_reference<event_t>::type result_t;
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
-	event_out_port() = default;
-	event_out_port(const event_out_port&) = default;
+	event_source() = default;
+	event_source(const event_source&) = default;
 
 	template<class... T>
 	void fire(T&&... event)
@@ -86,9 +88,10 @@ private:
 	std::shared_ptr<handler_vector> event_handlers = std::make_shared<handler_vector>(0);
 };
 
+} // namespace pure
+
 // traits
-// TODO prefer to test this algorithmically
-template<class T> struct is_port<event_out_port<T>> : public std::true_type {};
+template<class T> struct is_active_source<pure::event_source<T>> : public std::true_type {};
 
 } // namespace fc
 

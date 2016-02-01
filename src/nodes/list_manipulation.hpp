@@ -2,13 +2,13 @@
 #define SRC_NODES_LIST_MANIPULATION_HPP_
 
 #include <core/traits.hpp>
-#include <ports/ports.hpp>
-
-// std
+#include <nodes/base_node.hpp>
 #include <map>
 
 // boost
 #include <boost/range.hpp>
+
+#include <ports/ports.hpp>
 
 namespace fc
 {
@@ -26,22 +26,28 @@ template
 	<	class range_t,
 		class predicate_result_t
 	>
-class list_splitter
+class list_splitter : public tree_base_node
 {
 public:
 	typedef typename std::iterator_traits<decltype(std::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	explicit list_splitter(auto p)
-		: in( [&](const range_t& range){ this->receive(range); } )
-		, out_num_dropped(0)
+	explicit list_splitter(auto pred)
+		: tree_base_node("splitter")
+		, in(this, [&](const range_t& range){ this->receive(range); } )
+		, out_num_dropped(this)
 		, entries()
-		, predicate(p)
+		, predicate(pred)
 	{}
 
-	event_in_port<range_t> in;
-	event_out_port<out_range_t>& out(predicate_result_t value) { return entries[value].port; }
-	/**
+	event_sink<range_t> in;
+	event_source<out_range_t> out(predicate_result_t value)
+	{
+		auto it = entries.find(value);
+		if (it == entries.end())
+			it = entries.insert(std::make_pair(value, entry_t(this))).first;
+		return it->second.port;
+	}	/**
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
 	 */
@@ -73,7 +79,8 @@ private:
 	}
 	struct entry_t
 	{
-		event_out_port<out_range_t> port;
+		entry_t(list_splitter* p) : port(p), data() {}
+		event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};
 

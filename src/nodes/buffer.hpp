@@ -3,8 +3,7 @@
 
 #include <core/traits.hpp>
 
-#include <ports/states/state_sources.hpp>
-#include <ports/events/event_sinks.hpp>
+#include <ports/ports.hpp>
 
 #include <boost/range.hpp>
 #include <boost/circular_buffer.hpp>
@@ -58,14 +57,13 @@ public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
 	list_collector()
 		: detail::base_event_to_state<data_t, std::vector>{
-				state_source_call_function<out_range_t>(
 						[this]()
 						{
 							data_read = true;
 							return boost::make_iterator_range(
 									this->buffer_state.begin(),
 									this->buffer_state.end());
-						} )}
+						}}
 	{}
 
 	auto swap_buffers() noexcept
@@ -105,11 +103,10 @@ public:
 			out_range_t;
 
 	list_collector()
-		: detail::base_event_to_state<data_t, std::vector>{
-				state_source_call_function<out_range_t>([&]()
+		: detail::base_event_to_state<data_t, std::vector>{[&]()
 				{
 					return this->get_state();
-				} )}
+				}}
 	{}
 
 private:
@@ -152,7 +149,7 @@ struct collector
 
 /// Base class for nodes which take events and provide a range as state.
 template<class data_t, template<class...> class container_t>
-class base_event_to_state
+class base_event_to_state : public tree_base_node
 {
 public:
 	typedef boost::iterator_range<typename container_t<data_t>::const_iterator> out_range_t;
@@ -165,9 +162,12 @@ public:
 	auto out() noexcept { return out_port; }
 
 protected:
-	explicit base_event_to_state(const state_source_call_function<out_range_t>& out_port) :
+	template<class action_t>
+	explicit base_event_to_state(
+			action_t&& action) :
+		tree_base_node("event to state"),
 		buffer_collect(std::make_unique<std::vector<data_t>>()),
-		out_port(out_port)
+		out_port(this, action)
 	{
 	}
 
@@ -184,7 +184,7 @@ protected:
  * \tparam data_t is type of token received as event and then stored.
  */
 template<class data_t>
-class hold_last
+class hold_last : public tree_base_node
 {
 public:
 	static_assert(!std::is_void<data_t>(),
@@ -192,7 +192,8 @@ public:
 
 	/// Constructs hold_last with initial state.
 	explicit hold_last(const data_t& initial_value = data_t())
-		: storage(initial_value)
+		: tree_base_node("hold_last")
+		, storage(initial_value)
 	{
 	}
 
@@ -214,7 +215,7 @@ private:
  * \invariant capacity of buffer is > 0.
  */
 template<class data_t>
-class hold_n
+class hold_n : tree_base_node
 {
 public:
 	typedef boost::circular_buffer<data_t> buffer_t;
@@ -230,8 +231,9 @@ public:
 	 * \pre capacity > 0
 	 */
 	explicit hold_n(size_t capacity)
-		: storage(std::make_unique<buffer_t>(capacity))
-		, out_port(
+		: tree_base_node("hold")
+		, storage(std::make_unique<buffer_t>(capacity))
+		, out_port(this,
 				[this]()
 				{
 					return boost::make_iterator_range(
@@ -249,7 +251,7 @@ public:
 		return detail::collector<data_t, boost::circular_buffer>{storage.get()};
 	}
 	/// State out port supplying range of data_t.
-	auto out() const noexcept { return out_port; }
+	auto& out() const noexcept { return out_port; }
 private:
 	std::unique_ptr<buffer_t> storage;
 	state_source_call_function<out_range_t> out_port;

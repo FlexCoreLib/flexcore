@@ -10,9 +10,11 @@ BOOST_AUTO_TEST_SUITE(test_buffers)
 
 BOOST_AUTO_TEST_CASE(single_event_to_state)
 {
+	root_node root;
+
 	list_collector<int, swap_on_tick> buffer;
 
-	event_out_port<int> source;
+	event_source<int> source{&root};
 
 	source >> buffer.in();
 
@@ -35,9 +37,11 @@ BOOST_AUTO_TEST_CASE(single_event_to_state)
 
 BOOST_AUTO_TEST_CASE(event_range_to_state)
 {
+	root_node root;
+
 	list_collector<int, swap_on_tick> buffer;
 	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
-	event_out_port<int_range> source;
+	event_source<int_range> source{&root};
 	std::vector<int> vec {1,2,3,4};
 
 	source >> buffer.in();
@@ -60,10 +64,12 @@ BOOST_AUTO_TEST_CASE(event_range_to_state)
 
 BOOST_AUTO_TEST_CASE(test_hold_last)
 {
+	root_node root;
+
 	hold_last<int> buffer;
 
-	event_out_port<int> source;
-	state_sink<int> sink;
+	event_source<int> source{&root};
+	state_sink<int> sink{&root};
 
 	source >> buffer.in();
 	buffer.out() >> sink;
@@ -75,9 +81,11 @@ BOOST_AUTO_TEST_CASE(test_hold_last)
 
 BOOST_AUTO_TEST_CASE(test_hold_n)
 {
+	root_node root;
+
 	hold_n<int> buffer{3};
-	event_out_port<int> source;
-	state_sink<hold_n<int>::out_range_t> sink;
+	event_source<int> source{&root};
+	state_sink<hold_n<int>::out_range_t> sink{&root};
 
 	source >> buffer.in();
 	buffer.out() >> sink;
@@ -97,10 +105,12 @@ BOOST_AUTO_TEST_CASE(test_hold_n)
 
 BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
 {
+	root_node root;
+
 	hold_n<int> buffer{5};
-	state_sink<hold_n<int>::out_range_t> sink;
+	state_sink<hold_n<int>::out_range_t> sink{&root};
 	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
-	event_out_port<int_range> source;
+	event_source<int_range> source{&root};
 	std::vector<int> vec {1,2,3,4};
 
 	source >> buffer.in();

@@ -2,12 +2,16 @@
 #define SRC_NODES_STATE_NODES_HPP_
 
 #include <core/traits.hpp>
-#include <ports/states/state_sink.hpp>
+#include <ports/ports.hpp>
+#include <nodes/base_node.hpp>
 #include <ports/states/state_sources.hpp>
 
 #include <ports/events/event_sinks.hpp>
 
 #include <utility>
+#include <tuple>
+#include <memory>
+#include <cstddef>
 
 namespace fc
 {
@@ -26,12 +30,10 @@ namespace fc
  * \endcode
  */
 template<class operation, class signature>
-struct merge_node
-{
-};
+struct merge_node;
 
 template<class operation, class result, class... args>
-struct merge_node<operation, result (args...)>
+struct merge_node<operation, result (args...)> : public tree_base_node
 {
 	typedef std::tuple<args...> arguments;
 	typedef std::tuple<state_sink<args> ...> in_ports_t;
@@ -41,11 +43,11 @@ struct merge_node<operation, result (args...)>
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
-	explicit merge_node(operation op) :
-			in_ports(),
-			op(op)
-	{
-	}
+    explicit merge_node(operation o)
+		: tree_base_node("merger")
+  		, in_ports(state_sink<args>(this)...)
+		, op(o)
+	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation
 	result_type operator()()
@@ -70,15 +72,15 @@ private:
 };
 
 ///creats a merge node which applies the operation to all inputs and returns single state.
-template<class operation>
-auto merge(operation op)
+template<class parent_t, class operation>
+auto make_merge(parent_t& parent, operation op)
 {
-	return merge_node<
-			operation,
-			typename utils::function_traits<operation>::function_type
-			>(op);
+	typedef merge_node
+			<	operation,
+				typename utils::function_traits<operation>::function_type
+			> node_t;
+	return parent.template make_child<node_t>(op);
 }
-
 
 /*****************************************************************************/
 /*                                   Caches                                  */
@@ -86,16 +88,17 @@ auto merge(operation op)
 
 /// pulls inputs on incoming pull tick and makes it available to state otuput out().
 template<class data_t>
-class current_state
+class current_state : public tree_base_node
 {
 public:
 	explicit current_state(const data_t& initial_value = data_t()) :
+			tree_base_node("cache"),
 			pull_tick([this]()
 			{
 				out_port.set(in_port.get());
 			}),
-			in_port(),
-			out_port(initial_value)
+			in_port(this),
+			out_port(this, initial_value)
 	{
 	}
 
@@ -107,7 +110,7 @@ public:
 	auto& out() noexcept { return out_port; }
 
 private:
-	event_in_port<void> pull_tick;
+	pure::event_sink<void> pull_tick;
 	state_sink<data_t> in_port;
 	state_source_with_setter<data_t> out_port;
 };
@@ -119,12 +122,14 @@ private:
  * as events to this port mark the cache as dirty.
  */
 template<class data_t>
-class state_cache
+class state_cache : public tree_base_node
 {
 public:
 	state_cache() :
+		tree_base_node("cache"),
 		cache(std::make_shared<data_t>()),
-		load_new(true)
+		load_new(true),
+		in_port(this)
 	{
 	}
 
@@ -156,6 +161,6 @@ private:
 	state_sink<data_t> in_port;
 };
 
-}  // namespace fc
+} // namespace fc
 
 #endif /* SRC_NODES_STATE_NODES_HPP_ */

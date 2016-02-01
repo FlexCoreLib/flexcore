@@ -4,6 +4,7 @@
 #include <ports/states/state_sink.hpp>
 #include <ports/events/event_sinks.hpp>
 #include <ports/events/event_sources.hpp>
+#include <ports/ports.hpp>
 
 namespace fc
 {
@@ -16,7 +17,7 @@ namespace fc
  * \tparam event_t type of event handled by the node
  */
 template<class event_t>
-class generic_event_node
+class generic_event_node : public tree_base_node
 {
 public:
 	/**
@@ -26,8 +27,9 @@ public:
 	 * \param action action to execute when an event is received at in().
 	 */
 	template<class action_t>
-	explicit generic_event_node(action_t&& action) :
-		in_port(action), out_port()
+	explicit generic_event_node(std::string name ,action_t&& action) :
+	tree_base_node(name),
+		in_port(this, action), out_port(this)
 	{
 	}
 
@@ -42,8 +44,8 @@ public:
 		return out_port;
 	}
 protected:
-	event_in_port<event_t> in_port;
-	event_out_port<event_t> out_port;
+	event_sink<event_t> in_port;
+	event_source<event_t> out_port;
 };
 
 /**
@@ -58,11 +60,12 @@ class gate_with_predicate: public generic_event_node<event_t>
 {
 public:
 	explicit gate_with_predicate(const predicate& p) :
-		generic_event_node<event_t>([this](const event_t& in)
-		{
-			if (pred(in))
-			this->out_port.fire(in);
-		}),
+		generic_event_node<event_t>("gate",
+				[this](const event_t& in)
+				{
+					if (pred(in))
+					this->out_port.fire(in);
+				}),
 		pred(p)
 	{
 	}
@@ -83,11 +86,12 @@ class gate_with_control: public generic_event_node<event_t>
 {
 public:
 	gate_with_control() :
-		generic_event_node<event_t>([this](const event_t& in)
-		{
-			if (control.get())
-			this->out_port.fire(in);
-		}), control()
+		generic_event_node<event_t>("gate",
+				[this](const event_t& in)
+				{
+					if (control.get())
+					this->out_port.fire(in);
+				}), control(this)
 	{
 	}
 
