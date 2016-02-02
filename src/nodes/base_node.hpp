@@ -44,7 +44,7 @@ public:
 	const std::shared_ptr<region_info>& region() const { return region_; }
 	std::shared_ptr<region_info>& region() { return region_; }
 
-	std::shared_ptr<forest_t>& set_forest() { return forest_; }
+	std::shared_ptr<forest_t>& forest() { return forest_; }
 	const std::shared_ptr<forest_t>& forest() const { return forest_; }
 
 	tree_base_node* region(std::shared_ptr<region_info> r)
@@ -115,7 +115,7 @@ protected:
  */
 struct node_owner : public tree_base_node
 {
-	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
+	using tree_base_node::forest_t;
 
 	template<class... arg_types>
 	node_owner(const arg_types&... args)
@@ -180,7 +180,7 @@ private:
 		assert(this->forest_); //check invariant
 
 		child->region() = this->region_;
-		child->set_forest() = this->forest_;
+		child->forest() = this->forest_;
 
 		//we need to store an iterator and then cast back to node_t*
 		//to avoid use after move on child.
@@ -227,7 +227,7 @@ public:
 };
 
 /**
- * \brief Erases node and together with all children.
+ * \brief Erases node and recursively erases all children.
  *
  * \param forest, forest to delete node from.
  * \position iterator of forest pointing to node.
@@ -249,7 +249,7 @@ erase_with_subtree(
 inline std::string
 full_name(
 		const adobe::forest<std::unique_ptr<tree_base_node>>& forest,
-		adobe::forest<std::unique_ptr<tree_base_node>>::iterator position)
+		adobe::forest<std::unique_ptr<tree_base_node>>::const_iterator position)
 {
 
 	if (position == forest.end())
