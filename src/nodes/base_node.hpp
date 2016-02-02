@@ -79,12 +79,21 @@ protected:
 		assert(forest_); //check invariant
 	}
 
+	/* Information for abstract graph */
+	//stores the metainformation of the node used by the abstract graph
 	graph::graph_node_properties graph_info_;
-	std::shared_ptr<forest_t> forest_;
 
+	/* Access to forest */
+	// stores the access to the forest this node is contained in.
+	std::shared_ptr<forest_t> forest_;
+	/*
+	 * iterator self_ allows access to the node inside the forest.
+	 * Unfortunately this creates a circular reference of the node to itself.
+	 */
 	public: forest_t::iterator self_;
-	protected:
-	std::shared_ptr<region_info> region_;
+
+	/* Information about which region the node belongs to */
+	protected: std::shared_ptr<region_info> region_;
 };
 
 /**
@@ -246,6 +255,13 @@ erase_with_subtree(
 			adobe::child_end(position).base());
 }
 
+/**
+ * \brief Returns the full name of a node.
+ *
+ * The full name consists of the chained name of the nodes parent, grandparent etc.
+ * and the name of the node itself.
+ * The names are separated by a separation token.
+ */
 inline std::string
 full_name(
 		const adobe::forest<std::unique_ptr<tree_base_node>>& forest,
@@ -275,6 +291,7 @@ full_name(
 	return full_name;
 }
 
+/// Returns the full name of a node.
 inline std::string full_name(const tree_base_node& node)
 {
 	return full_name(*(node.forest()), node.self_);
