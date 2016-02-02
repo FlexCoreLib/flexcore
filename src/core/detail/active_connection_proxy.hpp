@@ -29,9 +29,9 @@ struct active_sink_first
 	};
 
 	template<class source_t, class sink_t>
-	auto operator()(source_t sink, sink_t source)
+	auto operator()(source_t&& sink, sink_t&& source)
 	{
-		return ::fc::connect(source, sink);
+		return ::fc::connect(std::forward<sink_t>(source), std::forward<source_t>(sink));
 	}
 };
 struct active_source_first
@@ -49,9 +49,9 @@ struct active_source_first
 		typedef typename result_of<source_t>::type result_t;
 	};
 	template<class source_t, class sink_t>
-	auto operator()(source_t source, sink_t sink)
+	auto operator()(source_t&& source, sink_t&& sink)
 	{
-		return ::fc::connect(source, sink);
+		return ::fc::connect(std::forward<source_t>(source), std::forward<sink_t>(sink));
 	}
 };
 
