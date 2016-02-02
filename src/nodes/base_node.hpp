@@ -57,7 +57,7 @@ public:
 
 	graph::graph_node_properties graph_info() { return graph_info_; }
 
-	tree_base_node(std::string name)
+	explicit tree_base_node(std::string name)
 		: graph_info_(name)
 		, forest_( std::make_shared<forest_t>() )
 		, self_(forest_->end())
