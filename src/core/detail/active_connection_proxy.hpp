@@ -157,7 +157,7 @@ struct active_passive_connect_impl
 {
 	auto operator()(active_t&& active, passive_t&& passive)
 	{
-		return active.connect(std::forward<passive_t>(passive));
+		return std::forward<active_t>(active).connect(std::forward<passive_t>(passive));
 	}
 };
 
@@ -214,7 +214,7 @@ struct active_passive_connect_impl
 {
 	auto operator()(active_t&& active, passive_t&& passive)
 	{
-		active.connect(std::forward<passive_t>(passive));
+		std::forward<active_t>(active).connect(std::forward<passive_t>(passive));
 		typedef typename
 				argument_order::template first<active_t, passive_t>
 				::type source_t;
