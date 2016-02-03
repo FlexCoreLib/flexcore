@@ -72,9 +72,9 @@ class n_ary_switch<data_t, state_tag, key_t> : public tree_base_node
 public:
 	n_ary_switch()
 		: tree_base_node("switch")
-		, index(this)
+		, switch_state(this)
 		, in_ports()
-		, out_port(this, [this](){return in_ports.at(index.get()).get();} )
+		, out_port(this, [this](){return in_ports.at(switch_state.get()).get();} )
 	{}
 
 	/**
@@ -92,10 +92,11 @@ public:
 		return it->second;
 	}
 	/// parameter port controlling the switch, expects state of key_t
-	auto& control() noexcept { return index; }
+	auto& control() noexcept { return switch_state; }
 	auto& out() noexcept { return out_port; }
 private:
-	state_sink<key_t> index;
+	/// provides the current state of the switch.
+	state_sink<key_t> switch_state;
 	std::map<key_t, state_sink<data_t>> in_ports;
 	state_source_call_function<data_t> out_port;
 };
@@ -106,7 +107,7 @@ class n_ary_switch<data_t, event_tag, key_t> : public tree_base_node
 public:
 	n_ary_switch()
 		: tree_base_node("switch")
-		, index(this)
+		, switch_state(this)
 		, out_port(this)
 		, in_ports()
 	{}
@@ -137,11 +138,11 @@ public:
 	/// output port of events of type data_t.
 	auto& out() noexcept { return out_port; }
 	/// parameter port controlling the switch, expects state of key_t
-	auto& control() noexcept { return index; }
+	auto& control() noexcept { return switch_state; }
 
 
 private:
-	state_sink<key_t> index;
+	state_sink<key_t> switch_state;
 	event_source<data_t> out_port;
 	std::map<key_t, event_sink<data_t>> in_ports;
 	/// fires incoming event if and only if it is from the currently chosen port.
@@ -150,7 +151,7 @@ private:
 		assert(!in_ports.empty());
 		assert(in_ports.find(port) != end(in_ports));
 
-		if (port == index.get())
+		if (port == switch_state.get())
 			out().fire(event);
 	}
 };

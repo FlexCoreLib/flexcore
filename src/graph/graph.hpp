@@ -169,7 +169,7 @@ private:
  *
  * The edge is leading from source to sink through the two ports.
  */
-inline void ad_to_graph(const graph_node_properties& source_node,
+inline void add_to_graph(const graph_node_properties& source_node,
 		const graph_port_information& source_port,
 		const graph_node_properties& sink_node,
 		const graph_port_information& sink_port)
@@ -186,7 +186,7 @@ inline void ad_to_graph(const graph_node_properties& source_node,
  *
  * The edge is leading from source to sink without ports.
  */
-inline void ad_to_graph(const graph_node_properties& source_node,
+inline void add_to_graph(const graph_node_properties& source_node,
 		const graph_node_properties& sink_node)
 {
 	connection_graph::access().add_connection(

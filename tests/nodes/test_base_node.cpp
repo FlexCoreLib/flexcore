@@ -95,10 +95,6 @@ public:
 	{
 		return forest_->size() -2; //-1 for this. -1 for root node
 	}
-	base_node::forest_t& forest()
-	{
-		return *forest_;
-	}
 };
 }
 
@@ -113,14 +109,14 @@ BOOST_AUTO_TEST_CASE( test_deletion )
 	auto temp_it = test_node->add_child();
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 1);
 
-	erase_with_subtree(test_node->forest(), temp_it);
+	erase_with_subtree(*(test_node->forest()), temp_it);
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
 
 	auto temp_it_2 = test_node->add_child();
 	static_cast<test_owning_node*>(temp_it_2->get())->add_child();
 
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 2);
-	erase_with_subtree(test_node->forest(), temp_it);
+	erase_with_subtree(*(test_node->forest()), temp_it);
 
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
 }

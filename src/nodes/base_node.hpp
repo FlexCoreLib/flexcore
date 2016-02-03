@@ -46,7 +46,7 @@ public:
 	const std::shared_ptr<region_info>& region() const { return region_; }
 	std::shared_ptr<region_info>& region() { return region_; }
 
-	std::shared_ptr<forest_t>& set_forest() { return forest_; }
+	std::shared_ptr<forest_t>& forest() { return forest_; }
 	const std::shared_ptr<forest_t>& forest() const { return forest_; }
 
 	tree_base_node* region(std::shared_ptr<region_info> r)
@@ -81,12 +81,21 @@ protected:
 		assert(forest_); //check invariant
 	}
 
+	/* Information for abstract graph */
+	//stores the metainformation of the node used by the abstract graph
 	graph::graph_node_properties graph_info_;
-	std::shared_ptr<forest_t> forest_;
 
+	/* Access to forest */
+	// stores the access to the forest this node is contained in.
+	std::shared_ptr<forest_t> forest_;
+	/*
+	 * iterator self_ allows access to the node inside the forest.
+	 * Unfortunately this creates a circular reference of the node to itself.
+	 */
 	public: forest_t::iterator self_;
-	protected:
-	std::shared_ptr<region_info> region_;
+
+	/* Information about which region the node belongs to */
+	protected: std::shared_ptr<region_info> region_;
 };
 
 /**
@@ -117,7 +126,7 @@ protected:
  */
 struct node_owner : public tree_base_node
 {
-	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
+	using tree_base_node::forest_t;
 
 	template<class... arg_types>
 	node_owner(const arg_types&... args)
@@ -182,7 +191,7 @@ private:
 		assert(this->forest_); //check invariant
 
 		child->region() = this->region_;
-		child->set_forest() = this->forest_;
+		child->forest() = this->forest_;
 
 		//we need to store an iterator and then cast back to node_t*
 		//to avoid use after move on child.
@@ -229,7 +238,7 @@ public:
 };
 
 /**
- * \brief Erases node and together with all children.
+ * \brief Erases node and recursively erases all children.
  *
  * \param forest, forest to delete node from.
  * \position iterator of forest pointing to node.
@@ -238,20 +247,27 @@ public:
  *
  * invalidates iterators pointing to deleted node.
  */
-inline adobe::forest<std::unique_ptr<tree_base_node>>::iterator
+inline tree_base_node::forest_t::iterator
 erase_with_subtree(
-		adobe::forest<std::unique_ptr<tree_base_node>>& forest,
-		adobe::forest<std::unique_ptr<tree_base_node>>::iterator position)
+		tree_base_node::forest_t& forest,
+		tree_base_node::forest_t::iterator position)
 {
 	return forest.erase(
 			adobe::child_begin(position).base(),
 			adobe::child_end(position).base());
 }
 
+/**
+ * \brief Returns the full name of a node.
+ *
+ * The full name consists of the chained name of the nodes parent, grandparent etc.
+ * and the name of the node itself.
+ * The names are separated by a separation token.
+ */
 inline std::string
 full_name(
-		const adobe::forest<std::unique_ptr<tree_base_node>>& forest,
-		adobe::forest<std::unique_ptr<tree_base_node>>::iterator position)
+		const tree_base_node::forest_t& forest,
+		tree_base_node::forest_t::const_iterator position)
 {
 
 	if (position == forest.end())
@@ -277,6 +293,7 @@ full_name(
 	return full_name;
 }
 
+/// Returns the full name of a node.
 inline std::string full_name(const tree_base_node& node)
 {
 	return full_name(*(node.forest()), node.self_);

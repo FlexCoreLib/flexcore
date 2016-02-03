@@ -17,12 +17,12 @@ namespace graph
  *
  * \tparam base any connectable to wrap graph_connectable around.
  */
-template<class base>
-struct graph_connectable : public base
+template<class base_t>
+struct graph_connectable : public base_t
 {
-	template<class... cstr_args>
-	graph_connectable(const graph_node_properties& graph_info, const cstr_args&... args)
-		: base(args...)
+	template<class... base_t_args>
+	graph_connectable(const graph_node_properties& graph_info, const base_t_args&... args)
+		: base_t(args...)
 		, graph_info(graph_info)
 	{
 	}
@@ -38,36 +38,36 @@ auto make_graph_connectable(const base_t& base,
 }
 
 ///Creates a graph_connectable with a human readable name.
-template<class connectable>
-auto named(const connectable& con, const std::string& name)
+template<class base_t>
+auto named(const base_t& con, const std::string& name)
 {
-	return graph_connectable<connectable>{graph_node_properties{name}, con};
+	return graph_connectable<base_t>{graph_node_properties{name}, con};
 }
 
-template<class source_base, class sink_t>
-auto connect(graph_connectable<source_base> source, sink_t sink)
+template<class source_base_t, class sink_t>
+auto connect(graph_connectable<source_base_t> source, sink_t sink)
 {
 	return make_graph_connectable(
-			::fc::connect<source_base, sink_t>(source, sink),
+			::fc::connect<source_base_t, sink_t>(source, sink),
 			 source.graph_info);
 }
 
-template<class source_t, class sink_base>
-auto connect(source_t source, graph_connectable<sink_base> sink)
+template<class source_t, class sink_base_t>
+auto connect(source_t source, graph_connectable<sink_base_t> sink)
 {
 	return make_graph_connectable(
-			::fc::connect<source_t, sink_base>(source, sink),
+			::fc::connect<source_t, sink_base_t>(source, sink),
 			 sink.graph_info);
 }
 
-template<class source_base, class sink_base>
-auto connect(graph_connectable<source_base> source,
-		graph_connectable<sink_base> sink)
+template<class source_base_t, class sink_base_t>
+auto connect(graph_connectable<source_base_t> source,
+		graph_connectable<sink_base_t> sink)
 {
 	//add edge to graph with node info of source and sink
-	ad_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
+	add_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
 	return make_graph_connectable(
-			::fc::connect<source_base, sink_base>(source, sink),
+			::fc::connect<source_base_t, sink_base_t>(source, sink),
 			 get_sink(source).graph_info);
 }
 
