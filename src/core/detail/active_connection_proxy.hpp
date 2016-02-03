@@ -85,8 +85,8 @@ struct active_connection_proxy
 //			connect_policy::template second<active_t, passive_t>::result_t result_t;
 
 	active_connection_proxy(active_t active_, passive_t passive) :
-			active(active_),
-			stored_passive(passive)
+			active(std::forward<active_t>(active_)),
+			stored_passive(std::forward<passive_t>(passive))
 	{}
 
 	/**
@@ -100,18 +100,15 @@ struct active_connection_proxy
 	 * \returns port connection tag object.
 	 */
 	template<class new_passive_t, class enable = void>
-	auto connect(new_passive_t new_passive,
-			typename std::enable_if<
-							(is_passive_source<new_passive_t>::value
-									or is_passive_sink<new_passive_t>::value)
-											>::type* = 0)
+	auto connect(new_passive_t&& new_passive,
+	             std::enable_if_t<(is_passive_source<std::decay_t<new_passive_t>>{} or
+	                               is_passive_sink<std::decay_t<new_passive_t>>{})>* = nullptr)
 	{
-		static_assert(is_passive<new_passive_t>::value,
+		static_assert(is_passive<std::decay_t<new_passive_t>>{},
 				"new_passive_t in proxy needs to be passive connectable");
 
-		auto tmp = connect_policy()(stored_passive, new_passive);
-
-		return active.connect(tmp);
+		auto tmp = connect_policy()(stored_passive, std::forward<new_passive_t>(new_passive));
+		return active.connect(std::move(tmp));
 	}
 
 	/**
@@ -124,19 +121,16 @@ struct active_connection_proxy
 	 * \post new_connectable_t is connected to the old passive.
 	 * \returns a active_connection_proxy, which contains the new_connectable in its connection.
 	 */
-	template<	class new_connectable_t,
-				class = typename std::enable_if<
-				not (is_passive_source<new_connectable_t>::value
-						or is_passive_sink<new_connectable_t>::value)
-								>::type
-			>
-	auto connect(const new_connectable_t& new_connectable)
+	template <class new_connectable_t,
+	          class = std::enable_if_t<not(is_passive_source<std::decay_t<new_connectable_t>>{} or
+	                                       is_passive_sink<std::decay_t<new_connectable_t>>{})>>
+	auto connect(new_connectable_t&& new_connectable)
 	{
-		auto connection = connect_policy()(stored_passive, new_connectable);
+		auto connection = connect_policy()(stored_passive, std::forward<new_connectable_t>(new_connectable));
 		return active_connection_proxy<
 				active_t,
 				decltype(connection),
-				connect_policy>(active, connection);
+				connect_policy>(active, std::move(connection));
 	}
 
 	active_t active;
