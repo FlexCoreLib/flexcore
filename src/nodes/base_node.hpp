@@ -245,10 +245,10 @@ public:
  *
  * invalidates iterators pointing to deleted node.
  */
-inline adobe::forest<std::unique_ptr<tree_base_node>>::iterator
+inline tree_base_node::forest_t::iterator
 erase_with_subtree(
-		adobe::forest<std::unique_ptr<tree_base_node>>& forest,
-		adobe::forest<std::unique_ptr<tree_base_node>>::iterator position)
+		tree_base_node::forest_t& forest,
+		tree_base_node::forest_t::iterator position)
 {
 	return forest.erase(
 			adobe::child_begin(position).base(),
@@ -264,8 +264,8 @@ erase_with_subtree(
  */
 inline std::string
 full_name(
-		const adobe::forest<std::unique_ptr<tree_base_node>>& forest,
-		adobe::forest<std::unique_ptr<tree_base_node>>::const_iterator position)
+		const tree_base_node::forest_t& forest,
+		tree_base_node::forest_t::const_iterator position)
 {
 
 	if (position == forest.end())
