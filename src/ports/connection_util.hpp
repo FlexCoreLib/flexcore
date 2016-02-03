@@ -14,9 +14,8 @@ namespace fc
  * Stopping criterion for recursion
  */
 template <class T>
-auto get_source(T s)
-	-> typename std::enable_if<!has_source<T>(0), T>::type
-
+auto get_source(const T& s)
+	-> const typename std::enable_if<!has_source<T>(0), T>::type&
 {
 	return s;
 }
@@ -24,8 +23,9 @@ auto get_source(T s)
  * \brief recursively extracts the source of a connection
  */
 template <class T>
-auto get_source(T c)
-	-> typename std::enable_if<has_source<T>(0), decltype(get_source(c.source))>::type
+auto get_source(const T& c)
+	-> const typename std::enable_if<has_source<T>(0),
+			decltype(get_source(c.source))>::type&
 {
 	return get_source(c.source);
 }
@@ -35,8 +35,8 @@ auto get_source(T c)
  * Stopping criterion for recursion
  */
 template <class T>
-auto get_sink(T s)
-	-> typename std::enable_if<!has_sink<T>(0), T>::type
+auto get_sink(const T& s)
+	-> const typename std::enable_if<!has_sink<T>(0), T>::type&
 {
 	return s;
 }
@@ -45,8 +45,9 @@ auto get_sink(T s)
  * \brief recursively extracts the sink of an object with member "sink"
  */
 template <class T>
-auto get_sink(T c)
-	-> typename std::enable_if<has_sink<T>(0), decltype(get_sink(c.sink))>::type
+auto get_sink(const T& c)
+	-> const typename std::enable_if<has_sink<T>(0),
+			decltype(get_sink(c.sink))>::type&
 {
 	return get_sink(c.sink);
 }

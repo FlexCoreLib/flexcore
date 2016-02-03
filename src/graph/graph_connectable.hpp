@@ -65,7 +65,7 @@ auto connect(graph_connectable<source_base_t> source,
 		graph_connectable<sink_base_t> sink)
 {
 	//add edge to graph with node info of source and sink
-	ad_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
+	add_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
 	return make_graph_connectable(
 			::fc::connect<source_base_t, sink_base_t>(source, sink),
 			 get_sink(source).graph_info);

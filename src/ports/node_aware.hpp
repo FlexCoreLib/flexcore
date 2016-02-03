@@ -393,7 +393,7 @@ struct source_node_aware_connect_impl
 template<class source_t, class sink_t>
 auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 {
-	graph::ad_to_graph(source.node_info(), source.port_info(),
+	graph::add_to_graph(source.node_info(), source.port_info(),
 			sink.node_info(), sink.port_info());
 	// construct node_aware_connection
 	// based on if source and sink are from same region
@@ -428,7 +428,7 @@ auto connect(source_t source, node_aware<sink_t> sink)
 template<class source_t, class sink_t>
 auto connect(node_aware<source_t> source, graph::graph_connectable<sink_t> sink)
 {
-	ad_to_graph(source.graph_info, sink.graph_info);
+	add_to_graph(source.graph_info, sink.graph_info);
 	// construct node_aware_connection
 	// based on if source and sink are from same region
 	auto result = detail::source_node_aware_connect_impl
@@ -450,7 +450,7 @@ auto connect(node_aware<source_t> source,
 		graph::graph_connectable<connection<S,
 		graph::graph_connectable<T>>> sink) //hackhack
 {
-	ad_to_graph(source.graph_info, sink.graph_info);
+	add_to_graph(source.graph_info, sink.graph_info);
 	// construct node_aware_connection
 	// based on if source and sink are from same region
 	auto result = detail::source_node_aware_connect_impl
@@ -465,7 +465,7 @@ auto connect(node_aware<source_t> source,
 template<class source_t, class sink_t>
 auto connect(graph::graph_connectable<source_t> source, node_aware<sink_t> sink)
 {
-	ad_to_graph(source.graph_info, sink.graph_info);
+	add_to_graph(source.graph_info, sink.graph_info);
 	// construct node_aware_connection
 	// based on if source and sink are from same region
 	auto result =  detail::sink_node_aware_connect_impl
