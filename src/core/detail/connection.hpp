@@ -162,7 +162,7 @@ struct is_passive_sink<connection<source_t, sink_t>> : is_passive_sink<sink_t>
 {};
 
 template <class source_t, class sink_t>
-struct result_of<connection<source_t, sink_t>> : result_of<source_t>
+struct result_of<connection<source_t, sink_t>> : result_of<sink_t>
 {};
 
 } //namespace fc
