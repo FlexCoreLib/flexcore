@@ -30,7 +30,7 @@ namespace
 	{
 		dummy_node(const std::string& name)
 			: tree_base_node(name)
-			, out_port(this, 0)
+			, out_port(this, [](){ return 0;})
 			, in_port(this)
 		{
 		}
@@ -38,7 +38,7 @@ namespace
 		auto& out() { return out_port; }
 		auto& in() { return in_port; }
 
-		state_source_with_setter<int> out_port;
+		state_source<int> out_port;
 		state_sink<int> in_port;
 		dummy_node(const dummy_node&) = delete;
 	};

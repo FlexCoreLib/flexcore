@@ -37,10 +37,7 @@ using state_sink = default_mixin<pure::state_sink<data_t>>;
 // -- state sources --
 
 template<class data_t>
-using state_source_call_function = default_mixin<pure::state_source_call_function<data_t>>;
-
-template<class data_t>
-using state_source_with_setter = default_mixin<pure::state_source_with_setter<data_t>>;
+using state_source = default_mixin<pure::state_source<data_t>>;
 
 template<class lambda_t>
 using state_source_tmpl = default_mixin<pure::state_source_tmpl<lambda_t>>;
@@ -57,7 +54,7 @@ struct in_port
 	typedef default_mixin<typename pure::in_port<data_t, tag>::type> type;
 };
 
-/// template output port, tag object creates either event_source or state_source_call_function
+/// template output port, tag object creates either event_source or state_source
 template<class data_t, class tag>
 struct out_port
 {
