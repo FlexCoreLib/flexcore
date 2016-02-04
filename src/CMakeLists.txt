@@ -12,5 +12,6 @@ TARGET_INCLUDE_DIRECTORIES( flexcore
     PUBLIC "." )
  
 # TODO only use coverage flags in debug mode
-TARGET_LINK_LIBRARIES( flexcore $<$<BOOL:ENABLE_COVERAGE_ANALYSIS>:-lgcov>
+TARGET_LINK_LIBRARIES( flexcore $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-lgcov>
 	-pthread )
+
