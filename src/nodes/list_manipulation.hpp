@@ -48,7 +48,6 @@ public:
 			it = entries.insert(std::make_pair(value, entry_t(this))).first;
 		return it->second.port;
 	}
-
 	/**
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
