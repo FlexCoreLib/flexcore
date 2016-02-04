@@ -1,47 +1,66 @@
 #ifndef SRC_PORTS_PORTS_HPP_
 #define SRC_PORTS_PORTS_HPP_
 
-#include "event_ports.hpp"
-#include "state_ports.hpp"
+#include <ports/node_aware.hpp>
+#include <ports/token_tags.hpp>
+#include "pure_ports.hpp"
 
 namespace fc
 {
 
-/// tag to specify that template uses events
-struct event_tag {};
-/// tag to specify that template uses states
-struct state_tag {};
+// === default mixins ===
 
-///template input port, tag object creates either event_in_port or state_sink
+template<class port_t>
+using default_mixin = node_aware<port_t>;
+
+// -- event sinks --
+
+template<class data_t>
+using event_sink = default_mixin<pure::event_sink<data_t>>;
+
+template<class lambda_t>
+using event_sink_tmpl = default_mixin<pure::event_sink_tmpl<lambda_t>>;
+
+template<class lambda_t>
+auto make_event_sink_tmpl(lambda_t h) { return event_sink_tmpl<lambda_t>{h}; }
+
+// -- event sources --
+
+template<class data_t>
+using event_source = default_mixin<pure::event_source<data_t>>;
+
+// -- state sinks --
+
+template<class data_t>
+using state_sink = default_mixin<pure::state_sink<data_t>>;
+
+// -- state sources --
+
+template<class data_t>
+using state_source = default_mixin<pure::state_source<data_t>>;
+
+template<class lambda_t>
+using state_source_tmpl = default_mixin<pure::state_source_tmpl<lambda_t>>;
+
+template<class lambda_t>
+auto make_state_source_tmpl(lambda_t h) { return state_source_tmpl<lambda_t>{h}; }
+
+// -- dispatch --
+
+/// template input port, tag object creates either event_sink or state_sink
 template<class data_t, class tag>
-struct in_port;
-
-template<class data_t>
-struct in_port<data_t, event_tag>
+struct in_port
 {
-	typedef event_in_port<data_t> type;
+	typedef default_mixin<typename pure::in_port<data_t, tag>::type> type;
 };
 
-template<class data_t>
-struct in_port<data_t, state_tag>
-{
-	typedef state_sink<data_t> type;
-};
-
-///template output port, tag object creates either event_out_port or state_source_call_function
+/// template output port, tag object creates either event_source or state_source
 template<class data_t, class tag>
-struct out_port;
+struct out_port
+{
+	typedef default_mixin<typename pure::out_port<data_t, tag>::type> type;
+};
 
-template<class data_t>
-struct out_port<data_t, event_tag>
-{
-	typedef event_out_port<data_t> type;
-};
-template<class data_t>
-struct out_port<data_t, state_tag>
-{
-	typedef state_source_call_function<data_t> type;
-};
-}
+} // namespace fc
 
 #endif /* SRC_PORTS_PORTS_HPP_ */

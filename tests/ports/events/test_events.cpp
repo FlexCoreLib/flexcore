@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
-#include "ports/event_ports.hpp"
+#include "ports/events/event_sinks.hpp"
+#include "ports/events/event_sources.hpp"
 #include "event_sink_with_queue.hpp"
 #include "core/connection.hpp"
 
@@ -8,35 +9,32 @@ using namespace fc;
 
 namespace fc
 {
+namespace pure
+{
 
 template<class T>
-struct event_sink
+struct event_sink_value
 {
-	void operator()(T in)
-	{
-		*storage = in;
-	}
+	void operator()(T in) { *storage = in; }
 	std::shared_ptr<T> storage = std::make_shared<T>();
 };
 
 template<class T>
-struct is_passive_sink<event_sink<T>> : public std::true_type
-{};
-
-template<class T>
-struct event_vector_sink
+struct event_sink_vector
 {
-	void operator()(T in)
-	{
-		storage->push_back(in);
-	}
-	std::shared_ptr<std::vector<T>> storage =
-			std::make_shared<std::vector<T>>();
+	void operator()(T in) {	storage->push_back(in);	}
+	std::shared_ptr<std::vector<T>> storage = std::make_shared<std::vector<T>>();
 };
 
-template<class T>
-struct is_passive_sink<event_vector_sink<T>> : public std::true_type
-{};
+} // namespace pure
+
+template<class T> struct is_passive_sink<pure::event_sink_value<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<pure::event_sink_vector<T>> : public std::true_type {};
+
+} // namespace fc
+
+namespace
+{
 
 /**
  * \brief Node for calculating the number of elements in a range
@@ -47,22 +45,17 @@ public:
 	range_size()
 		: out()
 	{}
-	event_out_port<int> out;
+	pure::event_source<int> out;
 
 	auto in()
 	{
-		return ::fc::make_event_in_port_tmpl( [this](auto event)
+		return ::fc::pure::make_event_sink_tmpl( [this](auto event)
 		{
 			size_t elems = std::distance(std::begin(event), std::end(event));
 			this->out.fire(static_cast<int>(elems));
 		} );
 	}
 };
-
-} // namespace fc
-
-namespace
-{
 
 /**
  * Helper class for testing event_in_port_tmpl
@@ -79,7 +72,7 @@ public:
 	 */
 	auto in()
 	{
-		return ::fc::make_event_in_port_tmpl( [this](auto event)
+		return ::fc::pure::make_event_sink_tmpl( [this](auto event)
 		{
 			value = event;
 		} );
@@ -94,8 +87,8 @@ BOOST_AUTO_TEST_SUITE(test_events)
 
 BOOST_AUTO_TEST_CASE( test_event_in_port_tmpl )
 {
-	event_out_port<int> src_int;
-	event_out_port<double> src_double;
+	pure::event_source<int> src_int;
+	pure::event_source<double> src_double;
 	generic_input_node to;
 
 	src_int >> to.in();
@@ -109,17 +102,17 @@ BOOST_AUTO_TEST_CASE( test_event_in_port_tmpl )
 
 BOOST_AUTO_TEST_CASE( connections )
 {
-	static_assert(is_active<event_out_port<int>>::value,
+	static_assert(is_active<pure::event_source<int>>::value,
 			"event_out_port is active by definition");
-	static_assert(is_passive<event_in_port<int>>::value,
+	static_assert(is_passive<pure::event_sink<int>>::value,
 			"event_in_port is passive by definition");
-	static_assert(!is_active<event_in_port<int>>::value,
+	static_assert(!is_active<pure::event_sink<int>>::value,
 			"event_in_port is not active by definition");
-	static_assert(!is_passive<event_out_port<int>>::value,
+	static_assert(!is_passive<pure::event_source<int>>::value,
 			"event_out_port is not passive by definition");
 
-	event_out_port<int> test_event;
-	event_sink<int> test_handler;
+	pure::event_source<int> test_event;
+	pure::event_sink_value<int> test_handler;
 
 
 	connect(test_event, test_handler);
@@ -147,8 +140,8 @@ BOOST_AUTO_TEST_CASE( queue_sink )
 {
 	auto inc = [](int i) { return i + 1; };
 
-	event_out_port<int> source;
-	event_in_queue<int> sink;
+	pure::event_source<int> source;
+	pure::event_sink_queue<int> sink;
 	source >> inc >> sink;
 	source.fire(4);
 	BOOST_CHECK_EQUAL(sink.empty(), false);
@@ -159,9 +152,9 @@ BOOST_AUTO_TEST_CASE( queue_sink )
 
 BOOST_AUTO_TEST_CASE( merge_events )
 {
-	event_out_port<int> test_event;
-	event_out_port<int> test_event_2;
-	event_vector_sink<int> test_handler;
+	pure::event_source<int> test_event;
+	pure::event_source<int> test_event_2;
+	pure::event_sink_vector<int> test_handler;
 
 	test_event >> test_handler;
 	test_event_2 >> test_handler;
@@ -180,9 +173,9 @@ BOOST_AUTO_TEST_CASE( merge_events )
 
 BOOST_AUTO_TEST_CASE( split_events )
 {
-	event_out_port<int> test_event;
-	event_sink<int> test_handler_1;
-	event_sink<int> test_handler_2;
+	pure::event_source<int> test_event;
+	pure::event_sink_value<int> test_handler_1;
+	pure::event_sink_value<int> test_handler_2;
 
 	test_event >> test_handler_1;
 	test_event >> test_handler_2;
@@ -198,8 +191,8 @@ BOOST_AUTO_TEST_CASE( in_port )
 
 	auto test_writer = [&](int i) {test_value = i;};
 
-	event_in_port<int> in_port(test_writer);
-	event_out_port<int> test_event;
+	pure::event_sink<int> in_port(test_writer);
+	pure::event_source<int> test_event;
 
 	test_event >> in_port;
 	test_event.fire(1);
@@ -210,8 +203,8 @@ BOOST_AUTO_TEST_CASE( in_port )
 	auto write_999 = [&]() {test_value = 999;};
 
 
-	event_in_port<void> void_in(write_999);
-	event_out_port<void> void_out;
+	pure::event_sink<void> void_in(write_999);
+	pure::event_source<void> void_out;
 	void_out >> void_in;
 	void_out.fire();
 	BOOST_CHECK_EQUAL(test_value, 999);
@@ -235,7 +228,7 @@ BOOST_AUTO_TEST_CASE( lambda )
 	int test_value = 0;
 
 	auto write_666 = [&]() {test_value = 666;};
-	event_out_port<void> void_out_2;
+	pure::event_source<void> void_out_2;
 	void_out_2 >> write_666;
 	void_out_2.fire();
 	BOOST_CHECK_EQUAL(test_value, 666);
@@ -247,8 +240,8 @@ template<class T>
 void test_connection(const T& connection)
 {
 	int storage = 0;
-	event_out_port<int> a;
-	event_in_queue<int> d;
+	pure::event_source<int> a;
+	pure::event_sink_queue<int> d;
 	auto c = [&](int i) { storage = i; return i; };
 	auto b = [](int i) { return i + 1; };
 
@@ -293,12 +286,8 @@ template<class operation>
 struct sink_t
 {
 	typedef void result_t;
-
 	template <class T>
-	void operator()(T&& in)
-	{
-		op(std::forward<T>(in));
-	}
+	void operator()(T&& in) { op(std::forward<T>(in)); }
 
 	operation op;
 };
@@ -314,7 +303,7 @@ BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
 {
 	int test_value = 0;
 
-	event_out_port<int> p;
+	pure::event_source<int> p;
 	auto write = sink([&](auto in) {test_value = in;});
 
 	static_assert(is_passive_sink<decltype(write)>::value, "");

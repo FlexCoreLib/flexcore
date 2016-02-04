@@ -50,5 +50,3 @@ BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

@@ -7,8 +7,11 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
+#include <ports/ports.hpp>
 
 namespace fc
+{
+namespace pure
 {
 
 /**
@@ -22,9 +25,9 @@ namespace fc
  * \tparam event_t type of event expected, must be copy_constructable
  */
 template<class event_t>
-struct event_in_queue
+struct event_sink_queue
 {
-	explicit event_in_queue()
+	explicit event_sink_queue()
 		: queue(new std::queue<event_t>)
 	{}
 
@@ -49,8 +52,13 @@ private:
 	std::shared_ptr<std::queue<event_t>> queue;
 };
 
+} // namespace pure
+
 // traits
-template<class T> struct is_passive_sink<event_in_queue<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<pure::event_sink_queue<T>> : public std::true_type {};
+
+template<class data_t>
+using event_sink_queue = default_mixin<pure::event_sink_queue<data_t>>;
 
 } // namespace fc
 
