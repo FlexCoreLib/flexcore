@@ -29,10 +29,11 @@ struct event_sink
 		assert(event_handler);
 	}
 
-	void operator()(auto&& in_event)
+	template <class T>
+	void operator()(T&& in_event)
 	{
 		assert(event_handler);
-		event_handler(std::move(in_event));
+		event_handler(std::forward<T>(in_event));
 	}
 
 	event_sink() = delete;
@@ -84,9 +85,10 @@ public:
 		: lambda(h)
 	{}
 
-	void operator()(auto&& in_event) // universal ref here?
+	template <class Event_t>
+	void operator()(Event_t&& in_event)
 	{
-		lambda(std::move(in_event));
+		lambda(std::forward<Event_t>(in_event));
 	}
 
 	event_sink_tmpl() = delete;

@@ -32,7 +32,8 @@ public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	explicit list_splitter(auto pred)
+	template <class predicate_t>
+	explicit list_splitter(predicate_t pred)
 		: tree_base_node("splitter")
 		, in(this, [&](const range_t& range){ this->receive(range); } )
 		, out_num_dropped(this, [this](){ return dropped_counter;})
