@@ -27,7 +27,7 @@ namespace fc
  * \endcode
  */
 template<class base>
-struct node_aware: public graph::graph_connectable<base>
+struct node_aware: graph::graph_connectable<base>
 {
 	static_assert(std::is_class<base>{},
 			"can only be mixed into clases, not primitives");
@@ -112,7 +112,7 @@ struct buffer_factory
  * \invariant buffer != null_ptr
  */
 template<class base_connection>
-struct buffered_event_connection : public base_connection
+struct buffered_event_connection : base_connection
 {
 	typedef typename base_connection::result_t result_t;
 
@@ -135,14 +135,14 @@ private:
 };
 
 //todo hackhack
-template<class T> struct is_passive_sink<buffered_event_connection<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<buffered_event_connection<T>> : std::true_type {};
 
 /**
  * \see buffered_event_connection
  * remove this code duplication if possible
  */
 template<class base_connection>
-struct buffered_state_connection: public base_connection
+struct buffered_state_connection: base_connection
 {
 	typedef typename base_connection::result_t result_t;
 
@@ -163,10 +163,10 @@ private:
 	std::shared_ptr<buffer_interface<result_t, state_tag>> buffer;
 };
 
-template<class T> struct is_active_sink<node_aware<T>> : public is_active_sink<T> {};
-template<class T> struct is_active_source<node_aware<T>> : public is_active_source<T> {};
-template<class T> struct is_passive_sink<node_aware<T>> : public is_passive_sink<T> {};
-template<class T> struct is_passive_source<node_aware<T>> : public is_passive_source<T> {};
+template<class T> struct is_active_sink<node_aware<T>> : is_active_sink<T> {};
+template<class T> struct is_active_source<node_aware<T>> : is_active_source<T> {};
+template<class T> struct is_passive_sink<node_aware<T>> : is_passive_sink<T> {};
+template<class T> struct is_passive_source<node_aware<T>> : is_passive_source<T> {};
 
 template<class source_t, class sink_t>
 struct result_of<node_aware<connection<source_t, sink_t>>>

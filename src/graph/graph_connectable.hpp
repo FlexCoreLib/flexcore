@@ -18,7 +18,7 @@ namespace graph
  * \tparam base any connectable to wrap graph_connectable around.
  */
 template<class base_t>
-struct graph_connectable : public base_t
+struct graph_connectable : base_t
 {
 	template<class... base_t_args>
 	graph_connectable(const graph_node_properties& graph_info, const base_t_args&... args)

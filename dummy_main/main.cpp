@@ -12,7 +12,7 @@
 
 using namespace fc;
 
-struct null : public base_node
+struct null : base_node
 {
 	null() : base_node("null") {}
 };

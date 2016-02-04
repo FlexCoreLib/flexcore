@@ -206,12 +206,12 @@ struct param_type
 };
 
 template<class T>
-struct is_active_sink: public std::false_type
+struct is_active_sink: std::false_type
 {
 };
 
 template<class T>
-struct is_active_source: public std::false_type
+struct is_active_source: std::false_type
 {
 };
 
@@ -234,7 +234,7 @@ struct is_active_connectable : is_active_connectable_impl<T>
 };
 
 template<class T, class enable = void>
-struct is_passive_source_impl: public std::false_type
+struct is_passive_source_impl: std::false_type
 {
 };
 
@@ -278,18 +278,17 @@ constexpr auto has_sink(int) -> decltype(
 
 //template<class T>
 //struct is_passive_source_impl<T, std::enable_if_t<is_callable<T>{}>>
-//		: public std::integral_constant<bool, void_callable<T>(0)>
+//		: std::integral_constant<bool, void_callable<T>(0)>
 //{
 //};
 
 template<class T>
-struct is_passive_source_impl<T, std::enable_if_t<void_callable<T>(0)>>
-		: public std::true_type
+struct is_passive_source_impl<T, std::enable_if_t<void_callable<T>(0)>> : std::true_type
 {
 };
 
 template<class T, class enable = void>
-struct is_passive_sink_impl: public std::false_type
+struct is_passive_sink_impl: std::false_type
 {
 };
 
@@ -309,7 +308,7 @@ constexpr bool overloaded(...)
 template<class T>
 struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
 			&& !overloaded<T>(0)>>
-		: public std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
+		: std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
 {
 };
 
@@ -317,18 +316,18 @@ template<class T>
 struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
 			&& overloaded<T>(0)
 			&& has_result<T>{}>>
-		: public std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
+		: std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
 {
 };
 
 
 template<class T>
-struct is_passive_sink: public is_passive_sink_impl<T>
+struct is_passive_sink: is_passive_sink_impl<T>
 {
 };
 
 template<class T>
-struct is_passive_source: public is_passive_source_impl<T>
+struct is_passive_source: is_passive_source_impl<T>
 {
 };
 

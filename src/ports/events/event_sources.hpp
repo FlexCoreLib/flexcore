@@ -91,7 +91,7 @@ private:
 } // namespace pure
 
 // traits
-template<class T> struct is_active_source<pure::event_source<T>> : public std::true_type {};
+template<class T> struct is_active_source<pure::event_source<T>> : std::true_type {};
 
 } // namespace fc
 

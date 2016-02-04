@@ -71,7 +71,7 @@ private:
 } // namespace pure
 
 // traits
-template<class T> struct is_active_sink<pure::state_sink<T>> : public std::true_type {};
+template<class T> struct is_active_sink<pure::state_sink<T>> : std::true_type {};
 
 } // namespace fc
 

@@ -20,7 +20,7 @@ namespace fc
  * \pre bin_op needs to be callable with two arguments
  */
 template<class bin_op>
-struct transform_node// : public node_interface
+struct transform_node// : node_interface
 {
 	static_assert(utils::function_traits<bin_op>::arity == 2,
 			"operator in transform node needs to take two parameters");

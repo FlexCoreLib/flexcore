@@ -28,8 +28,8 @@ struct event_sink_vector
 
 } // namespace pure
 
-template<class T> struct is_passive_sink<pure::event_sink_value<T>> : public std::true_type {};
-template<class T> struct is_passive_sink<pure::event_sink_vector<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<pure::event_sink_value<T>> : std::true_type {};
+template<class T> struct is_passive_sink<pure::event_sink_vector<T>> : std::true_type {};
 
 } // namespace fc
 
