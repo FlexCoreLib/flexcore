@@ -35,7 +35,7 @@ public:
 	explicit list_splitter(auto pred)
 		: tree_base_node("splitter")
 		, in(this, [&](const range_t& range){ this->receive(range); } )
-		, out_num_dropped(this)
+		, out_num_dropped(this, [this](){ return dropped_counter;})
 		, entries()
 		, predicate(pred)
 	{}
@@ -47,13 +47,17 @@ public:
 		if (it == entries.end())
 			it = entries.insert(std::make_pair(value, entry_t(this))).first;
 		return it->second.port;
-	}	/**
+	}
+
+	/**
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
 	 */
-	state_source_with_setter<size_t> out_num_dropped;
+	state_source<size_t> out_num_dropped;
 
 private:
+	size_t dropped_counter = 0;
+
 	void receive(const range_t& range)
 	{
 		auto begin = std::begin(range);
@@ -67,7 +71,7 @@ private:
 			if (entry_it != entries.end())
 				entry_it->second.data.push_back(*it);
 			else
-				++out_num_dropped.access();
+				++dropped_counter;
 		}
 		// send sorted elements
 		for (auto& e : entries)

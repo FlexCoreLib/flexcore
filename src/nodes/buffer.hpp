@@ -174,7 +174,7 @@ protected:
 	std::unique_ptr<container_t<data_t>> buffer_collect;
 	container_t<data_t> buffer_state;
 
-	state_source_call_function<out_range_t> out_port;
+	state_source<out_range_t> out_port;
 };
 } //namespace detail
 
@@ -254,7 +254,7 @@ public:
 	auto& out() const noexcept { return out_port; }
 private:
 	std::unique_ptr<buffer_t> storage;
-	state_source_call_function<out_range_t> out_port;
+	state_source<out_range_t> out_port;
 };
 
 }  // namespace fc

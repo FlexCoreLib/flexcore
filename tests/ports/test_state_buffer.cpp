@@ -10,7 +10,8 @@ using namespace fc;
 BOOST_AUTO_TEST_CASE( test_state_buffer )
 {
 	state_buffer<int> test_buffer;
-	pure::state_source_with_setter<int> source(1);
+	int test_state = 1;
+	pure::state_source<int> source([&test_state](){ return test_state; });
 	pure::state_sink<int> sink;
 
 	source >> test_buffer.in();
@@ -26,7 +27,7 @@ BOOST_AUTO_TEST_CASE( test_state_buffer )
 	// and still get the same result.
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 
-	source.set(2);
+	test_state = 2;
 	//since work wasn't ticked since the last switch, expect no change
 	test_buffer.switch_tick()();
 	BOOST_CHECK_EQUAL(sink.get(), 1);

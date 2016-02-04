@@ -168,9 +168,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 
 	// check the same for states
 	typedef node_aware<pure::state_sink<int>> test_in_state;
-	typedef node_aware<pure::state_source_with_setter<int>> test_out_state;
+	typedef node_aware<pure::state_source<int>> test_out_state;
 
-	test_out_state state_out{&root_1, 1};
+	test_out_state state_out{&root_1, [](){ return 1; }};
 	test_in_state state_in{&root_2};
 
 	(state_out >> inc) >> inc >> (inc >> state_in);
@@ -186,13 +186,13 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 BOOST_AUTO_TEST_CASE(test_state_transition)
 {
 	typedef node_aware<pure::state_sink<int>> test_in_port;
-	typedef node_aware<pure::state_source_with_setter<int>> test_out_port;
+	typedef node_aware<pure::state_source<int>> test_out_port;
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
 	root_node root_1("1", region_1);
 	root_node root_2("2", region_2);
 
-	test_out_port source(&root_1, 1);
+	test_out_port source(&root_1, [](){ return 1; });
 	test_in_port sink(&root_2);
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>::value, "");
@@ -223,10 +223,10 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 BOOST_AUTO_TEST_CASE(test_state_same_region)
 {
 	typedef node_aware<pure::state_sink<int>> test_in_port;
-	typedef node_aware<pure::state_source_with_setter<int>> test_out_port;
+	typedef node_aware<pure::state_source<int>> test_out_port;
 	root_node root;
 
-	test_out_port source(&root, 1);
+	test_out_port source(&root, [](){ return 1; });
 	test_in_port sink(&root);
 
 	source >> sink;

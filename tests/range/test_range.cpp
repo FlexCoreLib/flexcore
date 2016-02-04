@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_ports_with_ranges)
 			std::ptrdiff_t
 			> any_int_range;
 
-	pure::state_source_call_function<any_int_range>
+	pure::state_source<any_int_range>
 		source([&vec]()
 		{
 			return boost::make_iterator_range(std::begin(vec), std::end(vec));

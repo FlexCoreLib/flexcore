@@ -98,7 +98,7 @@ private:
 	/// provides the current state of the switch.
 	state_sink<key_t> switch_state;
 	std::map<key_t, state_sink<data_t>> in_ports;
-	state_source_call_function<data_t> out_port;
+	state_source<data_t> out_port;
 };
 
 template<class data_t, class key_t>

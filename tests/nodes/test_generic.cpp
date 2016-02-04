@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(test_transform)
 {
 	auto multiply = transform( [](int a, int b){ return a * b;});
 
-	pure::state_source_with_setter<int> three(3);
+	auto three = [](){ return 3; };
 	three >> multiply.param;
 
 	BOOST_CHECK_EQUAL(multiply(2), 6);
@@ -27,11 +27,12 @@ BOOST_AUTO_TEST_CASE(test_transform)
 BOOST_AUTO_TEST_CASE(test_n_ary_switch_state)
 {
 	root_node root;
-	state_source_with_setter<int> one(&root, 1);
-	state_source_with_setter<int> two(&root, 2);
+	state_source<int> one(&root, [](){ return 1; });
+	state_source<int> two(&root, [](){ return 2; });
 
 	auto test_switch = root.make_child<n_ary_switch<int, state_tag>>();
-	state_source_with_setter<size_t> config(&root, 0);
+	size_t switch_param = 0;
+	state_source<size_t> config(&root, [&switch_param](){ return switch_param; });
 
 	one >> test_switch->in(0);
 	two >> test_switch->in(1);
@@ -39,7 +40,7 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_state)
 
 	BOOST_CHECK_EQUAL(test_switch->out()(), 1);
 
-	config.access() = 1; //change switch to second port
+	switch_param = 1; //change switch to second port
 	BOOST_CHECK_EQUAL(test_switch->out()(), 2);
 }
 
@@ -49,7 +50,8 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	event_source<int> source_1(&root);
 	event_source<int> source_2(&root);
 	auto test_switch = root.make_child<n_ary_switch<int, event_tag>>();
-	state_source_with_setter<size_t> config(&root, 0);
+	size_t switch_param = 0;
+	state_source<size_t> config(&root, [&switch_param](){ return switch_param; });
 	event_sink_queue<int> buffer(&root);
 
 	static_assert(!is_active_sink   <event_source<int>>::value, "");
@@ -68,7 +70,7 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	BOOST_CHECK_EQUAL(buffer.get(), 1);
 	BOOST_CHECK_EQUAL(buffer.empty(), true);
 
-	config.access() = 1;
+	switch_param = 1;
 
 	source_1.fire(1); //tick source, currently not forwarded by switch
 	BOOST_CHECK_EQUAL(buffer.empty(), true);
@@ -85,7 +87,8 @@ BOOST_AUTO_TEST_CASE(watch_node)
 
 	auto watcher = watch([](int i){ return i < 0;}, int());
 
-	state_source_with_setter<int> source(&root, 1);
+	int test_state = 1;
+	state_source<int> source(&root, [&test_state](){ return test_state; });
 	event_sink<int> sink(&root, [&test_value](int i){test_value = i;});
 
 	source >> watcher.in();
@@ -94,7 +97,7 @@ BOOST_AUTO_TEST_CASE(watch_node)
 	watcher.check_tick()();
 
 	BOOST_CHECK_EQUAL(test_value, 0);
-	source.set(-1);
+	test_state = -1;
 
 	watcher.check_tick()();
 	BOOST_CHECK_EQUAL(test_value, -1);

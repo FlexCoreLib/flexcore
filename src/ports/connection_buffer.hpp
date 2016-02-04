@@ -143,14 +143,14 @@ public:
 	{
 		return in_port;
 	}
-	pure::state_source_call_function<data_t>& out() override
+	pure::state_source<data_t>& out() override
 	{
 		return out_port;
 	}
 
 private:
 	pure::state_sink<data_t> in_port;
-	pure::state_source_call_function<data_t> out_port;
+	pure::state_source<data_t> out_port;
 };
 
 /** \brief buffer for states using double buffering
@@ -174,7 +174,7 @@ public:
 	{
 		return in_port;
 	}
-	pure::state_source_call_function<data_t>& out() override
+	pure::state_source<data_t>& out() override
 	{
 		return out_port;
 	}
@@ -192,7 +192,7 @@ protected:
 	pure::event_sink<void> in_switch_tick;
 	pure::event_sink<void> in_work_tick;
 	pure::state_sink<data_t> in_port;
-	pure::state_source_call_function<data_t> out_port;
+	pure::state_source<data_t> out_port;
 private:
 	std::shared_ptr<data_t> intern_buffer;
 	std::shared_ptr<data_t> extern_buffer;

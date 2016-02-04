@@ -95,10 +95,11 @@ public:
 			tree_base_node("cache"),
 			pull_tick([this]()
 			{
-				out_port.set(in_port.get());
+				stored_state = in_port.get();
 			}),
 			in_port(this),
-			out_port(this, initial_value)
+			out_port(this, [this](){ return stored_state;}),
+			stored_state(initial_value)
 	{
 	}
 
@@ -112,7 +113,8 @@ public:
 private:
 	pure::event_sink<void> pull_tick;
 	state_sink<data_t> in_port;
-	state_source_with_setter<data_t> out_port;
+	state_source<data_t> out_port;
+	data_t stored_state;
 };
 
 /**
