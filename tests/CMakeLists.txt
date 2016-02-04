@@ -6,6 +6,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 ADD_EXECUTABLE( test_executable 
 	core/test_connection.cpp
+	core/test_connectables.cpp
 	core/test_traits.cpp
 	clock/TestClock.cpp
 	graph/test_graph.cpp

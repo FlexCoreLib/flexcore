@@ -9,7 +9,7 @@ namespace fc
 
 /**
  * A collection of different useful connectables.
- * A lot of them are names for simples lambdas do make code less verbose.
+ * A lot of them are names for simple lambdas to make code less verbose.
  */
 
 /// Increments input using prefix operator ++.
@@ -44,7 +44,7 @@ auto divide_by = [](const auto divisor)
 };
 
 /// Returns absolute value on input using std::abs.
-auto abs = [](auto in) { return std::abs(in); };
+auto absolute = [](auto in) { return std::abs(in); };
 
 /// Negates input using unary -.
 auto negate = [](auto in) { return -in; };
