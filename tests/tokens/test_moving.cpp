@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( moving_state )
 {
 	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
 	pure::state_sink<move_token> sink;
-	pure::state_source_call_function<move_token> source([](){ return move_token("foo"); });
+	pure::state_source<move_token> source([](){ return move_token("foo"); });
 
 	source >> set_bar >> sink;
 	auto v = sink.get();

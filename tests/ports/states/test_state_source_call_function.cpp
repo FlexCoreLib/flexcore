@@ -22,7 +22,7 @@ struct node_class
 
 	data_t get_value() { return value; }
 
-	typedef pure::state_source_call_function<data_t> port_t;
+	typedef pure::state_source<data_t> port_t;
 	port_t port;
 
 	data_t value;

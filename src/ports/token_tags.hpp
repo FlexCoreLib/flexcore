@@ -30,7 +30,7 @@ struct in_port<data_t, state_tag>
 	typedef state_sink<data_t> type;
 };
 
-/// template output port, tag object creates either event_source or state_source_call_function
+/// template output port, tag object creates either event_source or state_source
 template<class data_t, class tag>
 struct out_port;
 
@@ -42,7 +42,7 @@ struct out_port<data_t, event_tag>
 template<class data_t>
 struct out_port<data_t, state_tag>
 {
-	typedef state_source_call_function<data_t> type;
+	typedef state_source<data_t> type;
 };
 
 } // namespace pure
