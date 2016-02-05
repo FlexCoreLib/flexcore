@@ -4,8 +4,7 @@
 #include <vector>
 
 #include <clock/clock.hpp>
-#include <ports/event_ports.hpp>
-
+#include "../ports/pure_ports.hpp"
 #include "parallelscheduler.hpp"
 
 namespace fc
@@ -50,7 +49,7 @@ private:
 	std::function<void(void)> work;
 
 	//Todo refactor this intrusion of ports into otherwise independent code
-	event_out_port<void> switch_tick;
+	pure::event_source<void> switch_tick;
 };
 
 /**

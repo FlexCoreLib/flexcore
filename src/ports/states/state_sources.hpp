@@ -5,7 +5,13 @@
 #include <functional>
 #include <memory>
 
+#include <core/connection.hpp>
+#include <core/traits.hpp>
+#include <core/type_proxy.hpp>
+
 namespace fc
+{
+namespace pure
 {
 
 /**
@@ -32,12 +38,11 @@ public:
 
 	data_t operator()() { return call(); }
 
+	typedef data_t result_t;
+
 private:
 	std::function<data_t()> call;
 };
-
-// traits
-template<class T> struct is_passive_source<state_source_call_function<T>> : std::true_type {};
 
 /**
  * Simple StreamSource implementation that holds a state_source_with_setter.
@@ -51,6 +56,9 @@ public:
 	explicit state_source_with_setter(data_t d)
 		: d(std::make_shared<data_t>(d))
 	{}
+	explicit state_source_with_setter()
+		: state_source_with_setter(data_t())
+	{}
 
 	/// pull data
 	data_t operator()() { return *d; }
@@ -61,18 +69,6 @@ public:
 
 private:
 	std::shared_ptr<data_t> d;
-};
-
-// traits
-template<class data_t> struct is_passive_source<state_source_with_setter<data_t>> : std::true_type {};
-
-/**
- * Universal type proxy
- */
-template<class T>
-struct Type
-{
-	typedef T type;
 };
 
 /**
@@ -112,8 +108,12 @@ struct state_source_tmpl
 template<class lambda_t>
 auto make_state_source_tmpl(lambda_t h) { return state_source_tmpl<lambda_t>{h}; }
 
+} // namespace pure
+
 // traits
-template<class T> struct is_passive_source<state_source_tmpl<T>> : std::true_type {};
+template<class T> struct is_passive_source<pure::state_source_call_function<T>> : std::true_type {};
+template<class data_t> struct is_passive_source<pure::state_source_with_setter<data_t>> : std::true_type {};
+template<class T> struct is_passive_source<pure::state_source_tmpl<T>> : std::true_type {};
 
 } // namespace fc
 

@@ -7,7 +7,11 @@
 
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
-#include <ports/region_aware.hpp>
+#include <nodes/node_interface.hpp>
+#include "../src/ports/ports.hpp"
+
+using namespace fc;
+
 
 int main()
 {
@@ -31,7 +35,7 @@ int main()
 	std::cout << "start building connections\n";
 
 	using time_point = fc::wall_clock::system::time_point;
-	fc::event_out_port<time_point> source;
+	fc::pure::event_source<time_point> source;
 	first_region->ticks.work_tick()
 			>> [&source](){ source.fire(fc::wall_clock::system::now()); };
 
@@ -58,14 +62,21 @@ int main()
 	second_tick_cycle.out_switch_tick() >> second_region->ticks.in_switch_buffers();
 	thread_manager.add_task(second_tick_cycle);
 
-	second_region->ticks.work_tick() >> [](){std::cout << "Zonk!\n";;};
+	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
-	fc::region_aware<fc::event_out_port<std::string>> string_source(first_region);
-	fc::region_aware<fc::event_in_port<std::string>> string_sink(second_region,
+	fc::root_node root;
+	auto child_a = root.make_child_n<fc::null>("a")->region(first_region);
+	auto child_b = root.make_child_n<fc::null>("b")->region(second_region);
+	fc::node_aware<fc::pure::event_source<std::string>> string_source(child_a);
+	fc::event_sink<std::string> string_sink(child_b,
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
 	string_source >> string_sink;
-	first_region->ticks.work_tick() >> [string_source, first_region]() mutable {string_source.fire("a magic string from " + first_region->get_id().key); };
+	first_region->ticks.work_tick()
+			>>	[string_source, first_region]() mutable
+				{
+					string_source.fire("a magic string from " + first_region->get_id().key);
+				};
 
 	thread_manager.start();
 

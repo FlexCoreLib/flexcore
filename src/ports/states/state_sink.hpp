@@ -11,6 +11,8 @@
 
 namespace fc
 {
+namespace pure
+{
 
 /**
  * \brief Simple implementation for input port of states
@@ -66,9 +68,11 @@ private:
 	std::shared_ptr<std::function<data_t()>> con;
 };
 
-// traits
-template<class T> struct is_active_sink<state_sink<T> > : public std::true_type {};
+} // namespace pure
 
-}  // namespace fc
+// traits
+template<class T> struct is_active_sink<pure::state_sink<T>> : public std::true_type {};
+
+} // namespace fc
 
 #endif /* SRC_PORTS_STATES_STATE_SINK_HPP_ */

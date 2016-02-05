@@ -129,8 +129,8 @@ using rm_ref_t = std::remove_reference_t<T>;
  * \returns connection object which has its type determined by the source_t and sink_t.
  *
  * If source_t and sink_t fulfill connectable, the result is connectable.
- * If one of source_t and sink_t fulfills receive_connectable and the other fulfills send_connectable,
- * the result is not non_connectable.
+ * If one of source_t and sink_t fulfills receive_connectable and the other
+ * fulfills send_connectable, the result is not non_connectable.
  * If either source_t or sink_t fulfill send_connectable, the result is send_connectable.
  * If either source_t or sink_t fulfill receive_connectable, the result is receive_connectable.
  */

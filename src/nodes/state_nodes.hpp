@@ -3,8 +3,12 @@
 
 #include <core/traits.hpp>
 #include <ports/states/state_sink.hpp>
+#include <nodes/node_interface.hpp>
 
 #include <utility>
+#include <tuple>
+#include <cstddef>
+#include "../ports/ports.hpp"
 
 namespace fc
 {
@@ -23,12 +27,12 @@ namespace fc
  * \endcode
  */
 template<class operation, class signature>
-struct merge_node
+struct merge_node : public node_interface
 {
 };
 
 template<class operation, class result, class... args>
-struct merge_node<operation, result (args...)>
+struct merge_node<operation, result (args...)> : public node_interface
 {
 	typedef std::tuple<args...> arguments;
 	typedef std::tuple<state_sink<args> ...> in_ports_t;
@@ -38,11 +42,11 @@ struct merge_node<operation, result (args...)>
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
-	explicit merge_node(operation op) :
-			in_ports(),
-			op(op)
-	{
-	}
+    explicit merge_node(operation o)
+		: node_interface("merger")
+  		, in_ports(state_sink<args>(this)...)
+		, op(o)
+	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation
 	result_type operator()()
@@ -70,12 +74,11 @@ private:
 template<class operation>
 auto merge(operation op)
 {
-	return merge_node<
-			operation,
+	return new merge_node
+		<	operation,
 			typename utils::function_traits<operation>::function_type
-			>(op);
+		>(op);
 }
-
 
 }  // namespace fc
 
