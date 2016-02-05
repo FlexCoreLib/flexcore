@@ -30,11 +30,9 @@ struct node_aware: public base
 	//allows explicit access to base of this mixin.
 	typedef base base_t;
 
-	template<class ... args>
-	node_aware( node_interface* node_ptr,
-				const args& ... base_constructor_args )
-		: base_t(base_constructor_args...)
-		, node(node_ptr)
+	template <class... args>
+	node_aware(node_interface* node_ptr, args&&... base_constructor_args)
+	    : base_t(std::forward<args>(base_constructor_args)...), node(node_ptr)
 	{
 		assert(node_ptr);
 	}
