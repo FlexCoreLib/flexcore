@@ -206,12 +206,12 @@ template<class source_t, class sink_t>
 struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if
-        <	::fc::is_instantiation_of<node_aware, source_t>::value &&
-			::fc::is_active_source<source_t>::value &&
-			::fc::is_instantiation_of<node_aware, sink_t>::value &&
-			::fc::is_passive_sink<sink_t>::value
-		>::type
+        std::enable_if_t
+        <	::fc::is_instantiation_of<node_aware, std::decay_t<source_t>>{} &&
+			::fc::is_active_source<std::decay_t<source_t>>{} &&
+			::fc::is_instantiation_of<node_aware, std::decay_t<sink_t>>{} &&
+			::fc::is_passive_sink<std::decay_t<sink_t>>{}
+		>
 	>
 {
 	auto operator()(const source_t& source, const sink_t& sink)
@@ -230,11 +230,11 @@ template<class source_t, class sink_t>
 struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if
-        <	::fc::is_instantiation_of<node_aware, source_t>::value &&
-			::fc::is_active_source<source_t>::value &&
-			not ::fc::is_instantiation_of<node_aware, sink_t>::value
-		>::type
+        std::enable_if_t
+        <	::fc::is_instantiation_of<node_aware, std::decay_t<source_t>>{} &&
+			::fc::is_active_source<std::decay_t<source_t>>{} &&
+			not ::fc::is_instantiation_of<node_aware, std::decay_t<sink_t>>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -252,11 +252,11 @@ template<class source_t, class sink_t>
 struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
-		typename std::enable_if
-		<	::fc::is_instantiation_of<node_aware, source_t>::value &&
-			::fc::is_instantiation_of<node_aware, sink_t>::value &&
-			::fc::is_active_sink<sink_t>::value
-		>::type
+		std::enable_if_t
+		<	::fc::is_instantiation_of<node_aware, std::decay_t<source_t>>{} &&
+			::fc::is_instantiation_of<node_aware, std::decay_t<sink_t>>{} &&
+			::fc::is_active_sink<std::decay_t<sink_t>>{}
+		>
 	>
 {
 
@@ -277,11 +277,11 @@ template<class source_t, class sink_t>
 struct node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if
-        <		not ::fc::is_instantiation_of<node_aware, source_t>::value
-        	and	::fc::is_instantiation_of<node_aware, sink_t>::value
-			and ::fc::is_active_sink<source_t>::value
-		>::type
+        std::enable_if_t
+        <	not ::fc::is_instantiation_of<node_aware, std::decay_t<source_t>>{}
+			and	::fc::is_instantiation_of<node_aware, std::decay_t<sink_t>>{}
+			and ::fc::is_active_sink<std::decay_t<source_t>>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -314,25 +314,25 @@ auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 }
 
 template<class source_t, class sink_t>
-auto connect(node_aware<source_t> source, sink_t sink)
+auto connect(node_aware<source_t> source, sink_t&& sink)
 {
 	//construct region_aware_connection
 	//based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	node_aware<source_t>,
 			sink_t
-		> ()(source, sink);
+		> ()(source, std::forward<sink_t>(sink));
 }
 
 template<class source_t, class sink_t>
-auto connect(source_t source, node_aware<sink_t> sink)
+auto connect(source_t&& source, node_aware<sink_t> sink)
 {
 	//construct region_aware_connection
 	//based on if source and sink are from same region
 	return detail::node_aware_connect_impl
 		<	source_t,
 			node_aware<sink_t>
-		> ()(source, sink);
+		> ()(std::forward<source_t>(source), sink);
 }
 
 }  //namespace fc
