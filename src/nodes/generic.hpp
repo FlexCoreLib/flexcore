@@ -170,13 +170,15 @@ template<class data_t, class predicate>
 class watch_node : public tree_base_node
 {
 public:
-	explicit watch_node(const predicate& pred)
+	explicit watch_node(predicate pred)
 		: tree_base_node("watcher")
-		, pred(pred)
+		, pred{std::move(pred)}
 		, in_port(this)
 		, out_port(this)
 	{
 	}
+
+	watch_node(watch_node&&) = default;
 
 	/// State input port, expects data_t.
 	auto& in() noexcept { return in_port; }
@@ -202,9 +204,9 @@ private:
 
 /// Creates a watch node with a predicate.
 template<class data_t, class predicate>
-auto watch(const predicate& pred, const data_t&)
+auto watch(predicate&& pred, data_t)
 {
-	return watch_node<data_t, predicate>{pred};
+	return watch_node<data_t, predicate>{std::forward<predicate>(pred)};
 }
 
 /**
@@ -213,17 +215,16 @@ auto watch(const predicate& pred, const data_t&)
  *  Does not fire the first time the state is querried.
  */
 template<class data_t>
-auto on_changed()
+auto on_changed(data_t initial_value = data_t())
 {
-	std::shared_ptr<data_t> last = nullptr;
 	return watch(
-			[last](const data_t& in) mutable
+			[last{std::move(std::make_unique<data_t>())}](const data_t& in) mutable
 			{
-				bool check = last && (*last == in);
-				last = std::make_shared<data_t>(in);
-				return check;
+				const bool is_same = last && (*last == in);
+				last = std::make_unique<data_t>(in);
+				return !is_same;
 			},
-			data_t());
+			initial_value);
 }
 
 }  // namespace fc
