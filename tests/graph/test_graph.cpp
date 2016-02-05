@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(test_graph_connectable)
 
 namespace
 {
-	struct dummy_node : public tree_base_node
+	struct dummy_node : tree_base_node
 	{
 		dummy_node(const std::string& name)
 			: tree_base_node(name)

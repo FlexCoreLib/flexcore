@@ -10,7 +10,7 @@ using namespace fc;
 namespace // unnamed
 {
 template<class data_t>
-struct node_class : public base_node
+struct node_class : base_node
 {
 	node_class(data_t a)
 		: base_node("test_node")
@@ -27,7 +27,7 @@ struct node_class : public base_node
 	data_t value;
 };
 
-struct null : public base_node
+struct null : base_node
 {
 	null() : base_node("null") {}
 };

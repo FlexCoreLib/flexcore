@@ -3,7 +3,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 #ENABLE_TESTING()
 
 # test_executable
-
 ADD_EXECUTABLE( test_executable 
 	core/test_connection.cpp
 	core/test_traits.cpp
@@ -33,9 +32,7 @@ ADD_EXECUTABLE( test_executable
 	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
-	PRIVATE ${BOOST_INCLUDE_DIRS}
-	"../src/" 
-	"." )
+	PRIVATE "." )
 
 TARGET_LINK_LIBRARIES( test_executable
 	PUBLIC flexcore )

@@ -124,7 +124,7 @@ protected:
  * root.make_child_named<node_tmpl>("name", 5);
  * \endcode
  */
-struct node_owner : public tree_base_node
+struct node_owner : tree_base_node
 {
 	using tree_base_node::forest_t;
 

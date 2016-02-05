@@ -10,14 +10,13 @@ ADD_COMPILE_OPTIONS(
     "-Wextra"
     "-std=c++1y" 
     "-pthread"
-    $<$<BOOL:ENABLE_COVERAGE_ANALYSIS>:-fprofile-arcs>
-    $<$<BOOL:ENABLE_COVERAGE_ANALYSIS>:-ftest-coverage> 
+    $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-fprofile-arcs>
+    $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-ftest-coverage>
     )
+FIND_PACKAGE( Boost 1.54 REQUIRED )
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
 
 ADD_SUBDIRECTORY( src )
 ADD_SUBDIRECTORY( tests )
 ADD_SUBDIRECTORY( dummy_main )
-
-
-
 

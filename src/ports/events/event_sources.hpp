@@ -31,7 +31,7 @@ namespace pure
 template<class event_t>
 struct event_source
 {
-	typedef typename std::remove_reference<event_t>::type result_t;
+	typedef std::remove_reference_t<event_t> result_t;
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
 	event_source() = default;
@@ -43,11 +43,11 @@ struct event_source
 		static_assert(sizeof...(T) == 0 || sizeof...(T) == 1,
 				"we only allow single events, or void events atm");
 
-		static_assert(std::is_void<event_t>() || std::is_constructible<
-				typename std::remove_reference<T>::type...,
-				typename std::remove_reference<event_t>::type>(),
-				"tried to call fire with a type, not implicitly convertible to type of port."
-				"If conversion is required, do the cast before calling fire.");
+		static_assert(std::is_void<event_t>() ||
+		              std::is_constructible<std::remove_reference_t<T>...,
+		                                    std::remove_reference_t<event_t>>(),
+		              "tried to call fire with a type, not implicitly convertible to type of port."
+		              "If conversion is required, do the cast before calling fire.");
 
 		assert(event_handlers);
 		for (auto& target : (*event_handlers))
@@ -91,7 +91,7 @@ private:
 } // namespace pure
 
 // traits
-template<class T> struct is_active_source<pure::event_source<T>> : public std::true_type {};
+template<class T> struct is_active_source<pure::event_source<T>> : std::true_type {};
 
 } // namespace fc
 
