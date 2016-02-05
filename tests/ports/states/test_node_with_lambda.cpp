@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE( node_with_lambda_to_member )
 	auto increment = [](int i) -> int { return i+1; };
 	pure::state_sink<int> sink;
 
-	static_assert(is_passive<decltype(node.port())>::value,
+	static_assert(is_passive<decltype(node.port())>{},
 			"returns a lambda which takes void param, which is passive");
 	node.port() >> increment >> sink;
 

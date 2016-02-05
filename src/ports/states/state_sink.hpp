@@ -52,9 +52,9 @@ public:
 	template<class con_t>
 	void connect(con_t c)
 	{
-		static_assert(is_callable<con_t>::value,
+		static_assert(is_callable<con_t>{},
 				"only callables can be connected to a state_sink");
-		static_assert(is_passive_source<con_t>::value,
+		static_assert(is_passive_source<con_t>{},
 				"only passive sources can be connected to a state_sink");
 
 		(*con) = c;
@@ -71,7 +71,7 @@ private:
 } // namespace pure
 
 // traits
-template<class T> struct is_active_sink<pure::state_sink<T>> : public std::true_type {};
+template<class T> struct is_active_sink<pure::state_sink<T>> : std::true_type {};
 
 } // namespace fc
 

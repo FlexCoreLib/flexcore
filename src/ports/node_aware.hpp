@@ -27,9 +27,9 @@ namespace fc
  * \endcode
  */
 template<class base>
-struct node_aware: public graph::graph_connectable<base>
+struct node_aware: graph::graph_connectable<base>
 {
-	static_assert(std::is_class<base>::value,
+	static_assert(std::is_class<base>{},
 			"can only be mixed into clases, not primitives");
 	//allows explicit access to base of this mixin.
 	typedef base base_t;
@@ -112,7 +112,7 @@ struct buffer_factory
  * \invariant buffer != null_ptr
  */
 template<class base_connection>
-struct buffered_event_connection : public base_connection
+struct buffered_event_connection : base_connection
 {
 	typedef typename base_connection::result_t result_t;
 
@@ -135,14 +135,14 @@ private:
 };
 
 //todo hackhack
-template<class T> struct is_passive_sink<buffered_event_connection<T>> : public std::true_type {};
+template<class T> struct is_passive_sink<buffered_event_connection<T>> : std::true_type {};
 
 /**
  * \see buffered_event_connection
  * remove this code duplication if possible
  */
 template<class base_connection>
-struct buffered_state_connection: public base_connection
+struct buffered_state_connection: base_connection
 {
 	typedef typename base_connection::result_t result_t;
 
@@ -163,15 +163,15 @@ private:
 	std::shared_ptr<buffer_interface<result_t, state_tag>> buffer;
 };
 
-template<class T> struct is_active_sink<node_aware<T>> : public is_active_sink<T> {};
-template<class T> struct is_active_source<node_aware<T>> : public is_active_source<T> {};
-template<class T> struct is_passive_sink<node_aware<T>> : public is_passive_sink<T> {};
-template<class T> struct is_passive_source<node_aware<T>> : public is_passive_source<T> {};
+template<class T> struct is_active_sink<node_aware<T>> : is_active_sink<T> {};
+template<class T> struct is_active_source<node_aware<T>> : is_active_source<T> {};
+template<class T> struct is_passive_sink<node_aware<T>> : is_passive_sink<T> {};
+template<class T> struct is_passive_source<node_aware<T>> : is_passive_source<T> {};
 
 template<class source_t, class sink_t>
 struct result_of<node_aware<connection<source_t, sink_t>>>
 {
-	typedef typename result_of<source_t>::type type;
+	using type = result_of_t<source_t>;
 };
 
 namespace detail
@@ -256,15 +256,15 @@ template<class source_t, class sink_t>
 struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
-        	::fc::is_active_source<source_t>::value &&
-			::fc::is_passive_sink<sink_t>::value
-		>::type
+		std::enable_if_t<
+		::fc::is_active_source<source_t>{} &&
+			::fc::is_passive_sink<sink_t>{}
+		>
 	>
 {
 	auto operator()(const source_t& source, const sink_t& sink)
 	{
-		typedef typename result_of<source_t>::type result_t;
+		using result_t = result_of_t<source_t>;
 		return connect(
 				static_cast<const typename source_t::base_t&>(source),
 				detail::make_buffered_connection(
@@ -284,15 +284,15 @@ template<class source_t, class sink_t>
 struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-		typename std::enable_if<
-			::fc::is_passive_source<source_t>::value &&
-			::fc::is_active_sink<sink_t>::value
-		>::type
+		std::enable_if_t<
+			::fc::is_passive_source<source_t>{} &&
+			::fc::is_active_sink<sink_t>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
 	{
-		typedef typename result_of<source_t>::type result_t;
+		using result_t = result_of_t<source_t>;
 		return connect(detail::make_buffered_connection(
 				buffer_factory<result_t>::construct_buffer(
 						sink, // state sink is active thus first
@@ -308,9 +308,9 @@ template<class source_t, class sink_t>
 struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
-        	::fc::is_active_source<source_t>::value
-		>::type
+		std::enable_if_t<
+		::fc::is_active_source<source_t>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -327,9 +327,9 @@ template<class source_t, class sink_t>
 struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
-        	::fc::is_active_sink<sink_t>::value
-        >::type
+		std::enable_if_t<
+		::fc::is_active_sink<sink_t>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -346,10 +346,10 @@ template<class source_t, class sink_t>
 struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
-        	!is_active_source<source_t>::value &&
-			::fc::is_passive_sink<sink_t>::value
-		>::type
+		std::enable_if_t<
+			!is_active_source<source_t>{} &&
+			::fc::is_passive_sink<sink_t>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)
@@ -366,10 +366,10 @@ template<class source_t, class sink_t>
 struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
-        typename std::enable_if<
-        	is_passive_source<source_t>::value &&
-			!::fc::is_active_sink<sink_t>::value
-		>::type
+		std::enable_if_t<
+			is_passive_source<source_t>{} &&
+			!::fc::is_active_sink<sink_t>{}
+		>
 	>
 {
 	auto operator()(source_t source, sink_t sink)

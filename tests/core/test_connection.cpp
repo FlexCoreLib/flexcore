@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE( result_of_connection)
 	auto conn = source >> sink;
 	static_assert(is_instantiation_of<connection, decltype(conn)>{},
 	              "operator >> for connectable should return connection");
-	static_assert(std::is_same<result_of<decltype(conn)>::type, decltype(conn())>{},
+	static_assert(std::is_same<result_of_t<decltype(conn)>, decltype(conn())>{},
 	              "result_of connection should be the same as return type of conn()");
 }
 
