@@ -86,7 +86,7 @@ auto make_merge(parent_t& parent, operation op)
 /*                                   Caches                                  */
 /*****************************************************************************/
 
-/// pulls inputs on incoming pull tick and makes it available to state otuput out().
+/// Pulls inputs on incoming pull tick and makes it available to state output out().
 template<class data_t>
 class current_state : public tree_base_node
 {
@@ -149,7 +149,7 @@ public:
 	///State Input Port of type data_t
 	auto& in() noexcept { return in_port; }
 
-	///events to this port mark the cache as dirty. Expects events of type void.
+	///Events to this port mark the cache as dirty. Expects events of type void.
 	auto switch_tick() noexcept { return [this](){ load_new = true; }; }
 
 private:
