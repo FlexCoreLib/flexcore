@@ -11,6 +11,8 @@
 
 namespace fc
 {
+namespace pure
+{
 
 /**
  * \brief Simple implementation for input port of states
@@ -50,9 +52,9 @@ public:
 	template<class con_t>
 	void connect(con_t c)
 	{
-		static_assert(is_callable<con_t>::value,
+		static_assert(is_callable<con_t>{},
 				"only callables can be connected to a state_sink");
-		static_assert(is_passive_source<con_t>::value,
+		static_assert(is_passive_source<con_t>{},
 				"only passive sources can be connected to a state_sink");
 
 		(*con) = c;
@@ -66,9 +68,11 @@ private:
 	std::shared_ptr<std::function<data_t()>> con;
 };
 
-// traits
-template<class T> struct is_active_sink<state_sink<T> > : public std::true_type {};
+} // namespace pure
 
-}  // namespace fc
+// traits
+template<class T> struct is_active_sink<pure::state_sink<T>> : std::true_type {};
+
+} // namespace fc
 
 #endif /* SRC_PORTS_STATES_STATE_SINK_HPP_ */

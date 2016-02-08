@@ -3,12 +3,14 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 #ENABLE_TESTING()
 
 # test_executable
-
 ADD_EXECUTABLE( test_executable 
 	core/test_connection.cpp
 	core/test_traits.cpp
 	clock/TestClock.cpp
+	graph/test_graph.cpp
 	nodes/test_generic.cpp
+	nodes/test_list_manipulation.cpp
+	nodes/test_base_node.cpp
 	nodes/test_state_nodes.cpp
 	ports/test_event_buffer.cpp
 	ports/test_node_aware.cpp
@@ -29,10 +31,7 @@ ADD_EXECUTABLE( test_executable
 	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
-	PRIVATE ${BOOST_INCLUDE_DIRS}
-	"../src/" 
-	"../src/3rdparty/cereal/include"
-	"." )
+	PRIVATE "." )
 
 TARGET_LINK_LIBRARIES( test_executable
 	PUBLIC flexcore )

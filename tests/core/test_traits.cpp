@@ -32,7 +32,7 @@ namespace
 #define ASSERT_RESULT_OF(expr, t)										\
 	{																	\
 		auto callable_fd3s81sdk = expr;									\
-		static_assert( (std::is_same< result_of< decltype(callable_fd3s81sdk) >::type, t >::value), \
+		static_assert( (std::is_same< result_of_t< decltype(callable_fd3s81sdk) >, t >{}), \
 					   "result_of should return type '" #t "' for '" #expr "'."); \
 	}
 
@@ -40,7 +40,7 @@ namespace
 #define ASSERT_ARG_TYPE(expr, n, t)										\
 	{																	\
 		auto callable_fd3s81sdk = expr;									\
-		static_assert(std::is_same< argtype_of<decltype(callable_fd3s81sdk), n>::type, t >::value, \
+		static_assert(std::is_same< argtype_of<decltype(callable_fd3s81sdk), n>::type, t >{}, \
 						  "Parameter #" #n " of '" #expr "' should be of type '" #t "'"); \
 																		\
 	}
@@ -114,25 +114,25 @@ BOOST_AUTO_TEST_CASE( test_callable_traits )
 
 		ASSERT_RESULT_OF(callable5, bool);
 
-		static_assert(is_callable<CustomCallable>::value,
+		static_assert(is_callable<CustomCallable>{},
 				"this type was made to be callable");
-		static_assert(is_connectable<CustomCallable>::value,
+		static_assert(is_connectable<CustomCallable>{},
 				"struct was made to be connectable");
 
 		auto test = [](int){ };
-		static_assert(is_callable<decltype(test)>::value,
+		static_assert(is_callable<decltype(test)>{},
 				"lambda taking int is callable");
-		static_assert(is_connectable<decltype(test)>::value,
+		static_assert(is_connectable<decltype(test)>{},
 				"lambda taking int is connectable");
 
 		auto con_lambda = [](int)->int{return 1;};
-		static_assert(is_connectable<decltype(con_lambda)>::value,
+		static_assert(is_connectable<decltype(con_lambda)>{},
 				"lambda takes and returns int, is connectable");
 
-		static_assert(!has_result<CustomCallable>::value, "CustomCallable does not have a result_t");
-		static_assert(has_result<result_haver>::value, "result_haver has a result_t");
+		static_assert(!has_result<CustomCallable>{}, "CustomCallable does not have a result_t");
+		static_assert(has_result<result_haver>{}, "result_haver has a result_t");
 
-		static_assert(std::is_same<typename result_of<result_haver>::type, int>::value, "result_t is int");
+		static_assert(std::is_same<result_of_t<result_haver>, int>{}, "result_t is int");
 
 	}
 }
@@ -147,18 +147,18 @@ struct not_callable
 
 BOOST_AUTO_TEST_CASE( test_is_callable )
 {
-	static_assert(is_callable<CustomCallable>::value,
+	static_assert(is_callable<CustomCallable>{},
 			"type is defined to be callable");
-	static_assert(is_callable<CustomCallableArg>::value,
+	static_assert(is_callable<CustomCallableArg>{},
 			"this type was made to be callable");
 
-	static_assert(!is_callable<int>::value,
+	static_assert(!is_callable<int>{},
 			"int is very much not callable");
 
-	static_assert(!is_passive<CustomCallableArg>::value,
+	static_assert(!is_passive<CustomCallableArg>{},
 			"CusomtCallableArg returns bool and thus cannot be passive connectable");
 
-	static_assert(!is_callable<not_callable>::value,
+	static_assert(!is_callable<not_callable>{},
 			"type is defined to be not callable");
 }
 

@@ -16,6 +16,8 @@
 
 namespace fc
 {
+namespace pure
+{
 
 /**
  * \brief minimal output port for events.
@@ -27,13 +29,13 @@ namespace fc
  * \invariant shared pointer event_handlers != 0.
  */
 template<class event_t>
-struct event_out_port
+struct event_source
 {
-	typedef typename std::remove_reference<event_t>::type result_t;
+	typedef std::remove_reference_t<event_t> result_t;
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
-	event_out_port() = default;
-	event_out_port(const event_out_port&) = default;
+	event_source() = default;
+	event_source(const event_source&) = default;
 
 	template<class... T>
 	void fire(T&&... event)
@@ -41,11 +43,10 @@ struct event_out_port
 		static_assert(sizeof...(T) == 0 || sizeof...(T) == 1,
 				"we only allow single events, or void events atm");
 
-		static_assert(std::is_void<event_t>() || std::is_constructible<
-				typename std::remove_reference<T>::type...,
-				typename std::remove_reference<event_t>::type>(),
-				"tried to call fire with a type, not implicitly convertible to type of port."
-				"If conversion is required, do the cast before calling fire.");
+		static_assert(std::is_void<event_t>{} ||
+		              std::is_constructible<event_t, T...>{},
+		              "tried to call fire with a type, not implicitly convertible to type of port."
+		              "If conversion is required, do the cast before calling fire.");
 
 		assert(event_handlers);
 		for (auto& target : (*event_handlers))
@@ -86,9 +87,10 @@ private:
 	std::shared_ptr<handler_vector> event_handlers = std::make_shared<handler_vector>(0);
 };
 
+} // namespace pure
+
 // traits
-// TODO prefer to test this algorithmically
-template<class T> struct is_active_source<event_out_port<T>> : public std::true_type {};
+template<class T> struct is_active_source<pure::event_source<T>> : std::true_type {};
 
 } // namespace fc
 

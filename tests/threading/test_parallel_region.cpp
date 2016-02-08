@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
-#include <ports/ports.hpp>
 #include <threading/parallelregion.hpp>
+#include <ports/pure_ports.hpp>
 
 using namespace fc;
 

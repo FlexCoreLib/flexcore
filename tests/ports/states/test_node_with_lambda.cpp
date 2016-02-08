@@ -5,7 +5,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <core/connection.hpp>
-#include <ports/state_ports.hpp>
+#include <ports/states/state_sink.hpp>
 
 using namespace fc;
 
@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_CASE( node_with_lambda_to_member )
 {
 	node_class<int> node;
 	auto increment = [](int i) -> int { return i+1; };
-	state_sink<int> sink;
+	pure::state_sink<int> sink;
 
-	static_assert(is_passive<decltype(node.port())>::value,
+	static_assert(is_passive<decltype(node.port())>{},
 			"returns a lambda which takes void param, which is passive");
 	node.port() >> increment >> sink;
 

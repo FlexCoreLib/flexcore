@@ -77,7 +77,6 @@ struct connection
 	source_t source;
 	sink_t sink;
 
-
 	/**
 	 * \brief call operator, calls source and then sink with the result of source
 	 *
@@ -109,13 +108,17 @@ namespace detail
 template<class source_t, class sink_t, class Enable = void>
 struct connect_impl
 {
-	auto operator()(const source_t& source, const sink_t& sink)
+	auto operator()(source_t&& source, sink_t&& sink)
 	{
-		return connection<source_t, sink_t> {source, sink};
+		return connection<std::decay_t<source_t>, std::decay_t<sink_t>>
+				{std::forward<source_t>(source), std::forward<sink_t>(sink)};
 	}
 };
 
 } // namespace detail
+
+template <typename T>
+using rm_ref_t = std::remove_reference_t<T>;
 
 /**
  * \brief Connect takes two connectables and returns a connection.
@@ -125,8 +128,8 @@ struct connect_impl
  * \returns connection object which has its type determined by the source_t and sink_t.
  *
  * If source_t and sink_t fulfill connectable, the result is connectable.
- * If one of source_t and sink_t fulfills receive_connectable and the other fulfills send_connectable,
- * the result is not non_connectable.
+ * If one of source_t and sink_t fulfills receive_connectable and the other
+ * fulfills send_connectable, the result is not non_connectable.
  * If either source_t or sink_t fulfill send_connectable, the result is send_connectable.
  * If either source_t or sink_t fulfill receive_connectable, the result is receive_connectable.
  */
@@ -134,9 +137,10 @@ template
 	<	class source_t,
 		class sink_t
 	>
-auto connect(const source_t& source, const sink_t& sink)
+auto connect (source_t&& source, sink_t&& sink)
 {
-	return detail::connect_impl<source_t, sink_t>()(source, sink);
+	return detail::connect_impl<source_t, sink_t>()(
+	        std::forward<source_t>(source), std::forward<sink_t>(sink));
 }
 
 /**
@@ -144,17 +148,21 @@ auto connect(const source_t& source, const sink_t& sink)
  *
  * This operator is syntactic sugar for Connect.
  */
-template<class source_t, class sink_t, class enable = typename std::enable_if<
-		(is_connectable<source_t>::value || is_active_connectable<source_t>::value)
-		&& (is_connectable<sink_t>::value || is_active_connectable<sink_t>::value)>::type>
-auto operator >>(const source_t& source, const sink_t& sink)
+template<class source_t, class sink_t, class enable = std::enable_if_t<
+		(is_connectable<rm_ref_t<source_t>>::value || is_active_connectable<rm_ref_t<source_t>>{})
+		&& (is_connectable<rm_ref_t<sink_t>>::value || is_active_connectable<rm_ref_t<sink_t>>{})>>
+auto operator >>(source_t&& source, sink_t&& sink)
 {
-	return connect(source, sink);
+	return connect(std::forward<source_t>(source), std::forward<sink_t>(sink));
 }
 
 //todo: does not belong here
 template <class source_t, class sink_t>
 struct is_passive_sink<connection<source_t, sink_t>> : is_passive_sink<sink_t>
+{};
+
+template <class source_t, class sink_t>
+struct result_of<connection<source_t, sink_t>> : result_of<sink_t>
 {};
 
 } //namespace fc

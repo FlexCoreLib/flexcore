@@ -1,4 +1,5 @@
 #include "core/connection.hpp"
+#include "movable_connectable.hpp"
 
 // boost
 #include <boost/test/unit_test.hpp>
@@ -177,4 +178,29 @@ BOOST_AUTO_TEST_CASE( associativity )
 	BOOST_CHECK_EQUAL(sink_ref, 61);
 }
 
+BOOST_AUTO_TEST_CASE( result_of_connection)
+{
+	auto source = [] { return 1; };
+	auto sink = [] (int x) { return static_cast<float>(x); };
+	auto conn = source >> sink;
+	static_assert(is_instantiation_of<connection, decltype(conn)>{},
+	              "operator >> for connectable should return connection");
+	static_assert(std::is_same<result_of_t<decltype(conn)>, decltype(conn())>{},
+	              "result_of connection should be the same as return type of conn()");
+}
+
+BOOST_AUTO_TEST_CASE( moving_connectables )
+{
+	constructor_count ctr;
+	auto provide_zero = [] { return 0; };
+	auto identity = [](auto x) { return x; };
+	int val;
+	auto consume_int = [&val] (int val_) { val = val_; };
+	auto connection = provide_zero >> movable_connectable{&ctr} >> identity >> consume_int;
+	connection();
+	BOOST_CHECK_EQUAL(val, 1);
+	BOOST_CHECK_EQUAL(ctr.times_moved, 3);
+	BOOST_CHECK_EQUAL(ctr.times_copied, 0);
+	BOOST_CHECK_EQUAL(ctr.times_constructed, 1);
+}
 BOOST_AUTO_TEST_SUITE_END()
