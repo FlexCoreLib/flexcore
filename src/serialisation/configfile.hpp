@@ -71,9 +71,7 @@ private:
 
 } /* namespace fc */
 
-template<
-
-class data_t>
+template<class data_t>
 inline auto fc::config_file::out_value(const std::string& name)
 {
 	//currently forces data_t to be default constructible. is this acceptable?
