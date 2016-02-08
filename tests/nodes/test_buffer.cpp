@@ -91,16 +91,26 @@ BOOST_AUTO_TEST_CASE(test_hold_n)
 	buffer.out() >> sink;
 	BOOST_CHECK(sink.get().empty());
 
-	source.fire(1);
+	source.fire(0);
 	BOOST_CHECK_EQUAL(sink.get().size(), 1);
+	BOOST_CHECK_EQUAL(sink.get().front(), 0);
+	BOOST_CHECK_EQUAL(sink.get().back(), 0);
+
 
 	source.fire(1);
 	BOOST_CHECK_EQUAL(sink.get().size(), 2);
-	source.fire(1);
-	BOOST_CHECK_EQUAL(sink.get().size(), 3); //capacity reached
+	BOOST_CHECK_EQUAL(sink.get().back(), 1);
+	BOOST_CHECK_EQUAL(sink.get().front(), 0); // first event is still in buffer
 
 	source.fire(1);
 	BOOST_CHECK_EQUAL(sink.get().size(), 3); //capacity reached
+
+	source.fire(2);
+	BOOST_CHECK_EQUAL(sink.get().size(), 3); //capacity reached
+	 // first event has been pushed of out buffer as capacity was reched before
+	BOOST_CHECK_EQUAL(sink.get().back(), 2);
+	BOOST_CHECK_EQUAL(sink.get().front(), 1); //not 0 as before
+
 }
 
 BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
@@ -120,11 +130,16 @@ BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
 	source.fire(int_range(vec.begin(), vec.end()));
 	//size is smaller then capacity
 	BOOST_CHECK_EQUAL(sink.get().size(), vec.size());
+	BOOST_CHECK(sink.get() == vec);
 
 	source.fire(int_range(vec.begin(), vec.end()));
+
 	BOOST_CHECK_EQUAL(sink.get().size(), 5); //capacity reached
 	source.fire(int_range(vec.begin(), vec.end()));
 	BOOST_CHECK_EQUAL(sink.get().size(), 5); //capacity reached
+	//last element remaining from previous range is the back of the vector.
+	BOOST_CHECK_EQUAL(sink.get().front(), vec.back());
+	BOOST_CHECK_EQUAL(sink.get().back(), vec.back());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(test_current_state)
 	BOOST_CHECK_EQUAL(test_node_1.out()(), 1);
 
 	current_state<int> test_node_2;
-	BOOST_CHECK_EQUAL(test_node_2.out()(), 0); //default is int() == 0
+	BOOST_CHECK_EQUAL(test_node_2.out()(), int()); //default is int()
 	}
 
 	current_state<int> test_node;
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(test_current_state)
 	source >> test_node.in();
 
 	// we haven't pulled yet
-	BOOST_CHECK_EQUAL(test_node.out()(), 0);
+	BOOST_CHECK_EQUAL(test_node.out()(), int()); //default is int()
 
 	test_node.pull()();
 	BOOST_CHECK_EQUAL(test_node.out()(), 1);
