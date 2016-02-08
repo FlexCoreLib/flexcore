@@ -3,6 +3,7 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8.12 )
 # creates the executable
 ADD_LIBRARY( flexcore
 	clock/clock.cpp
+	graph/graph.cpp
 	threading/parallelregion.cpp
 	threading/cyclecontrol.cpp
     threading/minimalscheduler.cpp

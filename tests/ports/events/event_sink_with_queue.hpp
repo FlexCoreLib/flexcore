@@ -7,7 +7,7 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
-#include "../../../src/ports/ports.hpp"
+#include <ports/ports.hpp>
 
 namespace fc
 {

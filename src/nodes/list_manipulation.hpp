@@ -2,14 +2,13 @@
 #define SRC_NODES_LIST_MANIPULATION_HPP_
 
 #include <core/traits.hpp>
-#include <nodes/node_interface.hpp>
+#include <nodes/base_node.hpp>
 #include <map>
 
 // boost
 #include <boost/range.hpp>
 
-#include "../ports/ports.hpp"
-#include "../ports/pure_ports.hpp"
+#include <ports/ports.hpp>
 
 namespace fc
 {
@@ -27,14 +26,14 @@ template
 	<	class range_t,
 		class predicate_result_t
 	>
-class list_splitter : public node_interface
+class list_splitter : public tree_base_node
 {
 public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	explicit list_splitter(auto pred)
-		: node_interface("splitter")
+		: tree_base_node("splitter")
 		, in(this, [&](const range_t& range){ this->receive(range); } )
 		, out_num_dropped(this)
 		, entries()
@@ -81,7 +80,7 @@ private:
 	}
 	struct entry_t
 	{
-		entry_t(node_interface* p) : port(p), data() {}
+		entry_t(list_splitter* p) : port(p), data() {}
 		event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};
@@ -95,14 +94,14 @@ private:
  * Sends the buffer as state when pulled.
  */
 template<class range_t>
-class list_collector : public node_interface
+class list_collector : public tree_base_node
 {
 public:
 	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	list_collector()
-		: node_interface("list_collector")
+		: tree_base_node("list_collector")
 		, in( this, [&](const range_t& range){ this->receive(range); } )
 		, out( this, [&](){ return this->get_state(); } )
 	{}

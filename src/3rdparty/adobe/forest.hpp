@@ -389,6 +389,7 @@ struct node : public node_base<node<T>> {
     typedef T value_type;
 
     explicit node(const value_type& data) : data_m(data) {}
+    explicit node(value_type&& data) : data_m(std::move(data)) {}
 
     value_type data_m;
 };
@@ -647,6 +648,18 @@ public:
 
     iterator insert(const iterator& position, const T& x) {
         iterator result(new node_t(x), true);
+
+        if (size_valid())
+            ++size_m;
+
+        unsafe::set_next(boost::prior(position), result);
+        unsafe::set_next(boost::next(result), position);
+
+        return result;
+    }
+
+    iterator insert(const iterator& position, T&& x) {
+        iterator result(new node_t(std::move(x)), true);
 
         if (size_valid())
             ++size_m;

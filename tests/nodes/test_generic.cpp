@@ -7,24 +7,22 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_generic_nodes)
 
-//BOOST_AUTO_TEST_CASE(test_transform)
-//{
-//	root_node root;
-//	auto multiply = root.add_child(transform( [](int a, int b){ return a * b;}));
-//
-//	state_source_with_setter<int> three(&root, 3);
-//	three >> multiply->param;
-//
-//	BOOST_CHECK_EQUAL((*multiply)(2), 6);
-//
-//	auto add = root.add_child(transform( [](int a, int b){ return a + b;}));
-//
-//	auto con = [](){return 4;} >> add->in;
-//	add->out >> [](int i) { return i+1; };
-//	three >> add->param;
-//
-//	BOOST_CHECK_EQUAL(con(), 8);
-//}
+BOOST_AUTO_TEST_CASE(test_transform)
+{
+	auto multiply = transform( [](int a, int b){ return a * b;});
+
+	pure::state_source_with_setter<int> three(3);
+	three >> multiply.param;
+
+	BOOST_CHECK_EQUAL(multiply(2), 6);
+
+	auto add = transform( [](int a, int b){ return a + b;});
+
+	auto con = [](){return 4;} >> add >> [](int i) { return i+1; };
+	three >> add.param;
+
+	BOOST_CHECK_EQUAL(con(), 8);
+}
 
 BOOST_AUTO_TEST_CASE(test_n_ary_switch_state)
 {
@@ -54,14 +52,10 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	state_source_with_setter<size_t> config(&root, 0);
 	event_sink_queue<int> buffer(&root);
 
-	static_assert(not is_active_sink   <event_source<int>>::value, "");
-	static_assert(    is_active_source <event_source<int>>::value, "");
-	static_assert(not is_passive_sink  <event_source<int>>::value, "");
-	static_assert(not is_passive_source<event_source<int>>::value, "");
-	static_assert(not is_active_sink   <decltype(test_switch->in(0))>::value, "");
-	static_assert(not is_active_source <decltype(test_switch->in(0))>::value, "");
-	static_assert(    is_passive_sink  <decltype(test_switch->in(0))>::value, "");
-	static_assert(not is_passive_source<decltype(test_switch->in(0))>::value, "");
+	static_assert(!is_active_sink   <event_source<int>>::value, "");
+	static_assert( is_active_source <event_source<int>>::value, "");
+	static_assert(!is_passive_sink  <event_source<int>>::value, "");
+	static_assert(!is_passive_source<event_source<int>>::value, "");
 
 	source_1 >> test_switch->in(0);
 	source_2 >> test_switch->in(1);

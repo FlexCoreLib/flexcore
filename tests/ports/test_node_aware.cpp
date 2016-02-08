@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ports/node_aware.hpp>
-#include "../../src/ports/pure_ports.hpp"
+#include <ports/pure_ports.hpp>
 
 using namespace fc;
 
@@ -154,10 +154,7 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 
 	auto inc = [](int i){ return i + 1; };
 
-#warning this does not compile
-#warning FIXME region connection limitations
-//	(test_out >> inc) >> inc >> (inc >> test_in);
-	test_out >> inc >> inc >> inc >> test_in;
+	(test_out >> inc) >> inc >> (inc >> test_in);
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_out.fire(1);
@@ -168,6 +165,22 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
+
+	// check the same for states
+	typedef node_aware<pure::state_sink<int>> test_in_state;
+	typedef node_aware<pure::state_source_with_setter<int>> test_out_state;
+
+	test_out_state state_out{&root_1, 1};
+	test_in_state state_in{&root_2};
+
+	(state_out >> inc) >> inc >> (inc >> state_in);
+   //                          ^^^ buffer is here
+
+	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	region_1->ticks.in_work()();
+	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	region_2->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(state_in.get(), 4);
 }
 
 BOOST_AUTO_TEST_CASE(test_state_transition)
