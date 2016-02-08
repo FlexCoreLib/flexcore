@@ -55,6 +55,7 @@ struct merge_node<operation, result (args...)> : public tree_base_node
 		return invoke_helper(in_ports, std::make_index_sequence<nr_of_arguments>{});
 	}
 
+	/// State Sink corresponding to i-th argument of merge operation.
 	template<size_t i>
 	auto& in() noexcept { return std::get<i>(in_ports); }
 

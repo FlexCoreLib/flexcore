@@ -57,13 +57,13 @@ public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
 	list_collector()
 		: detail::base_event_to_state<data_t, std::vector>{
-						[this]()
-						{
-							data_read = true;
-							return boost::make_iterator_range(
-									this->buffer_state.begin(),
-									this->buffer_state.end());
-						}}
+				[this]()
+				{
+					data_read = true;
+					return boost::make_iterator_range(
+							this->buffer_state.begin(),
+							this->buffer_state.end());
+				}}
 	{}
 
 	auto swap_buffers() noexcept
@@ -93,12 +93,14 @@ private:
  * \brief Collects list contents and store them into a buffer.
  *
  * Sends the buffer as state when pulled.
+ * Events are stored in vector which grows until pull is called.
  */
 template<class data_t>
 class list_collector<data_t, swap_on_pull>
 		: public detail::base_event_to_state<data_t, std::vector>
 {
 public:
+	/// Type of range provided as output is an immutable range of data_t.
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator>
 			out_range_t;
 
@@ -126,6 +128,7 @@ namespace detail
 template<class data_t, template<class...> class container_t>
 struct collector
 {
+	// result_t is defined to allow result_of trait with overloaded operator().
 	typedef void result_t;
 
 	void operator() (const auto& range)
@@ -144,24 +147,40 @@ struct collector
 		buffer->insert(end(*buffer), single_input);
 	}
 
-	container_t<data_t>* buffer;
+	container_t<data_t>* buffer; ///< non-owning access to the buffer of node.
 };
 
-/// Base class for nodes which take events and provide a range as state.
+/**
+ * \brief  Base class for nodes which take events and provide a range as state.
+ *
+ * \tparam data_t type of data accepted and provided by the node.
+ * param container_t container used to store the incoming data.
+ *
+ * Extend this class to easily implement your own nodes.
+ */
 template<class data_t, template<class...> class container_t>
 class base_event_to_state : public tree_base_node
 {
 public:
-	typedef boost::iterator_range<typename container_t<data_t>::const_iterator> out_range_t;
+	typedef boost::iterator_range<typename container_t<data_t>::const_iterator>
+			out_range_t;
 
+	/// Input Port accepting both ranges and single events of type data_t
 	auto in() noexcept
 	{
 		return detail::collector<data_t, container_t>{buffer_collect.get()};
 	}
 
+	/// Output Port providing a range of data_t
 	auto out() noexcept { return out_port; }
 
 protected:
+	/**
+	 * \brief constructor used by classes extending this
+	 * \param action is the operation executed on incoming data
+	 *  to store it in outputs.
+	 *  Action can be a simple write to the output buffer or a more complex action.
+	 */
 	template<class action_t>
 	explicit base_event_to_state(
 			action_t&& action) :
