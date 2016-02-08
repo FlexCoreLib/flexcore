@@ -53,7 +53,7 @@ struct merge_node<operation, result (args...)> : public tree_base_node
 	}
 
 	template<size_t i>
-	auto in() const noexcept { return std::get<i>(in_ports); }
+	auto& in() noexcept { return std::get<i>(in_ports); }
 
 protected:
 	in_ports_t in_ports;
