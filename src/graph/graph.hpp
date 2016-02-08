@@ -169,39 +169,21 @@ private:
  *
  * The edge is leading from source to sink through the two ports.
  */
-inline void add_to_graph(const graph_node_properties& source_node,
+void add_to_graph(const graph_node_properties& source_node,
 		const graph_port_information& source_port,
 		const graph_node_properties& sink_node,
-		const graph_port_information& sink_port)
-{
-	connection_graph::access().add_connection(
-			source_node,
-			source_port,
-			sink_node,
-			sink_port);
-}
+		const graph_port_information& sink_port);
 
 /**
  * \brief Adds a new edge to the graph representation.
  *
  * The edge is leading from source to sink without ports.
  */
-inline void add_to_graph(const graph_node_properties& source_node,
-		const graph_node_properties& sink_node)
-{
-	connection_graph::access().add_connection(
-			source_node,
-			sink_node);
-}
+void add_to_graph(const graph_node_properties& source_node,
+		const graph_node_properties& sink_node);
 
 /// Prints current state of the abstract graph in graphviz format.
-inline void print()
-{
-	const auto graph = connection_graph::access().get_boost_graph();
-	boost::write_graphviz(std::cout, graph,
-	     boost::make_label_writer(boost::get(&vertex::name, graph)),
-	     boost::make_label_writer(boost::get(&edge::name, graph)));
-}
+void print();
 
 }  // namespace graph
 }  // namespace fc

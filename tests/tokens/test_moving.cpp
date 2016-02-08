@@ -37,7 +37,9 @@ BOOST_AUTO_TEST_CASE( moving_events )
 
 	std::function<void(move_token&&)> bla = sink;
 	source >> set_bar >> bla;
-	source.fire(move_token("foo"));
+	move_token m{"foo"};
+	// source.fire(m); // should not compile
+	source.fire(std::move(m));
 
 	move_token tmp = sink.get();
 	BOOST_CHECK_EQUAL(tmp.value(), "bar");
