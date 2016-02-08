@@ -48,7 +48,7 @@ template<class source_base_t, class sink_t>
 auto connect(graph_connectable<source_base_t> source, sink_t sink)
 {
 	return make_graph_connectable(
-			::fc::connect<source_base_t, sink_t>(source, sink),
+			::fc::connect(static_cast<source_base_t>(source), sink),
 			 source.graph_info);
 }
 
@@ -56,7 +56,7 @@ template<class source_t, class sink_base_t>
 auto connect(source_t source, graph_connectable<sink_base_t> sink)
 {
 	return make_graph_connectable(
-			::fc::connect<source_t, sink_base_t>(source, sink),
+			::fc::connect(source, static_cast<sink_base_t>(sink)),
 			 sink.graph_info);
 }
 
@@ -67,7 +67,7 @@ auto connect(graph_connectable<source_base_t> source,
 	//add edge to graph with node info of source and sink
 	add_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
 	return make_graph_connectable(
-			::fc::connect<source_base_t, sink_base_t>(source, sink),
+			::fc::connect(static_cast<source_base_t>(source), static_cast<sink_base_t>(sink)),
 			 get_sink(source).graph_info);
 }
 

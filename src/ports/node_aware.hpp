@@ -36,10 +36,10 @@ struct node_aware: graph::graph_connectable<base>
 
 	template<class ... args>
 	node_aware( tree_base_node* node_ptr,
-				const args& ... base_constructor_args )
+				args&&... base_constructor_args )
 		: graph::graph_connectable<base>(
 			graph::graph_node_properties{node_ptr->graph_info()}
-			, base_constructor_args ...)
+			, std::forward<args>(base_constructor_args)...)
 		, node(node_ptr)
 		, graph_port_info()
 	{
@@ -257,8 +257,8 @@ struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
 		std::enable_if_t<
-		::fc::is_active_source<source_t>{} &&
-			::fc::is_passive_sink<sink_t>{}
+			::fc::is_active_source<std::decay_t<source_t>>{} &&
+			::fc::is_passive_sink<std::decay_t<sink_t>>{}
 		>
 	>
 {
@@ -266,7 +266,7 @@ struct both_node_aware_connect_impl
 	{
 		using result_t = result_of_t<source_t>;
 		return connect(
-				static_cast<const typename source_t::base_t&>(source),
+				static_cast<typename source_t::base_t>(source),
 				detail::make_buffered_connection(
 						buffer_factory<result_t>::construct_buffer(
 								source, // event source is active, thus first
@@ -285,8 +285,8 @@ struct both_node_aware_connect_impl
 	<	source_t,
 		sink_t,
 		std::enable_if_t<
-			::fc::is_passive_source<source_t>{} &&
-			::fc::is_active_sink<sink_t>{}
+			::fc::is_passive_source<std::decay_t<source_t>>{} &&
+			::fc::is_active_sink<std::decay_t<sink_t>>{}
 		>
 	>
 {
@@ -309,7 +309,7 @@ struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
 		std::enable_if_t<
-		::fc::is_active_source<source_t>{}
+			::fc::is_active_source<std::decay_t<source_t>>{}
 		>
 	>
 {
@@ -347,7 +347,7 @@ struct sink_node_aware_connect_impl
 	<	source_t,
 		sink_t,
 		std::enable_if_t<
-			!is_active_source<source_t>{} &&
+			!is_active_source<std::decay_t<source_t>>{} &&
 			::fc::is_passive_sink<sink_t>{}
 		>
 	>
@@ -367,8 +367,8 @@ struct source_node_aware_connect_impl
 	<	source_t,
 		sink_t,
 		std::enable_if_t<
-			is_passive_source<source_t>{} &&
-			!::fc::is_active_sink<sink_t>{}
+		 	is_passive_source<std::decay_t<source_t>>{} &&
+			!::fc::is_active_sink<std::decay_t<sink_t>>{}
 		>
 	>
 {
@@ -404,25 +404,25 @@ auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
 }
 
 template<class source_t, class sink_t>
-auto connect(node_aware<source_t> source, sink_t sink)
+auto connect(node_aware<source_t> source, sink_t&& sink)
 {
 	// construct node_aware_connection
 	// based on if source and sink are from same region
 	return detail::source_node_aware_connect_impl
 		<	node_aware<source_t>,
 			sink_t
-		> ()(source, sink);
+		> ()(source, std::forward<sink_t>(sink));
 }
 
 template<class source_t, class sink_t>
-auto connect(source_t source, node_aware<sink_t> sink)
+auto connect(source_t&& source, node_aware<sink_t> sink)
 {
 	// construct node_aware_connection
 	// based on if source and sink are from same region
 	return detail::sink_node_aware_connect_impl
 		<	source_t,
 			node_aware<sink_t>
-		> ()(source, sink);
+		> ()(std::forward<source_t>(source), sink);
 }
 
 template<class source_t, class sink_t>
