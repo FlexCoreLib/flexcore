@@ -129,7 +129,7 @@ class state_cache : public tree_base_node
 public:
 	state_cache() :
 		tree_base_node("cache"),
-		cache(std::make_shared<data_t>()),
+		cache(std::make_unique<data_t>()),
 		load_new(true),
 		in_port(this)
 	{
@@ -158,7 +158,7 @@ private:
 		*cache = in_port.get();
 		load_new = false;
 	}
-	std::shared_ptr<data_t> cache;
+	std::unique_ptr<data_t> cache;
 	bool load_new;
 	state_sink<data_t> in_port;
 };

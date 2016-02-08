@@ -64,7 +64,7 @@ public:
 				[this](const event_t& in)
 				{
 					if (pred(in))
-					this->out_port.fire(in);
+						this->out_port.fire(in);
 				}),
 		pred(p)
 	{
@@ -90,7 +90,7 @@ public:
 				[this](const event_t& in)
 				{
 					if (control.get())
-					this->out_port.fire(in);
+						this->out_port.fire(in);
 				}), control(this)
 	{
 	}
