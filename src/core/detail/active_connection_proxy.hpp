@@ -28,10 +28,10 @@ struct active_sink_first
 		typedef void result_t;
 	};
 
-	template<class source_t, class sink_t>
-	auto operator()(source_t&& sink, sink_t&& source)
+	template<class sink_t, class source_t>
+	auto operator()(sink_t&& sink, source_t&& source)
 	{
-		return ::fc::connect(std::forward<sink_t>(source), std::forward<source_t>(sink));
+		return ::fc::connect(std::forward<source_t>(source), std::forward<sink_t>(sink));
 	}
 };
 struct active_source_first
