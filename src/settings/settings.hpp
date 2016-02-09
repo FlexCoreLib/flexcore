@@ -6,6 +6,15 @@
 namespace fc
 {
 
+class setting_backend_facade
+{
+	template<class data_t, class setter_t>
+	void register_setting(data_t initial_v, setter_t setter); //todo add constraint
+
+	template<class data_t, class setter_t>
+	void register_setting(data_t initial_v, setter_t setter, region_info& region); //todo add constraint
+};
+
 
 struct setting_identifier
 {
@@ -39,6 +48,10 @@ public:
 	}
 
 private:
+	data_t cache;
+
+
+
 	backend_t<data_t> backend_access;
 };
 
