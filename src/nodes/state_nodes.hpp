@@ -104,11 +104,11 @@ public:
 	{
 	}
 
-	///events to this port trigger the node to pull its inputs. expects void
-	auto& pull() noexcept { return pull_tick; }
-	///State Input Port of type data_t
+	/// Events to this port will cause the node to update the cached data. expects void
+	auto& update() noexcept { return pull_tick; }
+	/// State Input Port of type data_t.
 	auto& in() noexcept { return in_port; }
-	///State Output Port of type data_t
+	/// State Output Port of type data_t.
 	auto& out() noexcept { return out_port; }
 
 private:
@@ -136,8 +136,8 @@ public:
 	{
 	}
 
-	///State Output Port of type data_t
-	auto out() noexcept
+	/// State Output Port of type data_t
+	auto out() noexcept // todo: make lambda member and only return reference
 	{
 		return [this]()
 		{
@@ -147,11 +147,11 @@ public:
 		};
 	}
 
-	///State Input Port of type data_t
+	/// State Input Port of type data_t
 	auto& in() noexcept { return in_port; }
 
-	///Events to this port mark the cache as dirty. Expects events of type void.
-	auto switch_tick() noexcept { return [this](){ load_new = true; }; }
+	/// Events to this port mark the cache as dirty. Expects events of type void.
+	auto update() noexcept { return [this](){ load_new = true; }; } // todo: make lambda member and only return reference
 
 private:
 	void refresh_cache()

@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(test_state_cache)
 	test_val = 0;
 	BOOST_CHECK_EQUAL(cache.out()(), 1); //cache has not been reset
 
-	cache.switch_tick()(); //reset cache
+	cache.update()(); //reset cache
 	BOOST_CHECK_EQUAL(cache.out()(), 0);
 }
 
@@ -50,15 +50,15 @@ BOOST_AUTO_TEST_CASE(test_current_state)
 	auto source = [&test_val](){ return test_val;};
 	source >> test_node.in();
 
-	// we haven't pulled yet
+	// we haven't updated the cache yet
 	BOOST_CHECK_EQUAL(test_node.out()(), int()); //default is int()
 
-	test_node.pull()();
+	test_node.update()();
 	BOOST_CHECK_EQUAL(test_node.out()(), 1);
 
 	test_val = 2;
 	BOOST_CHECK_EQUAL(test_node.out()(), 1);
-	test_node.pull()();
+	test_node.update()();
 	BOOST_CHECK_EQUAL(test_node.out()(), 2);
 }
 
