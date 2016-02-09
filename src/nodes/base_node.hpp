@@ -36,6 +36,8 @@ public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
 	tree_base_node(const tree_base_node&) = delete;
+	tree_base_node(tree_base_node&&) = default;
+
 
 	virtual ~tree_base_node()
 	{
@@ -55,11 +57,11 @@ public:
 
 	graph::graph_node_properties graph_info() { return graph_info_; }
 
-	tree_base_node(std::string name)
+	explicit tree_base_node(std::string name)
 		: graph_info_(name)
 		, forest_( std::make_shared<forest_t>() )
 		, self_(forest_->end())
-		, region_(std::make_shared<parallel_region>("invalid"))
+		, region_(std::make_shared<parallel_region>("root"))
 	{
 		assert(forest_); //check invariant
 	}

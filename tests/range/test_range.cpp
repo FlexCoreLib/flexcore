@@ -1,7 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <core/connection.hpp>
-#include <ports/state_ports.hpp>
+#include <ports/states/state_sources.hpp>
+#include <ports/states/state_sink.hpp>
 
 #include <range/algorithm.hpp>
 #include <boost/range/any_range.hpp>
@@ -35,13 +36,13 @@ BOOST_AUTO_TEST_CASE(test_ports_with_ranges)
 			std::ptrdiff_t
 			> any_int_range;
 
-	state_source<any_int_range>
+	pure::state_source<any_int_range>
 		source([&vec]()
 		{
 			return boost::make_iterator_range(std::begin(vec), std::end(vec));
 		});
 
-	state_sink<any_int_range> sink;
+	pure::state_sink<any_int_range> sink;
 
 	source
 		>> filter([](int i){ return i < 0;})
