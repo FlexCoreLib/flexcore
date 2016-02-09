@@ -7,7 +7,7 @@ namespace fc
 {
 
 
-struct setting_identifier
+struct setting_id
 {
 	/// identifier of setting in context (for example key in ini file)
 	std::string key;
@@ -18,7 +18,7 @@ class const_setting_backend_facade
 {
 public:
 	template<class data_t, class setter_t>
-	void register_setting(setting_identifier /*id*/, data_t initial_v, setter_t setter) //todo add constraint
+	void register_setting(setting_id /*id*/, data_t initial_v, setter_t setter) //todo add constraint
 	{
 		// since this setting never changes,
 		// we just call the setter with the initial value and be done.
@@ -27,7 +27,7 @@ public:
 	}
 
 	template<class data_t, class setter_t, class region_t>
-	void register_setting(setting_identifier /*id*/, data_t initial_v, setter_t setter, region_t& /*region*/) //todo add constraint
+	void register_setting(setting_id /*id*/, data_t initial_v, setter_t setter, region_t& /*region*/) //todo add constraint
 	{
 		// since this setting never changes,
 		// we just call the setter with the initial value and be done.
@@ -48,7 +48,7 @@ public:
 
 	template<class data_t, class setter_t>
 	void register_setting(
-			setting_identifier id,
+			setting_id id,
 			data_t initial_v,
 			setter_t setter) //todo add constraint
 	{
@@ -74,7 +74,7 @@ public:
 	 */
 	template<class data_t, class setter_t, class region_t>
 	void register_setting(
-			setting_identifier id,
+			setting_id id,
 			data_t initial_v,
 			setter_t setter,
 			region_t& /*region*/) //todo add constraint
@@ -102,7 +102,7 @@ template<class data_t, class backend_facade>
 class setting
 {
 public:
-	setting(setting_identifier id, backend_facade& backend, data_t initial_value)
+	setting(setting_id id, backend_facade& backend, data_t initial_value)
 		: cache(initial_value)
 	{
 		backend.register_setting(
@@ -111,7 +111,7 @@ public:
 				[this](data_t i){ cache = i;}); //callback to let registry write cache
 	}
 
-	setting(setting_identifier id, data_t initial_value)
+	setting(setting_id id, data_t initial_value)
 		: cache(initial_value)
 	{
 		backend_facade{}.register_setting(
