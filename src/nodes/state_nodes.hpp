@@ -4,6 +4,9 @@
 #include <core/traits.hpp>
 #include <ports/ports.hpp>
 #include <nodes/base_node.hpp>
+#include <ports/states/state_sources.hpp>
+
+#include <ports/events/event_sinks.hpp>
 
 #include <utility>
 #include <tuple>
@@ -52,6 +55,7 @@ struct merge_node<operation, result (args...)> : public tree_base_node
 		return invoke_helper(in_ports, std::make_index_sequence<nr_of_arguments>{});
 	}
 
+	/// State Sink corresponding to i-th argument of merge operation.
 	template<size_t i>
 	auto& in() noexcept { return std::get<i>(in_ports); }
 
@@ -78,6 +82,87 @@ auto make_merge(parent_t& parent, operation op)
 			> node_t;
 	return parent.template make_child<node_t>(op);
 }
+
+/*****************************************************************************/
+/*                                   Caches                                  */
+/*****************************************************************************/
+
+/// Pulls inputs on incoming pull tick and makes it available to state output out().
+template<class data_t>
+class current_state : public tree_base_node
+{
+public:
+	explicit current_state(const data_t& initial_value = data_t()) :
+			tree_base_node("cache"),
+			pull_tick([this]()
+			{
+				stored_state = in_port.get();
+			}),
+			in_port(this),
+			out_port(this, [this](){ return stored_state;}),
+			stored_state(initial_value)
+	{
+	}
+
+	/// Events to this port will cause the node to update the cached data. expects void
+	auto& update() noexcept { return pull_tick; }
+	/// State Input Port of type data_t.
+	auto& in() noexcept { return in_port; }
+	/// State Output Port of type data_t.
+	auto& out() noexcept { return out_port; }
+
+private:
+	pure::event_sink<void> pull_tick;
+	state_sink<data_t> in_port;
+	state_source<data_t> out_port;
+	data_t stored_state;
+};
+
+/**
+ * \brief Caches state and only pulls new state when cache is marked as dirty.
+ *
+ * switch_tick port needs to be connected,
+ * as events to this port mark the cache as dirty.
+ */
+template<class data_t>
+class state_cache : public tree_base_node
+{
+public:
+	state_cache() :
+		tree_base_node("cache"),
+		cache(std::make_unique<data_t>()),
+		load_new(true),
+		in_port(this)
+	{
+	}
+
+	/// State Output Port of type data_t
+	auto out() noexcept // todo: make lambda member and only return reference
+	{
+		return [this]()
+		{
+			if (load_new)
+				refresh_cache();
+			return *cache;
+		};
+	}
+
+	/// State Input Port of type data_t
+	auto& in() noexcept { return in_port; }
+
+	/// Events to this port mark the cache as dirty. Expects events of type void.
+	auto update() noexcept { return [this](){ load_new = true; }; } // todo: make lambda member and only return reference
+
+private:
+	void refresh_cache()
+	{
+		*cache = in_port.get();
+		load_new = false;
+	}
+	std::unique_ptr<data_t> cache;
+	bool load_new;
+	state_sink<data_t> in_port;
+};
 
 } // namespace fc
 

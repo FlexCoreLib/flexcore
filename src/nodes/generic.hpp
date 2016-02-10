@@ -156,6 +156,77 @@ private:
 	}
 };
 
+/**
+ * \brief node which observes a state and fires an event if the state matches a predicate.
+ *
+ * Needs to be connected to a tick, which triggers the check of the predicate on the state.
+ *
+ * \tparam data_t type of data watched by the watch_node.
+ * \tparam predicate predicate which is tested on the observed state
+ * predicate needs to be a callable which takes objects convertible from data_t
+ * and returns a bool.
+ */
+template<class data_t, class predicate>
+class watch_node : public tree_base_node
+{
+public:
+	explicit watch_node(predicate pred)
+		: tree_base_node("watcher")
+		, pred{std::move(pred)}
+		, in_port(this)
+		, out_port(this)
+	{
+	}
+
+	watch_node(watch_node&&) = default;
+
+	/// State input port, expects data_t.
+	auto& in() noexcept { return in_port; }
+	/// Event Output port, fires data_t.
+	auto& out() noexcept { return out_port; }
+
+	/// Event input port expects event of type void. Usually connected to a work_tick.
+	auto check_tick()
+	{
+		return [this]()
+		{
+			const auto tmp = in_port.get();
+			if (pred(tmp))
+				out_port.fire(tmp);
+		};
+	}
+
+private:
+	predicate pred;
+	state_sink<data_t> in_port;
+	event_source<data_t> out_port;
+};
+
+/// Creates a watch node with a predicate.
+template<class data_t, class predicate>
+auto watch(predicate&& pred, data_t)
+{
+	return watch_node<data_t, predicate>{std::forward<predicate>(pred)};
+}
+
+/**
+ * \brief Creates a watch_node, which fires an event, if the state changes.
+ *
+ *  Does not fire the first time the state is querried.
+ */
+template<class data_t>
+auto on_changed(data_t initial_value = data_t())
+{
+	return watch(
+			[last{std::move(std::make_unique<data_t>())}](const data_t& in) mutable
+			{
+				const bool is_same = last && (*last == in);
+				last = std::make_unique<data_t>(in);
+				return !is_same;
+			},
+			initial_value);
+}
+
 }  // namespace fc
 
 #endif /* SRC_NODES_GENERIC_HPP_ */

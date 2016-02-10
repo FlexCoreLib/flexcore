@@ -29,7 +29,7 @@ template
 class list_splitter : public tree_base_node
 {
 public:
-	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
+	typedef typename std::iterator_traits<decltype(std::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	template <class predicate_t>
@@ -49,8 +49,6 @@ public:
 			it = entries.insert(std::make_pair(value, entry_t(this))).first;
 		return it->second.port;
 	}
-
-	size_t dropped_counter = 0;
 	/**
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
@@ -58,6 +56,8 @@ public:
 	state_source<size_t> out_num_dropped;
 
 private:
+	size_t dropped_counter = 0;
+
 	void receive(const range_t& range)
 	{
 		auto begin = std::begin(range);
@@ -90,42 +90,6 @@ private:
 
 	std::map<predicate_result_t, entry_t> entries;
 	std::function<predicate_result_t(value_t)> predicate;
-};
-
-/**
- * Collects list contents and store them into a buffer.
- * Sends the buffer as state when pulled.
- */
-template<class range_t>
-class list_collector : public tree_base_node
-{
-public:
-	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
-	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
-
-	list_collector()
-		: tree_base_node("list_collector")
-		, in( this, [&](const range_t& range){ this->receive(range); } )
-		, out( this, [&](){ return this->get_state(); } )
-	{}
-
-	event_sink<range_t> in;
-	state_source<out_range_t> out;
-
-
-private:
-	void receive(const range_t& range)
-	{
-		buffer_collect.insert(buffer_collect.end(), std::begin(range), std::end(range));
-	}
-	out_range_t get_state()
-	{
-		buffer_state.clear();
-		buffer_state.swap(buffer_collect);
-		return boost::make_iterator_range(buffer_state.begin(), buffer_state.end());
-	}
-	std::vector<value_t> buffer_collect;
-	std::vector<value_t> buffer_state;
 };
 
 } // namespace fc
