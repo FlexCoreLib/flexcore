@@ -1,1 +1,15 @@
-every project needs a readme
+flexcore is a generic C++ library for dataflow programming.
+
+Dependencies
+
+Several external build in libraries are located under /src/3rdparty.
+Currently, flexcore uses the following external libraries:
+
+- adobe stlab forest library - A generic C++ library for graph representation
+- cereal - A C++11 library for serialization
+
+Some as some libraries are included as git submodules, it may be necessary
+to run
+
+$ git submodules init
+$ git submodules update
