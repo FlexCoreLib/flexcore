@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <settings/settings.hpp>
+#include <settings/jsonfile_setting_backend.hpp>
 
 using namespace fc;
 

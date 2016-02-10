@@ -1,11 +1,8 @@
 #ifndef SRC_SETTINGS_SETTINGS_HPP_
 #define SRC_SETTINGS_SETTINGS_HPP_
 
-#include <cereal/archives/json.hpp>
-
 namespace fc
 {
-
 
 struct setting_id
 {
@@ -35,56 +32,6 @@ public:
 		setter(initial_v);
 	}
 };
-
-class json_file_setting_facade
-{
-public:
-	typedef cereal::JSONInputArchive json_archive;
-
-	json_file_setting_facade(std::istream& stream)
-		: archive(stream)
-	{
-	}
-
-	template<class data_t, class setter_t>
-	void register_setting(
-			setting_id id,
-			data_t initial_v,
-			setter_t setter) //todo add constraint
-	{
-		auto value = initial_v;
-		try
-		{
-			//tries to read value from json parser, value remains unchanged otherwise.
-			archive(cereal::make_nvp(id.key, value));
-		}
-		catch(cereal::Exception& ex)
-		{
-			//todo maybe output error message
-			(void)ex;
-		}
-		setter(value);
-	}
-
-	/**
-	 * \brief registers Setting together with region
-	 *
-	 * Region can be ignored in this case,
-	 * as parameters from json file don't change after loading.
-	 */
-	template<class data_t, class setter_t, class region_t>
-	void register_setting(
-			setting_id id,
-			data_t initial_v,
-			setter_t setter,
-			region_t& /*region*/) //todo add constraint
-	{
-		register_setting(id, initial_v, setter);
-	}
-
-	json_archive archive;
-};
-
 
 /**
  * \brief Provides access to values which can be configured by the user.
