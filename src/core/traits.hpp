@@ -121,8 +121,11 @@ struct is_callable:
 };
 
 template <class T>
-struct is_connectable
-    : std::integral_constant<bool, is_callable<T>{} && std::is_copy_constructible<T>{}>
+struct is_connectable :
+	std::integral_constant<bool,
+	    is_callable<std::remove_reference_t<T>>{} &&
+	    (std::is_lvalue_reference<T>{} || std::is_copy_constructible<T>{})
+	>
 {
 };
 
@@ -224,8 +227,7 @@ template<class T>
 struct is_active_connectable_impl<
 	T, std::enable_if_t<std::is_class<T>{}>> :
 		std::integral_constant
-			<bool, typename detail::has_member_connect<T>::type{}
-			 and std::is_copy_constructible<T>{}>
+			<bool, typename detail::has_member_connect<T>::type{}>
 {
 };
 template<class T>
