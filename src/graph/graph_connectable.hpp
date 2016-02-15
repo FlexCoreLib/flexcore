@@ -30,6 +30,22 @@ struct graph_connectable : base_t
 	graph_node_properties graph_info;
 };
 
+template<class base_connection_t>
+struct graph_connection : base_connection_t
+{
+	template<class... base_t_args>
+	graph_connection(const base_t_args&... args)
+		: base_connection_t(args...)
+	  {
+	  }
+};
+
+template<class base_connection_t>
+auto make_graph_connection(base_connection_t con)
+{
+	return graph_connection<base_connection_t>{con};
+}
+
 template<class base_t>
 auto make_graph_connectable(const base_t& base,
 		const graph_node_properties& graph_info)
@@ -45,19 +61,51 @@ auto named(const base_t& con, const std::string& name)
 }
 
 template<class source_base_t, class sink_t>
-auto connect(graph_connectable<source_base_t> source, sink_t sink)
+auto connect(graph_connectable<source_base_t> source, sink_t&& sink)
 {
-	return make_graph_connectable(
-			::fc::connect(static_cast<source_base_t>(source), sink),
-			 source.graph_info);
+	return make_graph_connection(
+			::fc::connect(static_cast<source_base_t>(source), std::forward<sink_t>(sink)));
 }
 
 template<class source_t, class sink_base_t>
-auto connect(source_t source, graph_connectable<sink_base_t> sink)
+auto connect(source_t&& source, graph_connectable<sink_base_t> sink)
 {
-	return make_graph_connectable(
-			::fc::connect(source, static_cast<sink_base_t>(sink)),
-			 sink.graph_info);
+	return make_graph_connection(
+			::fc::connect(std::forward<source_t>(source), static_cast<sink_base_t>(sink)));
+}
+
+template<class source_base_t, class sink_t>
+auto connect(graph_connection<source_base_t> source, sink_t&& sink)
+{
+	return make_graph_connection(
+			::fc::connect(static_cast<source_base_t>(source), std::forward<sink_t>(sink)));
+}
+
+template<class source_t, class sink_base_t>
+auto connect(source_t&& source, graph_connection<sink_base_t> sink)
+{
+	return make_graph_connection(
+			::fc::connect(std::forward<source_t>(source), static_cast<sink_base_t>(sink)));
+}
+
+template<class source_base_t, class sink_base_t>
+auto connect(graph_connection<source_base_t> source,
+		graph_connectable<sink_base_t> sink)
+{
+	//add edge to graph with node info of source and sink
+	add_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
+	return make_graph_connection(
+			::fc::connect(static_cast<source_base_t>(source), static_cast<sink_base_t>(sink)));
+}
+
+template<class source_base_t, class sink_base_t>
+auto connect(graph_connectable<source_base_t> source,
+		graph_connection<sink_base_t> sink)
+{
+	//add edge to graph with node info of source and sink
+	add_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
+	return make_graph_connection(
+			::fc::connect(static_cast<source_base_t>(source), static_cast<sink_base_t>(sink)));
 }
 
 template<class source_base_t, class sink_base_t>
@@ -66,15 +114,14 @@ auto connect(graph_connectable<source_base_t> source,
 {
 	//add edge to graph with node info of source and sink
 	add_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
-	return make_graph_connectable(
-			::fc::connect(static_cast<source_base_t>(source), static_cast<sink_base_t>(sink)),
-			 get_sink(source).graph_info);
+	return make_graph_connection(
+			::fc::connect(static_cast<source_base_t>(source), static_cast<sink_base_t>(sink)));
 }
 
 
 }  // namespace graph
 template<class source_t, class sink_t>
-struct result_of<graph::graph_connectable<connection<source_t, sink_t>>>
+struct result_of<graph::graph_connection<connection<source_t, sink_t>>>
 {
 	using type = result_of_t<source_t>;
 };
