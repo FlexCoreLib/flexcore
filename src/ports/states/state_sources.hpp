@@ -36,6 +36,9 @@ public:
 		assert(call);
 	}
 
+	state_source(const state_source&) = delete;
+	state_source(state_source&&) = default;
+
 	data_t operator()() { return call(); }
 
 	typedef data_t result_t;

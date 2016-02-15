@@ -35,7 +35,8 @@ struct event_source
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
 	event_source() = default;
-	event_source(const event_source&) = default;
+	event_source(const event_source&) = delete;
+	event_source(event_source&&) = default;
 
 	template<class... T>
 	void fire(T&&... event)
@@ -68,7 +69,7 @@ struct event_source
 	 * \pre new_handler is not empty function
 	 * \post event_handlers.empty() == false
 	 */
-	auto connect(handler_t new_handler)
+	auto connect(handler_t new_handler) &
 	{
 		assert(event_handlers);
 		assert(new_handler); //connecting empty functions is illegal

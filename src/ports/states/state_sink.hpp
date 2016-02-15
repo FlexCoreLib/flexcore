@@ -31,7 +31,8 @@ public:
 	state_sink()
 		: con(std::make_shared<std::function<data_t()>>())
 	{ }
-	state_sink(const state_sink& other) : con(other.con) { assert(con); }
+	state_sink(const state_sink&) = delete;
+	state_sink(state_sink&&) = default;
 
 	//typedef data_t result_t;
 
@@ -50,7 +51,7 @@ public:
 	 * \post connection is not empty
 	 */
 	template<class con_t>
-	void connect(con_t c)
+	void connect(con_t c) &
 	{
 		static_assert(is_callable<con_t>{},
 				"only callables can be connected to a state_sink");
