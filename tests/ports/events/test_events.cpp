@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE( connections )
 	static_assert(is_instantiation_of<
 			detail::active_connection_proxy, decltype(tmp_connection)>{},
 			"active port connected with standard connectable gets proxy");
-	tmp_connection >> test_handler;
+	std::move(tmp_connection) >> test_handler;
 
 	test_event.fire(1);
 	BOOST_CHECK_EQUAL(*(test_handler.storage), 2);
@@ -259,22 +259,22 @@ void test_connection(const T& connection)
  */
 BOOST_AUTO_TEST_CASE( associativity )
 {
-	test_connection([](auto a, auto b, auto c, auto d)
+	test_connection([](auto& a, auto& b, auto& c, auto& d)
 	{
 		a >> b >> c >> d;
 	});
 
-	test_connection([](auto a, auto b, auto c, auto d)
+	test_connection([](auto& a, auto& b, auto& c, auto& d)
 	{
 		(a >> b) >> (c >> d);
 	});
 
-	test_connection([](auto a, auto b, auto c, auto d)
+	test_connection([](auto& a, auto& b, auto& c, auto& d)
 	{
 		a >> ((b >> c) >> d);
 	});
 
-	test_connection([](auto a, auto b, auto c, auto d)
+	test_connection([](auto& a, auto& b, auto& c, auto& d)
 	{
 		(a >> (b >> c)) >> d;
 	});
