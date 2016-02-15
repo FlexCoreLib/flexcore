@@ -10,6 +10,7 @@
 #include <core/connection.hpp>
 
 #include <ports/detail/port_traits.hpp>
+#include <ports/detail/port_utils.hpp>
 #include <core/detail/active_connection_proxy.hpp>
 
 #include <iostream>
@@ -69,11 +70,11 @@ struct event_source
 	 * \pre new_handler is not empty function
 	 * \post event_handlers.empty() == false
 	 */
-	auto connect(handler_t new_handler) &
+	template <class conn_t>
+	auto connect(conn_t&& c) &
 	{
 		assert(event_handlers);
-		assert(new_handler); //connecting empty functions is illegal
-		event_handlers->push_back(new_handler);
+		event_handlers->emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
 
 		assert(!event_handlers->empty());
 		return port_connection<decltype(*this), handler_t, result_t>();
