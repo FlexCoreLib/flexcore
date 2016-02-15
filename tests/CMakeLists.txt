@@ -26,6 +26,7 @@ ADD_EXECUTABLE( test_executable
 	range/test_range.cpp
 	runner.cpp 
 	serialisation/test_configfile.cpp
+	serialisation/test_deserializer.cpp
 	threading/test_cyclecontrol.cpp
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp
