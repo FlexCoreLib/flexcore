@@ -105,8 +105,9 @@ struct active_connection_proxy
 		static_assert(is_passive<std::decay_t<new_passive_t>>{},
 				"new_passive_t in proxy needs to be passive connectable");
 
-		auto tmp = connect_policy()(stored_passive, std::forward<new_passive_t>(new_passive));
-		return active.connect(std::move(tmp));
+		auto tmp = connect_policy()(std::forward<passive_t>(stored_passive),
+		                            std::forward<new_passive_t>(new_passive));
+		return std::forward<active_t>(active).connect(std::move(tmp));
 	}
 
 	/**
@@ -124,7 +125,8 @@ struct active_connection_proxy
 	                                       is_passive_sink<std::decay_t<new_connectable_t>>{})>>
 	auto connect(new_connectable_t&& new_connectable)
 	{
-		auto connection = connect_policy()(stored_passive, std::forward<new_connectable_t>(new_connectable));
+		auto connection = connect_policy()(std::forward<passive_t>(stored_passive),
+		                                   std::forward<new_connectable_t>(new_connectable));
 		return active_connection_proxy<
 				active_t,
 				decltype(connection),
