@@ -7,7 +7,7 @@ ADD_EXECUTABLE( test_executable
 	core/test_connection.cpp
 	core/test_traits.cpp
 	clock/TestClock.cpp
-	graph/test_graph.cpp
+#	graph/test_graph.cpp
 	nodes/test_base_node.cpp
 	nodes/test_buffer.cpp
 	nodes/test_list_manipulation.cpp
