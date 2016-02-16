@@ -342,7 +342,7 @@ struct is_passive: std::integral_constant<bool,
 //todo cleanup of diverse redundant traits
 template<class T>
 struct is_active: std::integral_constant<bool,
-is_active_connectable<T>{} || is_active_sink<T>{}>
+is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
 
