@@ -37,6 +37,12 @@ struct node_aware : base
 		assert(node);
 	}
 
+	template <class conn_t, class base_t = base, class enable = std::enable_if_t<is_active<base_t>{}>>
+	auto connect(conn_t&& conn)
+	{
+		return base::connect(std::forward<conn_t>(conn));
+	}
+
 	tree_base_node* node;
 };
 
