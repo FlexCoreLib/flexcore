@@ -48,7 +48,6 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
-	static_assert(is_instantiation_of<node_aware, decltype(tmp)>{}, "");
 	static_assert(not is_active_sink   <test_in_port>{}, "");
 	static_assert(not is_active_source <test_in_port>{}, "");
 	static_assert(    is_passive_sink  <test_in_port>{}, "");

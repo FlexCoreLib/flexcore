@@ -142,11 +142,11 @@ auto make_buffered_connection(
 	assert(buffer);
 	typedef port_connection
 		<	typename source_t::base_t,
-			typename sink_t::base_t,
+			sink_t,
 			buffer_t
 		> base_connection_t;
 
-	connect(buffer->out(), static_cast<typename sink_t::base_t>(sink));
+	connect(buffer->out(), sink);
 
 	return buffered_event_connection<base_connection_t>(buffer, base_connection_t());
 }
@@ -166,12 +166,12 @@ auto make_buffered_connection(
 {
 	assert(buffer);
 	typedef port_connection
-		<	typename source_t::base_t,
+		<	source_t,
 			typename sink_t::base_t,
 			buffer_t
 		> base_connection_t;
 
-	connect(static_cast<typename source_t::base_t>(source), buffer->in());
+	connect(source, buffer->in());
 
 	return buffered_state_connection<base_connection_t>(buffer, base_connection_t());
 }
@@ -401,12 +401,24 @@ struct node_aware : base
 	template <class conn_t, class base_t = base, class enable = std::enable_if_t<is_active<base_t>{}>>
 	auto connect(conn_t&& conn)
 	{
+		return connect_impl(std::forward<conn_t>(conn), std::integral_constant<bool, has_node_aware(conn)>{});
+	}
+
+	template <class conn_t>
+	auto connect_impl(conn_t&& conn, std::true_type /* has_node_aware */)
+	{
 		auto tmp = introduce_buffer(std::forward<conn_t>(conn), is_active_source<base>{});
 		return base::connect(std::forward<decltype(tmp)>(tmp));
 	}
 
 	template <class conn_t>
-	auto introduce_buffer(conn_t&& conn, std::true_type base_is_source)
+	auto connect_impl(conn_t&& conn, std::false_type /* has_node_aware */)
+	{
+		return base::connect(std::forward<conn_t>(conn));
+	}
+
+	template <class conn_t>
+	auto introduce_buffer(conn_t&& conn, std::true_type /* base_is_source */)
 	{
 		using result_t = result_of_t<base_t>;
 		const auto& sink = get_sink(conn);
@@ -418,7 +430,7 @@ struct node_aware : base
 	}
 
 	template <class conn_t>
-	auto introduce_buffer(conn_t&& conn, std::false_type base_is_source)
+	auto introduce_buffer(conn_t&& conn, std::false_type /* base_is_source */)
 	{
 		using result_t = result_of_t<conn_t>;
 		const auto& source = get_source(conn);
@@ -430,6 +442,18 @@ struct node_aware : base
 	}
 
 	tree_base_node* node;
+
+private:
+	template <class conn_t>
+	static constexpr bool has_node_aware(conn_t&&)
+	{
+		if (is_active_source<base>{})
+			return is_instantiation_of<node_aware,
+			                           std::decay_t<decltype(get_sink(std::declval<conn_t>()))>>{};
+		else
+			return is_instantiation_of<node_aware,
+			                           std::decay_t<decltype(get_source(std::declval<conn_t>()))>>{};
+	}
 };
 }  //namespace fc
 
