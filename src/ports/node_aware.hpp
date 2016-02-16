@@ -401,12 +401,36 @@ struct node_aware : base
 	template <class conn_t, class base_t = base, class enable = std::enable_if_t<is_active<base_t>{}>>
 	auto connect(conn_t&& conn)
 	{
-		return base::connect(std::forward<conn_t>(conn));
+		auto tmp = introduce_buffer(std::forward<conn_t>(conn), is_active_source<base>{});
+		return base::connect(std::forward<decltype(tmp)>(tmp));
+	}
+
+	template <class conn_t>
+	auto introduce_buffer(conn_t&& conn, std::true_type base_is_source)
+	{
+		using result_t = result_of_t<base_t>;
+		const auto& sink = get_sink(conn);
+		return detail::make_buffered_connection(buffer_factory<result_t>::construct_buffer(
+		                                            *this, // event source is active, thus first
+		                                            sink,  // event sink is passive thus second
+		                                            event_tag()),
+		                                        *this, std::forward<conn_t>(conn));
+	}
+
+	template <class conn_t>
+	auto introduce_buffer(conn_t&& conn, std::false_type base_is_source)
+	{
+		using result_t = result_of_t<conn_t>;
+		const auto& source = get_source(conn);
+		return detail::make_buffered_connection(buffer_factory<result_t>::construct_buffer(
+		                                            *this,  // state sink is active thus first
+		                                            source, // state source is passive thus second
+		                                            state_tag()),
+		                                        std::forward<conn_t>(conn), *this);
 	}
 
 	tree_base_node* node;
 };
-
 }  //namespace fc
 
 #endif /* SRC_PORTS_NODE_AWARE_HPP_ */
