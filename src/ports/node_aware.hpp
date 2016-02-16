@@ -440,48 +440,6 @@ auto connect(node_aware<source_t> source, graph::graph_connectable<sink_t> sink)
 	return result;
 }
 
-/*
- * overload for special case, where right hand side (sink) is connection
- * and the sink of that connection is graph_connectable.
- * This should be refactored out.
- */
-template<class source_t, class sink_t>
-auto connect(node_aware<source_t> source,
-		graph::graph_connection<sink_t> sink) //hackhack
-{
-//	add_to_graph(source.graph_info, get_source(sink).graph_info);
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	auto result = detail::source_node_aware_connect_impl
-		<	node_aware<source_t>,
-			sink_t
-		> ()(source, sink);
-
-//	result.graph_info = get_sink(sink).graph_info;
-	return result;
-}
-
-/*
- * overload for special case, where left hand side (source) is connection
- * and the sink of that connection is graph_connectable.
- * This should be refactored out.
- */
-template<class source_t, class sink_t>
-auto connect(graph::graph_connection<source_t> source,
-		node_aware<sink_t> sink) //hackhack
-{
-//	add_to_graph(get_sink(source).graph_info, sink.graph_info);
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	auto result = detail::source_node_aware_connect_impl
-		<	node_aware<source_t>,
-			sink_t
-		> ()(source, sink);
-
-//	result.graph_info = get_source(source).graph_info;
-	return result;
-}
-
 template<class source_t, class sink_t>
 auto connect(graph::graph_connectable<source_t> source, node_aware<sink_t> sink)
 {
