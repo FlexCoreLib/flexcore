@@ -173,11 +173,11 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	test_in_state state_in{&root_2};
 
 	(state_out >> inc) >> inc >> (inc >> state_in);
-   //                          ^^^ buffer is here
+	//                                 ^^^ buffer is here
 
-	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
 	region_1->ticks.in_work()();
-	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
 	region_2->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(state_in.get(), 4);
 }
