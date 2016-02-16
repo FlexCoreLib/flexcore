@@ -16,6 +16,10 @@ ADD_COMPILE_OPTIONS(
 FIND_PACKAGE( Boost 1.54 REQUIRED )
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
 
+SET ( FLEXCORE_DIR "." CACHE PATH "flexcore project path" )
+
+INCLUDE( include_directories.cmake )
+
 ADD_SUBDIRECTORY( src )
 ADD_SUBDIRECTORY( tests )
 ADD_SUBDIRECTORY( dummy_main )
