@@ -10,42 +10,8 @@
 
 namespace fc
 {
-
-/**
- * \brief A mixin for elements that are aware of the node they belong to.
- * Used as mixin for ports and connections.
- * \tparam base is type node_aware is mixed into.
- * \invariant tree_base_node* node is always valid.
- *
- * example:
- * \code{cpp}
- * typedef node_aware<pure::event_in_port<int>> node_aware_event_port;
- * \endcode
- */
 template <class base>
-struct node_aware : base
-{
-	static_assert(std::is_class<base>{},
-			"can only be mixed into clases, not primitives");
-	//allows explicit access to base of this mixin.
-	typedef base base_t;
-
-	template <class... args>
-	node_aware(tree_base_node* node_ptr, args&&... base_constructor_args)
-	    : base(std::forward<args>(base_constructor_args)...), node(node_ptr)
-	{
-		assert(node);
-	}
-
-	template <class conn_t, class base_t = base, class enable = std::enable_if_t<is_active<base_t>{}>>
-	auto connect(conn_t&& conn)
-	{
-		return base::connect(std::forward<conn_t>(conn));
-	}
-
-	tree_base_node* node;
-};
-
+struct node_aware;
 
 /**
  * checks if two node_aware connectables are from the same region
@@ -405,6 +371,41 @@ auto connect(source_t&& source, node_aware<sink_t> sink)
 			node_aware<sink_t>
 		> ()(std::forward<source_t>(source), sink);
 }
+
+/**
+ * \brief A mixin for elements that are aware of the node they belong to.
+ * Used as mixin for ports and connections.
+ * \tparam base is type node_aware is mixed into.
+ * \invariant tree_base_node* node is always valid.
+ *
+ * example:
+ * \code{cpp}
+ * typedef node_aware<pure::event_in_port<int>> node_aware_event_port;
+ * \endcode
+ */
+template <class base>
+struct node_aware : base
+{
+	static_assert(std::is_class<base>{},
+			"can only be mixed into clases, not primitives");
+	//allows explicit access to base of this mixin.
+	typedef base base_t;
+
+	template <class... args>
+	node_aware(tree_base_node* node_ptr, args&&... base_constructor_args)
+	    : base(std::forward<args>(base_constructor_args)...), node(node_ptr)
+	{
+		assert(node);
+	}
+
+	template <class conn_t, class base_t = base, class enable = std::enable_if_t<is_active<base_t>{}>>
+	auto connect(conn_t&& conn)
+	{
+		return base::connect(std::forward<conn_t>(conn));
+	}
+
+	tree_base_node* node;
+};
 
 }  //namespace fc
 
