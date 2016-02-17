@@ -5,10 +5,18 @@
 #include <core/connection.hpp>
 #include <ports/connection_util.hpp>
 
+#include <core/detail/connection_utils.hpp>
+#include <ports/connection_util.hpp>
+
 namespace fc
 {
 namespace graph
 {
+
+namespace detail
+{
+	struct graph_adder;
+}
 
 /**
  * \brief Mixin for connectables which adds additional information for abstract graph.
@@ -27,8 +35,33 @@ struct graph_connectable : base_t
 	{
 	}
 
+	template<class arg_t,
+			class base_check = base_t, //forward base_t to template param of method
+			class = std::enable_if_t<is_active<base_check>::value>>
+	decltype(auto) connect(arg_t&& conn)
+	{
+		std::cout << "Zonk!\n";
+		//traverse connection and build up graph
+		std::vector<graph_node_properties> node_list;
+
+		node_list.push_back(graph_info);
+		::fc::detail::apply(detail::graph_adder{node_list}, conn);
+
+		if (node_list.size() >= 2)
+		{
+			for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
+			{
+				add_to_graph(*(it-1), *it);
+			}
+		}
+
+
+		return base_t::connect(std::forward<arg_t>(conn));
+	}
+
 	graph_node_properties graph_info;
 };
+
 
 template<class base_t>
 auto make_graph_connectable(const base_t& base,
@@ -44,40 +77,33 @@ auto named(const base_t& con, const std::string& name)
 	return graph_connectable<base_t>{graph_node_properties{name}, con};
 }
 
-template<class source_base_t, class sink_t>
-auto connect(graph_connectable<source_base_t> source, sink_t sink)
+namespace detail
 {
-	return make_graph_connectable(
-			::fc::connect(static_cast<source_base_t>(source), sink),
-			 source.graph_info);
-}
-
-template<class source_t, class sink_base_t>
-auto connect(source_t source, graph_connectable<sink_base_t> sink)
+struct graph_adder
 {
-	return make_graph_connectable(
-			::fc::connect(source, static_cast<sink_base_t>(sink)),
-			 sink.graph_info);
-}
+	std::vector<graph_node_properties>& node_list;
 
-template<class source_base_t, class sink_base_t>
-auto connect(graph_connectable<source_base_t> source,
-		graph_connectable<sink_base_t> sink)
-{
-	//add edge to graph with node info of source and sink
-	add_to_graph(get_sink(source).graph_info, get_source(sink).graph_info);
-	return make_graph_connectable(
-			::fc::connect(static_cast<source_base_t>(source), static_cast<sink_base_t>(sink)),
-			 get_sink(source).graph_info);
-}
+	template<class T>
+	void operator()(T& /*node*/)
+	{
+		//do nothing
+	}
 
+	template<class base_t>
+	void operator()(graph_connectable<base_t>& node)
+	{
+		node_list.push_back(node.graph_info);
+	}
+};
+} //namespace detail
 
 }  // namespace graph
-template<class source_t, class sink_t>
-struct result_of<graph::graph_connectable<connection<source_t, sink_t>>>
-{
-	using type = result_of_t<source_t>;
-};
+
+template<class T> struct is_active_sink<graph::graph_connectable<T>> : is_active_sink<T> {};
+template<class T> struct is_active_source<graph::graph_connectable<T>> : is_active_source<T> {};
+template<class T> struct is_passive_sink<graph::graph_connectable<T>> : is_passive_sink<T> {};
+template<class T> struct is_passive_source<graph::graph_connectable<T>> : is_passive_source<T> {};
+
 }  // namespace fc
 
 #endif /* SRC_GRAPH_GRAPH_CONNECTABLE_HPP_ */

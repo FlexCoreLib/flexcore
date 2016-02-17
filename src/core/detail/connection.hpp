@@ -149,8 +149,8 @@ auto connect (source_t&& source, sink_t&& sink)
  * This operator is syntactic sugar for Connect.
  */
 template<class source_t, class sink_t, class enable = std::enable_if_t<
-		(is_connectable<source_t>::value || is_active_connectable<rm_ref_t<source_t>>{})
-		&& (is_connectable<sink_t>::value || is_active_connectable<rm_ref_t<sink_t>>{})>>
+		(is_connectable<source_t>::value || is_active<rm_ref_t<source_t>>{})
+		&& (is_connectable<sink_t>::value || is_active<rm_ref_t<sink_t>>{})>>
 auto operator >>(source_t&& source, sink_t&& sink)
 {
 	return connect(std::forward<source_t>(source), std::forward<sink_t>(sink));
