@@ -42,7 +42,7 @@ public:
 	{}
 
 	event_sink<range_t> in;
-	event_source<out_range_t> out(predicate_result_t value)
+	event_source<out_range_t>& out(predicate_result_t value)
 	{
 		auto it = entries.find(value);
 		if (it == entries.end())

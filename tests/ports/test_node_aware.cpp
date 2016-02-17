@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	static_assert(    is_active_source <decltype(tmp)>{}, "");
 	static_assert(not is_active_sink   <decltype(tmp)>{}, "");
 
-	tmp >> test_in;
+	std::move(tmp) >> test_in;
 
 	test_out.fire(1);
 	BOOST_CHECK_EQUAL(test_sink.at(1), 1);
