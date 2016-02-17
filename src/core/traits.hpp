@@ -216,24 +216,6 @@ struct is_active_source: std::false_type
 };
 
 template<class T, class enable = void>
-struct is_active_connectable_impl : std::false_type
-{
-};
-
-template<class T>
-struct is_active_connectable_impl<
-	T, std::enable_if_t<std::is_class<T>{}>> :
-		std::integral_constant
-			<bool, typename detail::has_member_connect<T>::type{}
-			 and std::is_copy_constructible<T>{}>
-{
-};
-template<class T>
-struct is_active_connectable : is_active_connectable_impl<T>
-{
-};
-
-template<class T, class enable = void>
 struct is_passive_source_impl: std::false_type
 {
 };
