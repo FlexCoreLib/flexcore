@@ -8,61 +8,10 @@
 #include "connection_buffer.hpp"
 #include <nodes/base_node.hpp>
 
-#include <graph/graph.hpp>
-#include <graph/graph_connectable.hpp>
-
-
 namespace fc
 {
-
-/**
- * \brief A mixin for elements that are aware of the node they belong to.
- * Used as mixin for ports and connections.
- * \tparam base is type node_aware is mixed into.
- * \invariant tree_base_node* node is always valid.
- *
- * example:
- * \code{cpp}
- * typedef node_aware<pure::event_in_port<int>> node_aware_event_port;
- * \endcode
- */
-template<class base>
-struct node_aware: graph::graph_connectable<base>
-{
-	static_assert(std::is_class<base>{},
-			"can only be mixed into clases, not primitives");
-	//allows explicit access to base of this mixin.
-	typedef base base_t;
-
-	template<class ... args>
-	node_aware( tree_base_node* node_ptr,
-				args&&... base_constructor_args )
-		: graph::graph_connectable<base>(
-			graph::graph_node_properties{node_ptr->graph_info()}
-			, std::forward<args>(base_constructor_args)...)
-		, node(node_ptr)
-		, graph_port_info()
-	{
-		assert(node);
-	}
-
-	/// getter for information about the node of this port in the abstract graph.
-	auto node_info() const
-	{
-		assert(node);
-		return this->graph_info;
-	}
-
-	/// getter for information about this port in the abstract graph.
-	auto port_info() const
-	{
-		return graph_port_info;
-	}
-
-	tree_base_node* node;
-	graph::graph_port_information graph_port_info;
-};
-
+template <class base>
+struct node_aware;
 
 /**
  * checks if two node_aware connectables are from the same region
@@ -188,18 +137,18 @@ template<class source_t, class sink_t, class buffer_t>
 auto make_buffered_connection(
 		std::shared_ptr<buffer_interface<buffer_t, event_tag>> buffer,
 		const source_t& /*source*/, //only needed for type deduction
-		const sink_t& sink )
+		sink_t&& sink )
 {
 	assert(buffer);
 	typedef port_connection
 		<	typename source_t::base_t,
-			typename sink_t::base_t,
+			sink_t,
 			buffer_t
 		> base_connection_t;
 
-	connect(buffer->out(), static_cast<typename sink_t::base_t>(sink));
+	connect(buffer->out(), std::forward<sink_t>(sink));
 
-	return buffered_event_connection<base_connection_t>(buffer, base_connection_t());
+	return buffered_event_connection<base_connection_t>(std::move(buffer), base_connection_t());
 }
 
 /**
@@ -212,271 +161,111 @@ auto make_buffered_connection(
 template<class source_t, class sink_t, class buffer_t>
 auto make_buffered_connection(
 		std::shared_ptr<buffer_interface<buffer_t, state_tag>> buffer,
-		const source_t& source,
+		source_t&& source,
 		const sink_t& ) /*sink*/ //only needed for type deduction
 {
 	assert(buffer);
 	typedef port_connection
-		<	typename source_t::base_t,
+		<	source_t,
 			typename sink_t::base_t,
 			buffer_t
 		> base_connection_t;
 
-	connect(static_cast<typename source_t::base_t>(source), buffer->in());
+	connect(std::forward<source_t>(source), buffer->in());
 
-	return buffered_state_connection<base_connection_t>(buffer, base_connection_t());
+	return buffered_state_connection<base_connection_t>(std::move(buffer), base_connection_t());
 }
+} // namespace detail
 
 /**
- * \brief factory method to wrap node_aware around a connection,
+ * \brief A mixin for elements that are aware of the node they belong to.
+ * Used as mixin for ports and connections.
+ * \tparam base is type node_aware is mixed into.
+ * \invariant tree_base_node* node is always valid.
  *
- * Mainly there to use template deduction from parameter base.
- * Thus client code doesn't need to get type connection_base_t by hand.
+ * example:
+ * \code{cpp}
+ * typedef node_aware<pure::event_in_port<int>> node_aware_event_port;
+ * \endcode
  */
-template<class base_connection_t>
-node_aware<base_connection_t> make_node_aware(const base_connection_t& base, tree_base_node* node_ptr)
+template <class base>
+struct node_aware : base
 {
-	assert(node_ptr);
-	return node_aware<base_connection_t>(node_ptr, base);
-}
+	static_assert(std::is_class<base>{},
+			"can only be mixed into clases, not primitives");
+	//allows explicit access to base of this mixin.
+	typedef base base_t;
 
-/// Implementation of connect when both sides are node_aware.
-template<class source_t, class sink_t, class Enable = void>
-struct both_node_aware_connect_impl;
-
-/// Implementation of connect, where only the source is node_aware.
-template<class source_t, class sink_t, class Enable = void>
-struct source_node_aware_connect_impl;
-
-/// Implementation of connect where only the sink is node_aware.
-template<class source_t, class sink_t, class Enable = void>
-struct sink_node_aware_connect_impl;
-
-template<class source_t, class sink_t>
-struct both_node_aware_connect_impl
-	<	source_t,
-		sink_t,
-		std::enable_if_t<
-			::fc::is_active_source<std::decay_t<source_t>>{} &&
-			::fc::is_passive_sink<std::decay_t<sink_t>>{}
-		>
-	>
-{
-	auto operator()(const source_t& source, const sink_t& sink)
+	template <class... args>
+	node_aware(tree_base_node* node_ptr, args&&... base_constructor_args)
+	    : base(std::forward<args>(base_constructor_args)...), node(node_ptr)
 	{
-		using result_t = result_of_t<source_t>;
-		return connect(
-				static_cast<typename source_t::base_t>(source),
-				detail::make_buffered_connection(
-						buffer_factory<result_t>::construct_buffer(
-								source, // event source is active, thus first
-								sink, // event sink is passive thus second
-								event_tag()
-							),
-							source,
-							sink
-					)
-			);
+		assert(node);
+	}
+
+	template <class conn_t, class base_t = base, class enable = std::enable_if_t<is_active<base_t>{}>>
+	auto connect(conn_t&& conn)
+	{
+		return connect_impl(std::forward<conn_t>(conn), std::integral_constant<bool, has_node_aware(conn)>{});
+	}
+
+	tree_base_node* node;
+
+private:
+	// helper aliases to make method prototypes easier to read.
+	using connection_has_node_aware = std::true_type;
+	using connection_doesnt_have_node_aware = std::false_type;
+	using base_is_source = std::true_type;
+	using base_is_sink = std::false_type;
+
+	template <class conn_t>
+	auto connect_impl(conn_t&& conn, connection_has_node_aware)
+	{
+		auto tmp = introduce_buffer(std::forward<conn_t>(conn), is_active_source<base>{});
+		return base::connect(std::forward<decltype(tmp)>(tmp));
+	}
+
+	template <class conn_t>
+	auto connect_impl(conn_t&& conn, connection_doesnt_have_node_aware)
+	{
+		return base::connect(std::forward<conn_t>(conn));
+	}
+
+	template <class conn_t>
+	auto introduce_buffer(conn_t&& conn, base_is_source)
+	{
+		using result_t = result_of_t<base_t>;
+		const auto& sink = get_sink(conn);
+		return detail::make_buffered_connection(buffer_factory<result_t>::construct_buffer(
+		                                            *this, // event source is active, thus first
+		                                            sink,  // event sink is passive thus second
+		                                            event_tag()),
+		                                        *this, std::forward<conn_t>(conn));
+	}
+
+	template <class conn_t>
+	auto introduce_buffer(conn_t&& conn, base_is_sink)
+	{
+		using result_t = result_of_t<conn_t>;
+		const auto& source = get_source(conn);
+		return detail::make_buffered_connection(buffer_factory<result_t>::construct_buffer(
+		                                            *this,  // state sink is active thus first
+		                                            source, // state source is passive thus second
+		                                            state_tag()),
+		                                        std::forward<conn_t>(conn), *this);
+	}
+
+	template <class conn_t>
+	static constexpr bool has_node_aware(conn_t&&)
+	{
+		if (is_active_source<base>{})
+			return is_instantiation_of<node_aware,
+			                           std::decay_t<decltype(get_sink(std::declval<conn_t>()))>>{};
+		else
+			return is_instantiation_of<node_aware,
+			                           std::decay_t<decltype(get_source(std::declval<conn_t>()))>>{};
 	}
 };
-
-template<class source_t, class sink_t>
-struct both_node_aware_connect_impl
-	<	source_t,
-		sink_t,
-		std::enable_if_t<
-			::fc::is_passive_source<std::decay_t<source_t>>{} &&
-			::fc::is_active_sink<std::decay_t<sink_t>>{}
-		>
-	>
-{
-	auto operator()(source_t source, sink_t sink)
-	{
-		using result_t = result_of_t<source_t>;
-		return connect(detail::make_buffered_connection(
-				buffer_factory<result_t>::construct_buffer(
-						sink, // state sink is active thus first
-						source, // state source is passive thus second
-						state_tag()),
-				source, sink),
-				static_cast<typename sink_t::base_t>(sink)
-				);
-	}
-};
-
-template<class source_t, class sink_t>
-struct source_node_aware_connect_impl
-	<	source_t,
-		sink_t,
-		std::enable_if_t<
-			::fc::is_active_source<std::decay_t<source_t>>{}
-		>
-	>
-{
-	auto operator()(source_t source, sink_t sink)
-	{
-		// construct node_aware_connection
-		// based on if source and sink are from same region
-		return make_node_aware(
-				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.node);
-	}
-};
-
-template<class source_t, class sink_t>
-struct sink_node_aware_connect_impl
-	<	source_t,
-		sink_t,
-		std::enable_if_t<
-		::fc::is_active_sink<sink_t>{}
-		>
-	>
-{
-	auto operator()(source_t source, sink_t sink)
-	{
-		// construct node_aware_connection
-		// based on if source and sink are from same region
-		return make_node_aware(
-				connect(source, static_cast<typename sink_t::base_t>(sink)),
-						sink.node);
-	}
-};
-
-template<class source_t, class sink_t>
-struct sink_node_aware_connect_impl
-	<	source_t,
-		sink_t,
-		std::enable_if_t<
-			!is_active_source<std::decay_t<source_t>>{} &&
-			::fc::is_passive_sink<sink_t>{}
-		>
-	>
-{
-	auto operator()(source_t source, sink_t sink)
-	{
-		//construct node_aware_connection
-		//based on if source and sink are from same region
-		return make_node_aware(
-				connect(source, static_cast<typename sink_t::base_t>(sink)),
-				sink.node);
-	}
-};
-
-template<class source_t, class sink_t>
-struct source_node_aware_connect_impl
-	<	source_t,
-		sink_t,
-		std::enable_if_t<
-		 	is_passive_source<std::decay_t<source_t>>{} &&
-			!::fc::is_active_sink<std::decay_t<sink_t>>{}
-		>
-	>
-{
-	auto operator()(source_t source, sink_t sink)
-	{
-		//construct node_aware_connection
-		//based on if source and sink are from same region
-		return make_node_aware(
-				connect(static_cast<typename source_t::base_t>(source), sink),
-				source.node);
-	}
-};
-
-} //namesapce detail
-
-/**
- * \brief overload of connect with node_aware<>
- * possibly adds buffer, then forwards connect call to source_t.
- *
- * \returns buffered connection with connection of source_t and sink_t mixed in.
- */
-template<class source_t, class sink_t>
-auto connect(node_aware<source_t> source, node_aware<sink_t> sink)
-{
-	graph::add_to_graph(source.node_info(), source.port_info(),
-			sink.node_info(), sink.port_info());
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	return detail::both_node_aware_connect_impl
-		<	node_aware<source_t>,
-			node_aware<sink_t>
-		> ()(source, sink);
-}
-
-template<class source_t, class sink_t>
-auto connect(node_aware<source_t> source, sink_t&& sink)
-{
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	return detail::source_node_aware_connect_impl
-		<	node_aware<source_t>,
-			sink_t
-		> ()(source, std::forward<sink_t>(sink));
-}
-
-template<class source_t, class sink_t>
-auto connect(source_t&& source, node_aware<sink_t> sink)
-{
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	return detail::sink_node_aware_connect_impl
-		<	source_t,
-			node_aware<sink_t>
-		> ()(std::forward<source_t>(source), sink);
-}
-
-template<class source_t, class sink_t>
-auto connect(node_aware<source_t> source, graph::graph_connectable<sink_t> sink)
-{
-	add_to_graph(source.graph_info, sink.graph_info);
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	auto result = detail::source_node_aware_connect_impl
-		<	node_aware<source_t>,
-			sink_t
-		> ()(source, sink);
-
-	result.graph_info = sink.graph_info;
-	return result;
-}
-
-/*
- * overload for special case, where right hand side (sink) is connection
- * and the sink of that connection is graph_connectable.
- * This should be refactored out.
- */
-template<class source_t, class S, class T>
-auto connect(node_aware<source_t> source,
-		graph::graph_connectable<connection<S,
-		graph::graph_connectable<T>>> sink) //hackhack
-{
-	add_to_graph(source.graph_info, sink.graph_info);
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	auto result = detail::source_node_aware_connect_impl
-		<	node_aware<source_t>,
-			connection<S,T>
-		> ()(source, sink);
-
-	result.graph_info = get_source(sink).graph_info;
-	return result;
-}
-
-template<class source_t, class sink_t>
-auto connect(graph::graph_connectable<source_t> source, node_aware<sink_t> sink)
-{
-	add_to_graph(source.graph_info, sink.graph_info);
-	// construct node_aware_connection
-	// based on if source and sink are from same region
-	auto result =  detail::sink_node_aware_connect_impl
-		<	source_t,
-			node_aware<sink_t>
-		> ()(source, sink);
-
-	result.graph_info = get_sink(source).graph_info;
-	return result;
-}
-
 }  //namespace fc
 
 #endif /* SRC_PORTS_NODE_AWARE_HPP_ */

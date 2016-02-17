@@ -110,7 +110,7 @@ struct connect_impl
 {
 	auto operator()(source_t&& source, sink_t&& sink)
 	{
-		return connection<std::decay_t<source_t>, std::decay_t<sink_t>>
+		return connection<source_t, sink_t>
 				{std::forward<source_t>(source), std::forward<sink_t>(sink)};
 	}
 };
@@ -149,8 +149,8 @@ auto connect (source_t&& source, sink_t&& sink)
  * This operator is syntactic sugar for Connect.
  */
 template<class source_t, class sink_t, class enable = std::enable_if_t<
-		(is_connectable<rm_ref_t<source_t>>::value || is_active_connectable<rm_ref_t<source_t>>{})
-		&& (is_connectable<rm_ref_t<sink_t>>::value || is_active_connectable<rm_ref_t<sink_t>>{})>>
+		(is_connectable<source_t>::value || is_active_connectable<rm_ref_t<source_t>>{})
+		&& (is_connectable<sink_t>::value || is_active_connectable<rm_ref_t<sink_t>>{})>>
 auto operator >>(source_t&& source, sink_t&& sink)
 {
 	return connect(std::forward<source_t>(source), std::forward<sink_t>(sink));
@@ -158,11 +158,11 @@ auto operator >>(source_t&& source, sink_t&& sink)
 
 //todo: does not belong here
 template <class source_t, class sink_t>
-struct is_passive_sink<connection<source_t, sink_t>> : is_passive_sink<sink_t>
+struct is_passive_sink<connection<source_t, sink_t>> : is_passive_sink<rm_ref_t<sink_t>>
 {};
 
 template <class source_t, class sink_t>
-struct result_of<connection<source_t, sink_t>> : result_of<sink_t>
+struct result_of<connection<source_t, sink_t>> : result_of<rm_ref_t<sink_t>>
 {};
 
 } //namespace fc

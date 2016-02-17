@@ -34,7 +34,7 @@ struct periodic_task final
 	void set_work_to_do(bool todo) { *work_to_do = todo; }
 	bool is_due(virtual_clock::steady::time_point now) const;
 	void send_switch_tick() { switch_tick.fire(); }
-	auto out_switch_tick() { return switch_tick; }
+	auto& out_switch_tick() { return switch_tick; }
 
 	void operator()()
 	{

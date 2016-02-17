@@ -48,7 +48,6 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
-	static_assert(is_instantiation_of<node_aware, decltype(tmp)>{}, "");
 	static_assert(not is_active_sink   <test_in_port>{}, "");
 	static_assert(not is_active_source <test_in_port>{}, "");
 	static_assert(    is_passive_sink  <test_in_port>{}, "");
@@ -58,7 +57,7 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	static_assert(    is_active_source <decltype(tmp)>{}, "");
 	static_assert(not is_active_sink   <decltype(tmp)>{}, "");
 
-	tmp >> test_in;
+	std::move(tmp) >> test_in;
 
 	test_out.fire(1);
 	BOOST_CHECK_EQUAL(test_sink.at(1), 1);
@@ -174,11 +173,11 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	test_in_state state_in{&root_2};
 
 	(state_out >> inc) >> inc >> (inc >> state_in);
-   //                          ^^^ buffer is here
+	//                                 ^^^ buffer is here
 
-	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
 	region_1->ticks.in_work()();
-	BOOST_CHECK_EQUAL(state_in.get(), 1); //one increment after buffer
+	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
 	region_2->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(state_in.get(), 4);
 }

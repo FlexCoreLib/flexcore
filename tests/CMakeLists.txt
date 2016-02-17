@@ -8,18 +8,18 @@ ADD_EXECUTABLE( test_executable
 	core/test_connectables.cpp
 	core/test_traits.cpp
 	clock/TestClock.cpp
-	graph/test_graph.cpp
+#	graph/test_graph.cpp
 	nodes/test_base_node.cpp
-	nodes/test_buffer.cpp
-	nodes/test_list_manipulation.cpp
-	nodes/test_generic.cpp
-	nodes/test_event_nodes.cpp
-	nodes/test_state_nodes.cpp
-	ports/test_event_buffer.cpp
-	ports/test_node_aware.cpp
+#	nodes/test_buffer.cpp
+#	nodes/test_list_manipulation.cpp
+#	nodes/test_generic.cpp
+#	nodes/test_event_nodes.cpp
+#	nodes/test_state_nodes.cpp
+#	ports/test_event_buffer.cpp
+#	ports/test_node_aware.cpp
 	ports/test_state_buffer.cpp
- 	ports/events/test_events.cpp
- 	ports/states/test_state_sinks.cpp
+	ports/events/test_events.cpp
+	ports/states/test_state_sinks.cpp
 	ports/states/test_node_with_lambda.cpp
 	ports/states/test_state_source_call_function.cpp
 	ports/states/test_state_source_with_setter.cpp
