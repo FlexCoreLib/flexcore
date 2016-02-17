@@ -209,21 +209,27 @@ struct node_aware : base
 		return connect_impl(std::forward<conn_t>(conn), std::integral_constant<bool, has_node_aware(conn)>{});
 	}
 
+	// helper aliases to make method prototypes easier to read.
+	using connection_has_node_aware = std::true_type;
+	using connection_doesnt_have_node_aware = std::false_type;
+	using base_is_source = std::true_type;
+	using base_is_sink = std::false_type;
+
 	template <class conn_t>
-	auto connect_impl(conn_t&& conn, std::true_type /* has_node_aware */)
+	auto connect_impl(conn_t&& conn, connection_has_node_aware)
 	{
 		auto tmp = introduce_buffer(std::forward<conn_t>(conn), is_active_source<base>{});
 		return base::connect(std::forward<decltype(tmp)>(tmp));
 	}
 
 	template <class conn_t>
-	auto connect_impl(conn_t&& conn, std::false_type /* has_node_aware */)
+	auto connect_impl(conn_t&& conn, connection_doesnt_have_node_aware)
 	{
 		return base::connect(std::forward<conn_t>(conn));
 	}
 
 	template <class conn_t>
-	auto introduce_buffer(conn_t&& conn, std::true_type /* base_is_source */)
+	auto introduce_buffer(conn_t&& conn, base_is_source)
 	{
 		using result_t = result_of_t<base_t>;
 		const auto& sink = get_sink(conn);
@@ -235,7 +241,7 @@ struct node_aware : base
 	}
 
 	template <class conn_t>
-	auto introduce_buffer(conn_t&& conn, std::false_type /* base_is_source */)
+	auto introduce_buffer(conn_t&& conn, base_is_sink)
 	{
 		using result_t = result_of_t<conn_t>;
 		const auto& source = get_source(conn);
