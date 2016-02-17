@@ -137,7 +137,7 @@ template<class source_t, class sink_t, class buffer_t>
 auto make_buffered_connection(
 		std::shared_ptr<buffer_interface<buffer_t, event_tag>> buffer,
 		const source_t& /*source*/, //only needed for type deduction
-		const sink_t& sink )
+		sink_t&& sink )
 {
 	assert(buffer);
 	typedef port_connection
@@ -146,9 +146,9 @@ auto make_buffered_connection(
 			buffer_t
 		> base_connection_t;
 
-	connect(buffer->out(), sink);
+	connect(buffer->out(), std::forward<sink_t>(sink));
 
-	return buffered_event_connection<base_connection_t>(buffer, base_connection_t());
+	return buffered_event_connection<base_connection_t>(std::move(buffer), base_connection_t());
 }
 
 /**
@@ -161,7 +161,7 @@ auto make_buffered_connection(
 template<class source_t, class sink_t, class buffer_t>
 auto make_buffered_connection(
 		std::shared_ptr<buffer_interface<buffer_t, state_tag>> buffer,
-		const source_t& source,
+		source_t&& source,
 		const sink_t& ) /*sink*/ //only needed for type deduction
 {
 	assert(buffer);
@@ -171,9 +171,9 @@ auto make_buffered_connection(
 			buffer_t
 		> base_connection_t;
 
-	connect(source, buffer->in());
+	connect(std::forward<source_t>(source), buffer->in());
 
-	return buffered_state_connection<base_connection_t>(buffer, base_connection_t());
+	return buffered_state_connection<base_connection_t>(std::move(buffer), base_connection_t());
 }
 } // namespace detail
 
