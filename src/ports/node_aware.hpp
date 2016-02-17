@@ -209,6 +209,9 @@ struct node_aware : base
 		return connect_impl(std::forward<conn_t>(conn), std::integral_constant<bool, has_node_aware(conn)>{});
 	}
 
+	tree_base_node* node;
+
+private:
 	// helper aliases to make method prototypes easier to read.
 	using connection_has_node_aware = std::true_type;
 	using connection_doesnt_have_node_aware = std::false_type;
@@ -252,9 +255,6 @@ struct node_aware : base
 		                                        std::forward<conn_t>(conn), *this);
 	}
 
-	tree_base_node* node;
-
-private:
 	template <class conn_t>
 	static constexpr bool has_node_aware(conn_t&&)
 	{
