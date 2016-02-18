@@ -234,7 +234,7 @@ private:
  * \invariant capacity of buffer is > 0.
  */
 template<class data_t>
-class hold_n : tree_base_node
+class hold_n : public tree_base_node
 {
 public:
 	typedef boost::circular_buffer<data_t> buffer_t;

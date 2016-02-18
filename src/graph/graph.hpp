@@ -24,13 +24,15 @@ namespace graph
 class graph_node_properties
 {
 public:
-	explicit graph_node_properties(const std::string name)
+	typedef boost::uuids::uuid unique_id;
+
+	explicit graph_node_properties(const std::string name,
+			unique_id id = boost::uuids::random_generator()())
 		: human_readable_name(name)
-		, id(boost::uuids::random_generator()())
+		, id(id)
 	{
 	}
 
-	typedef boost::uuids::uuid unique_id;
 
 	const std::string& name() const { return human_readable_name; }
 	std::string& name() { return human_readable_name; }

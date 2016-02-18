@@ -5,13 +5,15 @@
 #include <ports/token_tags.hpp>
 #include "pure_ports.hpp"
 
+#include <graph/graph_connectable.hpp>
+
 namespace fc
 {
 
 // === default mixins ===
 
 template<class port_t>
-using default_mixin = node_aware<port_t>;
+using default_mixin = graph::graph_connectable<node_aware<port_t>>;
 
 // -- event sinks --
 
