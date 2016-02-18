@@ -35,13 +35,7 @@ class tree_base_node
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
-	tree_base_node(const tree_base_node&) = delete;
-	tree_base_node(tree_base_node&&) = default;
-
-
-	virtual ~tree_base_node()
-	{
-	}
+	virtual ~tree_base_node() = default;
 
 	const std::shared_ptr<region_info>& region() const { return region_; }
 	std::shared_ptr<region_info>& region() { return region_; }
@@ -235,7 +229,6 @@ public:
 				this->forest_->begin(), std::make_unique<base_node>(n)));
 	}
 
-	virtual ~root_node() {}
 };
 
 /**
