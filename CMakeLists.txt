@@ -9,6 +9,7 @@ ADD_COMPILE_OPTIONS(
     "-Wall"
     "-Wextra"
     "-std=c++1y" 
+    "-pedantic"
     "-pthread"
     $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-fprofile-arcs>
     $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-ftest-coverage>
