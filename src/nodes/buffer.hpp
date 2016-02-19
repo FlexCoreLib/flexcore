@@ -131,7 +131,8 @@ struct collector
 	// result_t is defined to allow result_of trait with overloaded operator().
 	typedef void result_t;
 
-	void operator() (const auto& range)
+	template <class range_t>
+	void operator()(const range_t& range)
 	{
 		using std::begin;
 		using std::end;
