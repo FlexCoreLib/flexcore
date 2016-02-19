@@ -139,7 +139,7 @@ struct collector
 		//check if the node owning the buffer has been deleted. which is a bug.
 		assert(buffer);
 		buffer->insert(end(*buffer), begin(range), end(range));
-	};
+	}
 
 	void operator()(const data_t& single_input)
 	{
