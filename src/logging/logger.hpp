@@ -1,6 +1,7 @@
 #ifndef SRC_LOGGING_LOGGER_HPP_
 #define SRC_LOGGING_LOGGER_HPP_
 
+#include <threading/parallelregion.hpp>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -52,6 +53,8 @@ class log_client
 public:
 	void write(const std::string& msg);
 	log_client();
+	log_client(const region_info* region);
+
 	log_client(const log_client&);
 	log_client& operator=(log_client);
 	log_client(log_client&&);

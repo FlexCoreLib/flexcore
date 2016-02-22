@@ -77,12 +77,16 @@ logger::logger()
 class log_client::log_client_impl
 {
 public:
+	log_client_impl(const region_info* region)
+	    : lg(keywords::channel = (region ? region->get_id().key : "(null)"))
+	{
+	}
 	void write(const std::string& msg)
 	{
 		BOOST_LOG(lg) << msg;
 	}
 private:
-	sources::logger lg;
+	sources::channel_logger<> lg;
 };
 
 void log_client::write(const std::string& msg)
@@ -90,7 +94,12 @@ void log_client::write(const std::string& msg)
 	log_client_pimpl->write(msg);
 }
 
-log_client::log_client() : log_client_pimpl(std::make_unique<log_client::log_client_impl>())
+log_client::log_client() : log_client_pimpl(std::make_unique<log_client::log_client_impl>(nullptr))
+{
+}
+
+log_client::log_client(const region_info* region)
+    : log_client_pimpl(std::make_unique<log_client::log_client_impl>(region))
 {
 }
 
