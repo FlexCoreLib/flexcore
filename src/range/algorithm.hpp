@@ -23,7 +23,7 @@ template<class predicate>
 struct filter_view
 {
 	template<class in_range>
-	auto operator()(const in_range&& input)
+	auto operator()(in_range&& input)
 	{
 		return boost::adaptors::filter(input, pred);
 	}
@@ -48,7 +48,7 @@ template<class operation>
 struct map_view
 {
 	template<class in_range>
-	auto operator()(const in_range&& input)
+	auto operator()(in_range&& input)
 	{
 		return boost::adaptors::transform(input, op);
 	}
