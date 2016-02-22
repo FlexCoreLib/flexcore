@@ -30,3 +30,13 @@ BOOST_FIXTURE_TEST_CASE( stream_logging, log_test )
 	client.write(expected_in_output);
 }
 
+BOOST_FIXTURE_TEST_CASE( region_logging, log_test )
+{
+	auto region_name = "test region";
+	auto region = std::make_shared<fc::parallel_region>(region_name);
+	BOOST_CHECK_EQUAL(region->get_id().key, region_name);
+	fc::log_client client{region.get()};
+	expected_in_output = region_name;
+	client.write("another log message.");
+}
+
