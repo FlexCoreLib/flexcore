@@ -12,6 +12,13 @@ class stream_handle
 {
 public:
 	stream_handle(std::function<void()> deleter);
+
+	// moveable, but not copyable
+	stream_handle(const stream_handle&) = delete;
+	stream_handle(stream_handle&&) = default;
+	stream_handle& operator=(const stream_handle&) = delete;
+	stream_handle& operator=(stream_handle&&) = default;
+
 	~stream_handle();
 private:
 	std::function<void()> deleter;
