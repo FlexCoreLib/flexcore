@@ -2,6 +2,7 @@
 #define BOOST_LOG_USE_NATIVE_SYSLOG
 #include <logging/logger.hpp>
 #include <boost/utility/empty_deleter.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
@@ -35,12 +36,26 @@ using namespace boost::log;
 template <class backend>
 using sync_sink = sinks::synchronous_sink<backend>;
 
+namespace
+{
+BOOST_LOG_ATTRIBUTE_KEYWORD(region, "Channel", std::string);
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", int);
+
+auto get_formatter()
+{
+	namespace expr = boost::log::expressions;
+	return expr::stream << severity << "[" << region << "] " << expr::smessage;
+}
+} // anonymous namespace
+
 void logger::add_file_log(std::string filename)
 {
 	auto file_sink = boost::make_shared<sinks::text_file_backend>(
 	    keywords::file_name = filename,
 	    keywords::open_mode = std::ios_base::app | std::ios_base::out);
-	core::get()->add_sink(boost::make_shared<sync_sink<sinks::text_file_backend>>(file_sink));
+	auto sink_front = boost::make_shared<sync_sink<sinks::text_file_backend>>(file_sink);
+	sink_front->set_formatter(get_formatter());
+	core::get()->add_sink(sink_front);
 }
 
 void logger::add_syslog_log(std::string progname)
@@ -48,7 +63,9 @@ void logger::add_syslog_log(std::string progname)
 	auto syslog_sink = boost::make_shared<sinks::syslog_backend>(
 	    keywords::use_impl = sinks::syslog::impl_types::native,
 	    keywords::ident = progname);
-	core::get()->add_sink(boost::make_shared<sync_sink<sinks::syslog_backend>>(syslog_sink));
+	auto sink_front = boost::make_shared<sync_sink<sinks::syslog_backend>>(syslog_sink);
+	sink_front->set_formatter(get_formatter());
+	core::get()->add_sink(sink_front);
 }
 
 stream_handle logger::add_stream_log(std::ostream& stream, logger::flush flush,
@@ -58,7 +75,9 @@ stream_handle logger::add_stream_log(std::ostream& stream, logger::flush flush,
 	auto shared_stream = boost::shared_ptr<std::ostream>(&stream, boost::empty_deleter());
 	stream_sink->add_stream(shared_stream);
 	stream_sink->auto_flush(static_cast<bool>(flush));
-	core::get()->add_sink(boost::make_shared<sync_sink<sinks::text_ostream_backend>>(stream_sink));
+	auto sink_front = boost::make_shared<sync_sink<sinks::text_ostream_backend>>(stream_sink);
+	sink_front->set_formatter(get_formatter());
+	core::get()->add_sink(sink_front);
 
 	// Prepare a function that will remove the stream from the sink
 	std::function<void()> cleanup_fun;
