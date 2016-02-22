@@ -2,6 +2,7 @@
 #define SRC_LOGGING_LOGGER_HPP_
 
 #include <functional>
+#include <memory>
 #include <ostream>
 #include <string>
 
@@ -44,6 +45,20 @@ public:
 
 private:
 	logger();
+};
+
+class log_client
+{
+public:
+	void write(const std::string& msg);
+	log_client();
+	log_client(const log_client&);
+	log_client& operator=(log_client);
+	log_client(log_client&&);
+	~log_client();
+private:
+	class log_client_impl;
+	std::unique_ptr<log_client_impl> log_client_pimpl;
 };
 
 } // namespace fc

@@ -6,8 +6,11 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sources/logger.hpp>
+#include <boost/log/common.hpp>
 #include <boost/log/core.hpp>
 #include <ios>
+#include <utility>
 
 namespace fc
 {
@@ -70,5 +73,39 @@ stream_handle logger::add_stream_log(std::ostream& stream, logger::flush flush,
 logger::logger()
 {
 }
+
+class log_client::log_client_impl
+{
+public:
+	void write(const std::string& msg)
+	{
+		BOOST_LOG(lg) << msg;
+	}
+private:
+	sources::logger lg;
+};
+
+void log_client::write(const std::string& msg)
+{
+	log_client_pimpl->write(msg);
+}
+
+log_client::log_client() : log_client_pimpl(std::make_unique<log_client::log_client_impl>())
+{
+}
+
+log_client::log_client(const log_client& other)
+    : log_client_pimpl(std::make_unique<log_client::log_client_impl>(*other.log_client_pimpl))
+{
+}
+
+log_client& log_client::operator=(log_client other)
+{
+	std::swap(log_client_pimpl, other.log_client_pimpl);
+	return *this;
+}
+
+log_client::log_client(log_client&&) = default;
+log_client::~log_client() = default;
 
 } // namespace fc
