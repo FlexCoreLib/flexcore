@@ -40,3 +40,48 @@ BOOST_FIXTURE_TEST_CASE( region_logging, log_test )
 	client.write("another log message.");
 }
 
+namespace
+{
+std::ostringstream global_stream;
+} // namespace
+
+BOOST_AUTO_TEST_CASE( stream_no_cleanup )
+{
+	global_stream.str(std::string{});
+	fc::logger::get()->add_stream_log(global_stream, logger::flush::true_, logger::cleanup::false_);
+	fc::log_client client;
+	auto msg = "message!";
+	client.write(msg);
+	auto str = global_stream.str();
+	BOOST_CHECK_NE(str.find(msg), std::string::npos);
+	BOOST_TEST_MESSAGE(str);
+}
+
+BOOST_AUTO_TEST_CASE( syslog_logging_works )
+{
+	logger::get()->add_syslog_log("my program");
+	// no way to check the syslog
+	fc::log_client client;
+	client.write("writing to syslog.");
+	BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_CASE( file_logging_works )
+{
+	logger::get()->add_file_log("./localfile.txt");
+	fc::log_client client;
+	client.write("writing to localfile.");
+	BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_CASE( log_client_copy_and_move )
+{
+	fc::log_client client;
+	{
+		auto client2 = client;
+		client = client2;
+		auto client3 = std::move(client2);
+	}
+	client.write("second");
+	BOOST_CHECK(true);
+}
