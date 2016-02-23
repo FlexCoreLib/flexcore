@@ -6,9 +6,22 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <syslog.h>
 
 namespace fc
 {
+
+enum class level : char
+{
+	emergency = LOG_EMERG,
+	alert = LOG_ALERT,
+	critical = LOG_CRIT,
+	error = LOG_ERR,
+	warning = LOG_WARNING,
+	notice = LOG_NOTICE,
+	info = LOG_INFO,
+	debug = LOG_DEBUG
+};
 
 class stream_handle
 {
@@ -51,7 +64,7 @@ private:
 class log_client
 {
 public:
-	void write(const std::string& msg);
+	void write(const std::string& msg, level = level::info);
 	log_client();
 	log_client(const region_info* region);
 

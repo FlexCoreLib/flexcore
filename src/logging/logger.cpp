@@ -31,6 +31,12 @@ logger* logger::get()
 	return &instance;
 }
 
+std::ostream& operator<<(std::ostream& out, fc::level severity)
+{
+	out << static_cast<int>(severity);
+	return out;
+}
+
 using namespace boost::log;
 
 template <class backend>
@@ -39,12 +45,13 @@ using sync_sink = sinks::synchronous_sink<backend>;
 namespace
 {
 BOOST_LOG_ATTRIBUTE_KEYWORD(region, "Channel", std::string);
-BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", int);
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level);
 
 auto get_formatter()
 {
 	namespace expr = boost::log::expressions;
-	return expr::stream << severity << "[" << region << "] " << expr::smessage;
+	return expr::stream << "<" << severity << ">"
+	                    << "[" << region << "] " << expr::smessage;
 }
 } // anonymous namespace
 
@@ -100,17 +107,17 @@ public:
 	    : lg(keywords::channel = (region ? region->get_id().key : "(null)"))
 	{
 	}
-	void write(const std::string& msg)
+	void write(const std::string& msg, level severity)
 	{
-		BOOST_LOG(lg) << msg;
+		BOOST_LOG_SEV(lg, severity) << msg;
 	}
 private:
-	sources::channel_logger<> lg;
+	sources::severity_channel_logger<level, std::string> lg;
 };
 
-void log_client::write(const std::string& msg)
+void log_client::write(const std::string& msg, level severity)
 {
-	log_client_pimpl->write(msg);
+	log_client_pimpl->write(msg, severity);
 }
 
 log_client::log_client() : log_client_pimpl(std::make_unique<log_client::log_client_impl>(nullptr))
