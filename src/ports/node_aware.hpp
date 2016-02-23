@@ -17,11 +17,10 @@ struct node_aware;
  * checks if two node_aware connectables are from the same region
  */
 template<class source_t, class sink_t>
-bool same_region( const node_aware<source_t>& source,
-				  const node_aware<sink_t>& sink )
+bool same_region(const node_aware<source_t>& source,
+        const node_aware<sink_t>& sink)
 {
-	return source.node->region()->get_id()
-		  == sink.node->region()->get_id();
+	return source.node->region()->get_id() == sink.node->region()->get_id();
 }
 
 /**
@@ -33,12 +32,15 @@ template<class result_t>
 struct buffer_factory
 {
 	template<class active_t, class passive_t, class tag>
-	static auto construct_buffer(const active_t& active, const passive_t& passive, tag) ->
-			std::shared_ptr<buffer_interface<result_t, tag>>
+	static auto construct_buffer(const active_t& active,
+	        const passive_t& passive,
+	        tag) ->
+	        std::shared_ptr<buffer_interface<result_t, tag>>
 	{
 		if (!same_region(active, passive))
 		{
-			auto result_buffer = std::make_shared<typename buffer<result_t, tag>::type>();
+			auto result_buffer =
+					std::make_shared<typename buffer<result_t, tag>::type>();
 
 			active.node->region()->switch_tick() >> result_buffer->switch_tick();
 			passive.node->region()->work_tick() >> result_buffer->work_tick();
@@ -61,14 +63,14 @@ struct buffer_factory
  * \invariant buffer != null_ptr
  */
 template<class base_connection>
-struct buffered_event_connection : base_connection
+struct buffered_event_connection: base_connection
 {
 	typedef typename base_connection::result_t result_t;
 
-	buffered_event_connection( std::shared_ptr<buffer_interface<result_t, event_tag>> new_buffer, 
-							   const base_connection& base ) 
-		: base_connection(base)
-		, buffer(new_buffer)
+	buffered_event_connection(std::shared_ptr<
+	        buffer_interface<result_t, event_tag>> new_buffer,
+	        const base_connection& base) :
+			base_connection(base), buffer(new_buffer)
 	{
 		assert(buffer);
 	}
@@ -83,9 +85,6 @@ private:
 	std::shared_ptr<buffer_interface<result_t, event_tag>> buffer;
 };
 
-//todo hackhack
-template<class T> struct is_passive_sink<buffered_event_connection<T>> : std::true_type {};
-
 /**
  * \see buffered_event_connection
  * remove this code duplication if possible
@@ -95,10 +94,10 @@ struct buffered_state_connection: base_connection
 {
 	typedef typename base_connection::result_t result_t;
 
-	buffered_state_connection( std::shared_ptr<buffer_interface<result_t, state_tag>> new_buffer,
-							   const base_connection& base ) 
-		: base_connection(base)
-		, buffer(new_buffer)
+	buffered_state_connection(std::shared_ptr<
+	        buffer_interface<result_t, state_tag>> new_buffer,
+	        const base_connection& base) :
+			base_connection(base), buffer(new_buffer)
 	{
 		assert(buffer);
 	}
@@ -134,21 +133,22 @@ namespace detail
  * This is the source, since event_sources are active
  */
 template<class source_t, class sink_t, class buffer_t>
-auto make_buffered_connection(
-		std::shared_ptr<buffer_interface<buffer_t, event_tag>> buffer,
-		const source_t& /*source*/, //only needed for type deduction
-		sink_t&& sink )
+auto make_buffered_connection(std::shared_ptr<
+        buffer_interface<buffer_t, event_tag>> buffer,
+        const source_t& /*source*/,  //only needed for type deduction
+        sink_t&& sink)
 {
 	assert(buffer);
-	typedef port_connection
-		<	typename source_t::base_t,
+	typedef port_connection<
+			typename source_t::base_t,
 			sink_t,
 			buffer_t
-		> base_connection_t;
+			> base_connection_t;
 
 	connect(buffer->out(), std::forward<sink_t>(sink));
 
-	return buffered_event_connection<base_connection_t>(std::move(buffer), base_connection_t());
+	return buffered_event_connection<base_connection_t>(std::move(buffer),
+	        base_connection_t());
 }
 
 /**
@@ -159,23 +159,20 @@ auto make_buffered_connection(
  * This is the sink, since state_sinks are active
  */
 template<class source_t, class sink_t, class buffer_t>
-auto make_buffered_connection(
-		std::shared_ptr<buffer_interface<buffer_t, state_tag>> buffer,
-		source_t&& source,
-		const sink_t& ) /*sink*/ //only needed for type deduction
+auto make_buffered_connection(std::shared_ptr<
+        buffer_interface<buffer_t, state_tag>> buffer,
+        source_t&& source,
+        const sink_t&) /*sink*/  //only needed for type deduction
 {
 	assert(buffer);
-	typedef port_connection
-		<	source_t,
-			typename sink_t::base_t,
-			buffer_t
-		> base_connection_t;
+	typedef port_connection<source_t, typename sink_t::base_t, buffer_t> base_connection_t;
 
 	connect(std::forward<source_t>(source), buffer->in());
 
-	return buffered_state_connection<base_connection_t>(std::move(buffer), base_connection_t());
+	return buffered_state_connection<base_connection_t>(std::move(buffer),
+	        base_connection_t());
 }
-} // namespace detail
+}  // namespace detail
 
 /**
  * \brief A mixin for elements that are aware of the node they belong to.
@@ -189,24 +186,27 @@ auto make_buffered_connection(
  * \endcode
  */
 template <class base>
-struct node_aware : base
+struct node_aware: base
 {
 	static_assert(std::is_class<base>{},
 			"can only be mixed into clases, not primitives");
 	//allows explicit access to base of this mixin.
 	typedef base base_t;
 
-	template <class... args>
+	template <class ... args>
 	node_aware(tree_base_node* node_ptr, args&&... base_constructor_args)
-	    : base(std::forward<args>(base_constructor_args)...), node(node_ptr)
+		: base(std::forward<args>(base_constructor_args)...), node(node_ptr)
 	{
 		assert(node);
 	}
 
-	template <class conn_t, class base_t = base, class enable = std::enable_if_t<is_active<base_t>{}>>
+	template<class conn_t,
+			class base_t = base,
+			class enable = std::enable_if_t<is_active<base_t>{}>>
 	auto connect(conn_t&& conn)
 	{
-		return connect_impl(std::forward<conn_t>(conn), std::integral_constant<bool, has_node_aware(conn)>{});
+		return connect_impl(std::forward<conn_t>(conn),
+		        std::integral_constant<bool, has_node_aware(conn)> { });
 	}
 
 	tree_base_node* node;
@@ -221,7 +221,8 @@ private:
 	template <class conn_t>
 	auto connect_impl(conn_t&& conn, connection_has_node_aware)
 	{
-		auto tmp = introduce_buffer(std::forward<conn_t>(conn), is_active_source<base>{});
+		auto tmp = introduce_buffer(std::forward<conn_t>(conn),
+		        is_active_source<base> { });
 		return base::connect(std::forward<decltype(tmp)>(tmp));
 	}
 
@@ -236,11 +237,11 @@ private:
 	{
 		using result_t = result_of_t<base_t>;
 		const auto& sink = get_sink(conn);
-		return detail::make_buffered_connection(buffer_factory<result_t>::construct_buffer(
-		                                            *this, // event source is active, thus first
-		                                            sink,  // event sink is passive thus second
-		                                            event_tag()),
-		                                        *this, std::forward<conn_t>(conn));
+		return detail::make_buffered_connection(
+				buffer_factory<result_t>::construct_buffer(
+						*this,  // event source is active, thus first
+						sink,  // event sink is passive thus second
+						event_tag()), *this, std::forward<conn_t>(conn));
 	}
 
 	template <class conn_t>
@@ -248,22 +249,22 @@ private:
 	{
 		using result_t = result_of_t<conn_t>;
 		const auto& source = get_source(conn);
-		return detail::make_buffered_connection(buffer_factory<result_t>::construct_buffer(
-		                                            *this,  // state sink is active thus first
-		                                            source, // state source is passive thus second
-		                                            state_tag()),
-		                                        std::forward<conn_t>(conn), *this);
+		return detail::make_buffered_connection(
+				buffer_factory<result_t>::construct_buffer(
+						*this,  // state sink is active thus first
+						source,  // state source is passive thus second
+						state_tag()), std::forward<conn_t>(conn), *this);
 	}
 
 	template <class conn_t>
 	static constexpr bool has_node_aware(conn_t&&)
 	{
-		if (is_active_source<base>{})
+		if (is_active_source<base> { })
 			return is_instantiation_of<node_aware,
-			                           std::decay_t<decltype(get_sink(std::declval<conn_t>()))>>{};
+			        std::decay_t<decltype(get_sink(std::declval<conn_t>()))>> { };
 		else
 			return is_instantiation_of<node_aware,
-			                           std::decay_t<decltype(get_source(std::declval<conn_t>()))>>{};
+			        std::decay_t<decltype(get_source(std::declval<conn_t>()))>> { };
 	}
 };
 }  //namespace fc
