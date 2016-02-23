@@ -2,12 +2,14 @@
 #define BOOST_LOG_USE_NATIVE_SYSLOG
 #include <logging/logger.hpp>
 #include <boost/utility/empty_deleter.hpp>
+#include <boost/log/attributes/clock.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sources/logger.hpp>
+#include <boost/log/support/date_time.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/core.hpp>
 #include <ios>
@@ -47,10 +49,19 @@ namespace
 BOOST_LOG_ATTRIBUTE_KEYWORD(region, "Channel", std::string);
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level);
 
-auto get_formatter()
+auto get_format()
 {
 	namespace expr = boost::log::expressions;
 	return expr::stream << "<" << severity << ">"
+	                    << "[" << region << "] " << expr::smessage;
+}
+
+auto get_format_with_timestamp()
+{
+	namespace expr = boost::log::expressions;
+	return expr::stream << expr::format_date_time<attributes::utc_clock::value_type>(
+	                           "TimeStamp", "%Y-%m-%d %H:%M:%S") << ": "
+	                    << "<" << severity << ">"
 	                    << "[" << region << "] " << expr::smessage;
 }
 } // anonymous namespace
@@ -61,7 +72,7 @@ void logger::add_file_log(std::string filename)
 	    keywords::file_name = filename,
 	    keywords::open_mode = std::ios_base::app | std::ios_base::out);
 	auto sink_front = boost::make_shared<sync_sink<sinks::text_file_backend>>(file_sink);
-	sink_front->set_formatter(get_formatter());
+	sink_front->set_formatter(get_format_with_timestamp());
 	core::get()->add_sink(sink_front);
 }
 
@@ -71,7 +82,7 @@ void logger::add_syslog_log(std::string progname)
 	    keywords::use_impl = sinks::syslog::impl_types::native,
 	    keywords::ident = progname);
 	auto sink_front = boost::make_shared<sync_sink<sinks::syslog_backend>>(syslog_sink);
-	sink_front->set_formatter(get_formatter());
+	sink_front->set_formatter(get_format());
 	core::get()->add_sink(sink_front);
 }
 
@@ -83,7 +94,7 @@ stream_handle logger::add_stream_log(std::ostream& stream, logger::flush flush,
 	stream_sink->add_stream(shared_stream);
 	stream_sink->auto_flush(static_cast<bool>(flush));
 	auto sink_front = boost::make_shared<sync_sink<sinks::text_ostream_backend>>(stream_sink);
-	sink_front->set_formatter(get_formatter());
+	sink_front->set_formatter(get_format_with_timestamp());
 	core::get()->add_sink(sink_front);
 
 	// Prepare a function that will remove the stream from the sink
@@ -98,6 +109,7 @@ stream_handle logger::add_stream_log(std::ostream& stream, logger::flush flush,
 
 logger::logger()
 {
+	core::get()->add_global_attribute("TimeStamp", attributes::utc_clock{});
 }
 
 class log_client::log_client_impl
