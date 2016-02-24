@@ -64,10 +64,11 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	BOOST_CHECK_EQUAL(test_sink.at(2), 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_different_region)
+namespace
 {
-	typedef node_aware<pure::event_sink<int>> test_in_port;
-	typedef node_aware<pure::event_source<int>> test_out_port;
+template<class source_t, class sink_t>
+void check_mixins()
+{
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
 	root_node root_1("1", region_1);
@@ -75,10 +76,10 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
-	test_in_port test_in(&root_2, write_param);
-	test_out_port test_out(&root_1);
+	sink_t test_in(&root_2, write_param);
+	source_t test_out(&root_1);
 
-	test_out >> test_in;
+	connect(test_out, test_in);
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_out.fire(1);
@@ -89,6 +90,29 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 1);
+}
+
+template<class base>
+struct useless_mixin : public base
+{
+	template <class ... args>
+	useless_mixin(args&&... base_constructor_args)
+		: base(std::forward<args>(base_constructor_args)...)
+	{
+	}
+};
+}
+
+BOOST_AUTO_TEST_CASE(test_different_region)
+{
+	typedef node_aware<pure::event_sink<int>> no_mixin_sink;
+	typedef node_aware<pure::event_source<int>> no_mixin_source;
+	check_mixins<no_mixin_source, no_mixin_sink>();
+
+	typedef useless_mixin<node_aware<pure::event_sink<int>>> test_mixin_sink;
+	typedef useless_mixin<node_aware<pure::event_source<int>>> test_mixin_source;
+	check_mixins<test_mixin_source, test_mixin_sink>();
+
 }
 
 BOOST_AUTO_TEST_CASE(test_connectable_in_between)
