@@ -221,9 +221,8 @@ private:
 	template <class conn_t>
 	auto connect_impl(conn_t&& conn, connection_has_node_aware)
 	{
-		auto tmp = introduce_buffer(std::forward<conn_t>(conn),
-		        is_active_source<base> { });
-		return base::connect(std::forward<decltype(tmp)>(tmp));
+		return base::connect(
+		    introduce_buffer(std::forward<conn_t>(conn), is_active_source<base>{}));
 	}
 
 	template <class conn_t>
