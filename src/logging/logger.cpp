@@ -1,6 +1,7 @@
 #define BOOST_ALL_DYN_LINK
 #define BOOST_LOG_USE_NATIVE_SYSLOG
 #include <logging/logger.hpp>
+#include <threading/parallelregion.hpp>
 #include <boost/utility/empty_deleter.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/expressions.hpp>

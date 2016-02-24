@@ -1,7 +1,6 @@
 #ifndef SRC_LOGGING_LOGGER_HPP_
 #define SRC_LOGGING_LOGGER_HPP_
 
-#include <threading/parallelregion.hpp>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -10,6 +9,7 @@
 
 namespace fc
 {
+class region_info;
 
 /**
  * \brief Enumeration of severity levels corresponding to the posix syslog api.
