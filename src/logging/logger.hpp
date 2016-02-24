@@ -55,7 +55,7 @@ class logger
 {
 public:
 	/// get the singleton instance of logger.
-	static logger* get();
+	static logger& get();
 
 	/// add log backends of the specified types
 	void add_file_log(std::string filename);
@@ -80,6 +80,8 @@ public:
 
 private:
 	logger();
+	logger(const logger&) = delete;
+	logger& operator=(const logger&) = delete;
 };
 
 /**

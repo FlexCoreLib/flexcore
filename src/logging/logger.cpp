@@ -51,10 +51,10 @@ stream_handle::~stream_handle()
 	deleter();
 }
 
-logger* logger::get()
+logger& logger::get()
 {
 	static logger instance;
-	return &instance;
+	return instance;
 }
 
 /// Print the severity level to the ostream, required for boost.log. For now this just casts the

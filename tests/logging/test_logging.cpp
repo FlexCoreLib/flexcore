@@ -10,7 +10,7 @@ struct log_test
 {
 	log_test()
 	    : handle(
-	          logger::get()->add_stream_log(stream, logger::flush::true_, logger::cleanup::true_))
+	          logger::get().add_stream_log(stream, logger::flush::true_, logger::cleanup::true_))
 	{
 	}
 	~log_test()
@@ -49,7 +49,7 @@ std::ostringstream global_stream;
 BOOST_AUTO_TEST_CASE( stream_no_cleanup )
 {
 	global_stream.str(std::string{});
-	fc::logger::get()->add_stream_log(global_stream, logger::flush::true_, logger::cleanup::false_);
+	logger::get().add_stream_log(global_stream, logger::flush::true_, logger::cleanup::false_);
 	fc::log_client client;
 	auto msg = "message!";
 	client.write(msg);
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE( stream_no_cleanup )
 
 BOOST_AUTO_TEST_CASE( syslog_logging_works )
 {
-	logger::get()->add_syslog_log("my program");
+	logger::get().add_syslog_log("my program");
 	// no way to check the syslog
 	fc::log_client client;
 	client.write("writing to syslog.");
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE( syslog_logging_works )
 
 BOOST_AUTO_TEST_CASE( file_logging_works )
 {
-	logger::get()->add_file_log("./localfile.txt");
+	logger::get().add_file_log("./localfile.txt");
 	fc::log_client client;
 	client.write("writing to localfile.");
 	BOOST_CHECK(true);
