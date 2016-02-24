@@ -3,6 +3,24 @@
 #include <ports/node_aware.hpp>
 #include <ports/pure_ports.hpp>
 
+template<class base>
+struct useless_mixin : public base
+{
+	template <class ... args>
+	useless_mixin(args&&... base_constructor_args)
+		: base(std::forward<args>(base_constructor_args)...)
+	{
+	}
+};
+
+namespace fc
+{
+template <class T>
+struct is_active_source<useless_mixin<T>> : is_active_source<T> {};
+template <class T>
+struct is_active_sink<useless_mixin<T>> : is_active_sink<T> {};
+}
+
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_parallle_region);
@@ -79,7 +97,9 @@ void check_mixins()
 	sink_t test_in(&root_2, write_param);
 	source_t test_out(&root_1);
 
-	connect(test_out, test_in);
+	test_out >> test_in;
+	static_assert(is_active<source_t>{}, "not active source.");
+	static_assert(is_connectable<sink_t&>{}, "no connectable sink.");
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_out.fire(1);
@@ -91,16 +111,6 @@ void check_mixins()
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 1);
 }
-
-template<class base>
-struct useless_mixin : public base
-{
-	template <class ... args>
-	useless_mixin(args&&... base_constructor_args)
-		: base(std::forward<args>(base_constructor_args)...)
-	{
-	}
-};
 }
 
 BOOST_AUTO_TEST_CASE(test_different_region)

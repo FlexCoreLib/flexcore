@@ -260,13 +260,14 @@ private:
 	static constexpr bool has_node_aware(conn_t&&)
 	{
 		if (is_active_source<base> { })
-			return is_instantiation_of<node_aware,
-			        std::decay_t<decltype(get_sink(std::declval<conn_t>()))>> { };
+			return detail::is_derived_from<fc::node_aware,
+			                               decltype(get_sink(std::declval<conn_t>()))>::value;
 		else
-			return is_instantiation_of<node_aware,
-			        std::decay_t<decltype(get_source(std::declval<conn_t>()))>> { };
+			return detail::is_derived_from<fc::node_aware,
+			                               decltype(get_source(std::declval<conn_t>()))>::value;
 	}
 };
+
 }  //namespace fc
 
 #endif /* SRC_PORTS_NODE_AWARE_HPP_ */
