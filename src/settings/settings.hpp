@@ -108,7 +108,7 @@ public:
 		backend.register_setting(
 				id, //unique id of setting in registry
 				initial_value, //initial value, in case it needs to be stored
-				[this](data_t i){ cache = i;}); //callback to let registry write cache
+				[this](data_t i){ cache = i; }); //callback to let registry write cache
 	}
 
 	setting(setting_id id, data_t initial_value)
@@ -117,7 +117,7 @@ public:
 		backend_facade{}.register_setting(
 				id, //unique id of setting in registry
 				initial_value, //initial value, in case it needs to be stored
-				[this](data_t i){ cache = i;}); //callback to let registry write cache
+				[this](data_t i){ cache = i; }); //callback to let registry write cache
 	}
 
 	data_t operator()()

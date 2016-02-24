@@ -4,7 +4,8 @@
 #include <boost/range.hpp>
 #include <boost/range/adaptors.hpp>
 
-#include <functional>
+#include <iterator>
+#include <numeric>
 
 namespace fc
 {
