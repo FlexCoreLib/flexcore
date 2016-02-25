@@ -55,6 +55,11 @@ struct active_source_first
 	}
 };
 
+template <class T>
+struct always_false : std::false_type
+{
+};
+
 /**
  * \brief contains connections of active_connectables during creation.
  *
@@ -100,13 +105,14 @@ struct active_connection_proxy
 	template<class new_passive_t, class enable = void>
 	auto connect(new_passive_t&& new_passive,
 	             std::enable_if_t<(is_passive_source<std::decay_t<new_passive_t>>{} or
-	                               is_passive_sink<std::decay_t<new_passive_t>>{})>* = nullptr)
+	                               is_passive_sink<std::decay_t<new_passive_t>>{})>* = nullptr) &&
 	{
 		static_assert(is_passive<std::decay_t<new_passive_t>>{},
 				"new_passive_t in proxy needs to be passive connectable");
 
-		auto tmp = connect_policy()(stored_passive, std::forward<new_passive_t>(new_passive));
-		return active.connect(std::move(tmp));
+		auto tmp = connect_policy()(std::forward<passive_t>(stored_passive),
+		                            std::forward<new_passive_t>(new_passive));
+		return std::forward<active_t>(active).connect(std::move(tmp));
 	}
 
 	/**
@@ -122,13 +128,23 @@ struct active_connection_proxy
 	template <class new_connectable_t,
 	          class = std::enable_if_t<not(is_passive_source<std::decay_t<new_connectable_t>>{} or
 	                                       is_passive_sink<std::decay_t<new_connectable_t>>{})>>
-	auto connect(new_connectable_t&& new_connectable)
+	auto connect(new_connectable_t&& new_connectable) &&
 	{
-		auto connection = connect_policy()(stored_passive, std::forward<new_connectable_t>(new_connectable));
+		auto connection = connect_policy()(std::forward<passive_t>(stored_passive),
+		                                   std::forward<new_connectable_t>(new_connectable));
 		return active_connection_proxy<
 				active_t,
 				decltype(connection),
 				connect_policy>(active, std::move(connection));
+	}
+
+	/**
+	 * \brief catch function to prevent active_connection_proxies from being treated as lvalues.
+	 */
+	template <class new_connectable_t>
+	void connect(new_connectable_t&&) &
+	{
+		static_assert(always_false<new_connectable_t>{}, "active_connection_proxies cannot be used multiple times.");
 	}
 
 	active_t active;
