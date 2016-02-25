@@ -26,7 +26,7 @@ class graph_node_properties
 public:
 	typedef boost::uuids::uuid unique_id;
 
-	explicit graph_node_properties(const std::string name,
+	explicit graph_node_properties(const std::string& name,
 			unique_id id = boost::uuids::random_generator()())
 		: human_readable_name(name)
 		, id(id)
@@ -184,8 +184,8 @@ void add_to_graph(const graph_node_properties& source_node,
 void add_to_graph(const graph_node_properties& source_node,
 		const graph_node_properties& sink_node);
 
-/// Prints current state of the abstract graph in graphviz format.
-void print();
+/// Prints current state of the abstract graph in graphviz format to stream.
+void print(std::ostream& stream);
 
 }  // namespace graph
 }  // namespace fc

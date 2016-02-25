@@ -88,7 +88,7 @@ int main()
 	event_source<std::string> string_source_2(child_c);
 	string_source_2 >> string_sink;
 
-	graph::print();
+	graph::print(std::cout);
 
 	thread_manager.start();
 
