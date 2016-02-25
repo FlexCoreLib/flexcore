@@ -121,8 +121,11 @@ struct is_callable:
 };
 
 template <class T>
-struct is_connectable
-    : std::integral_constant<bool, is_callable<T>{} && std::is_copy_constructible<T>{}>
+struct is_connectable :
+	std::integral_constant<bool,
+	    is_callable<std::remove_reference_t<T>>{} &&
+	    (std::is_lvalue_reference<T>{} || std::is_copy_constructible<T>{})
+	>
 {
 };
 
@@ -212,24 +215,6 @@ struct is_active_sink: std::false_type
 
 template<class T>
 struct is_active_source: std::false_type
-{
-};
-
-template<class T, class enable = void>
-struct is_active_connectable_impl : std::false_type
-{
-};
-
-template<class T>
-struct is_active_connectable_impl<
-	T, std::enable_if_t<std::is_class<T>{}>> :
-		std::integral_constant
-			<bool, typename detail::has_member_connect<T>::type{}
-			 and std::is_copy_constructible<T>{}>
-{
-};
-template<class T>
-struct is_active_connectable : is_active_connectable_impl<T>
 {
 };
 
@@ -342,7 +327,7 @@ struct is_passive: std::integral_constant<bool,
 //todo cleanup of diverse redundant traits
 template<class T>
 struct is_active: std::integral_constant<bool,
-is_active_connectable<T>{} || is_active_sink<T>{}>
+is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
 

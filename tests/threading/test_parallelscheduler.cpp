@@ -41,10 +41,11 @@ BOOST_AUTO_TEST_CASE(test_single_execution)
 	{
 	thread::cycle_control test_scheduler;
 
-	thread::periodic_task task1(std::bind(&store::make_1, &test_values),
-			thread::cycle_control::fast_tick);
-
-	test_scheduler.add_task(task1);
+	{
+		thread::periodic_task task1(std::bind(&store::make_1, &test_values),
+			                        thread::cycle_control::fast_tick);
+		test_scheduler.add_task(std::move(task1));
+	}
 
 	test_scheduler.work();
 
@@ -62,10 +63,11 @@ BOOST_AUTO_TEST_CASE(test_single_execution)
 		thread::cycle_control test_scheduler;
 
 	store test_values_2;
-	thread::periodic_task task_2(std::bind(&store::make_1, &test_values_2),
-			thread::cycle_control::fast_tick);
-
-	test_scheduler.add_task(task_2);
+	{
+		thread::periodic_task task_2(std::bind(&store::make_1, &test_values_2),
+			                         thread::cycle_control::fast_tick);
+		test_scheduler.add_task(std::move(task_2));
+	}
 
 	BOOST_CHECK_EQUAL(test_values_2.val, 0);
 	test_scheduler.work();
@@ -87,10 +89,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_execution)
 
 	for(auto i = begin(test_values); i != end(test_values); ++i)
 	{
-			thread::periodic_task task (std::bind(&store::make_1, &(*i)),
+			thread::periodic_task task(std::bind(&store::make_1, &(*i)),
 					thread::cycle_control::fast_tick);
-
-			test_scheduler.add_task(task);
+			test_scheduler.add_task(std::move(task));
 	}
 
 	test_scheduler.work();
@@ -110,10 +111,11 @@ BOOST_AUTO_TEST_CASE(test_main_loop)
 
 	store test_values;
 	thread::cycle_control test_scheduler;
-	thread::periodic_task task1(std::bind(&store::make_1, &test_values),
-			thread::cycle_control::fast_tick);
-
-	test_scheduler.add_task(task1);
+	{
+		thread::periodic_task task1(std::bind(&store::make_1, &test_values),
+		                            thread::cycle_control::fast_tick);
+		test_scheduler.add_task(std::move(task1));
+	}
 	test_scheduler.start(); //start main loop
 	sleep(1); //todo remove this hack,
 	//currently needed because this function runs through
