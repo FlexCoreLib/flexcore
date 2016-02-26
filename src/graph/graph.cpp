@@ -29,8 +29,8 @@ void print(std::ostream& stream)
 {
 	const auto graph = connection_graph::access().get_boost_graph();
 	boost::write_graphviz(stream, graph,
-	     boost::make_label_writer(boost::get(&vertex::name, graph)),
-	     boost::make_label_writer(boost::get(&edge::name, graph)));
+		boost::make_label_writer(boost::get(&vertex::name, graph)),
+		boost::make_label_writer(boost::get(&edge::name, graph)));
 }
 
 } // namespace graph

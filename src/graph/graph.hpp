@@ -74,11 +74,11 @@ struct edge
 };
 
 typedef boost::adjacency_list<boost::vecS,          // Store out-edges of each vertex in a std::list
-                              boost::vecS,          // Store vertex set in a std::list
-                              boost::directedS, // The dataflow graph is directed
-                              vertex,                // vertex properties
-                              edge                   // edge properties
-                              > dataflow_graph_t;
+							  boost::vecS,          // Store vertex set in a std::list
+							  boost::directedS, // The dataflow graph is directed
+							  vertex,                // vertex properties
+							  edge                   // edge properties
+							  > dataflow_graph_t;
 
 /**
  * \brief The abstract connection graph of a flexcore application.
@@ -98,8 +98,8 @@ public:
 	/// Static access to the singleton.
 	static connection_graph& access()
 	{
-	     static connection_graph s;
-	     return s;
+		static connection_graph s;
+		return s;
 	}
 
 	connection_graph(const connection_graph&) = delete;
