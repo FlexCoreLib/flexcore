@@ -9,10 +9,17 @@ ADD_COMPILE_OPTIONS(
     "-Wall"
     "-Wextra"
     "-std=c++1y" 
+    "-pedantic"
     "-pthread"
     $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-fprofile-arcs>
     $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-ftest-coverage>
     )
+
+IF( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
+	ADD_COMPILE_OPTIONS(
+	    "-Wno-unused-local-typedef"
+	    )
+ENDIF()
 
 FIND_PACKAGE( Boost 1.54 REQUIRED COMPONENTS log thread system)
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )

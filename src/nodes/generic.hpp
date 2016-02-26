@@ -218,7 +218,7 @@ template<class data_t>
 auto on_changed(data_t initial_value = data_t())
 {
 	return watch(
-			[last{std::move(std::make_unique<data_t>())}](const data_t& in) mutable
+			[last = std::make_unique<data_t>()](const data_t& in) mutable
 			{
 				const bool is_same = last && (*last == in);
 				last = std::make_unique<data_t>(in);

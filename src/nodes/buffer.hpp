@@ -131,14 +131,15 @@ struct collector
 	// result_t is defined to allow result_of trait with overloaded operator().
 	typedef void result_t;
 
-	void operator() (const auto& range)
+	template <class range_t>
+	void operator()(const range_t& range)
 	{
 		using std::begin;
 		using std::end;
 		//check if the node owning the buffer has been deleted. which is a bug.
 		assert(buffer);
 		buffer->insert(end(*buffer), begin(range), end(range));
-	};
+	}
 
 	void operator()(const data_t& single_input)
 	{

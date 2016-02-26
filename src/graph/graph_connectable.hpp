@@ -14,11 +14,29 @@ namespace fc
 {
 namespace graph
 {
+template<class base_t>
+struct graph_connectable;
 
 namespace detail
 {
-	struct graph_adder;
-}
+/// functor to use in connection applyer which adds graph_unfo to list
+struct graph_adder
+{
+	std::vector<graph_node_properties>& node_list;
+
+	template<class T>
+	void operator()(T& /*node*/)
+	{
+		//do nothing for connectables which is not graph_connectable
+	}
+
+	template<class base_t> //non_const ref, because applyer might forward non_const
+	void operator()(graph_connectable<base_t>& node)
+	{
+		node_list.push_back(node.graph_info);
+	}
+};
+} // namespace detail
 
 /**
  * \brief Mixin for connectables which adds additional information for abstract graph.
@@ -108,27 +126,6 @@ auto named(const base_t& con, const std::string& name)
 {
 	return graph_connectable<base_t>{graph_node_properties{name}, con};
 }
-
-namespace detail
-{
-/// functor to use in connection applyer which adds graph_unfo to list
-struct graph_adder
-{
-	std::vector<graph_node_properties>& node_list;
-
-	template<class T>
-	void operator()(T& /*node*/)
-	{
-		//do nothing for connectables which is not graph_connectable
-	}
-
-	template<class base_t> //non_const ref, because applyer might forward non_const
-	void operator()(graph_connectable<base_t>& node)
-	{
-		node_list.push_back(node.graph_info);
-	}
-};
-} //namespace detail
 
 }  // namespace graph
 

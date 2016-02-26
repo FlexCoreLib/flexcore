@@ -73,8 +73,8 @@ using sync_sink = sinks::synchronous_sink<backend>;
 namespace
 {
 // keywords for accessing the specified attributes of the log record.
-BOOST_LOG_ATTRIBUTE_KEYWORD(region, "Channel", std::string);
-BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level);
+BOOST_LOG_ATTRIBUTE_KEYWORD(region, "Channel", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level)
 
 /// format the log record with severity level, region information and a message.
 auto get_format()

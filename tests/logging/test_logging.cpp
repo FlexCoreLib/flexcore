@@ -1,3 +1,4 @@
+#if !defined(__clang__)
 #define BOOST_ALL_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <logging/logger.hpp>
@@ -86,3 +87,4 @@ BOOST_AUTO_TEST_CASE( log_client_copy_and_move )
 	client.write("second");
 	BOOST_CHECK(true);
 }
+#endif // !defined(__clang__)
