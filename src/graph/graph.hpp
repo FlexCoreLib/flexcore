@@ -26,7 +26,7 @@ class graph_node_properties
 public:
 	typedef boost::uuids::uuid unique_id;
 
-	explicit graph_node_properties(const std::string name,
+	explicit graph_node_properties(const std::string& name,
 			unique_id id = boost::uuids::random_generator()())
 		: human_readable_name(name)
 		, id(id)
@@ -74,11 +74,11 @@ struct edge
 };
 
 typedef boost::adjacency_list<boost::vecS,          // Store out-edges of each vertex in a std::list
-                              boost::vecS,          // Store vertex set in a std::list
-                              boost::directedS, // The dataflow graph is directed
-                              vertex,                // vertex properties
-                              edge                   // edge properties
-                              > dataflow_graph_t;
+							  boost::vecS,          // Store vertex set in a std::list
+							  boost::directedS, // The dataflow graph is directed
+							  vertex,                // vertex properties
+							  edge                   // edge properties
+							  > dataflow_graph_t;
 
 /**
  * \brief The abstract connection graph of a flexcore application.
@@ -98,8 +98,8 @@ public:
 	/// Static access to the singleton.
 	static connection_graph& access()
 	{
-	     static connection_graph s;
-	     return s;
+		static connection_graph s;
+		return s;
 	}
 
 	connection_graph(const connection_graph&) = delete;
@@ -184,8 +184,8 @@ void add_to_graph(const graph_node_properties& source_node,
 void add_to_graph(const graph_node_properties& source_node,
 		const graph_node_properties& sink_node);
 
-/// Prints current state of the abstract graph in graphviz format.
-void print();
+/// Prints current state of the abstract graph in graphviz format to stream.
+void print(std::ostream& stream);
 
 }  // namespace graph
 }  // namespace fc
