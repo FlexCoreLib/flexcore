@@ -92,8 +92,9 @@ int main()
 
 	thread_manager.start();
 
-	while (true)
-		sleep(1);
+	int iterations = 7;
+	while (iterations--)
+		usleep(500000);
 
 	return 0;
 }
