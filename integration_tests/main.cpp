@@ -4,7 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <ctime>
-#include <unistd.h>
+#include <thread>
 
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
@@ -92,9 +92,10 @@ int main()
 
 	thread_manager.start();
 
+	using namespace std::chrono_literals;
 	int iterations = 7;
 	while (iterations--)
-		usleep(500000);
+		std::this_thread::sleep_for(0.5s);
 
 	return 0;
 }
