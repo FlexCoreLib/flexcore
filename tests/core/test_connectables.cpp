@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(test_arithmetic_and_logical)
 
 	BOOST_CHECK_EQUAL(([](){ return -1;} >> absolute)(), 1);
 	BOOST_CHECK_EQUAL(([](){ return -1.f;} >> absolute)(), 1.f);
-	BOOST_CHECK_EQUAL(([](){ return -1.d;} >> absolute)(), 1.d);
+	BOOST_CHECK_EQUAL(([](){ return -1.l;} >> absolute)(), 1.l);
 
 	BOOST_CHECK_EQUAL(([](){ return 1;} >> negate)(), -1);
 
