@@ -21,8 +21,10 @@ public:
 	std::string operator()(const data_t& in)
 	{
 		std::ostringstream serialized_storage;
-		archive_t archive{serialized_storage};
-		archive(in);
+		{
+			archive_t archive{serialized_storage};
+			archive(in);
+		}
 		return serialized_storage.str();
 	}
 private:
