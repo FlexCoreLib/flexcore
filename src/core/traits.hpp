@@ -21,6 +21,8 @@ namespace detail
 
 template<class T>
 using always_void = void;
+template <typename T>
+void always_void_fun();
 
 template<class Expr, class Enable = void>
 struct expr_is_callable_impl: std::false_type
@@ -106,6 +108,38 @@ template<class T>
 struct type_is_callable_impl : has_call_op<T>::type
 {
 };
+
+template <class result_of>
+constexpr auto has_result_of_type_impl(int) -> decltype(always_void_fun<typename result_of::type>(), true)
+{
+	return true;
+}
+template <class result_of>
+constexpr bool has_result_of_type_impl(...)
+{
+	return false;
+}
+template <class F, typename Arg>
+struct result_of_fwd
+{
+	using type = std::result_of<F(Arg)>;
+};
+template <class F>
+struct result_of_fwd<F, void>
+{
+	using type = std::result_of<F()>;
+};
+
+/**
+ * \brief Check whether F can be called with Arg.
+ *
+ * Is done by checking whether std::result_of has a type typedef.
+ */
+template <class F, typename Arg>
+constexpr bool has_result_of_type()
+{
+	return has_result_of_type_impl<typename result_of_fwd<F, Arg>::type>(0);
+}
 
 } // namespace detail
 

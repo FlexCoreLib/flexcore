@@ -73,6 +73,9 @@ struct event_source
 	template <class conn_t>
 	auto connect(conn_t&& c) &
 	{
+		static_assert(detail::has_result_of_type<conn_t, event_t>(),
+		              "The type returned by this source is not compatible with the connection you "
+		              "are trying to establish.");
 		assert(event_handlers);
 		event_handlers->emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
 
