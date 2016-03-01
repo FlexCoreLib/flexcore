@@ -23,7 +23,7 @@ struct is_active_sink<useless_mixin<T>> : is_active_sink<T> {};
 
 using namespace fc;
 
-BOOST_AUTO_TEST_SUITE(test_parallle_region);
+BOOST_AUTO_TEST_SUITE(test_parallle_region)
 
 BOOST_AUTO_TEST_CASE(test_region_aware_node)
 {
@@ -269,4 +269,4 @@ BOOST_AUTO_TEST_CASE(test_state_same_region)
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

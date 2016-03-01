@@ -206,7 +206,7 @@ struct node_aware: base
 	auto connect(conn_t&& conn)
 	{
 		return connect_impl(std::forward<conn_t>(conn),
-		        std::integral_constant<bool, has_node_aware(conn)> { });
+		        std::integral_constant<bool, has_node_aware<conn_t>()> { });
 	}
 
 	tree_base_node* node;
@@ -256,7 +256,7 @@ private:
 	}
 
 	template <class conn_t>
-	static constexpr bool has_node_aware(conn_t&&)
+	static constexpr bool has_node_aware()
 	{
 		if (is_active_source<base> { })
 			return detail::is_derived_from<fc::node_aware,

@@ -246,7 +246,7 @@ constexpr auto has_source(int) -> decltype(
 		std::declval<T>().source, bool())
 {
 	return true;
-};
+}
 
 template <class T>
 constexpr bool has_sink(...)
@@ -259,7 +259,7 @@ constexpr auto has_sink(int) -> decltype(
 		std::declval<T>().sink, bool())
 {
 	return true;
-};
+}
 
 //template<class T>
 //struct is_passive_source_impl<T, std::enable_if_t<is_callable<T>{}>>
