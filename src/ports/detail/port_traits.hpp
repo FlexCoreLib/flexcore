@@ -29,6 +29,17 @@ struct handle_type<void>
 	typedef std::function<void()> type;
 };
 
+template <template <class...> class mixin_t, class port_t>
+class is_derived_from
+{
+	using yes = char[1];
+	using no = char[2];
+	template <class... arg_t>
+	static yes& test(const mixin_t<arg_t...>&);
+	static no& test(...);
+public:
+	static constexpr bool value = sizeof(test(std::declval<port_t>())) == sizeof(yes);
+};
 } //namespace detail
 
 } //namespace fc

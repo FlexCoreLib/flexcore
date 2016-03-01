@@ -172,7 +172,7 @@ public:
 	}
 
 	/// Output Port providing a range of data_t
-	auto out() noexcept { return out_port; }
+	auto& out() noexcept { return out_port; }
 
 protected:
 	/**
@@ -234,7 +234,7 @@ private:
  * \invariant capacity of buffer is > 0.
  */
 template<class data_t>
-class hold_n : tree_base_node
+class hold_n : public tree_base_node
 {
 public:
 	typedef boost::circular_buffer<data_t> buffer_t;
@@ -270,7 +270,7 @@ public:
 		return detail::collector<data_t, boost::circular_buffer>{storage.get()};
 	}
 	/// State out port supplying range of data_t.
-	auto& out() const noexcept { return out_port; }
+	auto& out() noexcept { return out_port; }
 private:
 	std::unique_ptr<buffer_t> storage;
 	state_source<out_range_t> out_port;

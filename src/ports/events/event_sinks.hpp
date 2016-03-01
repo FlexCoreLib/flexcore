@@ -37,6 +37,8 @@ struct event_sink
 	}
 
 	event_sink() = delete;
+	event_sink(const event_sink&) = delete;
+	event_sink(event_sink&&) = default;
 
 	typedef void result_t;
 
@@ -61,7 +63,10 @@ struct event_sink<void>
 		assert(event_handler);
 		event_handler();
 	}
+
 	event_sink() = delete;
+	event_sink(const event_sink&) = delete;
+	event_sink(event_sink&&) = default;
 private:
 	handler_t event_handler;
 };

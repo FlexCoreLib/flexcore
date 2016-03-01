@@ -13,17 +13,6 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE( test_graph )
 
-BOOST_AUTO_TEST_CASE(test_graph_connectable)
-{
-//	auto source = graph::named([](){return 1;}, "give 1");
-//	auto sink = graph::named([](int i){ std::cout << i;},"cout");
-//
-//	auto con = source >> [](int i){ return i+1; } >> sink;
-//	con();
-//
-//	graph::print();
-}
-
 namespace
 {
 	struct dummy_node : tree_base_node
@@ -47,18 +36,28 @@ namespace
 
 BOOST_AUTO_TEST_CASE(test_graph_creation)
 {
-	dummy_node source_1{"source 1"};
-	dummy_node source_2{"source 2"};
+	dummy_node source_1{"state_source 1"};
+	dummy_node source_2{"state_source 2"};
 	dummy_node intermediate{"intermediate"};
-	dummy_node sink{"sink"};
+	dummy_node sink{"state_sink"};
 
 	source_1.out() >> [](int i){ return i; } >> intermediate.in();
 	source_2.out() >> (graph::named([](int i){ return i; }, "incr") >> intermediate.in());
 	intermediate.out() >>
-			(graph::named([](int i){ return i; }, "foo") >>
-			graph::named([](int i){ return i; }, "bar")) >> sink.in();
+			(graph::named([](int i){ return i; }, "l 1") >>
+			graph::named([](int i){ return i; }, "l 2")) >> sink.in();
+
+
+	typedef graph::graph_connectable<pure::event_source<int>> graph_source;
+	typedef graph::graph_connectable<pure::event_sink<int>> graph_sink;
+
+	auto g_source = graph_source{graph::graph_node_properties{"event_source"}};
+	auto g_sink = graph_sink{graph::graph_node_properties{"event_sink"}, [](int i){}};
+
+	g_source >> graph::named([](int i){ return i; }, "l 3") >> g_sink;
 
 	graph::print();
+	g_source.fire(1);
 
 }
 
