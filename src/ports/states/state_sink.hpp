@@ -59,6 +59,8 @@ public:
 		static_assert(is_passive_source<con_t>{},
 				"only passive sources can be connected to a state_sink");
 
+		static_assert(std::is_convertible<decltype(std::declval<con_t>()()), data_t>{},
+		              "The type returned by this connection is incompatible with this sink.");
 		(*con) = detail::handler_wrapper(std::forward<con_t>(c));
 
 		assert(con); //check postcondition
