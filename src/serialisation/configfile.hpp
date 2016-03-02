@@ -14,8 +14,8 @@ public:
 	typedef cereal::JSONInputArchive archive_t;
 
 	explicit config_file(std::istream& stream)
-	: iarchive(stream)
-	, config_elements()
+		: iarchive(stream)
+		, config_elements()
 	{
 	}
 
@@ -30,29 +30,25 @@ public:
 	 *
 	 * \tparam data_t type of data corresponding to this port
 	 * \return a passive source, which provides state of type data_t
-	 *
 	 */
 	template<class data_t>
 	auto out_value(const std::string& name);
 
 private:
-	archive_t iarchive;
-
 	class archive_loadable
 	{
 	public:
 		virtual void load(archive_t&) = 0;
-		virtual ~archive_loadable()
-		{
-		}
+		virtual ~archive_loadable() { }
 	};
 
 	template<class data_t>
 	class config_value: public archive_loadable
 	{
 	public:
-		config_value(const std::string& name, const data_t intial_value) :
-				stored_value(intial_value), name(name)
+		config_value(const std::string& name, const data_t intial_value)
+			: stored_value(intial_value)
+			, name(name)
 		{
 		}
 
@@ -65,8 +61,8 @@ private:
 		}
 	};
 
+	archive_t iarchive;
 	std::vector<std::shared_ptr<archive_loadable>> config_elements;
-
 };
 
 } /* namespace fc */
