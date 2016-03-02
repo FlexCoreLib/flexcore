@@ -26,13 +26,14 @@ public:
 		auto value = initial_v;
 		try
 		{
-			//tries to read value from json parser, value remains unchanged otherwise.
+			//tries to read value from json parser.
+			//the value remains unchanged if an error occurs.
 			archive(cereal::make_nvp(id.key, value));
 		}
-		catch(cereal::Exception& ex)
+		catch(const cereal::Exception& ex)
 		{
-			//todo maybe output error message
-			(void)ex;
+			std::cerr << "json_file_setting_facade.register_setting():"
+					" '"	<< ex.what() << "'" << std::endl;
 		}
 		setter(value);
 	}
