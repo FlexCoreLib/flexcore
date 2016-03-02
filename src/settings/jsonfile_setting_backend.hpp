@@ -12,6 +12,14 @@ class json_file_setting_facade
 public:
 	typedef cereal::JSONInputArchive json_archive;
 
+	/**
+	 * @brief Creates a setting facade that reads values from
+	 * stream using json format.
+	 *
+	 * @param stream The input stream containing the data in json syntax.
+	 * @throw ::cereal::Exception if the given @p stream cannot be parsed
+	 * by json parser, e.g. if syntax is wrong.
+	 */
 	json_file_setting_facade(std::istream& stream)
 		: archive(stream)
 	{
