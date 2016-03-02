@@ -67,6 +67,7 @@ public:
 				[this](data_t i){ cache = i; }); //callback to let registry write cache
 	}
 
+	/// Returns the setting's current value.
 	data_t operator()()
 	{
 		return cache;
