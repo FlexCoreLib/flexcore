@@ -30,7 +30,17 @@ namespace
 		state_source<int> out_port;
 		state_sink<int> in_port;
 		dummy_node(const dummy_node&) = delete;
+
+		static_assert(is_active<state_sink<int>>::value,
+				"state_sink is active independent of mixins");
+		static_assert(is_passive<state_source<int>>::value,
+				"state_source is passive independent of mixins");
 	};
+
+}
+template<class T>
+void check_graph_connec(graph::graph_connectable<T>& t)
+{
 
 }
 
@@ -40,6 +50,9 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	dummy_node source_2{"state_source 2"};
 	dummy_node intermediate{"intermediate"};
 	dummy_node sink{"state_sink"};
+
+	check_graph_connec(source_1.out());
+	check_graph_connec(source_1.in());
 
 	source_1.out() >> [](int i){ return i; } >> intermediate.in();
 	source_2.out() >> (graph::named([](int i){ return i; }, "incr") >> intermediate.in());
@@ -52,7 +65,9 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	typedef graph::graph_connectable<pure::event_sink<int>> graph_sink;
 
 	auto g_source = graph_source{graph::graph_node_properties{"event_source"}};
-	auto g_sink = graph_sink{graph::graph_node_properties{"event_sink"}, [](int ){}};
+	int test_val = 0;
+	auto g_sink = graph_sink{graph::graph_node_properties{"event_sink"},
+			[&test_val](int i){test_val = i;}};
 
 	g_source >> graph::named([](int i){ return i; }, "l 3") >> g_sink;
 
@@ -64,6 +79,10 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	auto dot_string = out_stream.str();
 	unsigned line_count =
 			std::count(dot_string.begin(), dot_string.end(),'\n');
+
+	std::cout << dot_string << "\n";
+
+	BOOST_CHECK_EQUAL(test_val, 1);
 
 	// nr of lines in dot graph is nr of nodes and named lambdas
 	// + nr of connections + 2 (one for begin one for end)

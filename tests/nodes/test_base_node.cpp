@@ -44,6 +44,9 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
 	root_node root("root", region);
 	auto child = root.make_child_named<null>("child");
 
+	std::cout << "child->region()->get_id() " << child->region()->get_id().key;
+	std::cout << " region->get_id() " << region->get_id().key << "\n";
+
 	BOOST_CHECK(child->region()->get_id() == region->get_id());
 }
 

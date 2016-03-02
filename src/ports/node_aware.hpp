@@ -20,7 +20,7 @@ template<class source_t, class sink_t>
 bool same_region(const node_aware<source_t>& source,
         const node_aware<sink_t>& sink)
 {
-	return source.node->region()->get_id() == sink.node->region()->get_id();
+	return source.region->get_id() == sink.region->get_id();
 }
 
 /**
@@ -42,8 +42,8 @@ struct buffer_factory
 			auto result_buffer =
 					std::make_shared<typename buffer<result_t, tag>::type>();
 
-			active.node->region()->switch_tick() >> result_buffer->switch_tick();
-			passive.node->region()->work_tick() >> result_buffer->work_tick();
+			active.region->switch_tick() >> result_buffer->switch_tick();
+			passive.region->work_tick() >> result_buffer->work_tick();
 
 			return result_buffer;
 		}
@@ -194,10 +194,10 @@ struct node_aware: base
 	typedef base base_t;
 
 	template <class ... args>
-	node_aware(tree_base_node* node_ptr, args&&... base_constructor_args)
-		: base(std::forward<args>(base_constructor_args)...), node(node_ptr)
+	node_aware(region_info* r, args&&... base_constructor_args)
+		: base(std::forward<args>(base_constructor_args)...), region(r)
 	{
-		assert(node);
+		assert(region);
 	}
 
 	template<class conn_t,
@@ -205,11 +205,12 @@ struct node_aware: base
 			class enable = std::enable_if_t<is_active<base_t>{}>>
 	auto connect(conn_t&& conn)
 	{
+				std::cout << "node_aware member_connect \n";
 		return connect_impl(std::forward<conn_t>(conn),
 		        std::integral_constant<bool, has_node_aware<conn_t>()> { });
 	}
 
-	tree_base_node* node;
+	region_info* region;
 
 private:
 	// helper aliases to make method prototypes easier to read.

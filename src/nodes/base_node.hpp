@@ -40,8 +40,8 @@ public:
 	const std::shared_ptr<region_info>& region() const { return region_; }
 	std::shared_ptr<region_info>& region() { return region_; }
 
-	std::shared_ptr<forest_t>& forest() { return forest_; }
-	const std::shared_ptr<forest_t>& forest() const { return forest_; }
+	forest_t*& forest() { return forest_; }
+	const forest_t* forest() const { return forest_; }
 
 	tree_base_node* region(std::shared_ptr<region_info> r)
 			{ region_ = r; return this; }
@@ -49,26 +49,26 @@ public:
 	std::string own_name() const { return graph_info_.name(); }
 	void set_name(std::string name) { graph_info_.name() = name; }
 
-	graph::graph_node_properties graph_info() { return graph_info_; }
+	graph::graph_node_properties graph_info() const { return graph_info_; }
 
-	explicit tree_base_node(std::string name)
+	explicit tree_base_node(std::string name, forest_t* f) //todo remove nullptr
 		: graph_info_(name)
-		, forest_( std::make_shared<forest_t>() )
+		, forest_(f)
 		, self_(forest_->end())
 		, region_(std::make_shared<parallel_region>("root"))
 	{
 		assert(forest_); //check invariant
 	}
-protected:
+
 	/**
 	 * Constructor taking a parent node
 	 *
 	 * @param p parent node (not 0)
 	 * @param r region_info object. Will be taken from parent if not given
 	 */
-	tree_base_node(	std::string name, std::shared_ptr<region_info> r )
+	tree_base_node(	std::string name, std::shared_ptr<region_info> r, forest_t* f) //todo remove nullptr
 		: graph_info_(name)
-		, forest_( std::make_shared<forest_t>() )
+		, forest_(f)
 		, self_(forest_->end())
 		, region_(r)
 	{
@@ -76,17 +76,26 @@ protected:
 	}
 
 	/* Information for abstract graph */
+protected:
+	explicit tree_base_node(std::string name)
+		: graph_info_(name)
+		, forest_(nullptr)
+		, self_()
+		, region_(std::make_shared<parallel_region>("root"))
+	{
+	}
+
 	//stores the metainformation of the node used by the abstract graph
 	graph::graph_node_properties graph_info_;
 
 	/* Access to forest */
 	// stores the access to the forest this node is contained in.
-	std::shared_ptr<forest_t> forest_;
+	forest_t* forest_;
 	/*
 	 * iterator self_ allows access to the node inside the forest.
 	 * Unfortunately this creates a circular reference of the node to itself.
 	 */
-	public: forest_t::iterator self_;
+public: forest_t::iterator self_;
 
 	/* Information about which region the node belongs to */
 	protected: std::shared_ptr<region_info> region_;
@@ -124,8 +133,8 @@ struct node_owner : base_t
 	using forest_t = typename base_t::forest_t;
 
 	template<class... arg_types>
-	node_owner(const arg_types&... args)
-			: base_t(args...)
+	node_owner(arg_types&&... args)
+			: base_t(std::forward<arg_types>(args)...)
 	{
 	}
 
@@ -186,7 +195,7 @@ private:
 		assert(this->forest_); //check invariant
 
 		child->region() = this->region_;
-		child->forest() = this->forest_;
+		child->forest() = this->forest();
 
 		//we need to store an iterator and then cast back to node_t*
 		//to avoid use after move on child.
@@ -213,20 +222,45 @@ private:
 
 typedef node_owner<tree_base_node> base_node;
 
+class forest_owner
+{
+public:
+	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
+	std::shared_ptr<region_info>& region() { return region_; }
+	forest_t* forest() { return forest_.get(); }
+protected:
+	std::unique_ptr<forest_t> forest_;
+	std::shared_ptr<region_info> region_;
+	forest_t::iterator self_;
+
+	forest_owner(std::unique_ptr<forest_t> f,
+			const std::shared_ptr<region_info>& r)
+	: forest_{std::move(f)}
+	, region_(r)
+{
+}
+
+};
+
 /**
  * Root node for building node trees.
  * The only type of node that is allowed to exist without parent
  */
-class root_node : public base_node
+class root_node : public  node_owner<forest_owner>
 {
 public:
 	root_node(	std::string n = "",
 				std::shared_ptr<region_info> r =
 						std::make_shared<parallel_region>("root")	)
-		: base_node(n, r)
+		:  node_owner<forest_owner>(std::make_unique<forest_owner::forest_t>(), r)
 	{
 		self_ = adobe::trailing_of(this->forest_->insert(
-				this->forest_->begin(), std::make_unique<base_node>(n)));
+				this->forest_->begin(), std::make_unique<tree_base_node>(n, r, forest())));
+	}
+
+	graph::graph_node_properties graph_info() const
+	{
+		return (*self_)->graph_info();
 	}
 
 };
@@ -291,6 +325,11 @@ full_name(
 inline std::string full_name(const tree_base_node& node)
 {
 	return full_name(*(node.forest()), node.self_);
+}
+
+inline std::string full_name(const root_node& node)
+{
+	return node.graph_info().name();
 }
 
 } // namespace fc
