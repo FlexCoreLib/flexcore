@@ -124,13 +124,14 @@ protected:
  * root.make_child_named<node_tmpl>("name", 5);
  * \endcode
  */
-struct node_owner : tree_base_node
+template<class base_t>
+struct node_owner : base_t
 {
-	using tree_base_node::forest_t;
+	using forest_t = typename base_t::forest_t;
 
 	template<class... arg_types>
 	node_owner(const arg_types&... args)
-			: tree_base_node(args...)
+			: base_t(args...)
 	{
 	}
 
@@ -195,7 +196,7 @@ private:
 
 		//we need to store an iterator and then cast back to node_t*
 		//to avoid use after move on child.
-		forest_t::iterator child_it = adobe::trailing_of(
+		typename forest_t::iterator child_it = adobe::trailing_of(
 				this->forest_->insert(this->self_, std::move(child)));
 		(*child_it)->self_ = child_it;
 
@@ -216,7 +217,7 @@ private:
 	}
 };
 
-typedef node_owner base_node;
+typedef node_owner<tree_base_node> base_node;
 
 /**
  * Root node for building node trees.
@@ -230,8 +231,8 @@ public:
 						std::make_shared<parallel_region>("root")	)
 		: base_node(n, r)
 	{
-		self_ = adobe::trailing_of(forest_->insert(
-				forest_->begin(), std::make_unique<base_node>(n)));
+		self_ = adobe::trailing_of(this->forest_->insert(
+				this->forest_->begin(), std::make_unique<base_node>(n)));
 	}
 
 	virtual ~root_node() {}
