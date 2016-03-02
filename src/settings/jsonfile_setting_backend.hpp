@@ -21,8 +21,13 @@ public:
 	 * by json parser, e.g. if syntax is wrong.
 	 */
 	json_file_setting_facade(std::istream& stream)
-		: archive(stream)
+		try : archive(stream)
 	{
+	}
+	catch (const ::cereal::Exception& ex)
+	{
+		throw ::cereal::Exception(std::string(ex.what())
+				+ ". you should check for json syntax errors.");
 	}
 
 	template<class data_t, class setter_t>
