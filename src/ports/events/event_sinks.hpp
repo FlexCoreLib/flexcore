@@ -30,7 +30,7 @@ struct event_sink
 	}
 
 	template <class T>
-	void operator()(T&& in_event)
+	auto operator()(T&& in_event) -> std::enable_if_t<std::is_convertible<T&&, event_t>{}>
 	{
 		assert(event_handler);
 		event_handler(std::forward<T>(in_event));
