@@ -11,11 +11,9 @@ ADD_LIBRARY( flexcore
     threading/parallelscheduler.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( flexcore
-    PUBLIC "." 
-    "3rdparty/cereal/include" )
+    PUBLIC ${FLEXCORE_INCLUDE_DIRECTORIES} )
  
 # TODO only use coverage flags in debug mode
 TARGET_LINK_LIBRARIES( flexcore $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-lgcov>
 	-pthread
 	${Boost_LIBRARIES})
-
