@@ -5,7 +5,6 @@
 #include <functional>
 
 #include <core/traits.hpp>
-#include <core/connection.hpp>
 #include <ports/detail/port_traits.hpp>
 
 namespace fc
