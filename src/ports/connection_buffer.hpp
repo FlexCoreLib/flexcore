@@ -156,8 +156,6 @@ private:
 /** \brief buffer for states using double buffering
  *
  * \tparam data_t type of state stored in buffer. needs to be copy_constructable.
- * \invariant intern_buffer != null_ptr
- * extern_buffer != null_ptr
  */
 template<class data_t>
 class state_buffer : public buffer_interface<data_t, state_tag>
@@ -183,9 +181,8 @@ public:
 protected:
 	void switch_buffers()
 	{
-		using std::swap;
 		if (!already_switched)
-			*extern_buffer = *intern_buffer;
+			extern_buffer = intern_buffer;
 		already_switched = true;
 	}
 
@@ -194,8 +191,8 @@ protected:
 	pure::state_sink<data_t> in_port;
 	pure::state_source<data_t> out_port;
 private:
-	std::shared_ptr<data_t> intern_buffer;
-	std::shared_ptr<data_t> extern_buffer;
+	data_t intern_buffer;
+	data_t extern_buffer;
 	bool already_switched = false;
 };
 
@@ -239,16 +236,14 @@ inline fc::state_buffer<T>::state_buffer() :
 		in_switch_tick( [this](){ switch_buffers(); } ),
 		in_work_tick( [this]()
 				{
-					*intern_buffer = in_port.get();
+					intern_buffer = in_port.get();
 					already_switched = false;
 				}),
 		in_port(),
-		out_port([this](){ return *extern_buffer; }),
-		intern_buffer(std::make_shared<T>()), //todo, forces T to be default constructible, we should lift that restriction.
-		extern_buffer(std::make_shared<T>())
+		out_port([this](){ return extern_buffer; }),
+		intern_buffer(), //todo, forces T to be default constructible, we should lift that restriction.
+		extern_buffer()
 {
-	assert(intern_buffer); //check invariant
-	assert(extern_buffer);
 }
 
 #endif /* SRC_PORTS_CONNECTION_BUFFER_HPP_ */
