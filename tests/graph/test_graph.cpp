@@ -38,11 +38,6 @@ namespace
 	};
 
 }
-template<class T>
-void check_graph_connec(graph::graph_connectable<T>& t)
-{
-
-}
 
 BOOST_AUTO_TEST_CASE(test_graph_creation)
 {
@@ -51,15 +46,11 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	dummy_node intermediate{"intermediate"};
 	dummy_node sink{"state_sink"};
 
-	check_graph_connec(source_1.out());
-	check_graph_connec(source_1.in());
-
 	source_1.out() >> [](int i){ return i; } >> intermediate.in();
 	source_2.out() >> (graph::named([](int i){ return i; }, "incr") >> intermediate.in());
 	intermediate.out() >>
 			(graph::named([](int i){ return i; }, "l 1") >>
 			graph::named([](int i){ return i; }, "l 2")) >> sink.in();
-
 
 	typedef graph::graph_connectable<pure::event_source<int>> graph_source;
 	typedef graph::graph_connectable<pure::event_sink<int>> graph_sink;
@@ -79,8 +70,6 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	auto dot_string = out_stream.str();
 	unsigned line_count =
 			std::count(dot_string.begin(), dot_string.end(),'\n');
-
-	std::cout << dot_string << "\n";
 
 	BOOST_CHECK_EQUAL(test_val, 1);
 

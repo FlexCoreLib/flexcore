@@ -26,11 +26,11 @@ auto setup_parallel_region(const std::string& name,
 	auto tick_cycle = fc::thread::periodic_task(
 			[&region]()
 			{
-				region->ticks.in_work()();
+				region->ticks->in_work()();
 			},
 			tick);
 
-	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
+	tick_cycle.out_switch_tick() >> region->ticks->in_switch_buffers();
 	thread_manager.add_task(std::move(tick_cycle));
 
 	return region;
@@ -51,13 +51,13 @@ int main()
 
 	using time_point = fc::wall_clock::system::time_point;
 	fc::pure::event_source<time_point> source;
-	first_region->ticks.work_tick()
+	first_region->ticks->work_tick()
 			>> [&source](){ source.fire(fc::wall_clock::system::now()); };
 
 	source >> [](time_point t){ return fc::wall_clock::system::to_time_t(t); }
 		   >> [](time_t t) { std::cout << std::localtime(&t)->tm_sec << "\n"; };
 
-	first_region->ticks.work_tick()
+	first_region->ticks->work_tick()
 			>> [count = 0]() mutable {return count++;}
 			>> [](int i) { std::cout << "counted ticks: " << i << "\n"; };
 
@@ -67,7 +67,7 @@ int main()
 			fc::thread::cycle_control::slow_tick,
 			thread_manager);
 
-	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
+	second_region->ticks->work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
 	fc::root_node root;
 	auto child_a = root.make_child_named<null>("source_a")->region(first_region);
@@ -79,7 +79,7 @@ int main()
 			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
 	string_source >> string_sink;
-	first_region->ticks.work_tick()
+	first_region->ticks->work_tick()
 			>>	[&string_source, first_region]() mutable
 				{
 					string_source.fire("a magic string from " + first_region->get_id().key);
