@@ -36,26 +36,24 @@ public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
 	virtual ~tree_base_node() = default;
+	tree_base_node(tree_base_node&&) = default;
 
-	const std::shared_ptr<parallel_region>& region() const { return region_; }
-	std::shared_ptr<parallel_region>& region() { return region_; }
+	const std::unique_ptr<parallel_region>& region() const { return region_; }
+	std::unique_ptr<parallel_region>& region() { return region_; }
 
 	forest_t*& forest() { return forest_; }
 	const forest_t* forest() const { return forest_; }
-
-	tree_base_node* region(std::shared_ptr<parallel_region> r)
-			{ region_ = r; return this; }
 
 	std::string own_name() const { return graph_info_.name(); }
 	void set_name(std::string name) { graph_info_.name() = name; }
 
 	graph::graph_node_properties graph_info() const { return graph_info_; }
 
-	explicit tree_base_node(std::string name, forest_t* f) //todo remove nullptr
+	explicit tree_base_node(std::string name, forest_t* f)
 		: graph_info_(name)
 		, forest_(f)
 		, self_(forest_->end())
-		, region_(std::make_shared<parallel_region>("root"))
+		, region_(std::make_unique<parallel_region>("root"))
 	{
 		assert(forest_); //check invariant
 	}
@@ -66,11 +64,11 @@ public:
 	 * @param p parent node (not 0)
 	 * @param r parallel_region object. Will be taken from parent if not given
 	 */
-	tree_base_node(	std::string name, std::shared_ptr<parallel_region> r, forest_t* f) //todo remove nullptr
+	tree_base_node(	std::string name, std::unique_ptr<parallel_region> r, forest_t* f)
 		: graph_info_(name)
 		, forest_(f)
 		, self_(forest_->end())
-		, region_(r)
+		, region_(std::move(r))
 	{
 		assert(forest_); //check invariant
 	}
@@ -81,7 +79,7 @@ protected:
 		: graph_info_(name)
 		, forest_(nullptr)
 		, self_()
-		, region_(std::make_shared<parallel_region>("root"))
+		, region_(std::make_unique<parallel_region>("root"))
 	{
 	}
 
@@ -98,7 +96,7 @@ protected:
 public: forest_t::iterator self_;
 
 	/* Information about which region the node belongs to */
-	public: std::shared_ptr<parallel_region> region_;
+private: std::unique_ptr<parallel_region> region_;
 };
 
 /**
@@ -194,7 +192,7 @@ private:
 	{
 		assert(this->forest_); //check invariant
 
-		*(child->region_) = *(this->region_);
+		*(child->region()) = *(this->region());
 		child->forest() = this->forest();
 
 		//we need to store an iterator and then cast back to node_t*
@@ -226,17 +224,17 @@ class forest_owner
 {
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
-	std::shared_ptr<parallel_region>& region() { return region_; }
+	std::unique_ptr<parallel_region>& region() { return region_; }
 	forest_t* forest() { return forest_.get(); }
 protected:
 	std::unique_ptr<forest_t> forest_;
-	std::shared_ptr<parallel_region> region_;
+	std::unique_ptr<parallel_region> region_;
 	forest_t::iterator self_;
 
 	forest_owner(std::unique_ptr<forest_t> f,
-			const std::shared_ptr<parallel_region>& r)
+			std::unique_ptr<parallel_region> r)
 	: forest_{std::move(f)}
-	, region_(r)
+	, region_(std::move(r))
 {
 }
 
@@ -250,12 +248,16 @@ class root_node : public  node_owner<forest_owner>
 {
 public:
 	root_node(	std::string n = "",
-				std::shared_ptr<parallel_region> r =
-						std::make_shared<parallel_region>("root")	)
-		:  node_owner<forest_owner>(std::make_unique<forest_owner::forest_t>(), r)
+				std::unique_ptr<parallel_region> r =
+						std::make_unique<parallel_region>("root")	)
+		:  node_owner<forest_owner>(std::make_unique<forest_owner::forest_t>(),
+				std::make_unique<parallel_region>(*r))
 	{
 		self_ = adobe::trailing_of(this->forest_->insert(
-				this->forest_->begin(), std::make_unique<tree_base_node>(n, r, forest())));
+				this->forest_->begin(), std::make_unique<tree_base_node>(
+						n,
+						std::make_unique<parallel_region>(*r),
+						forest())));
 	}
 
 	graph::graph_node_properties graph_info() const
