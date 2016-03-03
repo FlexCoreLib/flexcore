@@ -51,8 +51,8 @@ template<class base_t>
 struct graph_connectable : base_t
 {
 	template<class... base_t_args>
-	graph_connectable(const graph_node_properties& graph_info, const base_t_args&... args)
-		: base_t(args...)
+	graph_connectable(const graph_node_properties& graph_info, base_t_args&&... args)
+		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
 	{
 	}

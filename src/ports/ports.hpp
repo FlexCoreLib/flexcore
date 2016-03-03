@@ -20,7 +20,7 @@ struct node_aware_mixin : graph::graph_connectable<node_aware<port_t>>
 	template <class T, class ... args>
 	node_aware_mixin(T* node_ptr, args&&... base_constructor_args)
 		: base(node_ptr->graph_info(),
-				node_ptr->region().get(),
+				*(node_ptr->region().get()),
 				std::forward<args>(base_constructor_args)...)
 	{
 		assert(node_ptr);
