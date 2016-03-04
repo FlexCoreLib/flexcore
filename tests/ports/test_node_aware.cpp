@@ -67,14 +67,14 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
-	static_assert(!is_active_sink   <test_in_port>{}, "");
-	static_assert(!is_active_source <test_in_port>{}, "");
-	static_assert( is_passive_sink  <test_in_port>{}, "");
-	static_assert(!is_passive_source<test_in_port>{}, "");
-	static_assert(!is_passive_source<decltype(tmp)>{}, "");
-	static_assert(!is_passive_sink  <decltype(tmp)>{}, "");
-	static_assert( is_active_source <decltype(tmp)>{}, "");
-	static_assert(!is_active_sink   <decltype(tmp)>{}, "");
+	static_assert(not is_active_sink   <test_in_port>{}, "");
+	static_assert(not is_active_source <test_in_port>{}, "");
+	static_assert(    is_passive_sink  <test_in_port>{}, "");
+	static_assert(not is_passive_source<test_in_port>{}, "");
+	static_assert(not is_passive_source<decltype(tmp)>{}, "");
+	static_assert(not is_passive_sink  <decltype(tmp)>{}, "");
+	static_assert(    is_active_source <decltype(tmp)>{}, "");
+	static_assert(not is_active_sink   <decltype(tmp)>{}, "");
 
 	std::move(tmp) >> test_in;
 
@@ -88,10 +88,10 @@ namespace
 template<class source_t, class sink_t>
 void check_mixins()
 {
-	auto region_1 = std::make_unique<parallel_region>("r1");
-	auto region_2 = std::make_unique<parallel_region>("r2");
-	root_node root_1("1", std::make_unique<parallel_region>(*region_1));
-	root_node root_2("2", std::make_unique<parallel_region>(*region_2));
+	auto region_1 = std::make_shared<parallel_region>("r1");
+	auto region_2 = std::make_shared<parallel_region>("r2");
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
@@ -130,10 +130,10 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 {
 	typedef node_aware<pure::event_sink<int>> test_in_port;
 	typedef node_aware<pure::event_source<int>> test_out_port;
-	auto region_1 = std::make_unique<parallel_region>("r1");
-	auto region_2 = std::make_unique<parallel_region>("r2");
-	root_node root_1("1", std::make_unique<parallel_region>(*region_1));
-	root_node root_2("2", std::make_unique<parallel_region>(*region_2));
+	auto region_1 = std::make_shared<parallel_region>("r1");
+	auto region_2 = std::make_shared<parallel_region>("r2");
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
@@ -153,8 +153,8 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	BOOST_CHECK_EQUAL(test_value, 2);
 
 	// test more than one lambda in between
-	auto region_3 = std::make_unique<parallel_region>("r3");
-	root_node root_3("3", std::make_unique<parallel_region>(*region_3));
+	auto region_3 = std::make_shared<parallel_region>("r3");
+	root_node root_3("3", region_3);
 
 	test_in_port test_in_2(*(root_3.region().get()), write_param);
 	test_out
@@ -176,10 +176,10 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 {
 	typedef node_aware<pure::event_sink<int>> test_in_port;
 	typedef node_aware<pure::event_source<int>> test_out_port;
-	auto region_1 = std::make_unique<parallel_region>("r1");
-	auto region_2 = std::make_unique<parallel_region>("r2");
-	root_node root_1("1", std::make_unique<parallel_region>(*region_1));
-	root_node root_2("2", std::make_unique<parallel_region>(*region_2));
+	auto region_1 = std::make_shared<parallel_region>("r1");
+	auto region_2 = std::make_shared<parallel_region>("r2");
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
@@ -221,10 +221,10 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 {
 	typedef node_aware<pure::state_sink<int>> test_in_port;
 	typedef node_aware<pure::state_source<int>> test_out_port;
-	auto region_1 = std::make_unique<parallel_region>("r1");
-	auto region_2 = std::make_unique<parallel_region>("r2");
-	root_node root_1("1", std::make_unique<parallel_region>(*region_1));
-	root_node root_2("2", std::make_unique<parallel_region>(*region_2));
+	auto region_1 = std::make_shared<parallel_region>("r1");
+	auto region_2 = std::make_shared<parallel_region>("r2");
+	root_node root_1("1", region_1);
+	root_node root_2("2", region_2);
 
 	test_out_port source(*(root_1.region().get()), [](){ return 1; });
 	test_in_port sink(*(root_2.region().get()));

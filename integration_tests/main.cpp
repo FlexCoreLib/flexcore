@@ -21,7 +21,7 @@ auto setup_parallel_region(const std::string& name,
 		const virtual_clock::steady::duration& tick,
 		fc::thread::cycle_control& thread_manager)
 {
-	auto region = std::make_unique<fc::parallel_region>(name);
+	auto region = std::make_shared<fc::parallel_region>(name);
 
 	auto tick_cycle = fc::thread::periodic_task(
 			[&region]()
@@ -69,20 +69,18 @@ int main()
 
 	second_region->ticks->work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
-	fc::root_node root1{"root1", std::make_unique<parallel_region>(*first_region)};
-	auto child_a = root1.make_child_named<null>("source_a");
-	fc::root_node root2{"root1", std::make_unique<parallel_region>(*second_region)};
-
-	auto child_b = root2.make_child_named<null>("sink_b");
-	auto child_c = root2.make_child_named<null>("source_c");
+	fc::root_node root;
+	auto child_a = root.make_child_named<null>("source_a")->region(first_region);
+	auto child_b = root.make_child_named<null>("sink_b")->region(second_region);
+	auto child_c = root.make_child_named<null>("source_c")->region(second_region);
 
 	event_source<std::string> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,
-			[&second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
+			[second_region](std::string in){std::cout << second_region->get_id().key << " received: " << in << "\n";});
 
 	string_source >> string_sink;
 	first_region->ticks->work_tick()
-			>>	[&string_source, &first_region]() mutable
+			>>	[&string_source, first_region]() mutable
 				{
 					string_source.fire("a magic string from " + first_region->get_id().key);
 				};
