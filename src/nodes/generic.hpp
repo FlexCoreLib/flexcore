@@ -77,8 +77,9 @@ template<class data_t, class key_t, class base_node>
 class n_ary_switch<data_t, state_tag, key_t, base_node> : public base_node
 {
 public:
-	n_ary_switch()
-		: base_node("switch")
+	template<class... base_args>
+	explicit n_ary_switch(base_args&&... args)
+		: base_node(std::forward<base_args>(args)...)
 		, switch_state(this)
 		, in_ports()
 		, out_port(this, [this](){return in_ports.at(switch_state.get()).get();} )
@@ -115,8 +116,9 @@ template<class data_t, class key_t, class base_node>
 class n_ary_switch<data_t, event_tag, key_t, base_node> : public base_node
 {
 public:
-	n_ary_switch()
-		: base_node("switch")
+	template<class... base_args>
+	explicit n_ary_switch(base_args&&... args)
+		: base_node(std::forward<base_args>(args)...)
 		, switch_state(this)
 		, out_port(this)
 		, in_ports()
@@ -176,12 +178,13 @@ private:
  * predicate needs to be a callable which takes objects convertible from data_t
  * and returns a bool.
  */
-template<class data_t, class predicate>
-class watch_node : public tree_base_node
+template<class data_t, class predicate, class base_node>
+class watch_node : public base_node
 {
 public:
-	explicit watch_node(predicate pred)
-		: tree_base_node("watcher")
+	template<class... base_args>
+	explicit watch_node(predicate pred, base_args&&... args)
+		: base_node(std::forward<base_args>(args)...)
 		, pred{std::move(pred)}
 		, in_port(this)
 		, out_port(this)
@@ -208,15 +211,15 @@ public:
 
 private:
 	predicate pred;
-	state_sink<data_t> in_port;
-	event_source<data_t> out_port;
+	typename base_node::template state_sink<data_t> in_port;
+	typename base_node::template event_source<data_t> out_port;
 };
 
 /// Creates a watch node with a predicate.
 template<class data_t, class predicate>
 auto watch(predicate&& pred, data_t)
 {
-	return watch_node<data_t, predicate>{std::forward<predicate>(pred)};
+	return watch_node<data_t, predicate, pure::pure_node>{std::forward<predicate>(pred)};
 }
 
 /**

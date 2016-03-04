@@ -19,7 +19,8 @@ BOOST_AUTO_TEST_CASE( test_merge )
 
 BOOST_AUTO_TEST_CASE(test_state_cache)
 {
-	state_cache<int> cache;
+	root_node root;
+	auto& cache = *(root.make_child<state_cache<int>>());
 
 	int test_val = 1;
 
@@ -35,15 +36,16 @@ BOOST_AUTO_TEST_CASE(test_state_cache)
 
 BOOST_AUTO_TEST_CASE(test_current_state)
 {
+	root_node root;
 	{ //check constructor
-	current_state<int> test_node_1{1};
+	auto& test_node_1 = *(root.make_child<current_state<int>>(1));
 	BOOST_CHECK_EQUAL(test_node_1.out()(), 1);
 
-	current_state<int> test_node_2;
+	auto& test_node_2 = *(root.make_child<current_state<int>>());
 	BOOST_CHECK_EQUAL(test_node_2.out()(), int()); //default is int()
 	}
 
-	current_state<int> test_node;
+	auto& test_node = *(root.make_child<current_state<int>>());
 	BOOST_CHECK_EQUAL(test_node.out()(), 0);
 
 	int test_val = 1;

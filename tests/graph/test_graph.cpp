@@ -17,8 +17,8 @@ namespace
 {
 	struct dummy_node : tree_base_node
 	{
-		dummy_node(const std::string& name)
-			: tree_base_node(name)
+		dummy_node( const std::string& name)
+			: tree_base_node(std::make_shared<parallel_region>(name), name)
 			, out_port(this, [](){ return 0;})
 			, in_port(this)
 		{

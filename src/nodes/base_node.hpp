@@ -42,31 +42,17 @@ public:
 	template<class data_t> using state_source = ::fc::state_source<data_t>;
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
-
 	virtual ~tree_base_node() = default;
 
 	const std::shared_ptr<parallel_region>& region() const { return region_; }
-	std::shared_ptr<parallel_region>& region() { return region_; }
 
 	forest_t*& forest() { return forest_; }
 	const forest_t* forest() const { return forest_; }
-
-	tree_base_node* region(std::shared_ptr<parallel_region> r)
-			{ region_ = r; return this; }
 
 	std::string own_name() const { return graph_info_.name(); }
 	void set_name(std::string name) { graph_info_.name() = name; }
 
 	graph::graph_node_properties graph_info() const { return graph_info_; }
-
-	explicit tree_base_node(std::string name, forest_t* f) //todo remove nullptr
-		: graph_info_(name)
-		, forest_(f)
-		, self_(forest_->end())
-		, region_(std::make_shared<parallel_region>("root"))
-	{
-		assert(forest_); //check invariant
-	}
 
 	/**
 	 * Constructor taking a parent node
@@ -74,7 +60,7 @@ public:
 	 * @param p parent node (not 0)
 	 * @param r parallel_region object. Will be taken from parent if not given
 	 */
-	tree_base_node(	std::string name, std::shared_ptr<parallel_region> r, forest_t* f) //todo remove nullptr
+	tree_base_node(	std::string name, std::shared_ptr<parallel_region> r, forest_t* f)
 		: graph_info_(name)
 		, forest_(f)
 		, self_(forest_->end())
@@ -83,16 +69,16 @@ public:
 		assert(forest_); //check invariant
 	}
 
-	/* Information for abstract graph */
 protected:
-	explicit tree_base_node(std::string name)
+	explicit tree_base_node(std::shared_ptr<parallel_region> r, std::string name)
 		: graph_info_(name)
 		, forest_(nullptr)
 		, self_()
-		, region_(std::make_shared<parallel_region>("root"))
+		, region_(r)
 	{
 	}
 
+	/* Information for abstract graph */
 	//stores the metainformation of the node used by the abstract graph
 	graph::graph_node_properties graph_info_;
 
@@ -106,7 +92,7 @@ protected:
 public: forest_t::iterator self_;
 
 	/* Information about which region the node belongs to */
-	public: std::shared_ptr<parallel_region> region_;
+private: std::shared_ptr<parallel_region> region_;
 };
 
 /**
@@ -158,7 +144,7 @@ struct node_owner : base_t
 	template<class node_t, class ... args_t>
 	node_t* make_child(args_t ... args)
 	{
-		return add_child(std::make_unique<node_t>(args...));
+		return add_child(std::make_unique<node_t>(this->region(), args...));
 	}
 	/**
 	 * Creates a new child node of type node_t from args,
@@ -169,7 +155,7 @@ struct node_owner : base_t
 	template<class node_t, class ... args_t>
 	node_t* make_child_named(std::string name, args_t ... args)
 	{
-		return add_child_named(name, std::make_unique<node_t>(args...));
+		return add_child(std::make_unique<node_t>(this->region(), name, args...));
 	}
 	/**
 	 * Creates a new child node of type node_t<args_t> from args
@@ -202,7 +188,6 @@ private:
 	{
 		assert(this->forest_); //check invariant
 
-		*(child->region_) = *(this->region_);
 		child->forest() = this->forest();
 
 		//we need to store an iterator and then cast back to node_t*
@@ -215,16 +200,6 @@ private:
 		assert(adobe::find_parent(child_it) != this->forest_->end());
 
 		return static_cast<node_t*>(child_it->get());
-	}
-	/**
-	 * Takes ownership of child node, sets name to n and inserts into tree.
-	 * @return pointer to child node
-	 */
-	template<class node_t>
-	node_t* add_child_named(const std::string& n, std::unique_ptr<node_t> child)
-	{
-		child->set_name(n);
-		return add_child(std::move(child));
 	}
 };
 
@@ -266,6 +241,7 @@ public:
 				this->forest_->begin(), std::make_unique<tree_base_node>(n, r, forest())));
 	}
 
+	//Todo this is currently necessary since ports in tests are attached directly to the root, remove if that is fixed.
 	graph::graph_node_properties graph_info() const
 	{
 		return (*self_)->graph_info();

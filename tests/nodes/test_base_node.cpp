@@ -12,10 +12,16 @@ namespace // unnamed
 template<class data_t>
 struct node_class : base_node
 {
-	node_class(data_t a)
-		: base_node("test_node")
+	node_class(std::shared_ptr<parallel_region> r, data_t a)
+		: base_node(r, "test_node")
 		, value(a)
 	{}
+
+	node_class(std::shared_ptr<parallel_region> r, std::string name, data_t a)
+		: base_node(r, name)
+		, value(a)
+	{}
+
 
 	data_t get_value() { return value; }
 
@@ -29,7 +35,9 @@ struct node_class : base_node
 
 struct null : base_node
 {
-	null() : base_node("null") {}
+	explicit null(std::shared_ptr<parallel_region> r,
+			std::string name = "null")
+	: base_node(r, name) {}
 };
 } // unnamed namespace
 
@@ -84,7 +92,7 @@ namespace
 class test_owning_node : public base_node
 {
 public:
-	test_owning_node() : base_node("test") {}
+	explicit test_owning_node(std::shared_ptr<parallel_region> r) : base_node(r, "test") {}
 	base_node::forest_t::iterator add_child()
 	{
 		make_child<test_owning_node>();
