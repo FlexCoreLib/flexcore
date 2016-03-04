@@ -67,14 +67,14 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
-	static_assert(not is_active_sink   <test_in_port>{}, "");
-	static_assert(not is_active_source <test_in_port>{}, "");
-	static_assert(    is_passive_sink  <test_in_port>{}, "");
-	static_assert(not is_passive_source<test_in_port>{}, "");
-	static_assert(not is_passive_source<decltype(tmp)>{}, "");
-	static_assert(not is_passive_sink  <decltype(tmp)>{}, "");
-	static_assert(    is_active_source <decltype(tmp)>{}, "");
-	static_assert(not is_active_sink   <decltype(tmp)>{}, "");
+	static_assert(! is_active_sink   <test_in_port>{}, "");
+	static_assert(! is_active_source <test_in_port>{}, "");
+	static_assert(  is_passive_sink  <test_in_port>{}, "");
+	static_assert(! is_passive_source<test_in_port>{}, "");
+	static_assert(! is_passive_source<decltype(tmp)>{}, "");
+	static_assert(! is_passive_sink  <decltype(tmp)>{}, "");
+	static_assert(  is_active_source <decltype(tmp)>{}, "");
+	static_assert(! is_active_sink   <decltype(tmp)>{}, "");
 
 	std::move(tmp) >> test_in;
 
@@ -107,9 +107,9 @@ void check_mixins()
 	//since we have a region transition, we need a switch tick
 	BOOST_CHECK_EQUAL(test_value, 0);
 
-	region_1->ticks->in_switch_buffers()();
+	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	region_2->ticks->in_work()();
+	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 1);
 }
 }
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	//since we have a region transition, we need a switch tick
 	BOOST_CHECK_EQUAL(test_value, 0);
 
-	region_1->ticks->in_switch_buffers()();
+	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	region_2->ticks->in_work()();
+	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 2);
 
 	// test more than one lambda in between
@@ -163,12 +163,12 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 			>> test_in_2;
 
 	test_out.fire(1);
-	region_1->ticks->in_switch_buffers()();
-	region_2->ticks->in_work()();
+	region_1->ticks.in_switch_buffers()();
+	region_2->ticks.in_work()();
 	// wrong region ticked, expect no change
 	BOOST_CHECK_EQUAL(test_value, 2);
 
-	region_3->ticks->in_work()();
+	region_3->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
 }
 
@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	//since we have a region transition, we need a switch tick
 	BOOST_CHECK_EQUAL(test_value, 0);
 
-	region_1->ticks->in_switch_buffers()();
+	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	region_2->ticks->in_work()();
+	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
 
 	// check the same for states
@@ -211,9 +211,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	//                                 ^^^ buffer is here
 
 	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
-	region_1->ticks->in_work()();
+	region_1->ticks.in_work()();
 	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
-	region_2->ticks->in_switch_buffers()();
+	region_2->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(state_in.get(), 4);
 }
 
@@ -248,9 +248,9 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 
 	BOOST_CHECK_EQUAL(sink.get(), 0);
 
-	region_1->ticks->in_work()();
+	region_1->ticks.in_work()();
 	BOOST_CHECK_EQUAL(sink.get(), 0);
-	region_2->ticks->in_switch_buffers()();
+	region_2->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 }
 

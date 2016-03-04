@@ -66,6 +66,9 @@ class parallel_region
 public:
 	explicit parallel_region(std::string id = "default");
 
+	parallel_region(const parallel_region&) = delete;
+	parallel_region(parallel_region&&) = default;
+
 	region_id get_id() const;
 	pure::event_source<void>& switch_tick();
 	pure::event_source<void>& work_tick();
@@ -73,7 +76,7 @@ public:
 protected:
 
 public:
-	std::shared_ptr<tick_controller> ticks;
+	tick_controller ticks;
 	region_id id;
 };
 

@@ -21,19 +21,19 @@ region_id parallel_region::get_id() const
 }
 
 parallel_region::parallel_region(std::string id_) :
-		ticks(std::make_shared<tick_controller>()),
+		ticks(),
 		id({id_})
 {
 }
 
 pure::event_source<void>& parallel_region::switch_tick()
 {
-	return ticks->switch_tick();
+	return ticks.switch_tick();
 }
 
 pure::event_source<void>& parallel_region::work_tick()
 {
-	return ticks->work_tick();
+	return ticks.work_tick();
 }
 
 } /* namespace fc */

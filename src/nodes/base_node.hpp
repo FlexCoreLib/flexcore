@@ -220,8 +220,8 @@ protected:
 			const std::shared_ptr<parallel_region>& r)
 	: forest_{std::move(f)}
 	, region_(r)
-{
-}
+	{
+	}
 
 };
 
