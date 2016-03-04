@@ -2,6 +2,7 @@
 
 #include <ports/node_aware.hpp>
 #include <ports/pure_ports.hpp>
+#include <nodes/base_node.hpp>
 
 template<class base>
 struct useless_mixin : public base

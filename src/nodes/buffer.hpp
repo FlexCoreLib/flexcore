@@ -4,6 +4,7 @@
 #include <core/traits.hpp>
 
 #include <ports/ports.hpp>
+#include <nodes/base_node.hpp>
 
 #include <boost/range.hpp>
 #include <boost/circular_buffer.hpp>

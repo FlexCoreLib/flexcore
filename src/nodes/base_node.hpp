@@ -10,6 +10,8 @@
 #include <memory>
 #include <stack>
 
+#include <ports/ports.hpp>
+
 namespace fc
 {
 
@@ -34,6 +36,12 @@ class tree_base_node
 {
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
+
+	template<class data_t> using event_source = ::fc::event_source<data_t>;
+	template<class data_t> using event_sink = ::fc::event_sink<data_t>;
+	template<class data_t> using state_source = ::fc::state_source<data_t>;
+	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
+
 
 	virtual ~tree_base_node() = default;
 	tree_base_node(tree_base_node&&) = default;

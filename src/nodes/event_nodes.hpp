@@ -5,6 +5,7 @@
 #include <ports/events/event_sinks.hpp>
 #include <ports/events/event_sources.hpp>
 #include <ports/ports.hpp>
+#include <nodes/base_node.hpp>
 
 namespace fc
 {

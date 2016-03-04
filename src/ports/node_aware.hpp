@@ -6,7 +6,6 @@
 #include <core/connection.hpp>
 #include <threading/parallelregion.hpp>
 #include "connection_buffer.hpp"
-#include <nodes/base_node.hpp>
 
 namespace fc
 {
