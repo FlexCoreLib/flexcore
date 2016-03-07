@@ -31,7 +31,6 @@ bool periodic_task::is_due(virtual_clock::steady::time_point now) const
 
 void cycle_control::start()
 {
-	scheduler.start();
 	keep_working = true;
 	// give the main thread some actual work to do (execute infinite main loop)
 	main_loop_thread = std::thread([this](){ main_loop();});
