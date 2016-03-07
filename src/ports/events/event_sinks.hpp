@@ -35,28 +35,7 @@ struct event_sink
 		event_handler(std::forward<T>(in_event));
 	}
 
-	event_sink() = delete;
-	event_sink(const event_sink&) = delete;
-	event_sink(event_sink&&) = default;
-
-	typedef void result_t;
-
-private:
-	handler_t event_handler;
-
-};
-
-/// specialisation of event_sink with void , necessary since operator() has no parameter.
-template<>
-struct event_sink<void>
-{
-	typedef typename detail::handle_type<void>::type handler_t;
-	explicit event_sink(handler_t handler) :
-			event_handler(handler)
-	{
-		assert(event_handler);
-	}
-
+	template <class T = event_t, typename = std::enable_if_t<std::is_void<T>{}>>
 	void operator()()
 	{
 		assert(event_handler);
@@ -66,6 +45,9 @@ struct event_sink<void>
 	event_sink() = delete;
 	event_sink(const event_sink&) = delete;
 	event_sink(event_sink&&) = default;
+
+	typedef void result_t;
+
 private:
 	handler_t event_handler;
 };
