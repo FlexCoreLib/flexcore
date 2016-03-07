@@ -97,5 +97,6 @@ int main()
 	while (iterations--)
 		std::this_thread::sleep_for(0.5s);
 
+	thread_manager.stop();
 	return 0;
 }
