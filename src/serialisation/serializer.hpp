@@ -1,6 +1,9 @@
 #ifndef SRC_SERIALISATION_SERIALIZER_HPP_
 #define SRC_SERIALISATION_SERIALIZER_HPP_
 
+#include <string>
+#include <sstream>
+
 namespace fc
 {
 
