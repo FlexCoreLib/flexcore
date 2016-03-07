@@ -98,7 +98,7 @@ void cycle_control::run_periodic_tasks()
 void cycle_control::add_task(periodic_task task)
 {
 	std::lock_guard<std::mutex> lock(task_queue_mutex);
-	tasks.push_back(std::move(task));
+	tasks.emplace_back(std::move(task));
 	assert(!tasks.empty());
 }
 

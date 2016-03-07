@@ -24,14 +24,23 @@ struct periodic_task final
 	 */
 	periodic_task(std::function<void(void)> job,
 			virtual_clock::duration cycle_duration) :
-				work_to_do(std::make_shared<bool>(false)),
+				work_to_do(false),
+				work_to_do_mtx(std::make_unique<std::mutex>()),
 				interval(cycle_duration),
 				work(job)
 	{
 	}
 
-	bool done() const { return !(*work_to_do); }
-	void set_work_to_do(bool todo) { *work_to_do = todo; }
+	bool done()
+	{
+		std::lock_guard<std::mutex> lock(*work_to_do_mtx);
+		return !work_to_do;
+	}
+	void set_work_to_do(bool todo)
+	{
+		std::lock_guard<std::mutex> lock(*work_to_do_mtx);
+		work_to_do = todo;
+	}
 	bool is_due(virtual_clock::steady::time_point now) const;
 	void send_switch_tick() { switch_tick.fire(); }
 	auto& out_switch_tick() { return switch_tick; }
@@ -43,7 +52,8 @@ struct periodic_task final
 	}
 private:
 	/// flag to check if work has already been executed this cycle.
-	std::shared_ptr<bool> work_to_do;
+	bool work_to_do;
+	std::unique_ptr<std::mutex> work_to_do_mtx;
 	virtual_clock::duration interval;
 	/// work to be done every cycle
 	std::function<void(void)> work;
