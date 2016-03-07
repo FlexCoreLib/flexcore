@@ -38,8 +38,11 @@ void cycle_control::start()
 
 void cycle_control::stop()
 {
-	keep_working = false;
-	main_loop_control.notify_all(); //in case main loop is currently waiting
+	{
+		std::lock_guard<std::mutex> lock(main_loop_mutex);
+		keep_working = false;
+		main_loop_control.notify_one(); //in case main loop is currently waiting
+	}
 	scheduler.stop();
 	if (main_loop_thread.joinable())
 		main_loop_thread.join();
@@ -53,9 +56,10 @@ void cycle_control::work()
 
 void cycle_control::main_loop()
 {
+	// the mutex needs to be held to check the condition; wait_until releases the lock while waiting.
+	std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
 	while(keep_working)
 	{
-		std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
 		const auto now = wall_clock::steady::now();
 		work();
 		main_loop_control.wait_until(
