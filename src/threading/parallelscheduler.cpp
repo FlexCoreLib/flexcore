@@ -27,7 +27,7 @@ void parallel_scheduler::start() noexcept
 
 	//fill thread_pool in body of constructor,
 	//since otherwise threads would need to be copied
-	for (int i=0; i != num_threads(); ++i)
+	for (int i = 0, e = num_threads(); i != e; ++i)
 	{
 		thread_pool.push_back(std::thread(
 				//infinite task loop for every thread,
