@@ -15,6 +15,7 @@ ADD_EXECUTABLE( test_executable
 	nodes/test_list_manipulation.cpp
 	nodes/test_generic.cpp
 	nodes/test_event_nodes.cpp
+	nodes/test_region_worker_node.cpp
 	nodes/test_state_nodes.cpp
 	ports/test_event_buffer.cpp
 	ports/test_node_aware.cpp
