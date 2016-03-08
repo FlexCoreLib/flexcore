@@ -4,8 +4,7 @@
 #include <vector>
 
 #include <clock/clock.hpp>
-#include <ports/event_ports.hpp>
-
+#include <ports/pure_ports.hpp>
 #include "parallelscheduler.hpp"
 
 namespace fc
@@ -35,7 +34,7 @@ struct periodic_task final
 	void set_work_to_do(bool todo) { *work_to_do = todo; }
 	bool is_due(virtual_clock::steady::time_point now) const;
 	void send_switch_tick() { switch_tick.fire(); }
-	auto out_switch_tick() { return switch_tick; }
+	auto& out_switch_tick() { return switch_tick; }
 
 	void operator()()
 	{
@@ -50,7 +49,7 @@ private:
 	std::function<void(void)> work;
 
 	//Todo refactor this intrusion of ports into otherwise independent code
-	event_out_port<void> switch_tick;
+	pure::event_source<void> switch_tick;
 };
 
 /**

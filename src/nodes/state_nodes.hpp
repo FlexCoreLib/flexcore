@@ -2,9 +2,16 @@
 #define SRC_NODES_STATE_NODES_HPP_
 
 #include <core/traits.hpp>
-#include <ports/states/state_sink.hpp>
+#include <ports/ports.hpp>
+#include <nodes/base_node.hpp>
+#include <ports/states/state_sources.hpp>
+
+#include <ports/events/event_sinks.hpp>
 
 #include <utility>
+#include <tuple>
+#include <memory>
+#include <cstddef>
 
 namespace fc
 {
@@ -23,12 +30,10 @@ namespace fc
  * \endcode
  */
 template<class operation, class signature>
-struct merge_node
-{
-};
+struct merge_node;
 
 template<class operation, class result, class... args>
-struct merge_node<operation, result (args...)>
+struct merge_node<operation, result (args...)> : public tree_base_node
 {
 	typedef std::tuple<args...> arguments;
 	typedef std::tuple<state_sink<args> ...> in_ports_t;
@@ -38,11 +43,11 @@ struct merge_node<operation, result (args...)>
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
-	explicit merge_node(operation op) :
-			in_ports(),
-			op(op)
-	{
-	}
+    explicit merge_node(operation o)
+		: tree_base_node("merger")
+  		, in_ports(state_sink<args>(this)...)
+		, op(o)
+	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation
 	result_type operator()()
@@ -50,8 +55,9 @@ struct merge_node<operation, result (args...)>
 		return invoke_helper(in_ports, std::make_index_sequence<nr_of_arguments>{});
 	}
 
+	/// State Sink corresponding to i-th argument of merge operation.
 	template<size_t i>
-	auto in() const noexcept { return std::get<i>(in_ports); }
+	auto& in() noexcept { return std::get<i>(in_ports); }
 
 protected:
 	in_ports_t in_ports;
@@ -67,16 +73,97 @@ private:
 };
 
 ///creats a merge node which applies the operation to all inputs and returns single state.
-template<class operation>
-auto merge(operation op)
+template<class parent_t, class operation>
+auto make_merge(parent_t& parent, operation op)
 {
-	return merge_node<
-			operation,
-			typename utils::function_traits<operation>::function_type
-			>(op);
+	typedef merge_node
+			<	operation,
+				typename utils::function_traits<operation>::function_type
+			> node_t;
+	return parent.template make_child<node_t>(op);
 }
 
+/*****************************************************************************/
+/*                                   Caches                                  */
+/*****************************************************************************/
 
-}  // namespace fc
+/// Pulls inputs on incoming pull tick and makes it available to state output out().
+template<class data_t>
+class current_state : public tree_base_node
+{
+public:
+	explicit current_state(const data_t& initial_value = data_t()) :
+			tree_base_node("cache"),
+			pull_tick([this]()
+			{
+				stored_state = in_port.get();
+			}),
+			in_port(this),
+			out_port(this, [this](){ return stored_state;}),
+			stored_state(initial_value)
+	{
+	}
+
+	/// Events to this port will cause the node to update the cached data. expects void
+	auto& update() noexcept { return pull_tick; }
+	/// State Input Port of type data_t.
+	auto& in() noexcept { return in_port; }
+	/// State Output Port of type data_t.
+	auto& out() noexcept { return out_port; }
+
+private:
+	pure::event_sink<void> pull_tick;
+	state_sink<data_t> in_port;
+	state_source<data_t> out_port;
+	data_t stored_state;
+};
+
+/**
+ * \brief Caches state and only pulls new state when cache is marked as dirty.
+ *
+ * switch_tick port needs to be connected,
+ * as events to this port mark the cache as dirty.
+ */
+template<class data_t>
+class state_cache : public tree_base_node
+{
+public:
+	state_cache() :
+		tree_base_node("cache"),
+		cache(std::make_unique<data_t>()),
+		load_new(true),
+		in_port(this)
+	{
+	}
+
+	/// State Output Port of type data_t
+	auto out() noexcept // todo: make lambda member and only return reference
+	{
+		return [this]()
+		{
+			if (load_new)
+				refresh_cache();
+			return *cache;
+		};
+	}
+
+	/// State Input Port of type data_t
+	auto& in() noexcept { return in_port; }
+
+	/// Events to this port mark the cache as dirty. Expects events of type void.
+	auto update() noexcept { return [this](){ load_new = true; }; } // todo: make lambda member and only return reference
+
+private:
+	void refresh_cache()
+	{
+		*cache = in_port.get();
+		load_new = false;
+	}
+	std::unique_ptr<data_t> cache;
+	bool load_new;
+	state_sink<data_t> in_port;
+};
+
+} // namespace fc
 
 #endif /* SRC_NODES_STATE_NODES_HPP_ */

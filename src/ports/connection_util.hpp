@@ -10,20 +10,33 @@ namespace fc
 {
 
 /**
+ * \brief generalization of get_source
+ * Stopping criterion for recursion
+ */
+template <class T>
+auto get_source(T& s)
+	-> std::enable_if_t<!has_source<T>(0), decltype(s)>
+{
+	return s;
+}
+/**
  * \brief recursively extracts the source of a connection
  */
-template <class source_t, class sink_t>
-auto get_source(connection<source_t, sink_t> c)
+template <class T>
+auto get_source(T& c)
+	-> std::enable_if_t<has_source<T>(0),
+			decltype(get_source(c.source))>
 {
 	return get_source(c.source);
 }
 
 /**
- * \brief generalization of get_source
+ * \brief generalization of get_sink
  * Stopping criterion for recursion
  */
-template <class source_t>
-auto get_source(source_t s)
+template <class T>
+auto get_sink(T& s)
+	-> std::enable_if_t<!has_sink<T>(0), decltype(s)>
 {
 	return s;
 }
@@ -32,21 +45,11 @@ auto get_source(source_t s)
  * \brief recursively extracts the sink of an object with member "sink"
  */
 template <class T>
-auto get_sink(T c)
-	-> typename std::enable_if<has_sink<T>(0), decltype(get_sink(c.sink))>::type
+auto get_sink(T& c)
+	-> std::enable_if_t<has_sink<T>(0),
+			decltype(get_sink(c.sink))>
 {
 	return get_sink(c.sink);
-}
-
-/**
- * \brief generalization of get_sink
- * Stopping criterion for recursion
- */
-template <class T>
-auto get_sink(T s)
-	-> typename std::enable_if<!has_sink<T>(0), T>::type
-{
-	return s;
 }
 
 /**
@@ -64,7 +67,7 @@ struct get_source_t
  */
 template <class T>
 struct get_source_t<T,
-		typename std::enable_if< has_source<T>(0) >::type
+		std::enable_if_t< has_source<T>(0) >
 	>
 {
 	typedef typename get_source_t<decltype(std::declval<T>().source)>::value value;
@@ -85,7 +88,7 @@ struct get_sink_t
  */
 template <class T>
 struct get_sink_t<T,
-		typename std::enable_if< has_sink<T>(0) >::type
+		std::enable_if_t< has_sink<T>(0) >
 	>
 {
 	typedef typename get_sink_t<decltype(std::declval<T>().sink)>::value value;

@@ -4,58 +4,60 @@
 #include <functional>
 #include <memory>
 
-#include "ports.hpp"
+#include "pure_ports.hpp"
+#include "token_tags.hpp"
 
 namespace fc
 {
 
 /**
  * \brief common interface of nodes serving as buffers within connections.
+ *
  * Classes implementing this are independent of the way they implement buffering.
  * Classes might even directly forward events.
  *
- * \tparam event_t type of events passing through the buffer
+ * \tparam event_t type of tokens passing through the buffer
  */
-template<class event_t, class tag>
+template<class token_t, class tag>
 struct buffer_interface
 {
-	typedef typename out_port<event_t, tag>::type out_port_t;
-	typedef typename in_port<event_t, tag>::type in_port_t;
+	typedef typename pure::out_port<token_t, tag>::type out_port_t;
+	typedef typename pure::in_port<token_t, tag>::type in_port_t;
 
 	buffer_interface() = default;
 	virtual ~buffer_interface() = default;
 
 	///input port for events, expects event_t
-	virtual in_port_t in() = 0;
+	virtual in_port_t& in() = 0;
 	///output port for events, sends event_t
-	virtual out_port_t out() = 0;
+	virtual out_port_t& out() = 0;
 
 	buffer_interface(const buffer_interface&) = delete;
 	buffer_interface& operator= (const buffer_interface &) = delete;
 };
 
 /// Implementation of buffer_interface, which directly forwards events.
-template<class event_t, class tag = event_tag>
-class event_no_buffer final : public buffer_interface<event_t, tag>
+template<class token_t, class tag = event_tag>
+class event_no_buffer final : public buffer_interface<token_t, tag>
 {
 public:
 	event_no_buffer()	:
-		in_event_port( [this](event_t in_event) { out_event_port.fire(in_event);})
+		in_event_port( [this](token_t in_event) { out_event_port.fire(in_event);})
 	{
 	}
 
-	typename in_port<event_t, tag>::type in() override
+	typename pure::in_port<token_t, tag>::type& in() override
 	{
 		return in_event_port;
 	}
-	typename out_port<event_t, tag>::type out() override
+	typename pure::out_port<token_t, tag>::type& out() override
 	{
 		return out_event_port;
 	}
 
 private:
-	typename in_port<event_t, tag>::type in_event_port;
-	typename out_port<event_t, tag>::type out_event_port;
+	typename pure::in_port<token_t, tag>::type in_event_port;
+	typename pure::out_port<token_t, tag>::type out_event_port;
 };
 
 /**
@@ -80,27 +82,20 @@ public:
 		{
 		}
 
-	typedef typename out_port<event_t, event_tag>::type out_port_t;
-	typedef typename in_port<event_t, event_tag>::type in_port_t;
+	typedef typename pure::out_port<event_t, event_tag>::type out_port_t;
+	typedef typename pure::in_port<event_t, event_tag>::type in_port_t;
 
-	// event in port of type void, switches buffers
-	auto switch_tick() { return in_switch_tick; };
-	// event in port of type void, fires external buffer
-	auto work_tick() { return in_send_tick; };
+	/// event in port of type void, switches buffers
+	auto& switch_tick() { return in_switch_tick; };
+	/// event in port of type void, fires external buffer
+	auto& work_tick() { return in_send_tick; };
 
-	in_port_t in() override
-	{
-		return in_event_port;
-	}
-	out_port_t out() override
-	{
-		return out_event_port;
-	}
+	in_port_t& in() override { return in_event_port; }
+	out_port_t& out() override { return out_event_port; }
 
 protected:
 	void switch_buffers()
 	{
-
 		// move content of intern buffer to extern, leaving content of extern buffer
 		// since the buffers might be switched several times, before extern buffer is emptied.
 		// otherwise we would potentially lose events on switch.
@@ -124,8 +119,8 @@ protected:
 		assert(extern_buffer.empty());
 	}
 
-	event_in_port<void> in_switch_tick;
-	event_in_port<void> in_send_tick;
+	pure::event_sink<void> in_switch_tick;
+	pure::event_sink<void> in_send_tick;
 	in_port_t in_event_port;
 	out_port_t out_event_port;
 
@@ -134,6 +129,7 @@ protected:
 	buffer_t extern_buffer;
 };
 
+/// Implementation of buffer_interface, which directly forwards state.
 template<class data_t>
 class state_no_buffer : public buffer_interface<data_t, state_tag>
 {
@@ -143,36 +139,42 @@ public:
 	{
 	}
 
-	state_sink<data_t> in() override
+	pure::state_sink<data_t>& in() override
 	{
 		return in_port;
 	}
-	state_source_call_function<data_t> out() override
+	pure::state_source<data_t>& out() override
 	{
 		return out_port;
 	}
 
 private:
-	state_sink<data_t> in_port;
-	state_source_call_function<data_t> out_port;
+	pure::state_sink<data_t> in_port;
+	pure::state_source<data_t> out_port;
 };
 
-template<class T>
-class state_buffer : public buffer_interface<T, state_tag>
+/** \brief buffer for states using double buffering
+ *
+ * \tparam data_t type of state stored in buffer. needs to be copy_constructable.
+ * \invariant intern_buffer != null_ptr
+ * extern_buffer != null_ptr
+ */
+template<class data_t>
+class state_buffer : public buffer_interface<data_t, state_tag>
 {
 public:
 	state_buffer();
 
 	// event in port of type void, switches buffers
-	auto switch_tick() { return in_switch_tick; };
+	auto& switch_tick() { return in_switch_tick; };
 	// event in port of type void, pulls data at in_port
-	auto work_tick() { return in_work_tick; };
+	auto& work_tick() { return in_work_tick; };
 
-	state_sink<T> in() override
+	pure::state_sink<data_t>& in() override
 	{
 		return in_port;
 	}
-	state_source_call_function<T> out() override
+	pure::state_source<data_t>& out() override
 	{
 		return out_port;
 	}
@@ -187,14 +189,13 @@ protected:
 		already_switched = true;
 	}
 
-	event_in_port<void> in_switch_tick;
-	event_in_port<void> in_work_tick;
-	state_sink<T> in_port;
-	state_source_call_function<T> out_port;
+	pure::event_sink<void> in_switch_tick;
+	pure::event_sink<void> in_work_tick;
+	pure::state_sink<data_t> in_port;
+	pure::state_source<data_t> out_port;
 private:
-	typedef T buffer_t;
-	std::shared_ptr<buffer_t> intern_buffer;
-	std::shared_ptr<buffer_t> extern_buffer;
+	std::shared_ptr<data_t> intern_buffer;
+	std::shared_ptr<data_t> extern_buffer;
 	bool already_switched = false;
 };
 
@@ -246,6 +247,8 @@ inline fc::state_buffer<T>::state_buffer() :
 		intern_buffer(std::make_shared<T>()), //todo, forces T to be default constructible, we should lift that restriction.
 		extern_buffer(std::make_shared<T>())
 {
+	assert(intern_buffer); //check invariant
+	assert(extern_buffer);
 }
 
 #endif /* SRC_PORTS_CONNECTION_BUFFER_HPP_ */

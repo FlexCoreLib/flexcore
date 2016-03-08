@@ -4,6 +4,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <vector>
 #include <list>
 
 #include <core/traits.hpp>
@@ -11,13 +12,14 @@
 
 #include <ports/connection_util.hpp>
 #include <ports/detail/port_traits.hpp>
+#include <ports/detail/port_utils.hpp>
 #include <core/detail/active_connection_proxy.hpp>
-
-#include <ports/events/event_sinks.hpp>
 
 #include <iostream>
 
 namespace fc
+{
+namespace pure
 {
 
 /**
@@ -30,20 +32,20 @@ namespace fc
  * \invariant shared pointer event_handlers != 0.
  */
 template<class event_t>
-struct event_out_port
+struct event_source
 {
-	typedef typename std::remove_reference<event_t>::type result_t;
+	typedef std::remove_reference_t<event_t> result_t;
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
 	typedef std::function<void(void)> void_fun;
 	typedef std::shared_ptr<void_fun> callback_fun_ptr_strong;
 
-	event_out_port() :
+	event_source() :
 		sink_callbacks(std::make_shared<std::list<callback_fun_ptr_strong>>())
 	{
 	};
-
-	event_out_port(const event_out_port&) = default;
+	event_source(const event_source&) = delete;
+	event_source(event_source&&) = default;
 
 	template<class... T>
 	void fire(T&&... event)
@@ -51,11 +53,10 @@ struct event_out_port
 		static_assert(sizeof...(T) == 0 || sizeof...(T) == 1,
 				"we only allow single events, or void events atm");
 
-		static_assert(std::is_void<event_t>() || std::is_constructible<
-				typename std::remove_reference<T>::type...,
-				typename std::remove_reference<event_t>::type>(),
-				"tried to call fire with a type, not implicitly convertible to type of port."
-				"If conversion is required, do the cast before calling fire.");
+		static_assert(std::is_void<event_t>{} ||
+		              std::is_constructible<event_t, T...>{},
+		              "tried to call fire with a type, not implicitly convertible to type of port."
+		              "If conversion is required, do the cast before calling fire.");
 
 		assert(event_handlers);
 		for (auto& target : (*event_handlers))
@@ -65,10 +66,13 @@ struct event_out_port
 		}
 	}
 
-	void add_handler(handler_t new_handler)
+	size_t nr_connected_handlers() const
 	{
-		event_handlers->push_back(new_handler);
+		assert(event_handlers);
+		return event_handlers->size();
 	}
+
+	// TODO: Adapt the connect method
 
 	/**
 	 * \brief Creates a callback to deregister event sinks
@@ -103,76 +107,84 @@ struct event_out_port
 	}
 
 	/**
-	 * \brief default implementation of connect(source_t, sink_t)
-	 * \param sink the new target to be connected.
-	 * \pre sink is not empty function
-	 * \pre sink not of type event_sink
+	 * \brief default implementation of connect(source_t, conn_t)
+	 * \param c the new target to be connected.
+	 * \pre c is not empty function
+	 * \pre c not of type event_sink
 	 * \post event_handlers.empty() == false
 	 */
-	template<class source_t, class sink_t, class Enable = void>
+	template<class source_t, class conn_t, class Enable = void>
 	struct connect_impl {
-		auto operator()(const source_t source, const sink_t sink)
+		auto operator()(source_t source, conn_t c)
 		{
 			assert(source.event_handlers);
-			source.add_handler(handler_t(sink));
+			source.event_handlers->emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
 
 			assert(!source.event_handlers->empty());
-			return port_connection<decltype(this), sink_t, result_t>();
+			return port_connection<decltype(this), conn_t, result_t>();
 		}
 	};
 
 	/**
 	 * \brief specialization for connection with connection struct
-	 * \param sink the new target to be connected.
-	 * \pre sink is not empty function
-	 * \pre sink of type connection
-	 * \pre sink.sink.(...).sink has register function
+	 * \param c the new target to be connected.
+	 * \pre c is not empty function
+	 * \pre c of type connection
+	 * \pre c.c.(...).c has register function
 	 * \post event_handlers.empty() == false
 	 */
-	template <class source_t, class sink_t>
+	template <class source_t, class conn_t>
 	struct connect_impl
 		<	source_t,
-			sink_t,
+			conn_t,
 			typename std::enable_if <
-				has_register_function<typename get_sink_t<sink_t>::value>(0)
+				has_register_function<typename get_sink_t<conn_t>::value>(0)
 			>::type
 		>
 	{
-		auto operator()(const source_t source, sink_t sink)
+		auto operator()(source_t source, conn_t c)
 		{
 			assert(source.event_handlers);
+			source.event_handlers->emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
 
-			source.add_handler(sink);
-
-			get_sink(sink).register_callback(source.create_callback_delete_handler());
+			get_sink(c).register_callback(source.create_callback_delete_handler());
 
 			assert(!source.event_handlers->empty());
-			return port_connection<decltype(*this), sink_t, result_t>();
+			return port_connection<decltype(this), conn_t, result_t>();
 		}
 	};
 
-	template <class sink_t>
-	auto connect(sink_t sink)
+	/**
+	 * \brief connects new connectable target to port.
+	 * Optionally adds a callback to deregister the connection
+	 * if supported by the sink at the end of the chain of connectables
+	 * \param new_handler the new target to be connected.
+	 * \pre new_handler is not empty function
+	 * \post event_handlers.empty() == false
+	 */
+	template <class conn_t>
+	auto connect(conn_t&& c) &
 	{
-		return connect_impl<decltype(*this), sink_t>()(*this, sink);
+		static_assert(detail::has_result_of_type<conn_t, event_t>(),
+			"The type returned by this source is not compatible with the connection you "
+			"are trying to establish.");
+		return connect_impl<decltype(*this), conn_t>()(*this, std::forward<conn_t>(c));
 	}
 
-protected:
+private:
 
 	// stores event_handlers in shared vector, since the port is stored in a node
 	// but will be copied, when it is connected. The node needs to send
 	// to all connected event_handlers, when an event is fired.
 	typedef std::list<handler_t> handler_vector;
 	std::shared_ptr<handler_vector> event_handlers = std::make_shared<handler_vector>(0);
-
-private:
-
 	std::shared_ptr<std::list<callback_fun_ptr_strong>> sink_callbacks;
 };
 
+} // namespace pure
+
 // traits
-// TODO prefer to test this algorithmically
-template<class T> struct is_active_source<event_out_port<T>> : public std::true_type {};
+template<class T> struct is_active_source<pure::event_source<T>> : std::true_type {};
 
 } // namespace fc
 

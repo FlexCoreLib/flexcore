@@ -6,11 +6,11 @@
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
-#include "ports/detail/port_traits.hpp"
-
-#include <iostream>
+#include <ports/detail/port_traits.hpp>
 
 namespace fc
+{
+namespace pure
 {
 
 /// Mixin for executing a callback to the source on deletion of the sink
@@ -78,23 +78,25 @@ private:
  * \tparam event_t type of event expected, must be copy_constructable
  */
 template<class event_t>
-struct event_in_port : public event_in_port_callback_mixin
+struct event_sink : public event_in_port_callback_mixin
 {
 	typedef typename detail::handle_type<event_t>::type handler_t;
-
-	explicit event_in_port(const handler_t& handler) :
+	explicit event_sink(const handler_t& handler) :
 			event_handler(handler)
 	{
 		assert(event_handler);
 	}
 
-	void operator()(auto&& in_event)
+	template <class T>
+	auto operator()(T&& in_event) -> std::enable_if_t<std::is_convertible<T&&, event_t>{}>
 	{
 		assert(event_handler);
-		event_handler(std::move(in_event));
+		event_handler(std::forward<T>(in_event));
 	}
 
-	event_in_port() = delete;
+	event_sink() = delete;
+	event_sink(const event_sink&) = delete;
+	event_sink(event_sink&&) = default;
 
 	typedef void result_t;
 
@@ -103,12 +105,12 @@ private:
 
 };
 
-/// specialisation of event_in_port with void , necessary since operator() has no parameter.
+/// specialisation of event_sink with void , necessary since operator() has no parameter.
 template<>
-struct event_in_port<void> : public event_in_port_callback_mixin
+struct event_sink<void> : public event_in_port_callback_mixin
 {
 	typedef typename detail::handle_type<void>::type handler_t;
-	explicit event_in_port(handler_t handler) :
+	explicit event_sink(handler_t handler) :
 			event_handler(handler)
 	{
 		assert(event_handler);
@@ -119,7 +121,10 @@ struct event_in_port<void> : public event_in_port_callback_mixin
 		assert(event_handler);
 		event_handler();
 	}
-	event_in_port() = delete;
+
+	event_sink() = delete;
+	event_sink(const event_sink&) = delete;
+	event_sink(event_sink&&) = default;
 private:
 	handler_t event_handler;
 };
@@ -136,19 +141,20 @@ private:
  * \tparam lambda_t Lambda to call when event arrived.
  */
 template<class lambda_t>
-struct event_in_port_tmpl
+struct event_sink_tmpl
 {
 public:
-	explicit event_in_port_tmpl(lambda_t h)
+	explicit event_sink_tmpl(lambda_t h)
 		: lambda(h)
 	{}
 
-	void operator()(auto&& in_event) // universal ref here?
+	template <class Event_t>
+	void operator()(Event_t&& in_event)
 	{
-		lambda(std::move(in_event));
+		lambda(std::forward<Event_t>(in_event));
 	}
 
-	event_in_port_tmpl() = delete;
+	event_sink_tmpl() = delete;
 
 	typedef void result_t;
 
@@ -159,11 +165,13 @@ public:
  * Helper needed for type inference
  */
 template<class lambda_t>
-auto make_event_in_port_tmpl(lambda_t h) { return event_in_port_tmpl<lambda_t>{h}; }
+auto make_event_sink_tmpl(lambda_t h) { return event_sink_tmpl<lambda_t>{h}; }
+
+} // namespace pure
 
 // traits
-template<class T> struct is_passive_sink<event_in_port<T>> : std::true_type {};
-template<class T> struct is_passive_sink<event_in_port_tmpl<T>> : std::true_type {};
+template<class T> struct is_passive_sink<pure::event_sink<T>> : std::true_type {};
+template<class T> struct is_passive_sink<pure::event_sink_tmpl<T>> : std::true_type {};
 
 } // namespace fc
 

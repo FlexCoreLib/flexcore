@@ -2,13 +2,13 @@
 #define SRC_NODES_LIST_MANIPULATION_HPP_
 
 #include <core/traits.hpp>
-#include <ports/ports.hpp>
-
-// std
+#include <nodes/base_node.hpp>
 #include <map>
 
 // boost
 #include <boost/range.hpp>
+
+#include <ports/ports.hpp>
 
 namespace fc
 {
@@ -26,27 +26,38 @@ template
 	<	class range_t,
 		class predicate_result_t
 	>
-class list_splitter
+class list_splitter : public tree_base_node
 {
 public:
-	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
+	typedef typename std::iterator_traits<decltype(std::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	explicit list_splitter(auto p)
-		: in( [&](const range_t& range){ this->receive(range); } )
+	template <class predicate_t>
+	explicit list_splitter(predicate_t pred)
+		: tree_base_node("splitter")
+		, in(this, [&](const range_t& range){ this->receive(range); } )
+		, out_num_dropped(this, [this](){ return dropped_counter;})
 		, entries()
-		, predicate(p)
+		, predicate(pred)
 	{}
 
-	event_in_port<range_t> in;
-	event_out_port<out_range_t> out(predicate_result_t value) { return entries[value].port; }
+	event_sink<range_t> in;
+	event_source<out_range_t>& out(predicate_result_t value)
+	{
+		auto it = entries.find(value);
+		if (it == entries.end())
+			it = entries.insert(std::make_pair(value, entry_t(this))).first;
+		return it->second.port;
+	}
 	/**
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
 	 */
-	state_source_with_setter<size_t> out_num_dropped;
+	state_source<size_t> out_num_dropped;
 
 private:
+	size_t dropped_counter = 0;
+
 	void receive(const range_t& range)
 	{
 		auto begin = std::begin(range);
@@ -60,7 +71,7 @@ private:
 			if (entry_it != entries.end())
 				entry_it->second.data.push_back(*it);
 			else
-				++out_num_dropped.access();
+				++dropped_counter;
 		}
 		// send sorted elements
 		for (auto& e : entries)
@@ -72,47 +83,13 @@ private:
 	}
 	struct entry_t
 	{
-		event_out_port<out_range_t> port;
+		entry_t(list_splitter* p) : port(p), data() {}
+		event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};
 
 	std::map<predicate_result_t, entry_t> entries;
 	std::function<predicate_result_t(value_t)> predicate;
-};
-
-/**
- * Collects list contents and store them into a buffer.
- * Sends the buffer as state when pulled.
- */
-template<class range_t>
-class list_collector
-{
-public:
-	typedef typename std::iterator_traits<decltype(boost::begin(range_t()))>::value_type value_t;
-	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
-
-	list_collector()
-		: in( [&](const range_t& range){ this->receive(range); } )
-		, out( [&](){ return this->get_state(); } )
-	{}
-
-	event_in_port<range_t> in;
-	state_source_call_function<out_range_t> out;
-
-
-private:
-	void receive(const range_t& range)
-	{
-		buffer_collect.insert(buffer_collect.end(), std::begin(range), std::end(range));
-	}
-	out_range_t get_state()
-	{
-		buffer_state.clear();
-		buffer_state.swap(buffer_collect);
-		return boost::make_iterator_range(buffer_state.begin(), buffer_state.end());
-	}
-	std::vector<value_t> buffer_collect;
-	std::vector<value_t> buffer_state;
 };
 
 } // namespace fc
