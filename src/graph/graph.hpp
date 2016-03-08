@@ -79,38 +79,23 @@ public:
 		return s;
 	}
 
-	struct impl;
-	friend void print(std::ostream& stream);
-
 	connection_graph(const connection_graph&) = delete;
-
-	/// Adds a new Connection containing two nodes and their ports to the graph.
-	void add_connection(const graph_node_properties& source_node,
-			const graph_port_information& source_port,
-			const graph_node_properties& sink_node,
-			const graph_port_information& sink_port);
 
 	/// Adds a new Connection without ports to the graph.
 	void add_connection(const graph_node_properties& source_node,
 			const graph_node_properties& sink_node);
+
+	/// Prints current state of the abstract graph in graphviz format to stream.
+	void print(std::ostream& stream);
 
 	~connection_graph();
 
 private:
 	connection_graph();
 
+	struct impl;
 	std::unique_ptr<impl> pimpl;
 };
-
-/**
- * \brief Adds a new edge to the graph representation.
- *
- * The edge is leading from source to sink through the two ports.
- */
-void add_to_graph(const graph_node_properties& source_node,
-		const graph_port_information& source_port,
-		const graph_node_properties& sink_node,
-		const graph_port_information& sink_port);
 
 /**
  * \brief Adds a new edge to the graph representation.
@@ -119,9 +104,6 @@ void add_to_graph(const graph_node_properties& source_node,
  */
 void add_to_graph(const graph_node_properties& source_node,
 		const graph_node_properties& sink_node);
-
-/// Prints current state of the abstract graph in graphviz format to stream.
-void print(std::ostream& stream);
 
 }  // namespace graph
 }  // namespace fc
