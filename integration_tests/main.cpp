@@ -95,7 +95,23 @@ int main()
 	using namespace std::chrono_literals;
 	int iterations = 7;
 	while (iterations--)
+	{
+		auto exception = thread_manager.last_exception();
+		if (exception)
+		{
+			try
+			{
+				std::rethrow_exception(exception);
+			}
+			catch (const fc::out_of_time_exception& ex)
+			{
+				std::cout << "Scheduler out of time: " << ex.what() << "\n";
+				thread_manager.stop();
+				return EXIT_FAILURE;
+			}
+		}
 		std::this_thread::sleep_for(0.5s);
+	}
 
 	thread_manager.stop();
 	return 0;
