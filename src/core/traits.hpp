@@ -21,6 +21,8 @@ namespace detail
 
 template<class T>
 using always_void = void;
+template <typename T>
+void always_void_fun();
 
 template<class Expr, class Enable = void>
 struct expr_is_callable_impl: std::false_type
@@ -107,6 +109,38 @@ struct type_is_callable_impl : has_call_op<T>::type
 {
 };
 
+template <class result_of>
+constexpr auto has_result_of_type_impl(int) -> decltype(always_void_fun<typename result_of::type>(), true)
+{
+	return true;
+}
+template <class result_of>
+constexpr bool has_result_of_type_impl(...)
+{
+	return false;
+}
+template <class F, typename Arg>
+struct result_of_fwd
+{
+	using type = std::result_of<F(Arg)>;
+};
+template <class F>
+struct result_of_fwd<F, void>
+{
+	using type = std::result_of<F()>;
+};
+
+/**
+ * \brief Check whether F can be called with Arg.
+ *
+ * Is done by checking whether std::result_of has a type typedef.
+ */
+template <class F, typename Arg>
+constexpr bool has_result_of_type()
+{
+	return has_result_of_type_impl<typename result_of_fwd<F, Arg>::type>(0);
+}
+
 } // namespace detail
 
 /// Trait for determining if Expr is callable
@@ -121,8 +155,11 @@ struct is_callable:
 };
 
 template <class T>
-struct is_connectable
-    : std::integral_constant<bool, is_callable<T>{} && std::is_copy_constructible<T>{}>
+struct is_connectable :
+	std::integral_constant<bool,
+	    is_callable<std::remove_reference_t<T>>{} &&
+	    (std::is_lvalue_reference<T>{} || std::is_copy_constructible<T>{})
+	>
 {
 };
 
@@ -216,25 +253,6 @@ struct is_active_source: std::false_type
 };
 
 template<class T, class enable = void>
-struct is_active_connectable_impl : std::false_type
-{
-};
-
-template<class T>
-struct is_active_connectable_impl<
-	T, std::enable_if_t<std::is_class<T>{}>> :
-		std::integral_constant
-			<bool, typename detail::has_member_connect<T>::type{}
-			 and std::is_copy_constructible<T>{}>
-{
-};
-
-template<class T>
-struct is_active_connectable : is_active_connectable_impl<T>
-{
-};
-
-template<class T, class enable = void>
 struct is_passive_source_impl: std::false_type
 {
 };
@@ -262,7 +280,7 @@ constexpr auto has_source(int) -> decltype(
 		std::declval<T>().source, bool())
 {
 	return true;
-};
+}
 
 template <class T>
 constexpr bool has_sink(...)
@@ -275,7 +293,7 @@ constexpr auto has_sink(int) -> decltype(
 		std::declval<T>().sink, bool())
 {
 	return true;
-};
+}
 
 //template<class T>
 //struct is_passive_source_impl<T, std::enable_if_t<is_callable<T>{}>>
@@ -343,7 +361,7 @@ struct is_passive: std::integral_constant<bool,
 //todo cleanup of diverse redundant traits
 template<class T>
 struct is_active: std::integral_constant<bool,
-is_active_connectable<T>{} || is_active_sink<T>{}>
+is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
 

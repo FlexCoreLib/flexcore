@@ -4,7 +4,7 @@
 
 using namespace fc;
 
-BOOST_AUTO_TEST_SUITE( test_state_sinks );
+BOOST_AUTO_TEST_SUITE( test_state_sinks )
 
 BOOST_AUTO_TEST_CASE( test_state_sink )
 {
@@ -16,4 +16,4 @@ BOOST_AUTO_TEST_CASE( test_state_sink )
 	static_assert(not is_passive_source<port_t>{}, "");
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

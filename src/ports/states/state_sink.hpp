@@ -7,6 +7,7 @@
 
 // flexcore
 #include <ports/detail/port_traits.hpp>
+#include <ports/detail/port_utils.hpp>
 #include <core/connection.hpp>
 
 namespace fc
@@ -21,17 +22,16 @@ namespace pure
  * Is not a Connectable.
  *
  * \tparam data_t data type flowing through this port. Needs to fulfill copy_constructable
- *
- * \invariant shared_ptr<> con != null_ptr
  */
 template<class data_t>
 class state_sink
 {
 public:
 	state_sink()
-		: con(std::make_shared<std::function<data_t()>>())
+		: con()
 	{ }
-	state_sink(const state_sink& other) : con(other.con) { assert(con); }
+	state_sink(const state_sink&) = delete;
+	state_sink(state_sink&&) = default;
 
 	//typedef data_t result_t;
 
@@ -40,7 +40,7 @@ public:
 	 *
 	 * \returns current state available at this port.
 	 */
-	data_t get() const { return (*con)(); }
+	data_t get() const { return con(); }
 
 	/**
 	 * \brief Cconnects state source to sink.
@@ -50,22 +50,23 @@ public:
 	 * \post connection is not empty
 	 */
 	template<class con_t>
-	void connect(con_t c)
+	void connect(con_t&& c) &
 	{
-		static_assert(is_callable<con_t>{},
+		static_assert(is_callable<std::remove_reference_t<con_t>>{},
 				"only callables can be connected to a state_sink");
 		static_assert(is_passive_source<con_t>{},
 				"only passive sources can be connected to a state_sink");
 
-		(*con) = c;
+		static_assert(std::is_convertible<decltype(std::declval<con_t>()()), data_t>{},
+		              "The type returned by this connection is incompatible with this sink.");
+		con = detail::handler_wrapper(std::forward<con_t>(c));
 
 		assert(con); //check postcondition
-		assert(*con);
 	}
 
-		typedef void result_t;
+	typedef void result_t;
 private:
-	std::shared_ptr<std::function<data_t()>> con;
+	std::function<data_t()> con;
 };
 
 } // namespace pure

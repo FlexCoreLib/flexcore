@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <settings/settings.hpp>
+#include <settings/jsonfile_setting_backend.hpp>
 
 using namespace fc;
 
@@ -15,7 +16,29 @@ BOOST_AUTO_TEST_CASE(test_trivial_setting)
 	BOOST_CHECK_EQUAL(my_setting(), default_value);
 }
 
-BOOST_AUTO_TEST_CASE(test_json_file)
+BOOST_AUTO_TEST_CASE(test_setting_json_file_good)
+{
+	std::stringstream ss;
+	ss << "{ "
+			"\"test_int\": 1,"
+			"\"test_float\": 0.5 "
+			"}";
+
+	BOOST_CHECK_NO_THROW(json_file_setting_facade backend{ss};);
+}
+
+BOOST_AUTO_TEST_CASE(test_setting_json_file_bad)
+{
+	std::stringstream ss;
+	ss << "{ "
+			"\"test_int\": 1,"
+			"\"test_float\": \"incompatible value"
+			"}";
+
+	BOOST_CHECK_THROW(json_file_setting_facade backend{ss}, cereal::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_setting_from_json_file)
 {
 	int default_value = 0;
 

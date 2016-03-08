@@ -4,7 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <ctime>
-#include <unistd.h>
+#include <thread>
 
 #include <threading/cyclecontrol.hpp>
 #include <threading/parallelregion.hpp>
@@ -31,7 +31,7 @@ auto setup_parallel_region(const std::string& name,
 			tick);
 
 	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
-	thread_manager.add_task(tick_cycle);
+	thread_manager.add_task(std::move(tick_cycle));
 
 	return region;
 }
@@ -80,7 +80,7 @@ int main()
 
 	string_source >> string_sink;
 	first_region->ticks.work_tick()
-			>>	[string_source, first_region]() mutable
+			>>	[&string_source, first_region]() mutable
 				{
 					string_source.fire("a magic string from " + first_region->get_id().key);
 				};
@@ -88,12 +88,14 @@ int main()
 	event_source<std::string> string_source_2(child_c);
 	string_source_2 >> string_sink;
 
-	graph::print();
+	graph::print(std::cout);
 
 	thread_manager.start();
 
-	while (true)
-		sleep(1);
+	using namespace std::chrono_literals;
+	int iterations = 7;
+	while (iterations--)
+		std::this_thread::sleep_for(0.5s);
 
 	return 0;
 }

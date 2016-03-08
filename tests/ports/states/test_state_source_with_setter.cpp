@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 	static_assert(is_instantiation_of<
 			detail::active_connection_proxy, decltype(tmp)>{},
 			"active sink connected with standard connectable gets proxy");
-	source >> tmp;
+	source >> std::move(tmp);
 
 	BOOST_CHECK(sink.get() == 2);
 	state = 2;
@@ -67,13 +67,10 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 	static_assert(!void_callable<decltype(1)>(0), "");
 	static_assert(!void_callable<decltype(connection_add2)>(0), "");
 
-	auto two_stored = connection_add2 >> sink;
-	source_2 >> two_stored;
+	source_2 >> (connection_add2 >> sink);
 	BOOST_CHECK_EQUAL(sink.get(), 3);
 
 	pure::state_source<int> source_3 {[&state](){ return state;}};
-	auto tmp2 = (increment >> sink);
-	auto two_stored_2 = increment >> tmp2;
-	source_3 >> two_stored_2;
+	source_3 >> (increment >> (increment >> sink));
 	BOOST_CHECK_EQUAL(sink.get(), 4);
 }

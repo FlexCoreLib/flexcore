@@ -1,6 +1,7 @@
 #include "parallelscheduler.hpp"
 
 #include <cassert>
+#include <utility>
 
 namespace fc
 {
@@ -95,8 +96,8 @@ size_t parallel_scheduler::nr_of_waiting_tasks()
 void parallel_scheduler::add_task(task_t new_task)
 {
 	{
-	queue_lock lock(task_queue_mutex);
-	task_queue.push(new_task);
+		queue_lock lock(task_queue_mutex);
+		task_queue.push(std::move(new_task));
 	}
 	thread_control.notify_one();
 	assert(!thread_pool.empty()); //check invariant
