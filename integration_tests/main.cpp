@@ -49,12 +49,13 @@ int main()
 
 	std::cout << "start building connections\n";
 
-	using time_point = fc::wall_clock::system::time_point;
+	using clock = fc::virtual_clock::system;
+	using time_point = clock::time_point;
 	fc::pure::event_source<time_point> source;
 	first_region->ticks.work_tick()
-			>> [&source](){ source.fire(fc::wall_clock::system::now()); };
+			>> [&source](){ source.fire(clock::now()); };
 
-	source >> [](time_point t){ return fc::wall_clock::system::to_time_t(t); }
+	source >> [](time_point t){ return clock::to_time_t(t); }
 		   >> [](time_t t) { std::cout << std::localtime(&t)->tm_sec << "\n"; };
 
 	first_region->ticks.work_tick()
