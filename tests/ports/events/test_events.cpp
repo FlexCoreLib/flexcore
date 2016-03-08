@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(test_sink_deleted_callback)
 
 }
 
-BOOST_AUTO_TEST_CASE(test_lambda_in_connection)
+BOOST_AUTO_TEST_CASE(test_delete_with_lambda_in_connection)
 {
 	disconnecting_event_sink<int> test_sink;
 
