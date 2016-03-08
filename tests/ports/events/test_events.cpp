@@ -359,7 +359,11 @@ BOOST_AUTO_TEST_CASE(test_sink_deleted_callback)
 			test_source >> test_sink4;
 			test_source.fire(7);
 			BOOST_CHECK_EQUAL(*(test_sink4.storage), 7);
+
+			BOOST_CHECK_EQUAL(test_source.nr_connected_handlers(), 4);
 		}
+
+		BOOST_CHECK_EQUAL(test_source.nr_connected_handlers(), 2);
 
 		// this primarily checks, that no exception is thrown
 		// since the connections from test_source to sink1-3 are deleted.
@@ -384,8 +388,10 @@ BOOST_AUTO_TEST_CASE(test_delete_with_lambda_in_connection)
 				>> test_sink_2;
 				test_source.fire(10);
 				BOOST_CHECK_EQUAL(*(test_sink_2.storage), 12);
+				BOOST_CHECK_EQUAL(test_source.nr_connected_handlers(), 2);
 	}
 
+	BOOST_CHECK_EQUAL(test_source.nr_connected_handlers(), 1);
 
 	test_source.fire(11);
 	BOOST_CHECK_EQUAL(*(test_sink.storage), 12);
