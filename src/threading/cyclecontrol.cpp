@@ -14,14 +14,6 @@ constexpr virtual_clock::steady::duration cycle_control::fast_tick;
 constexpr virtual_clock::steady::duration cycle_control::medium_tick;
 constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 
-struct out_of_time_exepction: std::runtime_error
-{
-	out_of_time_exepction() :
-			std::runtime_error("cyclic task has not finished in time")
-	{
-	}
-};
-
 /// returns true if cycle _rate of task matches time and work of task is due.
 bool periodic_task::is_due(virtual_clock::steady::time_point now) const
 {
@@ -81,7 +73,7 @@ void cycle_control::run_periodic_tasks()
 		{
 			if (!task.done())  //todo specify error model
 			{
-				std::exception_ptr ep = std::make_exception_ptr(out_of_time_exepction());
+				auto ep = std::make_exception_ptr(out_of_time_exception());
 				std::lock_guard<std::mutex> lock(task_exception_mutex);
 				task_exceptions.push_back(ep);
 				keep_working=false;

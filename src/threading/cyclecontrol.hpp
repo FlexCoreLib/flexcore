@@ -116,6 +116,14 @@ private:
 };
 
 } /* namespace thread */
+
+struct out_of_time_exception: std::runtime_error
+{
+	out_of_time_exception() :
+			std::runtime_error("cyclic task has not finished in time")
+	{
+	}
+};
 } /* namespace fc */
 
 #endif /* SRC_THREADING_CYCLECONTROL_HPP_ */
