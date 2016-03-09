@@ -67,26 +67,6 @@ auto clamp = [](auto min, auto max)
 	};
 };
 
-/// Applies sin wave function to the input, wavelength is 1
-double sin_wave = [](double in) { return std::sin(in * 2 * M_PI); };
-
-/// Applies a saw wave function to the input, wavelength is 1
-double saw_wave = [](double in)
-	{
-		in = (in < 2 ? 2 : 0) + fmod(in, 2);
-		return 2*(2*in - floor(in)) - 1;
-	};
-
-/// Applies a triangular wave function to the input, wavelength is 1
-double tri_wave = [](double in) { return 2*std::abs(saw_wave(in)) - 1; };
-
-/// Applies a rectangular wave function to the input, wavelength is 1
-double rec_wave = [](double in)
-	{
-		in = (in < 0 ? 2 : 0), + fmod(in, 2);
-		return in > 1 ? -1 : 1;
-	};
-
 }  // namespace fc
 
 #endif /* SRC_CORE_CONNECTABLES_HPP_ */
