@@ -90,6 +90,11 @@ public:
 
 	/**
 	 * \brief adds a new cyclic task.
+	 * Tasks can only be added as long as the cycle_control has not been started. A
+	 * std::runtime_error exception will be thrown if an attempt is made to add a task to a running
+	 * cycle_control.
+	 *
+	 * \pre cycle_control is not running
 	 * \post list of tasks is not empty
 	 */
 	void add_task(periodic_task task);
@@ -104,10 +109,10 @@ private:
 	std::vector<periodic_task> tasks;
 	parallel_scheduler scheduler;
 	bool keep_working = false;
+	bool running = false;
 	std::condition_variable main_loop_control;
 	//Todo refactor main loop and task queue to locked class together with their mutex
 	std::mutex main_loop_mutex;
-	std::mutex task_queue_mutex;
 	std::thread main_loop_thread;
 
 	//Thread exception handling

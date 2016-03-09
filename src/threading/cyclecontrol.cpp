@@ -24,6 +24,7 @@ bool periodic_task::is_due(virtual_clock::steady::time_point now) const
 void cycle_control::start()
 {
 	keep_working = true;
+	running = true;
 	// give the main thread some actual work to do (execute infinite main loop)
 	main_loop_thread = std::thread([this](){ main_loop();});
 }
@@ -38,6 +39,7 @@ void cycle_control::stop()
 	scheduler.stop();
 	if (main_loop_thread.joinable())
 		main_loop_thread.join();
+	running = false;
 }
 
 void cycle_control::work()
@@ -66,7 +68,6 @@ cycle_control::~cycle_control()
 
 void cycle_control::run_periodic_tasks()
 {
-	std::lock_guard<std::mutex> lock(task_queue_mutex);
 	for (auto& task : tasks)
 	{
 		if (task.is_due(virtual_clock::steady::now()))
@@ -89,7 +90,8 @@ void cycle_control::run_periodic_tasks()
 
 void cycle_control::add_task(periodic_task task)
 {
-	std::lock_guard<std::mutex> lock(task_queue_mutex);
+	if (running)
+		throw std::runtime_error{"Worker threads are already running"};
 	tasks.emplace_back(std::move(task));
 	assert(!tasks.empty());
 }
