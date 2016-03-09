@@ -27,6 +27,9 @@ namespace pure
  * fulfills active_source
  * can be connected to multiples sinks and stores these in a std::list.
  *
+ * \remark This class is not thread safe with respect to connections
+ * i.e. all connections to sinks must be made serially
+ *
  * \tparam event_t type of event stored, needs to fulfill copy_constructable.
  */
 template<class event_t>
@@ -76,12 +79,12 @@ struct event_source
 	 */
 	auto create_callback_delete_handler()
 	{
-		//Assumes event_wrappers::connect is not called simultaneously -> not thread safe!
 		auto handleIt = std::prev(event_handlers.end());
 
 		sink_callbacks.push_back(std::make_shared<void_fun>());
 		auto callbackIt = std::prev(sink_callbacks.end());
 		sink_callbacks.back()=std::make_shared<void_fun>(
+				// TODO: Here lies the cause for the class not being thread safe
 				[this, handleIt, callbackIt]()
 				{
 					event_handlers.erase(handleIt);
@@ -159,10 +162,11 @@ struct event_source
 
 private:
 
-	// stores event_handlers in shared vector, since the port is stored in a node
-	// but will be copied, when it is connected. The node needs to send
-	// to all connected event_handlers, when an event is fired.
+	// Stores event_handlers in a vector, the node needs to send
+	// to all connected event_handlers when an event is fired.
 	std::list<handler_t> event_handlers;
+	// Holds callbacks from connected sinks to *this that delete the
+	// connection when invoked
 	std::list<callback_fun_ptr_strong> sink_callbacks;
 };
 
