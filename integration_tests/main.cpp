@@ -26,7 +26,7 @@ auto setup_parallel_region(const std::string& name,
 	auto region = std::make_shared<fc::parallel_region>(name);
 
 	auto tick_cycle = fc::thread::periodic_task(
-			[&region]()
+			[region]()
 			{
 				region->ticks.in_work()();
 			},
