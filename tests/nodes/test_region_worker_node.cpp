@@ -13,7 +13,8 @@ struct triggered_counter : public region_worker_node
 {
 public:
 	triggered_counter(std::string name, parallel_region& parent_region)
-		: region_worker_node(name, parent_region)
+		: region_worker_node([this](){out_event_source.fire(++work_counter);},
+				name, parent_region)
 		, out_event_source(this)
 		, work_counter(0)
 	{
@@ -21,8 +22,6 @@ public:
 
 	event_source<int> out_event_source;
 	int work_counter;
-
-	virtual void DoWork() { out_event_source.fire(++work_counter); }
 };
 
 struct container_sink

@@ -17,18 +17,13 @@ namespace fc
 class region_worker_node : public tree_base_node
 {
 public:
-	region_worker_node(std::string name, parallel_region& parent_region) :
+	template<class action_t>
+	region_worker_node(action_t&& action, std::string name, parallel_region& parent_region) :
 		tree_base_node(name)
 	{
-		parent_region.work_tick() >>  std::function<void(void)>(std::bind(&region_worker_node::DoWork, this));
+		parent_region.work_tick() >> std::forward<action_t>(action);
 	}
 
-	virtual ~region_worker_node()
-	{
-	}
-
-protected:
-	virtual void DoWork() = 0;
 };
 
 
