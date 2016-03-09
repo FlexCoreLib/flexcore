@@ -10,6 +10,8 @@
 #include <threading/parallelregion.hpp>
 #include <ports/ports.hpp>
 
+#include <boost/scope_exit.hpp>
+
 using namespace fc;
 
 struct null : base_node
@@ -92,6 +94,9 @@ int main()
 	graph::print(std::cout);
 
 	thread_manager.start();
+	BOOST_SCOPE_EXIT(&thread_manager) {
+		thread_manager.stop();
+	} BOOST_SCOPE_EXIT_END
 
 	using namespace std::chrono_literals;
 	int iterations = 7;
@@ -107,13 +112,11 @@ int main()
 			catch (const fc::out_of_time_exception& ex)
 			{
 				std::cout << "Scheduler out of time: " << ex.what() << "\n";
-				thread_manager.stop();
 				return EXIT_FAILURE;
 			}
 		}
 		std::this_thread::sleep_for(0.5s);
 	}
 
-	thread_manager.stop();
 	return 0;
 }
