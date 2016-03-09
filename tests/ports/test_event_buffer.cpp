@@ -20,7 +20,9 @@ BOOST_AUTO_TEST_CASE(test_event_buffer)
 
 	source.fire(1);
 	BOOST_CHECK_EQUAL(test_value, 0);
-	test_buffer.switch_tick()();
+	test_buffer.switch_active_tick()();
+	BOOST_CHECK_EQUAL(test_value, 0);
+	test_buffer.switch_passive_tick()();
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_buffer.work_tick()();
 	BOOST_CHECK_EQUAL(test_value, 1);
@@ -30,7 +32,9 @@ BOOST_AUTO_TEST_CASE(test_event_buffer)
 	{
 		source.fire(i);
 		BOOST_CHECK_EQUAL(test_value, i-1);
-		test_buffer.switch_tick()();
+		test_buffer.switch_active_tick()();
+		BOOST_CHECK_EQUAL(test_value, i-1);
+		test_buffer.switch_passive_tick()();
 		BOOST_CHECK_EQUAL(test_value, i-1);
 		test_buffer.work_tick()();
 		BOOST_CHECK_EQUAL(test_value, i);

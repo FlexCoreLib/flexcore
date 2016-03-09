@@ -108,6 +108,8 @@ void check_mixins()
 
 	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
+	region_2->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 1);
 }
@@ -148,6 +150,8 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 
 	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
+	region_2->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 2);
 
@@ -166,6 +170,7 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	region_2->ticks.in_work()();
 	// wrong region ticked, expect no change
 	BOOST_CHECK_EQUAL(test_value, 2);
+	region_3->ticks.in_switch_buffers()();
 
 	region_3->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
@@ -196,6 +201,8 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 
 	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(test_value, 0);
+	region_2->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
 
@@ -209,10 +216,12 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	(state_out >> inc) >> inc >> (inc >> state_in);
 	//                                 ^^^ buffer is here
 
-	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
+	BOOST_CHECK_EQUAL(state_in.get(), 0);
 	region_1->ticks.in_work()();
-	BOOST_CHECK_EQUAL(state_in.get(), 0); //one increment after buffer
-	region_2->ticks.in_switch_buffers()();
+	BOOST_CHECK_EQUAL(state_in.get(), 0);
+	region_1->ticks.in_switch_buffers()(); // moved to middle buffer
+	BOOST_CHECK_EQUAL(state_in.get(), 0);
+	region_2->ticks.in_switch_buffers()(); // moved to outgoing buffer
 	BOOST_CHECK_EQUAL(state_in.get(), 4);
 }
 
@@ -248,6 +257,8 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	BOOST_CHECK_EQUAL(sink.get(), 0);
 
 	region_1->ticks.in_work()();
+	BOOST_CHECK_EQUAL(sink.get(), 0);
+	region_1->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(sink.get(), 0);
 	region_2->ticks.in_switch_buffers()();
 	BOOST_CHECK_EQUAL(sink.get(), 1);
