@@ -14,14 +14,6 @@ constexpr virtual_clock::steady::duration cycle_control::fast_tick;
 constexpr virtual_clock::steady::duration cycle_control::medium_tick;
 constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 
-struct out_of_time_exepction: std::runtime_error
-{
-	out_of_time_exepction() :
-			std::runtime_error("cyclic task has not finished in time")
-	{
-	}
-};
-
 /// returns true if cycle _rate of task matches time and work of task is due.
 bool periodic_task::is_due(virtual_clock::steady::time_point now) const
 {
@@ -31,19 +23,23 @@ bool periodic_task::is_due(virtual_clock::steady::time_point now) const
 
 void cycle_control::start()
 {
-	scheduler.start();
 	keep_working = true;
+	running = true;
 	// give the main thread some actual work to do (execute infinite main loop)
 	main_loop_thread = std::thread([this](){ main_loop();});
 }
 
 void cycle_control::stop()
 {
-	keep_working = false;
-	main_loop_control.notify_all(); //in case main loop is currently waiting
+	{
+		std::lock_guard<std::mutex> lock(main_loop_mutex);
+		keep_working = false;
+		main_loop_control.notify_one(); //in case main loop is currently waiting
+	}
 	scheduler.stop();
 	if (main_loop_thread.joinable())
 		main_loop_thread.join();
+	running = false;
 }
 
 void cycle_control::work()
@@ -54,9 +50,10 @@ void cycle_control::work()
 
 void cycle_control::main_loop()
 {
+	// the mutex needs to be held to check the condition; wait_until releases the lock while waiting.
+	std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
 	while(keep_working)
 	{
-		std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
 		const auto now = wall_clock::steady::now();
 		work();
 		main_loop_control.wait_until(
@@ -71,14 +68,13 @@ cycle_control::~cycle_control()
 
 void cycle_control::run_periodic_tasks()
 {
-	std::lock_guard<std::mutex> lock(task_queue_mutex);
 	for (auto& task : tasks)
 	{
 		if (task.is_due(virtual_clock::steady::now()))
 		{
 			if (!task.done())  //todo specify error model
 			{
-				std::exception_ptr ep = std::make_exception_ptr(out_of_time_exepction());
+				auto ep = std::make_exception_ptr(out_of_time_exception());
 				std::lock_guard<std::mutex> lock(task_exception_mutex);
 				task_exceptions.push_back(ep);
 				keep_working=false;
@@ -94,8 +90,9 @@ void cycle_control::run_periodic_tasks()
 
 void cycle_control::add_task(periodic_task task)
 {
-	std::lock_guard<std::mutex> lock(task_queue_mutex);
-	tasks.push_back(std::move(task));
+	if (running)
+		throw std::runtime_error{"Worker threads are already running"};
+	tasks.emplace_back(std::move(task));
 	assert(!tasks.empty());
 }
 
