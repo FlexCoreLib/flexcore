@@ -98,10 +98,13 @@ public:
 	std::exception_ptr last_exception();
 
 private:
-	/// contains the main loop, which is running as as long as it is not stopped
+	/// contains the main loop, which runs until it is stopped
 	void main_loop();
-	void run_periodic_tasks();
-	std::vector<periodic_task> tasks;
+	/// runs the tasks in this vector; returns false if any task is not done, true otherwise
+	bool run_periodic_tasks(std::vector<periodic_task>& tasks);
+	std::vector<periodic_task> tasks_slow;
+	std::vector<periodic_task> tasks_medium;
+	std::vector<periodic_task> tasks_fast;
 	parallel_scheduler scheduler;
 	bool keep_working = false;
 	bool running = false;

@@ -38,7 +38,17 @@ void cycle_control::stop()
 void cycle_control::work()
 {
 	clock::advance();
-	run_periodic_tasks();
+	auto now = virtual_clock::steady::now();
+	auto run_if_due = [this, now](auto tick_rate, auto& task_vector)
+	{
+		if (now.time_since_epoch() % tick_rate == virtual_clock::duration::zero())
+			if (!run_periodic_tasks(task_vector))
+				return false;
+		return true;
+	};
+	if (!run_if_due(slow_tick, tasks_slow)) return;
+	if (!run_if_due(medium_tick, tasks_medium)) return;
+	if (!run_if_due(fast_tick, tasks_fast)) return;
 }
 
 void cycle_control::main_loop()
@@ -59,7 +69,7 @@ cycle_control::~cycle_control()
 	stop();
 }
 
-void cycle_control::run_periodic_tasks()
+bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 {
 	for (auto& task : tasks)
 	{
@@ -69,22 +79,33 @@ void cycle_control::run_periodic_tasks()
 			auto ep = std::make_exception_ptr(out_of_time_exception());
 			std::lock_guard<std::mutex> lock(task_exception_mutex);
 			task_exceptions.push_back(ep);
-			keep_working=false;
-			return;
+			keep_working = false;
+			return false;
 		}
-
 		task.set_work_to_do(true);
 		task.send_switch_tick();
 		scheduler.add_task([&task] { task(); });
 	}
+	return true;
 }
 
 void cycle_control::add_task(periodic_task task, virtual_clock::duration tick_rate)
 {
 	if (running)
 		throw std::runtime_error{"Worker threads are already running"};
-	tasks.emplace_back(std::move(task));
-	assert(!tasks.empty());
+
+	std::vector<periodic_task>* v = nullptr;
+	if (tick_rate == slow_tick)
+		v = &tasks_slow;
+	else if (tick_rate == medium_tick)
+		v = &tasks_medium;
+	else if (tick_rate == fast_tick)
+		v = &tasks_fast;
+	else
+		throw std::invalid_argument{"Unsupported tick_rate"};
+
+	v->emplace_back(std::move(task));
+	assert(!v->empty());
 }
 
 std::exception_ptr cycle_control::last_exception()
