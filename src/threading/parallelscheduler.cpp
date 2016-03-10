@@ -50,6 +50,9 @@ void parallel_scheduler::start() noexcept
 
 							// if we're here, then do_work must be true, and
 							// task_queue.empty() must be false.
+							assert(do_work);
+							assert(!task_queue.empty());
+
 							task = task_queue.front();
 							task_queue.pop();
 						}
