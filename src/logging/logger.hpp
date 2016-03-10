@@ -9,7 +9,7 @@
 
 namespace fc
 {
-class region_info;
+class parallel_region;
 
 /**
  * \brief Enumeration of severity levels corresponding to the posix syslog api.
@@ -98,7 +98,7 @@ public:
 	/// Construct a log_client with the region name "null"
 	log_client();
 	/// Construct a log_client which logs from the passed region.
-	log_client(const region_info* region);
+	log_client(const parallel_region* region);
 
 	log_client(const log_client&);
 	log_client& operator=(log_client);

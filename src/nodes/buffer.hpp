@@ -4,6 +4,7 @@
 #include <core/traits.hpp>
 
 #include <ports/ports.hpp>
+#include <nodes/base_node.hpp>
 
 #include <boost/range.hpp>
 #include <boost/circular_buffer.hpp>
@@ -55,8 +56,8 @@ class list_collector<data_t, swap_on_tick>
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
-	list_collector()
-		: detail::base_event_to_state<data_t, std::vector>{
+	explicit list_collector(std::shared_ptr<parallel_region> r)
+		: detail::base_event_to_state<data_t, std::vector>{r,
 				[this]()
 				{
 					data_read = true;
@@ -104,8 +105,8 @@ public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator>
 			out_range_t;
 
-	list_collector()
-		: detail::base_event_to_state<data_t, std::vector>{[&]()
+	explicit list_collector(std::shared_ptr<parallel_region> r)
+		: detail::base_event_to_state<data_t, std::vector>{r, [&]()
 				{
 					return this->get_state();
 				}}
@@ -184,8 +185,9 @@ protected:
 	 */
 	template<class action_t>
 	explicit base_event_to_state(
+			std::shared_ptr<parallel_region> r,
 			action_t&& action) :
-		tree_base_node("event to state"),
+		tree_base_node(r, "event to state"),
 		buffer_collect(std::make_unique<std::vector<data_t>>()),
 		out_port(this, action)
 	{
@@ -211,8 +213,8 @@ public:
 			"data stored in hold_last cannot be void");
 
 	/// Constructs hold_last with initial state.
-	explicit hold_last(const data_t& initial_value = data_t())
-		: tree_base_node("hold_last")
+	explicit hold_last(std::shared_ptr<parallel_region> r, const data_t& initial_value = data_t())
+		: tree_base_node(r, "hold_last")
 		, storage(initial_value)
 	{
 	}
@@ -250,8 +252,8 @@ public:
 	 * \param capacity sets the max nr of elements in the circular buffer.
 	 * \pre capacity > 0
 	 */
-	explicit hold_n(size_t capacity)
-		: tree_base_node("hold")
+	explicit hold_n(std::shared_ptr<parallel_region> r, size_t capacity)
+		: tree_base_node(r, "hold")
 		, storage(std::make_unique<buffer_t>(capacity))
 		, out_port(this,
 				[this]()

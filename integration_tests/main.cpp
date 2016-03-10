@@ -14,7 +14,8 @@ using namespace fc;
 
 struct null : base_node
 {
-	null() : base_node("null") {}
+	null(std::shared_ptr<fc::parallel_region> r,
+			std::string name) : base_node(r, name) {}
 };
 
 auto setup_parallel_region(const std::string& name,
@@ -69,10 +70,11 @@ int main()
 
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
-	fc::root_node root;
-	auto child_a = root.make_child_named<null>("source_a")->region(first_region);
-	auto child_b = root.make_child_named<null>("sink_b")->region(second_region);
-	auto child_c = root.make_child_named<null>("source_c")->region(second_region);
+	fc::root_node root1{"root1", first_region};
+	auto child_a = root1.make_child_named<null>("source_a");
+	fc::root_node root2{"root2", second_region};
+	auto child_b = root2.make_child_named<null>("sink_b");
+	auto child_c = root2.make_child_named<null>("source_c");
 
 	event_source<std::string> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,

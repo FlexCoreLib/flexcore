@@ -33,8 +33,8 @@ public:
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
 	template <class predicate_t>
-	explicit list_splitter(predicate_t pred)
-		: tree_base_node("splitter")
+	explicit list_splitter(std::shared_ptr<parallel_region> r, predicate_t pred)
+		: tree_base_node(r, "splitter")
 		, in(this, [&](const range_t& range){ this->receive(range); } )
 		, out_num_dropped(this, [this](){ return dropped_counter;})
 		, entries()

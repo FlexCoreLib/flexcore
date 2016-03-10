@@ -44,8 +44,8 @@ struct merge_node<operation, result (args...)> : public tree_base_node
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
-    explicit merge_node(operation o)
-		: tree_base_node("merger")
+    explicit merge_node(std::shared_ptr<parallel_region> r,operation o)
+		: tree_base_node(r, "merger")
   		, in_ports(state_sink<args>(this)...)
 		, op(o)
 	{}
@@ -88,15 +88,17 @@ auto make_merge(parent_t& parent, operation op)
 /*                                   Caches                                  */
 /*****************************************************************************/
 
+/// Pulls inputs on incoming pull tick and makes it available to state output out().
 template<class data_t>
 class current_state : public region_worker_node
 {
 public:
-	explicit current_state(parallel_region& region,
-			const data_t& initial_value = data_t()) :
+	explicit current_state(std::shared_ptr<parallel_region> r, const data_t& initial_value = data_t()) :
 			region_worker_node(
-					[this](){stored_state = in_port.get();},
-					"cache", region),
+			[this]()
+			{
+				stored_state = in_port.get();
+			}, "cache", r),
 			in_port(this),
 			out_port(this, [this](){ return stored_state;}),
 			stored_state(initial_value)
@@ -124,8 +126,8 @@ template<class data_t>
 class state_cache : public tree_base_node
 {
 public:
-	state_cache() :
-		tree_base_node("cache"),
+	explicit state_cache(std::shared_ptr<parallel_region> r) :
+		tree_base_node(r, "cache"),
 		cache(std::make_unique<data_t>()),
 		load_new(true),
 		in_port(this)

@@ -19,7 +19,8 @@ BOOST_AUTO_TEST_CASE( test_merge )
 
 BOOST_AUTO_TEST_CASE(test_state_cache)
 {
-	state_cache<int> cache;
+	root_node root;
+	auto& cache = *(root.make_child<state_cache<int>>());
 
 	int test_val = 1;
 
@@ -39,14 +40,14 @@ BOOST_AUTO_TEST_CASE(test_current_state)
 
 	{ //check constructor
 	auto region_2 = std::make_shared<parallel_region>("MyRegion");
-	current_state<int> test_node_1{*region_2,1};
+	current_state<int> test_node_1{region_2,1};
 	BOOST_CHECK_EQUAL(test_node_1.out()(), 1);
 
-	current_state<int> test_node_2{*region_2};
+	current_state<int> test_node_2{region_2};
 	BOOST_CHECK_EQUAL(test_node_2.out()(), int()); //default is int()
 	}
 
-	current_state<int> test_node{*region};
+	current_state<int> test_node{region};
 	BOOST_CHECK_EQUAL(test_node.out()(), 0);
 
 	int test_val = 1;

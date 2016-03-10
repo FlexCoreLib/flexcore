@@ -2,6 +2,7 @@
 
 #include <ports/node_aware.hpp>
 #include <ports/pure_ports.hpp>
+#include <nodes/base_node.hpp>
 
 template<class base>
 struct useless_mixin : public base
@@ -32,7 +33,7 @@ BOOST_AUTO_TEST_CASE(test_region_aware_node)
 
 	int test_value = 0;
 	auto write_param = [&](int i) {test_value = i;};
-	test_in_port test_in(&root, write_param);
+	test_in_port test_in(*(root.region().get()), write_param);
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_in(1);
@@ -49,8 +50,8 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	std::vector<int> test_sink;
 	auto write_param = [&](int i) {test_sink.push_back(i);};
-	test_in_port test_in(&root, write_param);
-	test_out_port test_out(&root);
+	test_in_port test_in(*(root.region().get()), write_param);
+	test_out_port test_out(*(root.region().get()));
 
 	static_assert(is_passive_sink<test_in_port>{}, "");
 	static_assert(has_result<test_out_port>{},
@@ -66,14 +67,14 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
-	static_assert(not is_active_sink   <test_in_port>{}, "");
-	static_assert(not is_active_source <test_in_port>{}, "");
-	static_assert(    is_passive_sink  <test_in_port>{}, "");
-	static_assert(not is_passive_source<test_in_port>{}, "");
-	static_assert(not is_passive_source<decltype(tmp)>{}, "");
-	static_assert(not is_passive_sink  <decltype(tmp)>{}, "");
-	static_assert(    is_active_source <decltype(tmp)>{}, "");
-	static_assert(not is_active_sink   <decltype(tmp)>{}, "");
+	static_assert(! is_active_sink   <test_in_port>{}, "");
+	static_assert(! is_active_source <test_in_port>{}, "");
+	static_assert(  is_passive_sink  <test_in_port>{}, "");
+	static_assert(! is_passive_source<test_in_port>{}, "");
+	static_assert(! is_passive_source<decltype(tmp)>{}, "");
+	static_assert(! is_passive_sink  <decltype(tmp)>{}, "");
+	static_assert(  is_active_source <decltype(tmp)>{}, "");
+	static_assert(! is_active_sink   <decltype(tmp)>{}, "");
 
 	std::move(tmp) >> test_in;
 
@@ -94,8 +95,8 @@ void check_mixins()
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
-	sink_t test_in(&root_2, write_param);
-	source_t test_out(&root_1);
+	sink_t test_in(*(root_2.region().get()), write_param);
+	source_t test_out(*(root_1.region().get()));
 
 	test_out >> test_in;
 	static_assert(is_active<source_t>{}, "not active source.");
@@ -138,8 +139,8 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
-	test_in_port test_in(&root_2, write_param);
-	test_out_port test_out(&root_1);
+	test_in_port test_in(*(root_2.region().get()), write_param);
+	test_out_port test_out(*(root_1.region().get()));
 
 	test_out >> [](int i){ return i+1;} >> test_in;
 
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	auto region_3 = std::make_shared<parallel_region>("r3");
 	root_node root_3("3", region_3);
 
-	test_in_port test_in_2(&root_3, write_param);
+	test_in_port test_in_2(*(root_3.region().get()), write_param);
 	test_out
 			>> [](int i){ return i+1;}
 			>> [](int i){ return i*2;}
@@ -187,8 +188,8 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};
-	test_in_port test_in(&root_2, write_param);
-	test_out_port test_out(&root_1);
+	test_in_port test_in(*(root_2.region().get()), write_param);
+	test_out_port test_out(*(root_1.region().get()));
 
 	auto inc = [](int i){ return i + 1; };
 
@@ -210,8 +211,8 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	typedef node_aware<pure::state_sink<int>> test_in_state;
 	typedef node_aware<pure::state_source<int>> test_out_state;
 
-	test_out_state state_out{&root_1, [](){ return 1; }};
-	test_in_state state_in{&root_2};
+	test_out_state state_out{*(root_1.region().get()), [](){ return 1; }};
+	test_in_state state_in{*(root_2.region().get())};
 
 	(state_out >> inc) >> inc >> (inc >> state_in);
 	//                                 ^^^ buffer is here
@@ -234,19 +235,19 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	root_node root_1("1", region_1);
 	root_node root_2("2", region_2);
 
-	test_out_port source(&root_1, [](){ return 1; });
-	test_in_port sink(&root_2);
+	test_out_port source(*(root_1.region().get()), [](){ return 1; });
+	test_in_port sink(*(root_2.region().get()));
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
 	static_assert(is_instantiation_of<node_aware, test_out_port>{}, "");
-	static_assert(    is_active_sink   <test_in_port>{}, "");
-	static_assert(not is_active_source <test_in_port>{}, "");
-	static_assert(not is_passive_sink  <test_in_port>{}, "");
-	static_assert(not is_passive_source<test_in_port>{}, "");
-	static_assert(    is_passive_source<test_out_port>{}, "");
-	static_assert(not is_passive_sink  <test_out_port>{}, "");
-	static_assert(not is_active_source <test_out_port>{}, "");
-	static_assert(not is_active_sink   <test_out_port>{}, "");
+	static_assert(  is_active_sink   <test_in_port>{}, "");
+	static_assert(! is_active_source <test_in_port>{}, "");
+	static_assert(! is_passive_sink  <test_in_port>{}, "");
+	static_assert(! is_passive_source<test_in_port>{}, "");
+	static_assert(  is_passive_source<test_out_port>{}, "");
+	static_assert(! is_passive_sink  <test_out_port>{}, "");
+	static_assert(! is_active_source <test_out_port>{}, "");
+	static_assert(! is_active_sink   <test_out_port>{}, "");
 
 	static_assert(std::is_same<int,
 			result_of_t<test_out_port>>{},
@@ -270,8 +271,8 @@ BOOST_AUTO_TEST_CASE(test_state_same_region)
 	typedef node_aware<pure::state_source<int>> test_out_port;
 	root_node root;
 
-	test_out_port source(&root, [](){ return 1; });
-	test_in_port sink(&root);
+	test_out_port source(*(root.region().get()), [](){ return 1; });
+	test_in_port sink(*(root.region().get()));
 
 	source >> sink;
 

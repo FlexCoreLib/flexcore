@@ -2,13 +2,12 @@
 #define SRC_GRAPH_GRAPH_CONNECTABLE_HPP_
 
 #include <graph/graph.hpp>
+#include <graph/traits.hpp>
 #include <core/connection.hpp>
 #include <ports/connection_util.hpp>
 
 #include <core/detail/connection_utils.hpp>
 #include <ports/connection_util.hpp>
-
-#include <nodes/base_node.hpp>
 
 namespace fc
 {
@@ -25,13 +24,16 @@ struct graph_adder
 	std::vector<graph_node_properties>& node_list;
 
 	template<class T>
-	void operator()(T& /*node*/)
+	void operator()(T& /*node*/,
+			typename std::enable_if<!has_graph_info<T>(0)>::type* = nullptr)
 	{
 		//do nothing for connectables which is not graph_connectable
 	}
 
-	template<class base_t> //non_const ref, because applyer might forward non_const
-	void operator()(graph_connectable<base_t>& node)
+	 //non_const ref, because applyer might forward non_const
+	template<class T>
+	void operator()(T& node,
+			typename std::enable_if<has_graph_info<T>(0)>::type* = nullptr)
 	{
 		node_list.push_back(node.graph_info);
 	}
@@ -49,16 +51,9 @@ template<class base_t>
 struct graph_connectable : base_t
 {
 	template<class... base_t_args>
-	graph_connectable(const graph_node_properties& graph_info, const base_t_args&... args)
-		: base_t(args...)
+	graph_connectable(const graph_node_properties& graph_info, base_t_args&&... args)
+		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
-	{
-	}
-
-	template<class... base_t_args>
-	graph_connectable(tree_base_node* node_ptr, base_t_args&&... args)
-		: base_t(node_ptr, args...)
-		, graph_info{node_ptr->graph_info()}
 	{
 	}
 

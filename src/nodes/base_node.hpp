@@ -10,6 +10,8 @@
 #include <memory>
 #include <stack>
 
+#include <ports/ports.hpp>
+
 namespace fc
 {
 
@@ -35,50 +37,45 @@ class tree_base_node
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
-	tree_base_node(const tree_base_node&) = delete;
-	tree_base_node(tree_base_node&&) = default;
+	template<class data_t> using event_source = ::fc::event_source<data_t>;
+	template<class data_t> using event_sink = ::fc::event_sink<data_t>;
+	template<class data_t> using state_source = ::fc::state_source<data_t>;
+	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
+	virtual ~tree_base_node() = default;
 
-	virtual ~tree_base_node()
-	{
-	}
+	const std::shared_ptr<parallel_region>& region() const { return region_; }
 
-	const std::shared_ptr<region_info>& region() const { return region_; }
-	std::shared_ptr<region_info>& region() { return region_; }
-
-	std::shared_ptr<forest_t>& forest() { return forest_; }
-	const std::shared_ptr<forest_t>& forest() const { return forest_; }
-
-	tree_base_node* region(std::shared_ptr<region_info> r)
-			{ region_ = r; return this; }
+	forest_t*& forest() { return forest_; }
+	const forest_t* forest() const { return forest_; }
 
 	std::string own_name() const { return graph_info_.name(); }
 	void set_name(std::string name) { graph_info_.name() = name; }
 
-	graph::graph_node_properties graph_info() { return graph_info_; }
+	graph::graph_node_properties graph_info() const { return graph_info_; }
 
-	explicit tree_base_node(std::string name)
-		: graph_info_(name)
-		, forest_( std::make_shared<forest_t>() )
-		, self_(forest_->end())
-		, region_(std::make_shared<parallel_region>("root"))
-	{
-		assert(forest_); //check invariant
-	}
-protected:
 	/**
 	 * Constructor taking a parent node
 	 *
 	 * @param p parent node (not 0)
-	 * @param r region_info object. Will be taken from parent if not given
+	 * @param r parallel_region object. Will be taken from parent if not given
 	 */
-	tree_base_node(	std::string name, std::shared_ptr<region_info> r )
+	tree_base_node(	std::string name, std::shared_ptr<parallel_region> r, forest_t* f)
 		: graph_info_(name)
-		, forest_( std::make_shared<forest_t>() )
+		, forest_(f)
 		, self_(forest_->end())
 		, region_(r)
 	{
 		assert(forest_); //check invariant
+	}
+
+protected:
+	explicit tree_base_node(std::shared_ptr<parallel_region> r, std::string name)
+		: graph_info_(name)
+		, forest_(nullptr)
+		, self_()
+		, region_(r)
+	{
 	}
 
 	/* Information for abstract graph */
@@ -87,15 +84,15 @@ protected:
 
 	/* Access to forest */
 	// stores the access to the forest this node is contained in.
-	std::shared_ptr<forest_t> forest_;
+	forest_t* forest_;
 	/*
 	 * iterator self_ allows access to the node inside the forest.
 	 * Unfortunately this creates a circular reference of the node to itself.
 	 */
-	public: forest_t::iterator self_;
+public: forest_t::iterator self_;
 
 	/* Information about which region the node belongs to */
-	protected: std::shared_ptr<region_info> region_;
+private: std::shared_ptr<parallel_region> region_;
 };
 
 /**
@@ -124,13 +121,14 @@ protected:
  * root.make_child_named<node_tmpl>("name", 5);
  * \endcode
  */
-struct node_owner : tree_base_node
+template<class base_t>
+struct node_owner : base_t
 {
-	using tree_base_node::forest_t;
+	using forest_t = typename base_t::forest_t;
 
 	template<class... arg_types>
-	node_owner(const arg_types&... args)
-			: tree_base_node(args...)
+	node_owner(arg_types&&... args)
+			: base_t(std::forward<arg_types>(args)...)
 	{
 	}
 
@@ -146,7 +144,7 @@ struct node_owner : tree_base_node
 	template<class node_t, class ... args_t>
 	node_t* make_child(args_t ... args)
 	{
-		return add_child(std::make_unique<node_t>(args...));
+		return add_child(std::make_unique<node_t>(this->region(), args...));
 	}
 	/**
 	 * Creates a new child node of type node_t from args,
@@ -157,7 +155,7 @@ struct node_owner : tree_base_node
 	template<class node_t, class ... args_t>
 	node_t* make_child_named(std::string name, args_t ... args)
 	{
-		return add_child_named(name, std::make_unique<node_t>(args...));
+		return add_child(std::make_unique<node_t>(this->region(), name, args...));
 	}
 	/**
 	 * Creates a new child node of type node_t<args_t> from args
@@ -190,12 +188,11 @@ private:
 	{
 		assert(this->forest_); //check invariant
 
-		child->region() = this->region_;
-		child->forest() = this->forest_;
+		child->forest() = this->forest();
 
 		//we need to store an iterator and then cast back to node_t*
 		//to avoid use after move on child.
-		forest_t::iterator child_it = adobe::trailing_of(
+		typename forest_t::iterator child_it = adobe::trailing_of(
 				this->forest_->insert(this->self_, std::move(child)));
 		(*child_it)->self_ = child_it;
 
@@ -204,37 +201,52 @@ private:
 
 		return static_cast<node_t*>(child_it->get());
 	}
-	/**
-	 * Takes ownership of child node, sets name to n and inserts into tree.
-	 * @return pointer to child node
-	 */
-	template<class node_t>
-	node_t* add_child_named(const std::string& n, std::unique_ptr<node_t> child)
-	{
-		child->set_name(n);
-		return add_child(std::move(child));
-	}
 };
 
-typedef node_owner base_node;
+typedef node_owner<tree_base_node> base_node;
+
+class forest_owner
+{
+public:
+	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
+	std::shared_ptr<parallel_region>& region() { return region_; }
+	forest_t* forest() { return forest_.get(); }
+protected:
+	std::unique_ptr<forest_t> forest_;
+	std::shared_ptr<parallel_region> region_;
+	forest_t::iterator self_;
+
+	forest_owner(std::unique_ptr<forest_t> f,
+			const std::shared_ptr<parallel_region>& r)
+	: forest_{std::move(f)}
+	, region_(r)
+	{
+	}
+
+};
 
 /**
  * Root node for building node trees.
  * The only type of node that is allowed to exist without parent
  */
-class root_node : public base_node
+class root_node : public  node_owner<forest_owner>
 {
 public:
 	root_node(	std::string n = "",
-				std::shared_ptr<region_info> r =
+				std::shared_ptr<parallel_region> r =
 						std::make_shared<parallel_region>("root")	)
-		: base_node(n, r)
+		:  node_owner<forest_owner>(std::make_unique<forest_owner::forest_t>(), r)
 	{
-		self_ = adobe::trailing_of(forest_->insert(
-				forest_->begin(), std::make_unique<base_node>(n)));
+		self_ = adobe::trailing_of(this->forest_->insert(
+				this->forest_->begin(), std::make_unique<tree_base_node>(n, r, forest())));
 	}
 
-	virtual ~root_node() {}
+	//Todo this is currently necessary since ports in tests are attached directly to the root, remove if that is fixed.
+	graph::graph_node_properties graph_info() const
+	{
+		return (*self_)->graph_info();
+	}
+
 };
 
 /**
@@ -297,6 +309,11 @@ full_name(
 inline std::string full_name(const tree_base_node& node)
 {
 	return full_name(*(node.forest()), node.self_);
+}
+
+inline std::string full_name(const root_node& node)
+{
+	return node.graph_info().name();
 }
 
 } // namespace fc
