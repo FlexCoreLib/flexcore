@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cassert>
+#include <algorithm>
 
 namespace fc
 {
@@ -102,17 +103,18 @@ cycle_control::~cycle_control()
 
 bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 {
+	//todo specify error model
+	if (any_of(begin(tasks), end(tasks), [](auto& task) { return !task.done(); }))
+	{
+		auto ep = std::make_exception_ptr(out_of_time_exception());
+		std::lock_guard<std::mutex> lock(task_exception_mutex);
+		task_exceptions.push_back(ep);
+		keep_working = false;
+		return false;
+	}
+
 	for (auto& task : tasks)
 	{
-		//todo specify error model
-		if (!task.done())
-		{
-			auto ep = std::make_exception_ptr(out_of_time_exception());
-			std::lock_guard<std::mutex> lock(task_exception_mutex);
-			task_exceptions.push_back(ep);
-			keep_working = false;
-			return false;
-		}
 		task.set_work_to_do(true);
 		task.send_switch_tick();
 		scheduler.add_task([&task] { task(); });
