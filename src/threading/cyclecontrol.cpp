@@ -14,13 +14,6 @@ constexpr virtual_clock::steady::duration cycle_control::fast_tick;
 constexpr virtual_clock::steady::duration cycle_control::medium_tick;
 constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 
-/// returns true if cycle _rate of task matches time and work of task is due.
-bool periodic_task::is_due(virtual_clock::steady::time_point now) const
-{
-	auto time = now .time_since_epoch();
-	return (time % interval) == virtual_clock::duration::zero();
-}
-
 void cycle_control::start()
 {
 	keep_working = true;
@@ -70,25 +63,23 @@ void cycle_control::run_periodic_tasks()
 {
 	for (auto& task : tasks)
 	{
-		if (task.is_due(virtual_clock::steady::now()))
+		//todo specify error model
+		if (!task.done())
 		{
-			if (!task.done())  //todo specify error model
-			{
-				auto ep = std::make_exception_ptr(out_of_time_exception());
-				std::lock_guard<std::mutex> lock(task_exception_mutex);
-				task_exceptions.push_back(ep);
-				keep_working=false;
-				return;
-			}
-
-			task.set_work_to_do(true);
-			task.send_switch_tick();
-			scheduler.add_task([&task] { task(); });
+			auto ep = std::make_exception_ptr(out_of_time_exception());
+			std::lock_guard<std::mutex> lock(task_exception_mutex);
+			task_exceptions.push_back(ep);
+			keep_working=false;
+			return;
 		}
+
+		task.set_work_to_do(true);
+		task.send_switch_tick();
+		scheduler.add_task([&task] { task(); });
 	}
 }
 
-void cycle_control::add_task(periodic_task task)
+void cycle_control::add_task(periodic_task task, virtual_clock::duration tick_rate)
 {
 	if (running)
 		throw std::runtime_error{"Worker threads are already running"};

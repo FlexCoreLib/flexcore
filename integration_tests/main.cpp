@@ -27,11 +27,10 @@ auto setup_parallel_region(const std::string& name,
 			[&region]()
 			{
 				region->ticks.in_work()();
-			},
-			tick);
+			});
 
 	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
-	thread_manager.add_task(std::move(tick_cycle));
+	thread_manager.add_task(std::move(tick_cycle), tick);
 
 	return region;
 }
