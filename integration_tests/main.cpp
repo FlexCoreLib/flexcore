@@ -12,10 +12,10 @@
 
 using namespace fc;
 
-struct null : base_node
+struct null : tree_base_node
 {
 	null(std::shared_ptr<fc::parallel_region> r,
-			std::string name) : base_node(r, name) {}
+			std::string name) : tree_base_node(r, name) {}
 };
 
 auto setup_parallel_region(const std::string& name,

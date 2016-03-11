@@ -10,15 +10,15 @@ using namespace fc;
 namespace // unnamed
 {
 template<class data_t>
-struct node_class : base_node
+struct node_class : tree_base_node
 {
 	node_class(std::shared_ptr<parallel_region> r, data_t a)
-		: base_node(r, "test_node")
+		: tree_base_node(r, "test_node")
 		, value(a)
 	{}
 
 	node_class(std::shared_ptr<parallel_region> r, std::string name, data_t a)
-		: base_node(r, name)
+		: tree_base_node(r, name)
 		, value(a)
 	{}
 
@@ -33,11 +33,11 @@ struct node_class : base_node
 	data_t value;
 };
 
-struct null : base_node
+struct null : tree_base_node
 {
 	explicit null(std::shared_ptr<parallel_region> r,
 			std::string name = "null")
-	: base_node(r, name) {}
+	: tree_base_node(r, name) {}
 };
 } // unnamed namespace
 
@@ -55,6 +55,29 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
 	BOOST_CHECK(child->region()->get_id() == region->get_id());
 }
 
+namespace
+{
+class test_owning_node : public node_owner<owning_base_node>
+{
+public:
+	explicit test_owning_node(std::shared_ptr<parallel_region> r, forest_t* f ) :
+			node_owner<owning_base_node>(r, "test_owning_node", f) {}
+	tree_base_node::forest_t::iterator add_child()
+	{
+		make_child<test_owning_node>();
+		return ++adobe::trailing_of(adobe::child_begin(self_).base());
+	}
+
+	explicit test_owning_node(std::shared_ptr<parallel_region> r, std::string name, forest_t* f ) :
+			node_owner<owning_base_node>(r, name, f) {}
+
+	size_t nr_of_children()
+	{
+		return this->forest_->size() -2; //-1 for this. -1 for root node
+	}
+};
+}
+
 /*
  * Confirm full names
  */
@@ -62,13 +85,13 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
 	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
 	root_node root("root", region);
-	auto child1 = root.make_child_named<null>("1");
+	auto child1 = root.make_child_named<test_owning_node>("test_owning_node");
 	auto child2 = root.make_child_named<null>("2");
 	auto child1a = child1->make_child_named<null>("a");
 
-	BOOST_CHECK_EQUAL(full_name(*child1), "root/1");
-	BOOST_CHECK_EQUAL(full_name(*child2), "root/2");
-	BOOST_CHECK_EQUAL(full_name(*child1a), "root/1/a");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child1->self_), "root/test_owning_node");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2->self_), "root/2");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child1a->self_), "root/test_owning_node/a");
 }
 
 BOOST_AUTO_TEST_CASE( test_make_child )
@@ -77,34 +100,11 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	auto child1 = root.make_child<node_class<int>>(5);
 	auto child2 = root.make_child_named<node_class<int>>("name", 5);
 
-	BOOST_CHECK_EQUAL(full_name(*child1), "root/test_node");
-	BOOST_CHECK_EQUAL(full_name(*child2), "root/name");
-
-	auto child3 = root.make_child<node_class>(5);
-	auto child4 = root.make_child_named<node_class>("foo", 5);
-
-	BOOST_CHECK_EQUAL(full_name(*child3), "root/test_node");
-	BOOST_CHECK_EQUAL(full_name(*child4), "root/foo");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()), child1->self_), "root/test_node");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2->self_), "root/name");
 }
 
-namespace
-{
-class test_owning_node : public base_node
-{
-public:
-	explicit test_owning_node(std::shared_ptr<parallel_region> r) : base_node(r, "test") {}
-	base_node::forest_t::iterator add_child()
-	{
-		make_child<test_owning_node>();
-		return ++adobe::trailing_of(adobe::child_begin(self_).base());
-	}
 
-	size_t nr_of_children()
-	{
-		return forest_->size() -2; //-1 for this. -1 for root node
-	}
-};
-}
 
 BOOST_AUTO_TEST_CASE( test_deletion )
 {
