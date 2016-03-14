@@ -38,7 +38,6 @@ void cycle_control::stop()
 
 void cycle_control::work()
 {
-	clock::advance();
 	auto now = virtual_clock::steady::now();
 	auto run_if_due = [this, now](auto tick_rate, auto& task_vector)
 	{
@@ -50,6 +49,7 @@ void cycle_control::work()
 	if (!run_if_due(slow_tick, tasks_slow)) return;
 	if (!run_if_due(medium_tick, tasks_medium)) return;
 	if (!run_if_due(fast_tick, tasks_fast)) return;
+	clock::advance();
 }
 
 void cycle_control::main_loop()
@@ -59,7 +59,7 @@ void cycle_control::main_loop()
 	std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
 	while (keep_working)
 	{
-		const auto now = wall_clock::steady::now();
+		auto now = wall_clock::steady::now();
 		const int slow_medium_ratio = slow_tick / medium_tick;
 		const int medium_fast_ratio = medium_tick / fast_tick;
 
@@ -82,17 +82,16 @@ void cycle_control::main_loop()
 				// return.
 				//
 				// Thus we either return or keep_working is true.
-				if (main_loop_control.wait_for(loop_lock, min_tick_length, [this]
-				                               {
-					                               return !keep_working;
-					                           }))
+				if (main_loop_control.wait_until(loop_lock, now + min_tick_length, [this]
+				                                 {
+					                                 return !keep_working;
+				                                 }))
 					return;
 				assert(keep_working);
 				clock::advance();
+				now = wall_clock::steady::now();
 			}
 		}
-
-		main_loop_control.wait_until(loop_lock, now + 100 * min_tick_length);
 	}
 }
 
@@ -137,6 +136,7 @@ void cycle_control::add_task(periodic_task task, virtual_clock::duration tick_ra
 	else
 		throw std::invalid_argument{"Unsupported tick_rate"};
 
+	assert(v);
 	v->emplace_back(std::move(task));
 	assert(!v->empty());
 }
