@@ -54,44 +54,14 @@ void cycle_control::work()
 
 void cycle_control::main_loop()
 {
-	// the mutex needs to be held to check the condition; waiting releases the lock and reaquires it
-	// afterwards.
+	// the mutex needs to be held to check the condition; wait_until releases the lock while waiting.
 	std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
-	while (keep_working)
+	while(keep_working)
 	{
-		auto now = wall_clock::steady::now();
-		const int slow_medium_ratio = slow_tick / medium_tick;
-		const int medium_fast_ratio = medium_tick / fast_tick;
-
-		if (!run_periodic_tasks(tasks_slow)) return;
-
-		for (int slow_iter = 0; slow_iter < slow_medium_ratio; ++slow_iter)
-		{
-			if (!run_periodic_tasks(tasks_medium)) return;
-
-			for (int medium_iter = 0; medium_iter < medium_fast_ratio; ++medium_iter)
-			{
-				if (!run_periodic_tasks(tasks_fast)) return;
-
-				// !keep_working is the predicate.
-				// When the predicate returns true (*don't keep working*) the
-				// wait_for returns true and we return.
-				// When the timeout comes the value of the predicate is
-				// returned, which *should* be false. If the predicate is true at
-				// the timeout then it means keep_working is false and we should
-				// return.
-				//
-				// Thus we either return or keep_working is true.
-				if (main_loop_control.wait_until(loop_lock, now + min_tick_length, [this]
-				                                 {
-					                                 return !keep_working;
-				                                 }))
-					return;
-				assert(keep_working);
-				clock::advance();
-				now = wall_clock::steady::now();
-			}
-		}
+		const auto now = wall_clock::steady::now();
+		work();
+		main_loop_control.wait_until(
+				loop_lock, now + min_tick_length);
 	}
 }
 
