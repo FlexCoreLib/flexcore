@@ -5,7 +5,6 @@
 #include <ports/events/event_sinks.hpp>
 #include <ports/events/event_sources.hpp>
 #include <ports/ports.hpp>
-#include <nodes/base_node.hpp>
 #include <nodes/pure_node.hpp>
 
 namespace fc
@@ -57,8 +56,8 @@ protected:
  * \pparam predicate type of predicate evaluated on event
  * needs to be callable with type convertible from event_t and return bool.
  */
-template<class event_t, class predicate>
-class gate_with_predicate: public generic_event_node<event_t, pure::pure_node>
+template<class event_t, class predicate, class base_t = pure::pure_node>
+class gate_with_predicate: public generic_event_node<event_t, base_t>
 {
 public:
 	explicit gate_with_predicate(const predicate& p) :
@@ -83,8 +82,8 @@ private:
  *
  * \tparam event_t type of event expected and forwarded
  */
-template<class event_t>
-class gate_with_control: public generic_event_node<event_t, pure::pure_node>
+template<class event_t, class base_t = pure::pure_node>
+class gate_with_control: public generic_event_node<event_t, base_t>
 {
 public:
 	gate_with_control() :
@@ -101,7 +100,7 @@ public:
 	auto& in_control() noexcept { return control; }
 
 private:
-	pure::pure_node::state_sink<bool> control;
+	typename base_t::template state_sink<bool> control;
 };
 
 /// Creates gate_with_predicate with predicate p of type event_t.

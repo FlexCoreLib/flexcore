@@ -24,25 +24,26 @@ namespace fc
  */
 template
 	<	class range_t,
-		class predicate_result_t
+		class predicate_result_t,
+		class base_t = tree_base_node
 	>
-class list_splitter : public tree_base_node
+class list_splitter : public base_t
 {
 public:
 	typedef typename std::iterator_traits<decltype(std::begin(range_t()))>::value_type value_t;
 	typedef boost::iterator_range<typename std::vector<value_t>::iterator> out_range_t;
 
-	template <class predicate_t>
-	explicit list_splitter(std::shared_ptr<parallel_region> r, predicate_t pred)
-		: tree_base_node(r, "splitter")
+	template <class predicate_t, class... args_t>
+	explicit list_splitter(predicate_t pred, args_t&&... args)
+		: base_t(std::forward<args_t>(args)...)
 		, in(this, [&](const range_t& range){ this->receive(range); } )
 		, out_num_dropped(this, [this](){ return dropped_counter;})
 		, entries()
 		, predicate(pred)
 	{}
 
-	event_sink<range_t> in;
-	event_source<out_range_t>& out(predicate_result_t value)
+	typename base_t::template event_sink<range_t> in;
+	auto& out(predicate_result_t value)
 	{
 		auto it = entries.find(value);
 		if (it == entries.end())
@@ -53,7 +54,7 @@ public:
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
 	 */
-	state_source<size_t> out_num_dropped;
+	typename base_t::template state_source<size_t> out_num_dropped;
 
 private:
 	size_t dropped_counter = 0;
@@ -84,7 +85,7 @@ private:
 	struct entry_t
 	{
 		entry_t(list_splitter* p) : port(p), data() {}
-		event_source<out_range_t> port;
+		typename base_t::template event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};
 

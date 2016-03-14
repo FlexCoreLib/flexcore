@@ -3,9 +3,6 @@
 
 #include <core/traits.hpp>
 
-#include <ports/ports.hpp>
-#include <nodes/base_node.hpp>
-
 #include <boost/range.hpp>
 #include <boost/circular_buffer.hpp>
 #include <vector>
@@ -15,7 +12,7 @@ namespace fc
 
 namespace detail
 {
-template<class data_t, template<class...> class container_t>
+template<class data_t, template<class...> class container_t, class base_t>
 class base_event_to_state;
 }
 /**
@@ -26,7 +23,7 @@ class base_event_to_state;
  * policy classes control when the buffer is cleared
  * as well as how and when the state is available.
  */
-template<class data_t, class buffer_policy>
+template<class data_t, class buffer_policy, class base_t>
 class list_collector;
 
 /**
@@ -50,21 +47,23 @@ struct swap_on_pull {};
  * Sends the buffer as state when pulled.
  * inputs are made available on tick received at port swap_buffers.
  */
-template<class data_t>
-class list_collector<data_t, swap_on_tick>
-		: public detail::base_event_to_state<data_t, std::vector>
+template<class data_t, class base_t>
+class list_collector<data_t, swap_on_tick, base_t>
+		: public detail::base_event_to_state<data_t, std::vector, base_t>
 {
 public:
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
-	explicit list_collector(std::shared_ptr<parallel_region> r)
-		: detail::base_event_to_state<data_t, std::vector>{r,
+	template<class... args_t>
+	explicit list_collector(args_t&&... args)
+		: detail::base_event_to_state<data_t, std::vector, base_t>{
 				[this]()
 				{
 					data_read = true;
 					return boost::make_iterator_range(
 							this->buffer_state.begin(),
 							this->buffer_state.end());
-				}}
+				},
+				std::forward<args_t>(args)...}
 	{}
 
 	auto swap_buffers() noexcept
@@ -96,20 +95,22 @@ private:
  * Sends the buffer as state when pulled.
  * Events are stored in vector which grows until pull is called.
  */
-template<class data_t>
-class list_collector<data_t, swap_on_pull>
-		: public detail::base_event_to_state<data_t, std::vector>
+template<class data_t, class base_t>
+class list_collector<data_t, swap_on_pull, base_t>
+		: public detail::base_event_to_state<data_t, std::vector, base_t>
 {
 public:
 	/// Type of range provided as output is an immutable range of data_t.
 	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator>
 			out_range_t;
 
-	explicit list_collector(std::shared_ptr<parallel_region> r)
-		: detail::base_event_to_state<data_t, std::vector>{r, [&]()
+	template<class... args_t>
+	explicit list_collector(args_t&&... args)
+		: detail::base_event_to_state<data_t, std::vector, base_t>{[&]()
 				{
 					return this->get_state();
-				}}
+				},
+				std::forward<args_t>(args)...}
 	{}
 
 private:
@@ -160,8 +161,8 @@ struct collector
  *
  * Extend this class to easily implement your own nodes.
  */
-template<class data_t, template<class...> class container_t>
-class base_event_to_state : public tree_base_node
+template<class data_t, template<class...> class container_t, class base_t>
+class base_event_to_state : public base_t
 {
 public:
 	typedef boost::iterator_range<typename container_t<data_t>::const_iterator>
@@ -183,11 +184,10 @@ protected:
 	 *  to store it in outputs.
 	 *  Action can be a simple write to the output buffer or a more complex action.
 	 */
-	template<class action_t>
+	template<class action_t, class... args_t>
 	explicit base_event_to_state(
-			std::shared_ptr<parallel_region> r,
-			action_t&& action) :
-		tree_base_node(r, "event to state"),
+			action_t&& action, args_t&&... args) :
+			base_t(std::forward<args_t>(args)...),
 		buffer_collect(std::make_unique<std::vector<data_t>>()),
 		out_port(this, action)
 	{
@@ -196,7 +196,7 @@ protected:
 	std::unique_ptr<container_t<data_t>> buffer_collect;
 	container_t<data_t> buffer_state;
 
-	state_source<out_range_t> out_port;
+	typename base_t::template state_source<out_range_t> out_port;
 };
 } //namespace detail
 
@@ -205,16 +205,17 @@ protected:
  *
  * \tparam data_t is type of token received as event and then stored.
  */
-template<class data_t>
-class hold_last : public tree_base_node
+template<class data_t, class base_t>
+class hold_last : public base_t
 {
 public:
 	static_assert(!std::is_void<data_t>(),
 			"data stored in hold_last cannot be void");
 
 	/// Constructs hold_last with initial state.
-	explicit hold_last(std::shared_ptr<parallel_region> r, const data_t& initial_value = data_t())
-		: tree_base_node(r, "hold_last")
+	template<class... args_t>
+	explicit hold_last(const data_t& initial_value, args_t&&... args)
+		: base_t(std::forward<args_t>(args)..., "hold_last")
 		, storage(initial_value)
 	{
 	}
@@ -236,8 +237,8 @@ private:
  * \tparam data_t type of data stored in buffer
  * \invariant capacity of buffer is > 0.
  */
-template<class data_t>
-class hold_n : public tree_base_node
+template<class data_t, class base_t>
+class hold_n : public base_t
 {
 public:
 	typedef boost::circular_buffer<data_t> buffer_t;
@@ -252,8 +253,9 @@ public:
 	 * \param capacity sets the max nr of elements in the circular buffer.
 	 * \pre capacity > 0
 	 */
-	explicit hold_n(std::shared_ptr<parallel_region> r, size_t capacity)
-		: tree_base_node(r, "hold")
+	template<class... args_t>
+	explicit hold_n(size_t capacity, args_t&&... args)
+		: base_t(std::forward<args_t>(args)..., "hold")
 		, storage(std::make_unique<buffer_t>(capacity))
 		, out_port(this,
 				[this]()
@@ -276,7 +278,7 @@ public:
 	auto& out() noexcept { return out_port; }
 private:
 	std::unique_ptr<buffer_t> storage;
-	state_source<out_range_t> out_port;
+	typename base_t::template state_source<out_range_t> out_port;
 };
 
 }  // namespace fc

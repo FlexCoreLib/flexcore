@@ -8,19 +8,18 @@ BOOST_AUTO_TEST_SUITE( test_state_nodes )
 
 BOOST_AUTO_TEST_CASE( test_merge )
 {
-	root_node root;
-	auto multiply = make_merge( root, [](int a, int b){return a*b;} );
-	state_source<size_t> three(&root, [](){ return 3; });
-	state_source<size_t> two(&root, [](){ return 2; });
-	three >> multiply->in<0>();
-	two >> multiply->in<1>();
-	BOOST_CHECK_EQUAL((*multiply)(), 6);
+	auto multiply = make_merge([](int a, int b){return a*b;} );
+	pure::state_source<size_t> three([](){ return 3; });
+	pure::state_source<size_t> two([](){ return 2; });
+	three >> multiply.in<0>();
+	two >> multiply.in<1>();
+	BOOST_CHECK_EQUAL(multiply(), 6);
 }
 
 BOOST_AUTO_TEST_CASE(test_state_cache)
 {
 	root_node root;
-	auto& cache = *(root.make_child<state_cache<int>>());
+	auto& cache = *(root.make_child<state_cache<int, tree_base_node>>("cache"));
 
 	int test_val = 1;
 
@@ -55,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_current_state)
 	source >> test_node.in();
 
 	// we haven't updated the cache yet
-	BOOST_CHECK_EQUAL(test_node.out()(), int()); //default is int()
+	BOOST_CHECK_EQUAL(test_node.out()(), int());
 
 	region->ticks.work.fire(); //triggers update of the cache
 	BOOST_CHECK_EQUAL(test_node.out()(), 1);

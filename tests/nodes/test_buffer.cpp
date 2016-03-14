@@ -1,6 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <nodes/buffer.hpp>
+#include <nodes/base_node.hpp>
+
 #include <ports/events/event_sources.hpp>
 #include <ports/states/state_sink.hpp>
 
@@ -12,7 +14,8 @@ BOOST_AUTO_TEST_CASE(single_event_to_state)
 {
 	root_node root;
 
-	list_collector<int, swap_on_tick> buffer{std::make_shared<parallel_region>("dummy")};
+	list_collector<int, swap_on_tick, tree_base_node>
+			buffer{std::make_shared<parallel_region>("dummy"), "collector"};
 
 	event_source<int> source{&root};
 
@@ -39,7 +42,8 @@ BOOST_AUTO_TEST_CASE(event_range_to_state)
 {
 	root_node root;
 
-	list_collector<int, swap_on_tick> buffer{std::make_shared<parallel_region>("dummy")};
+	list_collector<int, swap_on_tick,tree_base_node>
+			buffer{std::make_shared<parallel_region>("dummy"), "collector"};
 	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
 	event_source<int_range> source{&root};
 	std::vector<int> vec {1,2,3,4};
@@ -66,7 +70,8 @@ BOOST_AUTO_TEST_CASE(test_hold_last)
 {
 	root_node root;
 
-	hold_last<int> buffer{std::make_shared<parallel_region>("root")};
+	hold_last<int, tree_base_node>
+			buffer{0, std::make_shared<parallel_region>("root")};
 
 	event_source<int> source{&root};
 	state_sink<int> sink{&root};
@@ -83,9 +88,10 @@ BOOST_AUTO_TEST_CASE(test_hold_n)
 {
 	root_node root;
 
-	hold_n<int> buffer{std::make_shared<parallel_region>("root"), 3};
+	hold_n<int, tree_base_node>
+		buffer{3, std::make_shared<parallel_region>("root")};
 	event_source<int> source{&root};
-	state_sink<hold_n<int>::out_range_t> sink{&root};
+	state_sink<hold_n<int, tree_base_node>::out_range_t> sink{&root};
 
 	source >> buffer.in();
 	buffer.out() >> sink;
@@ -117,8 +123,9 @@ BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
 {
 	root_node root;
 
-	hold_n<int> buffer{std::make_shared<parallel_region>("root"), 5};
-	state_sink<hold_n<int>::out_range_t> sink{&root};
+	hold_n<int, tree_base_node>
+		buffer{5, std::make_shared<parallel_region>("root")};
+	state_sink<hold_n<int, tree_base_node>::out_range_t> sink{&root};
 	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
 	event_source<int_range> source{&root};
 	std::vector<int> vec {1,2,3,4};

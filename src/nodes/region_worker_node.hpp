@@ -18,7 +18,9 @@ class region_worker_node : public tree_base_node
 {
 public:
 	template<class action_t>
-	region_worker_node(action_t&& action, std::string name, std::shared_ptr<parallel_region> parent_region) :
+	region_worker_node(action_t&& action,
+			std::shared_ptr<parallel_region> parent_region,
+			std::string name) :
 		tree_base_node(parent_region, name)
 	{
 		parent_region->work_tick() >> std::forward<action_t>(action);
