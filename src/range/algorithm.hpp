@@ -9,6 +9,9 @@
 
 namespace fc
 {
+namespace views
+{
+
 
 /**
  * \brief Higher order function filter as a connectable.
@@ -38,7 +41,7 @@ auto filter(predicate pred)
 }
 
 /**
- * \brief Higher order map aka transform filter as a connectable.
+ * \brief Higher order map aka transform as a connectable.
  *
  * \tparam operation operation to apply to each element of range.
  *
@@ -62,6 +65,10 @@ auto map(operation op)
 	return map_view<operation> { op };
 }
 
+
+} //namespace views
+
+
 /**
  * \brief Higher order function reduce aka fold as a connectable.
  *
@@ -78,7 +85,7 @@ struct reduce_view
 	}
 
 	template<class in_range>
-	auto operator()(const in_range&& input)
+	auto operator()(in_range&& input)
 	{
 		using std::begin;
 		using std::end;
