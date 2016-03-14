@@ -96,19 +96,14 @@ void cycle_control::add_task(periodic_task task, virtual_clock::duration tick_ra
 	if (running)
 		throw std::runtime_error{"Worker threads are already running"};
 
-	std::vector<periodic_task>* v = nullptr;
 	if (tick_rate == slow_tick)
-		v = &tasks_slow;
+		tasks_slow.emplace_back(std::move(task));
 	else if (tick_rate == medium_tick)
-		v = &tasks_medium;
+		tasks_medium.emplace_back(std::move(task));
 	else if (tick_rate == fast_tick)
-		v = &tasks_fast;
+		tasks_fast.emplace_back(std::move(task));
 	else
 		throw std::invalid_argument{"Unsupported tick_rate"};
-
-	assert(v);
-	v->emplace_back(std::move(task));
-	assert(!v->empty());
 }
 
 std::exception_ptr cycle_control::last_exception()
