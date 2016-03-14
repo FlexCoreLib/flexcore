@@ -10,6 +10,8 @@
 #include <threading/parallelregion.hpp>
 #include <ports/ports.hpp>
 
+#include <boost/scope_exit.hpp>
+
 using namespace fc;
 
 struct null : base_node
@@ -24,7 +26,7 @@ auto setup_parallel_region(const std::string& name,
 	auto region = std::make_shared<fc::parallel_region>(name);
 
 	auto tick_cycle = fc::thread::periodic_task(
-			[&region]()
+			[region]()
 			{
 				region->ticks.in_work()();
 			},
@@ -49,12 +51,13 @@ int main()
 
 	std::cout << "start building connections\n";
 
-	using time_point = fc::wall_clock::system::time_point;
+	using clock = fc::virtual_clock::system;
+	using time_point = clock::time_point;
 	fc::pure::event_source<time_point> source;
 	first_region->ticks.work_tick()
-			>> [&source](){ source.fire(fc::wall_clock::system::now()); };
+			>> [&source](){ source.fire(clock::now()); };
 
-	source >> [](time_point t){ return fc::wall_clock::system::to_time_t(t); }
+	source >> [](time_point t){ return clock::to_time_t(t); }
 		   >> [](time_t t) { std::cout << std::localtime(&t)->tm_sec << "\n"; };
 
 	first_region->ticks.work_tick()
@@ -91,11 +94,29 @@ int main()
 	graph::connection_graph::access().print(std::cout);
 
 	thread_manager.start();
+	BOOST_SCOPE_EXIT(&thread_manager) {
+		thread_manager.stop();
+	} BOOST_SCOPE_EXIT_END
 
 	using namespace std::chrono_literals;
 	int iterations = 7;
 	while (iterations--)
+	{
+		auto exception = thread_manager.last_exception();
+		if (exception)
+		{
+			try
+			{
+				std::rethrow_exception(exception);
+			}
+			catch (const fc::out_of_time_exception& ex)
+			{
+				std::cout << "Scheduler out of time: " << ex.what() << "\n";
+				return EXIT_FAILURE;
+			}
+		}
 		std::this_thread::sleep_for(0.5s);
+	}
 
 	return 0;
 }
