@@ -4,6 +4,8 @@
 #include <ports/pure_ports.hpp>
 #include <nodes/base_node.hpp>
 
+#include <nodes/owning_node.hpp>
+
 template<class base>
 struct useless_mixin : public base
 {
@@ -183,8 +185,8 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	typedef node_aware<pure::event_source<int>> test_out_port;
 	auto region_1 = std::make_shared<parallel_region>("r1");
 	auto region_2 = std::make_shared<parallel_region>("r2");
-	root_node root_1("1", region_1);
-	root_node root_2("2", region_2);
+	tests::owning_node root_1(region_1);
+	tests::owning_node root_2(region_2);
 
 	int test_value = 0;
 	auto write_param = [&test_value](int i) {test_value = i;};

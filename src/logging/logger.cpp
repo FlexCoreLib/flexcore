@@ -148,7 +148,7 @@ logger::logger()
 class log_client::log_client_impl
 {
 public:
-	log_client_impl(const region_info* region)
+	log_client_impl(const parallel_region* region)
 	    : lg(keywords::channel = (region ? region->get_id().key : "(null)"))
 	{
 	}
@@ -169,7 +169,7 @@ log_client::log_client() : log_client_pimpl(std::make_unique<log_client::log_cli
 {
 }
 
-log_client::log_client(const region_info* region)
+log_client::log_client(const parallel_region* region)
     : log_client_pimpl(std::make_unique<log_client::log_client_impl>(region))
 {
 }

@@ -2,6 +2,8 @@
 
 #include <nodes/base_node.hpp>
 
+#include "owning_node.hpp"
+
 // std
 #include <memory>
 
@@ -48,9 +50,9 @@ BOOST_AUTO_TEST_SUITE( test_base_node )
  */
 BOOST_AUTO_TEST_CASE( test_region_propagation )
 {
-	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
-	root_node root("root", region);
-	auto child = root.make_child_named<null>("child");
+	auto region = std::make_shared<parallel_region>("foo");
+	tests::owning_node root(region);
+	auto child = root.make_child<null>("child");
 
 	BOOST_CHECK(child->region()->get_id() == region->get_id());
 }
@@ -83,8 +85,7 @@ public:
  */
 BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
-	std::shared_ptr<region_info> region = std::make_shared<parallel_region>("foo");
-	root_node root("root", region);
+	tests::owning_node root("root");
 	auto child1 = root.make_child_named<test_owning_node>("test_owning_node");
 	auto child2 = root.make_child_named<null>("2");
 	auto child1a = child1->make_child_named<null>("a");
@@ -96,7 +97,7 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 
 BOOST_AUTO_TEST_CASE( test_make_child )
 {
-	root_node root("root");
+	tests::owning_node root("root");
 	auto child1 = root.make_child<node_class<int>>(5);
 	auto child2 = root.make_child_named<node_class<int>>("name", 5);
 
@@ -108,7 +109,7 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 
 BOOST_AUTO_TEST_CASE( test_deletion )
 {
-	root_node root("root");
+	tests::owning_node root;
 
 	auto test_node = root.make_child<test_owning_node>();
 

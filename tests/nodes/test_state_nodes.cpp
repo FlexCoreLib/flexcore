@@ -2,6 +2,8 @@
 
 #include <nodes/state_nodes.hpp>
 
+#include "owning_node.hpp"
+
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE( test_state_nodes )
@@ -18,8 +20,7 @@ BOOST_AUTO_TEST_CASE( test_merge )
 
 BOOST_AUTO_TEST_CASE(test_state_cache)
 {
-	root_node root;
-	auto& cache = *(root.make_child<state_cache<int, tree_base_node>>("cache"));
+	state_cache<int, pure::pure_node> cache;
 
 	int test_val = 1;
 

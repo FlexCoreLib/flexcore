@@ -43,7 +43,7 @@ public:
 
 	explicit tree_base_node(std::shared_ptr<parallel_region> r, std::string name)
 		: graph_info_(name)
-		, self_()
+		, self_() // todo zonk
 		, region_(r)
 	{
 		assert(region_);
@@ -99,7 +99,6 @@ protected:
  * the ownership tree.
  *
  * Nodes are not copyable.
- * Deleting a node will delete any children.
  *
  * Node creation examples:
  * \code{cpp}
@@ -184,12 +183,14 @@ struct node_owner : base_t
 private:
 	/**
 	 * Takes ownership of child node and inserts into tree.
-	 * @return pointer to child node
+	 * \return pointer to child node
+	 * \pre child != nullptr
 	 */
 	template<class node_t>
 	node_t* add_child(std::unique_ptr<node_t> child)
 	{
 		assert(this->forest_); //check invariant
+		assert(child);
 
 		//we need to store an iterator and then cast back to node_t*
 		//to avoid use after move on child.
@@ -241,9 +242,13 @@ public:
 				std::shared_ptr<parallel_region> r =
 						std::make_shared<parallel_region>("root")	)
 		:  node_owner<detail::forest_owner>(std::make_unique<forest_owner::forest_t>(), r)
+		, tree_root(nullptr)
 	{
 		self_ = adobe::trailing_of(this->forest_->insert(
 				this->forest_->begin(), std::make_unique<tree_base_node>(r, n)));
+
+		tree_root = static_cast<node_owner<owning_base_node>*>(self_->get());
+		tree_root->self_ = self_;
 	}
 
 	//Todo this is currently necessary since ports in tests are attached directly to the root, remove if that is fixed.
@@ -251,6 +256,11 @@ public:
 	{
 		return (*self_)->graph_info();
 	}
+
+	auto& nodes() { return *tree_root; }
+
+private:
+	node_owner<owning_base_node>* tree_root;
 
 };
 

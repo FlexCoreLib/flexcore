@@ -6,6 +6,8 @@
 #include <ports/events/event_sources.hpp>
 #include <ports/states/state_sink.hpp>
 
+#include "owning_node.hpp"
+
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_buffers)

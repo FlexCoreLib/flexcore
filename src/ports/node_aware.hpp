@@ -194,7 +194,7 @@ struct node_aware: base
 	typedef base base_t;
 
 	template <class ... args>
-	node_aware(region_info& r, args&&... base_constructor_args)
+	node_aware(parallel_region& r, args&&... base_constructor_args)
 		: base(std::forward<args>(base_constructor_args)...), region(r)
 	{
 	}
@@ -208,7 +208,7 @@ struct node_aware: base
 		        std::integral_constant<bool, has_node_aware<conn_t>()> { });
 	}
 
-	region_info& region;
+	parallel_region& region;
 
 private:
 	// helper aliases to make method prototypes easier to read.

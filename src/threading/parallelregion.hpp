@@ -80,10 +80,6 @@ public:
 	region_id id;
 };
 
-//temporary type alias to not break all the code using region_info
-using region_info = parallel_region;
-
-
 } /* namespace fc */
 
 #endif /* SRC_THREADING_PARALLELREGION_HPP_ */
