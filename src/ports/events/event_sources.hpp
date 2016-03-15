@@ -136,7 +136,8 @@ struct event_source
 		{
 			source.event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
 
-			get_sink(c).register_callback(source.create_callback_delete_handler());
+			auto callback = source.create_callback_delete_handler();
+			get_sink(c).register_callback(callback);
 
 			assert(!source.event_handlers.empty());
 			return port_connection<decltype(this), conn_t, result_t>();

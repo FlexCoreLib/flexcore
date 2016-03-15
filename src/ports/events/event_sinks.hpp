@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <functional>
+#include <vector>
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
@@ -12,65 +13,6 @@ namespace fc
 {
 namespace pure
 {
-
-/// Mixin for executing a callback to the source on deletion of the sink
-struct event_in_port_callback_mixin
-{
-	typedef std::weak_ptr<std::function<void(void)>> callback_fun_ptr_weak;
-	explicit event_in_port_callback_mixin() :
-		deregisterer(std::make_shared<scoped_deregister>())
-	{
-	}
-
-public:
-
-	/**
-	 * \brief Registers the source to the sink
-	 * \pre fun != null_ptr
-	 * \post destruct_callback->expired() == false
-	 */
-	void register_callback(const std::shared_ptr<std::function<void(void)>>& fun)
-	{
-		assert(fun);
-		deregisterer->destruct_callback = fun;
-		assert(!deregisterer->destruct_callback.expired());
-	}
-
-	long int numRefs()
-	{
-		return deregisterer.use_count();
-	}
-
-private:
-	/**
-	 * \brief scoped wrapper around deregister call
-	 *
-	 * Makes sure deregister is only called, when the last copy of the port is destroyed
-	 */
-	struct scoped_deregister
-	{
-		~scoped_deregister()
-		{
-			deregister();
-		}
-
-		/**
-		 * \brief Deregisters from the source
-		 * \pre destruct_callback != null_ptr
-		 */
-		void deregister()
-		{
-			if (auto sharedCallbackPtr = destruct_callback.lock())
-				(*sharedCallbackPtr)();
-		}
-
-		callback_fun_ptr_weak destruct_callback = callback_fun_ptr_weak();
-	};
-
-	std::shared_ptr<scoped_deregister> deregisterer;
-};
-
-
 /**
  * \brief minimal input port for events
  *
@@ -78,9 +20,11 @@ private:
  * \tparam event_t type of event expected, must be copy_constructable
  */
 template<class event_t>
-struct event_sink : public event_in_port_callback_mixin
+struct event_sink
 {
 	typedef typename detail::handle_type<event_t>::type handler_t;
+	typedef void result_t;
+
 	explicit event_sink(const handler_t& handler) :
 			event_handler(handler)
 	{
@@ -97,19 +41,34 @@ struct event_sink : public event_in_port_callback_mixin
 	event_sink() = delete;
 	event_sink(const event_sink&) = delete;
 	event_sink(event_sink&&) = default;
+	~event_sink()
+	{
+		for (auto& breaker_ptr : connection_breakers)
+		{
+			auto breaker = breaker_ptr.lock();
+			if (breaker)
+				(*breaker)();
+		}
+	}
 
-	typedef void result_t;
+	void register_callback(std::shared_ptr<std::function<void()>>& visit_fun)
+	{
+		assert(visit_fun);
+		assert(*visit_fun);
+		connection_breakers.emplace_back(visit_fun);
+	}
 
 private:
 	handler_t event_handler;
-
+	std::vector<std::weak_ptr<std::function<void()>>> connection_breakers;
 };
 
 /// specialisation of event_sink with void , necessary since operator() has no parameter.
 template<>
-struct event_sink<void> : public event_in_port_callback_mixin
+struct event_sink<void>
 {
 	typedef typename detail::handle_type<void>::type handler_t;
+
 	explicit event_sink(handler_t handler) :
 			event_handler(handler)
 	{
@@ -125,8 +84,26 @@ struct event_sink<void> : public event_in_port_callback_mixin
 	event_sink() = delete;
 	event_sink(const event_sink&) = delete;
 	event_sink(event_sink&&) = default;
+	~event_sink()
+	{
+		for (auto& breaker_ptr : connection_breakers)
+		{
+			auto breaker = breaker_ptr.lock();
+			if (breaker)
+				(*breaker)();
+		}
+	}
+
+	void register_callback(std::shared_ptr<std::function<void()>>& visit_fun)
+	{
+		assert(visit_fun);
+		assert(*visit_fun);
+		connection_breakers.emplace_back(visit_fun);
+	}
+
 private:
 	handler_t event_handler;
+	std::vector<std::weak_ptr<std::function<void()>>> connection_breakers;
 };
 
 /**
