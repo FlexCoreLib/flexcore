@@ -4,6 +4,8 @@
 #include <nodes/list_manipulation.hpp>
 #include <nodes/buffer.hpp>
 
+#include "owning_node.hpp"
+
 // std
 #include <deque>
 #include <list>
@@ -101,18 +103,17 @@ BOOST_AUTO_TEST_CASE( test_list_splitter_bool )
 	range_compare(out_false, std::vector<int>{ -1, -6, -6});
 }
 
-BOOST_AUTO_TEST_CASE( test_list_collector )
+BOOST_AUTO_TEST_CASE( test_list_collector_pure )
 {
+	// test case of list collector without region context
+
 	typedef list_splitter <std::list<int>, bool, pure::pure_node> splitter_t;
-	root_node root;
-	auto region = std::shared_ptr<parallel_region>();
-
-	auto splitter = splitter_t{ [](int) { return 0; }};
-
 	typedef list_collector<int, swap_on_pull, pure::pure_node> collector_t;
+
+	splitter_t splitter{ [](int) { return 0; }};
 	collector_t collector;
 
-	state_sink<collector_t::out_range_t> sink(&root);
+	pure::state_sink<collector_t::out_range_t> sink;
 
 	splitter.out(0) >> collector.in();
 	collector.out() >> sink;

@@ -64,6 +64,8 @@ public:
 
 	auto region() const { return owner.region(); }
 
+	auto& node() { return owner; };
+
 private:
 	std::unique_ptr<forest_t> owned_forest;
 	node_owner<owning_base_node> owner;

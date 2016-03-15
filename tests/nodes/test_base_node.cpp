@@ -14,12 +14,12 @@ namespace // unnamed
 template<class data_t>
 struct node_class : tree_base_node
 {
-	node_class(std::shared_ptr<parallel_region> r, data_t a)
+	node_class(data_t a, std::shared_ptr<parallel_region> r)
 		: tree_base_node(r, "test_node")
 		, value(a)
 	{}
 
-	node_class(std::shared_ptr<parallel_region> r, std::string name, data_t a)
+	node_class(data_t a, std::shared_ptr<parallel_region> r, std::string name)
 		: tree_base_node(r, name)
 		, value(a)
 	{}
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
 {
 	auto region = std::make_shared<parallel_region>("foo");
 	tests::owning_node root(region);
-	auto child = root.make_child<null>("child");
+	auto child = root.make_child_named<null>("child");
 
 	BOOST_CHECK(child->region()->get_id() == region->get_id());
 }

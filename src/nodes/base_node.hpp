@@ -133,7 +133,7 @@ struct node_owner : base_t
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(args_t ... args)
 	{
-		return add_child(std::make_unique<node_t>(this->region(), args...));
+		return add_child(std::make_unique<node_t>(args..., this->region()));
 	}
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
@@ -149,7 +149,7 @@ struct node_owner : base_t
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(args_t ... args)
 	{
-		return add_child(std::make_unique<node_t>(this->region(), this->forest(), args...));
+		return add_child(std::make_unique<node_t>( args..., this->region(), this->forest()));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args.
@@ -162,7 +162,7 @@ struct node_owner : base_t
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t ... args)
 	{
-		return add_child(std::make_unique<node_t>(this->region(),name, args...));
+		return add_child(std::make_unique<node_t>(args..., this->region(),name));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args
@@ -177,7 +177,7 @@ struct node_owner : base_t
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t ... args)
 	{
-		return add_child(std::make_unique<node_t>(this->region(), name, this->forest(), args...));
+		return add_child(std::make_unique<node_t>( args..., this->region(), name, this->forest()));
 	}
 
 private:
