@@ -5,7 +5,6 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include <algorithm>
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
@@ -92,47 +91,11 @@ struct event_source
 	}
 
 private:
-	class connection_breaker
-	{
-	public:
-		connection_breaker(std::vector<handler_t>& handlers)
-		    : handlers(&handlers), sink_callback(std::make_shared<std::function<void(size_t)>>(
-		                               [this](size_t hash)
-		                               {
-			                               this->remove_handler(hash);
-		                               }))
-		{
-		}
-
-		template <class sink_t>
-		void add_circuit_breaker(sink_t& sink, std::true_type)
-		{
-			handler_hashes.push_back(std::hash<sink_t*>{}(&sink));
-			sink.register_callback(sink_callback);
-		}
-		template <class sink_t>
-		void add_circuit_breaker(sink_t&, std::false_type) {}
-
-		void remove_handler(size_t port_hash)
-		{
-			auto handler_position = find(begin(handler_hashes), end(handler_hashes), port_hash);
-			assert(handler_position != end(handler_hashes));
-			auto idx = distance(begin(handler_hashes), handler_position);
-			handlers->erase(begin(*handlers) + idx);
-			handler_hashes.erase(begin(handler_hashes) + idx);
-		}
-	private:
-		std::vector<handler_t>* handlers;
-		std::vector<size_t> handler_hashes;
-		// Callback from connected sinks to *this that delete the connection corresponding to a hash
-		// when invoked.
-		std::shared_ptr<std::function<void(size_t)>> sink_callback;
-	};
 
 	// Stores event_handlers in a vector, the node needs to send
 	// to all connected event_handlers when an event is fired.
 	std::vector<handler_t> event_handlers;
-	connection_breaker breaker{event_handlers};
+	detail::connection_breaker<handler_t, detail::multiple_handler_policy> breaker{event_handlers};
 };
 
 } // namespace pure
