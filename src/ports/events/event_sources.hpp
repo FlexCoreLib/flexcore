@@ -98,51 +98,22 @@ struct event_source
 	}
 
 	/**
-	 * \brief default implementation of connect(source_t, conn_t)
-	 * \param c the new target to be connected.
-	 * \pre c is not empty function
-	 * \pre c not of type event_sink
-	 * \post event_handlers.empty() == false
+	 * \brief do nothing function for sinks not supporting callbacks
 	 */
-	template<class source_t, class conn_t, class Enable = void>
-	struct connect_impl {
-		auto operator()(source_t source, conn_t c)
-		{
-			source.event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
-
-			assert(!source.event_handlers.empty());
-			return port_connection<decltype(this), conn_t, result_t>();
-		}
-	};
+	template <class sink_t>
+	auto add_circuit_breaker(sink_t&, std::false_type) {}
 
 	/**
-	 * \brief specialization for connection with connection struct
-	 * \param c the new target to be connected.
-	 * \pre c is not empty function
-	 * \pre c of type connection
-	 * \pre c.c.(...).c has register function
-	 * \post event_handlers.empty() == false
+	 * \brief Register a circuit breaker callback for sinks that support callbacks.
+	 * \param sink the sink with which to register a callback.
+	 * \pre sink has register function
 	 */
-	template <class source_t, class conn_t>
-	struct connect_impl
-		<	source_t,
-			conn_t,
-			typename std::enable_if <
-				has_register_function<typename get_sink_t<conn_t>::type>(0)
-			>::type
-		>
+	template <class sink_t>
+	auto add_circuit_breaker(sink_t& sink, std::true_type)
 	{
-		auto operator()(source_t source, conn_t c)
-		{
-			source.event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
-
-			auto callback = source.create_callback_delete_handler();
-			get_sink(c).register_callback(callback);
-
-			assert(!source.event_handlers.empty());
-			return port_connection<decltype(this), conn_t, result_t>();
-		}
-	};
+		auto callback = create_callback_delete_handler();
+		sink.register_callback(callback);
+	}
 
 	/**
 	 * \brief connects new connectable target to port.
@@ -158,7 +129,15 @@ struct event_source
 		static_assert(detail::has_result_of_type<conn_t, event_t>(),
 			"The type returned by this source is not compatible with the connection you "
 			"are trying to establish.");
-		return connect_impl<decltype(*this), conn_t>()(*this, std::forward<conn_t>(c));
+
+		event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
+		// Register a connection breaker callback if sink_t supports it
+		using sink_t = typename get_sink_t<conn_t>::type;
+		auto can_register_function = std::integral_constant<bool, fc::has_register_function<sink_t>(0)>{};
+		add_circuit_breaker(get_sink(c), can_register_function);
+
+		assert(!event_handlers.empty());
+		return port_connection<decltype(this), conn_t, result_t>();
 	}
 
 private:
