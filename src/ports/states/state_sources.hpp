@@ -38,13 +38,31 @@ public:
 
 	state_source(const state_source&) = delete;
 	state_source(state_source&&) = default;
+	~state_source()
+	{
+		auto self = std::hash<decltype(this)>{}(this);
+		for (auto& breaker_ptr : connection_breakers)
+		{
+			auto breaker = breaker_ptr.lock();
+			if (breaker)
+				(*breaker)(self);
+		}
+	}
 
 	data_t operator()() { return call(); }
+
+	void register_callback(std::shared_ptr<std::function<void(size_t)>>& visit_fun)
+	{
+		assert(visit_fun);
+		assert(*visit_fun);
+		connection_breakers.emplace_back(visit_fun);
+	}
 
 	typedef data_t result_t;
 
 private:
 	std::function<data_t()> call;
+	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
 };
 
 /**
