@@ -273,7 +273,7 @@ constexpr bool void_callable(...)
 template <class T>
 constexpr auto has_register_function(int)
     -> decltype(std::declval<T>().register_callback(
-                    std::declval<std::shared_ptr<std::function<void()>>&>()),
+                    std::declval<std::shared_ptr<std::function<void(size_t)>>&>()),
                 bool())
 {
 	return true;

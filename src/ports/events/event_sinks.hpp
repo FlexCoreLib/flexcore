@@ -43,15 +43,16 @@ struct event_sink
 	event_sink(event_sink&&) = default;
 	~event_sink()
 	{
+		auto self = std::hash<decltype(this)>{}(this);
 		for (auto& breaker_ptr : connection_breakers)
 		{
 			auto breaker = breaker_ptr.lock();
 			if (breaker)
-				(*breaker)();
+				(*breaker)(self);
 		}
 	}
 
-	void register_callback(std::shared_ptr<std::function<void()>>& visit_fun)
+	void register_callback(std::shared_ptr<std::function<void(size_t)>>& visit_fun)
 	{
 		assert(visit_fun);
 		assert(*visit_fun);
@@ -60,7 +61,7 @@ struct event_sink
 
 private:
 	handler_t event_handler;
-	std::vector<std::weak_ptr<std::function<void()>>> connection_breakers;
+	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
 };
 
 /// specialisation of event_sink with void , necessary since operator() has no parameter.
@@ -86,15 +87,16 @@ struct event_sink<void>
 	event_sink(event_sink&&) = default;
 	~event_sink()
 	{
+		auto self = std::hash<decltype(this)>{}(this);
 		for (auto& breaker_ptr : connection_breakers)
 		{
 			auto breaker = breaker_ptr.lock();
 			if (breaker)
-				(*breaker)();
+				(*breaker)(self);
 		}
 	}
 
-	void register_callback(std::shared_ptr<std::function<void()>>& visit_fun)
+	void register_callback(std::shared_ptr<std::function<void(size_t)>>& visit_fun)
 	{
 		assert(visit_fun);
 		assert(*visit_fun);
@@ -103,7 +105,7 @@ struct event_sink<void>
 
 private:
 	handler_t event_handler;
-	std::vector<std::weak_ptr<std::function<void()>>> connection_breakers;
+	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
 };
 
 /**

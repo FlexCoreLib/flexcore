@@ -38,7 +38,7 @@ struct event_source
 	typedef std::remove_reference_t<event_t> result_t;
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
-	typedef std::function<void(void)> void_fun;
+	typedef std::function<void(size_t)> void_fun;
 	typedef std::shared_ptr<void_fun> callback_fun_ptr_strong;
 
 	event_source() = default;
@@ -85,7 +85,7 @@ struct event_source
 		auto callbackIt = std::prev(sink_callbacks.end());
 		sink_callbacks.back()=std::make_shared<void_fun>(
 				// TODO: Here lies the cause for the class not being thread safe
-				[this, handleIt, callbackIt]()
+				[this, handleIt, callbackIt](size_t /* hash */)
 				{
 					event_handlers.erase(handleIt);
 					sink_callbacks.erase(callbackIt);

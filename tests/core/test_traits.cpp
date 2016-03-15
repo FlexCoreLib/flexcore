@@ -166,7 +166,7 @@ namespace
 {
 struct accepting_registration
 {
-	void register_callback(const std::shared_ptr<std::function<void(void)>>&)
+	void register_callback(const std::shared_ptr<std::function<void(size_t)>>&)
 	{
 	}
 };
