@@ -270,10 +270,11 @@ constexpr bool void_callable(...)
 	return false;
 }
 
-template<class T>
-constexpr auto has_register_function(int) -> decltype(
-			std::declval<T>().register_callback(std::make_shared<std::function<void(void)>>()),
-		bool())
+template <class T>
+constexpr auto has_register_function(int)
+    -> decltype(std::declval<T>().register_callback(
+                    std::declval<std::shared_ptr<std::function<void()>>&>()),
+                bool())
 {
 	return true;
 }
