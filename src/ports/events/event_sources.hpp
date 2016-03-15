@@ -128,7 +128,7 @@ struct event_source
 		<	source_t,
 			conn_t,
 			typename std::enable_if <
-				has_register_function<typename get_sink_t<conn_t>::value>(0)
+				has_register_function<typename get_sink_t<conn_t>::type>(0)
 			>::type
 		>
 	{
