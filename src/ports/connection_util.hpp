@@ -59,7 +59,7 @@ auto get_sink(T& c)
 template <class T, class Enable = void>
 struct get_source_t
 {
-	typedef T value;
+	typedef T type;
 };
 
 /**
@@ -70,7 +70,7 @@ struct get_source_t<T,
 		std::enable_if_t< has_source<T>(0) >
 	>
 {
-	typedef typename get_source_t<decltype(std::declval<T>().source)>::value value;
+	typedef typename get_source_t<decltype(std::declval<T>().source)>::type type;
 };
 
 /**
@@ -80,7 +80,7 @@ struct get_source_t<T,
 template <class T, class Enable = void>
 struct get_sink_t
 {
-	typedef T value;
+	typedef T type;
 };
 
 /**
@@ -91,7 +91,7 @@ struct get_sink_t<T,
 		std::enable_if_t< has_sink<T>(0) >
 	>
 {
-	typedef typename get_sink_t<decltype(std::declval<T>().sink)>::value value;
+	typedef typename get_sink_t<decltype(std::declval<T>().sink)>::type type;
 };
 
 }// namespace fc

@@ -4,7 +4,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
-#include <list>
+#include <vector>
 
 #include <core/traits.hpp>
 #include <core/connection.hpp>
@@ -38,9 +38,6 @@ struct event_source
 	typedef std::remove_reference_t<event_t> result_t;
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
-	typedef std::function<void(void)> void_fun;
-	typedef std::shared_ptr<void_fun> callback_fun_ptr_strong;
-
 	event_source() = default;
 	event_source(const event_source&) = delete;
 	event_source(event_source&&) = default;
@@ -69,81 +66,6 @@ struct event_source
 	}
 
 	/**
-	 * \brief Creates a callback to deregister event sinks
-	 * \returns std::shared_ptr<std::function<void(void)>>, pointer to a callback method
-	 * \pre sink_callback != null_ptr
-	 * \pre event_source_t::event_handlers != null_ptr
-	 * \pre *event_source_t::event_handlers is container that does not invalidate its iterators (e.g. std::list)
-	 * \pre Method is not called in parallel i.e. sinks are connected in serial fashion
-	 * \post sink_callback->empty() == false
-	 */
-	auto create_callback_delete_handler()
-	{
-		auto handleIt = std::prev(event_handlers.end());
-
-		sink_callbacks.push_back(std::make_shared<void_fun>());
-		auto callbackIt = std::prev(sink_callbacks.end());
-		sink_callbacks.back()=std::make_shared<void_fun>(
-				// TODO: Here lies the cause for the class not being thread safe
-				[this, handleIt, callbackIt]()
-				{
-					event_handlers.erase(handleIt);
-					sink_callbacks.erase(callbackIt);
-				}
-			);
-
-		assert(!sink_callbacks.empty());
-
-		return sink_callbacks.back();
-	}
-
-	/**
-	 * \brief default implementation of connect(source_t, conn_t)
-	 * \param c the new target to be connected.
-	 * \pre c is not empty function
-	 * \pre c not of type event_sink
-	 * \post event_handlers.empty() == false
-	 */
-	template<class source_t, class conn_t, class Enable = void>
-	struct connect_impl {
-		auto operator()(source_t source, conn_t c)
-		{
-			source.event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
-
-			assert(!source.event_handlers.empty());
-			return port_connection<decltype(this), conn_t, result_t>();
-		}
-	};
-
-	/**
-	 * \brief specialization for connection with connection struct
-	 * \param c the new target to be connected.
-	 * \pre c is not empty function
-	 * \pre c of type connection
-	 * \pre c.c.(...).c has register function
-	 * \post event_handlers.empty() == false
-	 */
-	template <class source_t, class conn_t>
-	struct connect_impl
-		<	source_t,
-			conn_t,
-			typename std::enable_if <
-				has_register_function<typename get_sink_t<conn_t>::value>(0)
-			>::type
-		>
-	{
-		auto operator()(source_t source, conn_t c)
-		{
-			source.event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
-
-			get_sink(c).register_callback(source.create_callback_delete_handler());
-
-			assert(!source.event_handlers.empty());
-			return port_connection<decltype(this), conn_t, result_t>();
-		}
-	};
-
-	/**
 	 * \brief connects new connectable target to port.
 	 * Optionally adds a callback to deregister the connection
 	 * if supported by the sink at the end of the chain of connectables
@@ -157,17 +79,23 @@ struct event_source
 		static_assert(detail::has_result_of_type<conn_t, event_t>(),
 			"The type returned by this source is not compatible with the connection you "
 			"are trying to establish.");
-		return connect_impl<decltype(*this), conn_t>()(*this, std::forward<conn_t>(c));
+
+		// Register a connection breaker callback if sink_t supports it
+		using sink_t = typename get_sink_t<conn_t>::type;
+		auto can_register_function = std::integral_constant<bool, fc::has_register_function<sink_t>(0)>{};
+		breaker.add_circuit_breaker(get_sink(c), can_register_function);
+
+		event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
+		assert(!event_handlers.empty());
+		return port_connection<decltype(this), conn_t, result_t>();
 	}
 
 private:
 
 	// Stores event_handlers in a vector, the node needs to send
 	// to all connected event_handlers when an event is fired.
-	std::list<handler_t> event_handlers;
-	// Holds callbacks from connected sinks to *this that delete the
-	// connection when invoked
-	std::list<callback_fun_ptr_strong> sink_callbacks;
+	std::vector<handler_t> event_handlers;
+	detail::connection_breaker<handler_t, detail::multiple_handler_policy> breaker{event_handlers};
 };
 
 } // namespace pure
