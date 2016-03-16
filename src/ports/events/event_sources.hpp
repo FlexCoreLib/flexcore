@@ -9,6 +9,7 @@
 #include <core/traits.hpp>
 #include <core/connection.hpp>
 
+#include <ports/connection_util.hpp>
 #include <ports/detail/port_traits.hpp>
 #include <ports/detail/port_utils.hpp>
 #include <core/detail/active_connection_proxy.hpp>
@@ -24,7 +25,10 @@ namespace pure
  * \brief minimal output port for events.
  *
  * fulfills active_source
- * can be connected to multiples sinks and stores these in an std::vector.
+ * can be connected to multiples sinks and stores these in a std::list.
+ *
+ * \remark This class is not thread safe with respect to connections
+ * i.e. all connections to sinks must be made serially
  *
  * \tparam event_t type of event stored, needs to fulfill copy_constructable.
  */
@@ -63,6 +67,8 @@ struct event_source
 
 	/**
 	 * \brief connects new connectable target to port.
+	 * Optionally adds a callback to deregister the connection
+	 * if supported by the sink at the end of the chain of connectables
 	 * \param new_handler the new target to be connected.
 	 * \pre new_handler is not empty function
 	 * \post event_handlers.empty() == false
@@ -71,16 +77,25 @@ struct event_source
 	auto connect(conn_t&& c) &
 	{
 		static_assert(detail::has_result_of_type<conn_t, event_t>(),
-		              "The type returned by this source is not compatible with the connection you "
-		              "are trying to establish.");
-		event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
+			"The type returned by this source is not compatible with the connection you "
+			"are trying to establish.");
 
+		// Register a connection breaker callback if sink_t supports it
+		using sink_t = typename get_sink_t<conn_t>::type;
+		auto can_register_function = std::integral_constant<bool, fc::has_register_function<sink_t>(0)>{};
+		breaker.add_circuit_breaker(get_sink(c), can_register_function);
+
+		event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
 		assert(!event_handlers.empty());
-		return port_connection<decltype(*this), handler_t, result_t>();
+		return port_connection<decltype(this), conn_t, result_t>();
 	}
 
 private:
+
+	// Stores event_handlers in a vector, the node needs to send
+	// to all connected event_handlers when an event is fired.
 	std::vector<handler_t> event_handlers;
+	detail::connection_breaker<handler_t, detail::multiple_handler_policy> breaker{event_handlers};
 };
 
 } // namespace pure
