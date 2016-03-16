@@ -32,6 +32,7 @@ decltype(auto) handler_wrapper(conn_t&& c)
 	return std::move(c);
 }
 
+/// Policy for circuit breaker where only one handler is connected at any given time.
 template <class handler_t>
 class single_handler_policy
 {
@@ -43,7 +44,7 @@ public:
 	void add_handler(size_t hash) { handler_hash = hash; }
 	void remove_handler(size_t hash)
 	{
-		// TODO: investigate this test_case
+		// Consider this test_case:
 		//
 		//     state_sink sink;
 		//     state_source source1, source2;
@@ -62,6 +63,7 @@ private:
 	size_t handler_hash;
 };
 
+/// Policy class for circuit breaker when multiple handlers can be connected at once.
 template <class handler_t>
 class multiple_handler_policy
 {
@@ -70,6 +72,7 @@ public:
 	{
 		assert(handlers);
 	}
+	/// \pre The handler corresponding to hash has been pushed_back to handlers before this call.
 	void add_handler(size_t hash) { handler_hashes.push_back(hash); }
 	void remove_handler(size_t hash)
 	{
@@ -85,10 +88,18 @@ private:
 	std::vector<size_t> handler_hashes;
 };
 
+/** \brief Register callbacks with passive port.
+ *
+ * \tparam handler_t type of handler used by active port.
+ * \tparam handler_storage_policy policy class that handles the number of
+ *         handlers used in active port.
+ */
 template <class handler_t, template <class> class handler_storage_policy>
 class connection_breaker : handler_storage_policy<handler_t>
 {
 public:
+	/// \param handlers is used by the active side to store the connection.
+	///        Needs to be compatible with what the policy expects.
 	template <class handler_storage>
 	connection_breaker(handler_storage& handlers)
 	    : handler_storage_policy<handler_t>(&handlers),
@@ -96,24 +107,27 @@ public:
 	                                                                  {
 		                                                                  this->remove_handler(
 		                                                                      hash);
-		                                                              }))
+	                                                                  }))
 	{
 	}
 
+	/** \brief Register a callback with sink, that breaks the connection to source.
+	 * \pre sink_t supports registering callbacks.
+	 */
 	template <class sink_t>
 	void add_circuit_breaker(sink_t& sink, std::true_type)
 	{
 		this->add_handler(std::hash<sink_t*>{}(&sink));
 		sink.register_callback(sink_callback);
 	}
+	/// Do-nothing when sink does not support registering callbacks.
 	template <class sink_t>
 	void add_circuit_breaker(sink_t&, std::false_type) {}
 
 	void remove_handler(size_t hash) { handler_storage_policy<handler_t>::remove_handler(hash); }
 
 private:
-	// Callback from connected sinks to *this that delete the connection corresponding to a hash
-	// when invoked.
+	/// Callback from connected passive port to *this that deletes the connection when invoked.
 	std::shared_ptr<std::function<void(size_t)>> sink_callback;
 };
 
