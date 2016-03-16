@@ -24,6 +24,10 @@ ENDIF()
 FIND_PACKAGE( Boost 1.54 REQUIRED COMPONENTS log thread system)
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
 
+SET ( FLEXCORE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "flexcore project path" )
+
+INCLUDE( include_directories.cmake )
+
 ADD_SUBDIRECTORY( src )
 ADD_SUBDIRECTORY( tests )
 ADD_SUBDIRECTORY( integration_tests )

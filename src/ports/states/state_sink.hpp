@@ -8,6 +8,7 @@
 // flexcore
 #include <ports/detail/port_traits.hpp>
 #include <ports/detail/port_utils.hpp>
+#include <ports/connection_util.hpp>
 
 namespace fc
 {
@@ -21,15 +22,13 @@ namespace pure
  * Is not a Connectable.
  *
  * \tparam data_t data type flowing through this port. Needs to fulfill copy_constructable
- *
- * \invariant shared_ptr<> con != null_ptr
  */
 template<class data_t>
 class state_sink
 {
 public:
 	state_sink()
-		: con(std::make_shared<std::function<data_t()>>())
+		: con()
 	{ }
 	state_sink(const state_sink&) = delete;
 	state_sink(state_sink&&) = default;
@@ -41,7 +40,7 @@ public:
 	 *
 	 * \returns current state available at this port.
 	 */
-	data_t get() const { return (*con)(); }
+	data_t get() const { return con(); }
 
 	/**
 	 * \brief Cconnects state source to sink.
@@ -60,15 +59,20 @@ public:
 
 		static_assert(std::is_convertible<decltype(std::declval<con_t>()()), data_t>{},
 		              "The type returned by this connection is incompatible with this sink.");
-		(*con) = detail::handler_wrapper(std::forward<con_t>(c));
 
+		// optionally register a callback
+		using source_t = typename get_source_t<con_t>::type;
+		auto can_register_function = std::integral_constant<bool, fc::has_register_function<source_t>(0)>{};
+		breaker.add_circuit_breaker(get_source(c), can_register_function);
+
+		con = detail::handler_wrapper(std::forward<con_t>(c));
 		assert(con); //check postcondition
-		assert(*con);
 	}
 
 	typedef void result_t;
 private:
-	std::shared_ptr<std::function<data_t()>> con;
+	std::function<data_t()> con;
+	detail::connection_breaker<std::function<data_t()>, detail::single_handler_policy> breaker{con};
 };
 
 } // namespace pure

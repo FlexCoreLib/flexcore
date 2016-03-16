@@ -27,32 +27,35 @@ void parallel_scheduler::start() noexcept
 
 	//fill thread_pool in body of constructor,
 	//since otherwise threads would need to be copied
-	for (int i=0; i != num_threads(); ++i)
+	for (int i = 0, e = num_threads(); i != e; ++i)
 	{
 		thread_pool.push_back(std::thread(
 				//infinite task loop for every thread,
 				//looks for tasks in task_queue and executes them
 				[this] ()
 				{
-					while(do_work)
+					while (true)
 					{
 						task_t task;
 						{
 							queue_lock lock(task_queue_mutex);
-							if (!task_queue.empty())
-							{
-								task = task_queue.front();
-								task_queue.pop();
-							}
-							else
-							{
-								//check flag again since it might have changed
-								//since we entered the loop
-								if (!do_work)
-									return;
+							// Wait while task_queue is empty and do_work is true.
+							// If do_work is false then exit loop. If task_queue is not empty, exit.
+							// Still need to check which condition is true after the while loop.
+							while (task_queue.empty() && do_work)
 								thread_control.wait(lock);
-							}
-						} //releases lock
+
+							if (!do_work)
+								return;
+
+							// if we're here, then do_work must be true, and
+							// task_queue.empty() must be false.
+							assert(do_work);
+							assert(!task_queue.empty());
+
+							task = task_queue.front();
+							task_queue.pop();
+						}
 						if (task)
 							task();
 					}
@@ -65,9 +68,9 @@ void parallel_scheduler::stop() noexcept
 {
 	//first stop the infinite loop in all threads
 	{
-	//Acquire lock first, to stop work loops to enter while we set the flag.
-	queue_lock lock(task_queue_mutex);
-	do_work = false;
+		//Acquire lock first, to stop work loops to enter while we set the flag.
+		queue_lock lock(task_queue_mutex);
+		do_work = false;
 	}
 	thread_control.notify_all();
 	//then stop all calculations and join threads

@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 
 	std::ostringstream out_stream;
 
-	graph::print(out_stream);
+	graph::connection_graph::access().print(out_stream);
 	g_source.fire(1);
 
 	auto dot_string = out_stream.str();

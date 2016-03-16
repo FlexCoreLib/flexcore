@@ -9,6 +9,7 @@
 #include <core/traits.hpp>
 #include <core/ports.hpp>
 
+#include <ports/connection_util.hpp>
 #include <ports/detail/port_traits.hpp>
 #include <ports/detail/port_utils.hpp>
 
@@ -23,10 +24,12 @@ namespace pure
  * \brief minimal output port for events.
  *
  * fulfills active_source
- * can be connected to multiples sinks and stores these in a shared std::vector.
+ * can be connected to multiples sinks and stores these in a std::list.
+ *
+ * \remark This class is not thread safe with respect to connections
+ * i.e. all connections to sinks must be made serially
  *
  * \tparam event_t type of event stored, needs to fulfill copy_constructable.
- * \invariant shared pointer event_handlers != 0.
  */
 template<class event_t>
 struct event_source
@@ -49,8 +52,7 @@ struct event_source
 		              "tried to call fire with a type, not implicitly convertible to type of port."
 		              "If conversion is required, do the cast before calling fire.");
 
-		assert(event_handlers);
-		for (auto& target : (*event_handlers))
+		for (auto& target : event_handlers)
 		{
 			assert(target);
 			target(static_cast<event_t>(event)...);
@@ -59,12 +61,13 @@ struct event_source
 
 	size_t nr_connected_handlers() const
 	{
-		assert(event_handlers);
-		return event_handlers->size();
+		return event_handlers.size();
 	}
 
 	/**
 	 * \brief connects new connectable target to port.
+	 * Optionally adds a callback to deregister the connection
+	 * if supported by the sink at the end of the chain of connectables
 	 * \param new_handler the new target to be connected.
 	 * \pre new_handler is not empty function
 	 * \post event_handlers.empty() == false
@@ -73,22 +76,25 @@ struct event_source
 	auto connect(conn_t&& c) &
 	{
 		static_assert(detail::has_result_of_type<conn_t, event_t>(),
-		              "The type returned by this source is not compatible with the connection you "
-		              "are trying to establish.");
-		assert(event_handlers);
-		event_handlers->emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
+			"The type returned by this source is not compatible with the connection you "
+			"are trying to establish.");
 
-		assert(!event_handlers->empty());
-		return port_connection<decltype(*this), handler_t, result_t>();
+		// Register a connection breaker callback if sink_t supports it
+		using sink_t = typename get_sink_t<conn_t>::type;
+		auto can_register_function = std::integral_constant<bool, fc::has_register_function<sink_t>(0)>{};
+		breaker.add_circuit_breaker(get_sink(c), can_register_function);
+
+		event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
+		assert(!event_handlers.empty());
+		return port_connection<decltype(this), conn_t, result_t>();
 	}
 
 private:
 
-	// stores event_handlers in shared vector, since the port is stored in a node
-	// but will be copied, when it is connected. The node needs to send
-	// to all connected event_handlers, when an event is fired.
-	typedef std::vector<handler_t> handler_vector;
-	std::shared_ptr<handler_vector> event_handlers = std::make_shared<handler_vector>(0);
+	// Stores event_handlers in a vector, the node needs to send
+	// to all connected event_handlers when an event is fired.
+	std::vector<handler_t> event_handlers;
+	detail::connection_breaker<handler_t, detail::multiple_handler_policy> breaker{event_handlers};
 };
 
 } // namespace pure

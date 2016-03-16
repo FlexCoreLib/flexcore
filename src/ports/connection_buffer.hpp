@@ -74,33 +74,50 @@ class event_buffer : public buffer_interface<event_t, event_tag>
 {
 public:
 	event_buffer()
-		: in_switch_tick( [this](){ switch_buffers(); } )
+		: switch_active_tick_([this] { switch_active_buffers(); })
+		, switch_passive_tick_([this] { switch_passive_buffers(); })
 		, in_send_tick( [this](){ send_events(); } )
 		, in_event_port( [this](event_t in_event) { intern_buffer.push_back(in_event);})
 		, intern_buffer()
 		, extern_buffer()
+		, read(false)
 		{
 		}
 
 	typedef typename pure::out_port<event_t, event_tag>::type out_port_t;
 	typedef typename pure::in_port<event_t, event_tag>::type in_port_t;
 
-	/// event in port of type void, switches buffers
-	auto& switch_tick() { return in_switch_tick; };
-	/// event in port of type void, fires external buffer
+	/// event in port of type void, switches active-side buffers
+	auto& switch_active_tick() { return switch_active_tick_; };
+	/// event in port of type void, switches passive-side buffers
+	auto& switch_passive_tick() { return switch_passive_tick_; };
+	/// event in port of type void, fires outgoing buffer
 	auto& work_tick() { return in_send_tick; };
 
 	in_port_t& in() override { return in_event_port; }
 	out_port_t& out() override { return out_event_port; }
 
 protected:
-	void switch_buffers()
+	void switch_active_buffers()
 	{
-		// move content of intern buffer to extern, leaving content of extern buffer
-		// since the buffers might be switched several times, before extern buffer is emptied.
-		// otherwise we would potentially lose events on switch.
-		extern_buffer.insert(end(extern_buffer), begin(intern_buffer), end(intern_buffer));
+		// If middle buffer has been switched with outgoing_buffer, then we can swap the incoming
+		// buffers without data loss. If middle buffer has not been read then data needs to be
+		// appended.
+		if (read)
+			swap(intern_buffer, middle_buffer);
+		else
+			middle_buffer.insert(end(middle_buffer), begin(intern_buffer), end(intern_buffer));
+		read = false;
 		intern_buffer.clear();
+	}
+
+	void switch_passive_buffers()
+	{
+		// Switching the outgoing buffers means the previous value in extern_buffer has already been
+		// processed. So a new value is unconditionally needed. Swap should do.
+		swap(middle_buffer, extern_buffer);
+		read = true;
+		middle_buffer.clear();
 	}
 
 	/**
@@ -119,7 +136,8 @@ protected:
 		assert(extern_buffer.empty());
 	}
 
-	pure::event_sink<void> in_switch_tick;
+	pure::event_sink<void> switch_active_tick_;
+	pure::event_sink<void> switch_passive_tick_;
 	pure::event_sink<void> in_send_tick;
 	in_port_t in_event_port;
 	out_port_t out_event_port;
@@ -127,6 +145,8 @@ protected:
 	typedef std::vector<event_t> buffer_t;
 	buffer_t intern_buffer;
 	buffer_t extern_buffer;
+	buffer_t middle_buffer;
+	bool read;
 };
 
 /// Implementation of buffer_interface, which directly forwards state.
@@ -156,8 +176,6 @@ private:
 /** \brief buffer for states using double buffering
  *
  * \tparam data_t type of state stored in buffer. needs to be copy_constructable.
- * \invariant intern_buffer != null_ptr
- * extern_buffer != null_ptr
  */
 template<class data_t>
 class state_buffer : public buffer_interface<data_t, state_tag>
@@ -165,8 +183,10 @@ class state_buffer : public buffer_interface<data_t, state_tag>
 public:
 	state_buffer();
 
-	// event in port of type void, switches buffers
-	auto& switch_tick() { return in_switch_tick; };
+	// event in port of type void, switches incoming buffers
+	auto& switch_active_tick() { return switch_active_tick_; };
+	// event in port of type void, switches outgoing buffers
+	auto& switch_passive_tick() { return switch_passive_tick_; };
 	// event in port of type void, pulls data at in_port
 	auto& work_tick() { return in_work_tick; };
 
@@ -181,22 +201,25 @@ public:
 
 
 protected:
-	void switch_buffers()
+	void switch_passive_buffers()
 	{
-		using std::swap;
-		if (!already_switched)
-			*extern_buffer = *intern_buffer;
-		already_switched = true;
+		middle_buffer = intern_buffer;
 	}
 
-	pure::event_sink<void> in_switch_tick;
+	void switch_active_buffers()
+	{
+		extern_buffer = middle_buffer;
+	}
+
+	pure::event_sink<void> switch_active_tick_;
+	pure::event_sink<void> switch_passive_tick_;
 	pure::event_sink<void> in_work_tick;
 	pure::state_sink<data_t> in_port;
 	pure::state_source<data_t> out_port;
 private:
-	std::shared_ptr<data_t> intern_buffer;
-	std::shared_ptr<data_t> extern_buffer;
-	bool already_switched = false;
+	data_t intern_buffer;
+	data_t extern_buffer;
+	data_t middle_buffer;
 };
 
 
@@ -236,19 +259,15 @@ struct buffer<data_t, state_tag>
 /***************************** Implementation ********************************/
 template<class T>
 inline fc::state_buffer<T>::state_buffer() :
-		in_switch_tick( [this](){ switch_buffers(); } ),
-		in_work_tick( [this]()
-				{
-					*intern_buffer = in_port.get();
-					already_switched = false;
-				}),
+		switch_active_tick_([this] { switch_active_buffers(); }),
+		switch_passive_tick_([this] { switch_passive_buffers(); }),
+		in_work_tick([this]() { intern_buffer = in_port.get(); }),
 		in_port(),
-		out_port([this](){ return *extern_buffer; }),
-		intern_buffer(std::make_shared<T>()), //todo, forces T to be default constructible, we should lift that restriction.
-		extern_buffer(std::make_shared<T>())
+		out_port([this](){ return extern_buffer; }),
+		intern_buffer(), //todo, forces T to be default constructible, we should lift that restriction.
+		extern_buffer(),
+		middle_buffer()
 {
-	assert(intern_buffer); //check invariant
-	assert(extern_buffer);
 }
 
 #endif /* SRC_PORTS_CONNECTION_BUFFER_HPP_ */

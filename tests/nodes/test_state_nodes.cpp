@@ -35,15 +35,18 @@ BOOST_AUTO_TEST_CASE(test_state_cache)
 
 BOOST_AUTO_TEST_CASE(test_current_state)
 {
+	auto region = std::make_shared<parallel_region>("MyRegion");
+
 	{ //check constructor
-	current_state<int> test_node_1{1};
+	auto region_2 = std::make_shared<parallel_region>("MyRegion");
+	current_state<int> test_node_1{*region_2,1};
 	BOOST_CHECK_EQUAL(test_node_1.out()(), 1);
 
-	current_state<int> test_node_2;
+	current_state<int> test_node_2{*region_2};
 	BOOST_CHECK_EQUAL(test_node_2.out()(), int()); //default is int()
 	}
 
-	current_state<int> test_node;
+	current_state<int> test_node{*region};
 	BOOST_CHECK_EQUAL(test_node.out()(), 0);
 
 	int test_val = 1;
@@ -53,12 +56,12 @@ BOOST_AUTO_TEST_CASE(test_current_state)
 	// we haven't updated the cache yet
 	BOOST_CHECK_EQUAL(test_node.out()(), int()); //default is int()
 
-	test_node.update()();
+	region->ticks.work.fire(); //triggers update of the cache
 	BOOST_CHECK_EQUAL(test_node.out()(), 1);
 
 	test_val = 2;
 	BOOST_CHECK_EQUAL(test_node.out()(), 1);
-	test_node.update()();
+	region->ticks.work.fire(); //triggers update of the cache
 	BOOST_CHECK_EQUAL(test_node.out()(), 2);
 }
 

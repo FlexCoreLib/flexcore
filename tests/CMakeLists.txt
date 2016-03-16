@@ -15,6 +15,7 @@ ADD_EXECUTABLE( test_executable
 	nodes/test_list_manipulation.cpp
 	nodes/test_generic.cpp
 	nodes/test_event_nodes.cpp
+	nodes/test_region_worker_node.cpp
 	nodes/test_state_nodes.cpp
 	ports/test_event_buffer.cpp
 	ports/test_node_aware.cpp
@@ -28,6 +29,7 @@ ADD_EXECUTABLE( test_executable
 	range/test_range.cpp
 	runner.cpp 
 	serialisation/test_deserializer.cpp
+	settings/test_settings.cpp
 	threading/test_cyclecontrol.cpp
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp

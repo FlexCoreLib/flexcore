@@ -4,6 +4,7 @@
 #include <core/traits.hpp>
 #include <ports/ports.hpp>
 #include <nodes/base_node.hpp>
+#include <nodes/region_worker_node.hpp>
 
 #include <utility>
 #include <tuple>
@@ -84,32 +85,27 @@ auto make_merge(parent_t& parent, operation op)
 /*                                   Caches                                  */
 /*****************************************************************************/
 
-/// Pulls inputs on incoming pull tick and makes it available to state output out().
 template<class data_t>
-class current_state : public tree_base_node
+class current_state : public region_worker_node
 {
 public:
-	explicit current_state(const data_t& initial_value = data_t()) :
-			tree_base_node("cache"),
-			pull_tick([this]()
-			{
-				stored_state = in_port.get();
-			}),
+	explicit current_state(parallel_region& region,
+			const data_t& initial_value = data_t()) :
+			region_worker_node(
+					[this](){stored_state = in_port.get();},
+					"cache", region),
 			in_port(this),
 			out_port(this, [this](){ return stored_state;}),
 			stored_state(initial_value)
 	{
 	}
 
-	/// Events to this port will cause the node to update the cached data. expects void
-	auto& update() noexcept { return pull_tick; }
 	/// State Input Port of type data_t.
 	auto& in() noexcept { return in_port; }
 	/// State Output Port of type data_t.
 	auto& out() noexcept { return out_port; }
 
 private:
-	pure::event_sink<void> pull_tick;
 	state_sink<data_t> in_port;
 	state_source<data_t> out_port;
 	data_t stored_state;
@@ -118,7 +114,7 @@ private:
 /**
  * \brief Caches state and only pulls new state when cache is marked as dirty.
  *
- * switch_tick port needs to be connected,
+ * event_sink update needs to be connected,
  * as events to this port mark the cache as dirty.
  */
 template<class data_t>

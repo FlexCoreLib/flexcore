@@ -33,15 +33,14 @@ public:
 
 	///adds a new task and notifies waiting threads.
 	void add_task(task_t new_task);
-
-	/// startes the work loop of all threads
-	void start() noexcept;
 	/// stops the work loop of all threads
 	void stop() noexcept;
-
 	size_t nr_of_waiting_tasks();
 
 private:
+	/// startes the work loop of all threads
+	void start() noexcept;
+
 	std::vector<std::thread> thread_pool;
 	bool do_work; ///< flag indicates threads to keep working.
 

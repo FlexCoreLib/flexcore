@@ -12,8 +12,8 @@ namespace fc
  * Stopping criterion for recursion
  */
 template <class T>
-auto get_source(const T& s)
-	-> const std::enable_if_t<!has_source<T>(0), T>&
+auto get_source(T& s)
+	-> std::enable_if_t<!has_source<T>(0), decltype(s)>
 {
 	return s;
 }
@@ -21,9 +21,9 @@ auto get_source(const T& s)
  * \brief recursively extracts the source of a connection
  */
 template <class T>
-auto get_source(const T& c)
-	-> const std::enable_if_t<has_source<T>(0),
-			decltype(get_source(c.source))>&
+auto get_source(T& c)
+	-> std::enable_if_t<has_source<T>(0),
+			decltype(get_source(c.source))>
 {
 	return get_source(c.source);
 }
@@ -33,8 +33,8 @@ auto get_source(const T& c)
  * Stopping criterion for recursion
  */
 template <class T>
-auto get_sink(const T& s)
-	-> const std::enable_if_t<!has_sink<T>(0), T>&
+auto get_sink(T& s)
+	-> std::enable_if_t<!has_sink<T>(0), decltype(s)>
 {
 	return s;
 }
@@ -43,9 +43,9 @@ auto get_sink(const T& s)
  * \brief recursively extracts the sink of an object with member "sink"
  */
 template <class T>
-auto get_sink(const T& c)
-	-> const std::enable_if_t<has_sink<T>(0),
-			decltype(get_sink(c.sink))>&
+auto get_sink(T& c)
+	-> std::enable_if_t<has_sink<T>(0),
+			decltype(get_sink(c.sink))>
 {
 	return get_sink(c.sink);
 }
@@ -57,7 +57,7 @@ auto get_sink(const T& c)
 template <class T, class Enable = void>
 struct get_source_t
 {
-	typedef T value;
+	typedef T type;
 };
 
 /**
@@ -68,7 +68,7 @@ struct get_source_t<T,
 		std::enable_if_t< has_source<T>(0) >
 	>
 {
-	typedef typename get_source_t<decltype(std::declval<T>().source)>::value value;
+	typedef typename get_source_t<decltype(std::declval<T>().source)>::type type;
 };
 
 /**
@@ -78,7 +78,7 @@ struct get_source_t<T,
 template <class T, class Enable = void>
 struct get_sink_t
 {
-	typedef T value;
+	typedef T type;
 };
 
 /**
@@ -89,7 +89,7 @@ struct get_sink_t<T,
 		std::enable_if_t< has_sink<T>(0) >
 	>
 {
-	typedef typename get_sink_t<decltype(std::declval<T>().sink)>::value value;
+	typedef typename get_sink_t<decltype(std::declval<T>().sink)>::type type;
 };
 
 }// namespace fc

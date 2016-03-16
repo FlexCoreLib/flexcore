@@ -42,7 +42,8 @@ struct buffer_factory
 			auto result_buffer =
 					std::make_shared<typename buffer<result_t, tag>::type>();
 
-			active.node->region()->switch_tick() >> result_buffer->switch_tick();
+			active.node->region()->switch_tick() >> result_buffer->switch_active_tick();
+			passive.node->region()->switch_tick() >> result_buffer->switch_passive_tick();
 			passive.node->region()->work_tick() >> result_buffer->work_tick();
 
 			return result_buffer;
@@ -260,10 +261,10 @@ private:
 	{
 		if (is_active_source<base> { })
 			return detail::is_derived_from<fc::node_aware,
-			                               decltype(get_sink(std::declval<conn_t>()))>::value;
+			                               decltype(get_sink(std::declval<conn_t&>()))>::value;
 		else
 			return detail::is_derived_from<fc::node_aware,
-			                               decltype(get_source(std::declval<conn_t>()))>::value;
+			                               decltype(get_source(std::declval<conn_t&>()))>::value;
 	}
 };
 
