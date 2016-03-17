@@ -43,7 +43,7 @@ public:
 
 	explicit tree_base_node(std::shared_ptr<parallel_region> r, std::string name)
 		: graph_info_(name)
-		, self_() // todo zonk
+		, self_() // todo this currently allows construction of node with invalid iterator self_
 		, region_(r)
 	{
 		assert(region_);
@@ -133,14 +133,18 @@ struct node_owner : base_t
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region()));
+		return add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				this->region()));
 	}
 
 	template<class node_t, class ... args_t>
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_r(const std::shared_ptr<parallel_region>& r, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)...,r));
+		return add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				r));
 	}
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
@@ -156,14 +160,20 @@ struct node_owner : base_t
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region(), this->forest()));
+		return add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				this->region(),
+				this->forest()));
 	}
 
 	template<class node_t, class ... args_t>
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_r(std::shared_ptr<parallel_region>& r, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., r, this->forest()));
+		return add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				r,
+				this->forest()));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args.
@@ -176,7 +186,10 @@ struct node_owner : base_t
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region(),name));
+		return add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				this->region(),
+				name));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args
@@ -191,7 +204,11 @@ struct node_owner : base_t
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region(), name, this->forest()));
+		return add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				this->region(),
+				name,
+				this->forest()));
 	}
 
 private:
@@ -223,7 +240,7 @@ private:
 /**
  * \brief Root node for building node trees.
  *
- * Has Ownership of the forest and thus serves
+ * Has ownership of the forest and thus serves
  * as the root node for all other nodes in the forest.
  */
 class root_node
@@ -250,6 +267,7 @@ public:
 
 private:
 	std::unique_ptr<forest_t> forest_;
+	/// non_owning access to first node in tree, ownership is in forest.
 	node_owner<owning_base_node>* tree_root;
 };
 
