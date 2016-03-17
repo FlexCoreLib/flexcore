@@ -131,9 +131,16 @@ struct node_owner : base_t
 	 */
 	template<class node_t, class ... args_t>
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child(args_t ... args)
+	make_child(args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(args..., this->region()));
+		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region()));
+	}
+
+	template<class node_t, class ... args_t>
+	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
+	make_child_r(const std::shared_ptr<parallel_region>& r, args_t&&... args)
+	{
+		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)...,r));
 	}
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
@@ -147,9 +154,16 @@ struct node_owner : base_t
 	 */
 	template<class node_t, class ... args_t>
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child(args_t ... args)
+	make_child(args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>( args..., this->region(), this->forest()));
+		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region(), this->forest()));
+	}
+
+	template<class node_t, class ... args_t>
+	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
+	make_child_r(std::shared_ptr<parallel_region>& r, args_t&&... args)
+	{
+		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., r, this->forest()));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args.
@@ -160,9 +174,9 @@ struct node_owner : base_t
 	 */
 	template<class node_t, class ... args_t>
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child_named(std::string name, args_t ... args)
+	make_child_named(std::string name, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(args..., this->region(),name));
+		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region(),name));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args
@@ -175,9 +189,9 @@ struct node_owner : base_t
 	 */
 	template<class node_t, class ... args_t>
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child_named(std::string name, args_t ... args)
+	make_child_named(std::string name, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>( args..., this->region(), name, this->forest()));
+		return add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., this->region(), name, this->forest()));
 	}
 
 private:
@@ -206,62 +220,37 @@ private:
 
 };
 
-namespace detail
-{
-/// Contains the forest itself, used by root_node
-class forest_owner
+/**
+ * \brief Root node for building node trees.
+ *
+ * Has Ownership of the forest and thus serves
+ * as the root node for all other nodes in the forest.
+ */
+class root_node
 {
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
-	std::shared_ptr<parallel_region>& region() { return region_; }
-	forest_t* forest() { return forest_.get(); }
-protected:
-	std::unique_ptr<forest_t> forest_;
-	std::shared_ptr<parallel_region> region_;
-	forest_t::iterator self_;
 
-	forest_owner(std::unique_ptr<forest_t> f,
-			const std::shared_ptr<parallel_region>& r)
-	: forest_{std::move(f)}
-	, region_(r)
-	{
-		assert(forest_);
-		assert(region_);
-	}
-};
-} //namespace detail
-/**
- * Root node for building node trees.
- * Has Ownership of the forest and thus serves
- * as the base node for all other nodes.
- */
-class root_node : public  node_owner<detail::forest_owner>
-{
-public:
-	root_node(	std::string n = "",
-				std::shared_ptr<parallel_region> r =
-						std::make_shared<parallel_region>("root")	)
-		:  node_owner<detail::forest_owner>(std::make_unique<forest_owner::forest_t>(), r)
+	root_node(std::string n, std::shared_ptr<parallel_region> r)
+		: forest_(std::make_unique<forest_t>())
 		, tree_root(nullptr)
 	{
-		self_ = adobe::trailing_of(this->forest_->insert(
-				this->forest_->begin(), std::make_unique<tree_base_node>(r, n)));
+		auto temp_it = adobe::trailing_of(forest_->insert(
+				forest_->begin(),
+				std::make_unique<node_owner<owning_base_node>>(r, n, forest_.get())));
 
-		tree_root = static_cast<node_owner<owning_base_node>*>(self_->get());
-		tree_root->self_ = self_;
-	}
+		tree_root = static_cast<node_owner<owning_base_node>*>(temp_it->get());
+		tree_root->self_ = temp_it;
 
-	//Todo this is currently necessary since ports in tests are attached directly to the root, remove if that is fixed.
-	graph::graph_node_properties graph_info() const
-	{
-		return (*self_)->graph_info();
+		assert(forest_);
+		assert(tree_root);
 	}
 
 	auto& nodes() { return *tree_root; }
 
 private:
+	std::unique_ptr<forest_t> forest_;
 	node_owner<owning_base_node>* tree_root;
-
 };
 
 /**
@@ -318,11 +307,6 @@ full_name(
 
 	full_name += (*position)->own_name();
 	return full_name;
-}
-
-inline std::string full_name(const root_node& node)
-{
-	return node.graph_info().name();
 }
 
 } // namespace fc

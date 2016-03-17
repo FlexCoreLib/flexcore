@@ -15,9 +15,10 @@ public:
 	std::shared_ptr<parallel_region> add_region(const std::string& name,
 			const virtual_clock::steady::duration& tick);
 
-	root_node& node_owner() { return forest_root; }
+	auto& node_owner() { return forest_root.nodes(); }
 	void infinite_main_loop();
-	void state_scheduler() { scheduler.start(); }
+	void start_scheduler() { scheduler.start(); }
+	void stop_scheduler() { scheduler.stop(); }
 	void iterate_main_loop();
 
 private:
