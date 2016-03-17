@@ -8,7 +8,8 @@
 #ifndef SRC_THREADING_PARALLELREGION_HPP_
 #define SRC_THREADING_PARALLELREGION_HPP_
 
-#include <ports/pure_ports.hpp>
+#include <ports/events/event_sources.hpp>
+#include <string>
 
 namespace fc
 {

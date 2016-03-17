@@ -1,3 +1,6 @@
+#ifndef SRC_CORE_PORTS_H_
+#define SRC_CORE_PORTS_H_
+
 #include <core/traits.hpp>
 
 /**
@@ -24,3 +27,5 @@ struct port_connection
 };
 
 } //namespace fc
+
+#endif // SRC_CORE_PORTS_H_

@@ -5,9 +5,6 @@
 #include <ports/ports.hpp>
 #include <nodes/base_node.hpp>
 #include <nodes/pure_node.hpp>
-#include <ports/states/state_sources.hpp>
-#include <ports/events/event_sinks.hpp>
-
 #include <nodes/region_worker_node.hpp>
 
 #include <utility>

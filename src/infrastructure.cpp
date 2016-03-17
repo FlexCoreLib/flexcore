@@ -13,11 +13,10 @@ std::shared_ptr<parallel_region> infrastructure::add_region(const std::string& n
 			[&ticks]()
 			{
 				ticks.in_work()();
-			},
-			tick);
+			});
 
 	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
-	scheduler.add_task(std::move(tick_cycle));
+	scheduler.add_task(std::move(tick_cycle),tick);
 
 	return region;
 }

@@ -259,10 +259,10 @@ private:
 	{
 		if (is_active_source<base> { })
 			return detail::is_derived_from<fc::node_aware,
-			                               decltype(get_sink(std::declval<conn_t>()))>::value;
+			                               decltype(get_sink(std::declval<conn_t&>()))>::value;
 		else
 			return detail::is_derived_from<fc::node_aware,
-			                               decltype(get_source(std::declval<conn_t>()))>::value;
+			                               decltype(get_source(std::declval<conn_t&>()))>::value;
 	}
 };
 
