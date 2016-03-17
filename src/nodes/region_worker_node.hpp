@@ -10,6 +10,7 @@
 
 #include <nodes/base_node.hpp>
 #include <threading/parallelregion.hpp>
+#include <core/connection.hpp>
 
 namespace fc
 {

@@ -42,7 +42,7 @@ struct invoke_helper<payload_void, source_t, sink_t>
 	template<class... param>
 	decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p)
 	{
-		source(p...);
+		source(std::forward<param>(p)...);
 		return sink();
 	}
 };
@@ -53,7 +53,7 @@ struct invoke_helper<payload_not_void, source_t, sink_t>
 	template<class... param>
 	decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p)
 	{
-		return sink(source(p...));
+		return sink(source(std::forward<param>(p)...));
 	}
 };
 
@@ -118,14 +118,14 @@ struct connection
 				detail::void_check<S, T, param...>(0),
 				S,T
 			>()
-			(source,sink,p...))
+			(source, sink, std::forward<param>(p)...))
 	{
 		constexpr auto test = detail::void_check<S, T, param...>(0);
 		return detail::invoke_helper<
 					test,
 					S,T
 				>()
-				(source,sink,p...);
+				(source, sink, std::forward<param>(p)...);
 	}
 };
 

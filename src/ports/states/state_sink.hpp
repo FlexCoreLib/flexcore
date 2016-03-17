@@ -9,7 +9,6 @@
 #include <ports/detail/port_traits.hpp>
 #include <ports/detail/port_utils.hpp>
 #include <ports/connection_util.hpp>
-#include <core/connection.hpp>
 
 namespace fc
 {

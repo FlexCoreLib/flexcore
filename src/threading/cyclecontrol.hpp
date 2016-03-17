@@ -1,11 +1,11 @@
 #ifndef SRC_THREADING_CYCLECONTROL_HPP_
 #define SRC_THREADING_CYCLECONTROL_HPP_
 
-#include <vector>
-
 #include <clock/clock.hpp>
-#include <ports/pure_ports.hpp>
+#include <ports/events/event_sources.hpp>
 #include "parallelscheduler.hpp"
+
+#include <vector>
 
 namespace fc
 {

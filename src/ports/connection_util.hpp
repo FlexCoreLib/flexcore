@@ -2,8 +2,6 @@
 #define SRC_PORTS_CONNECTION_UTIL_HPP_
 
 #include <utility>
-
-#include <core/connection.hpp>
 #include <core/traits.hpp>
 
 namespace fc

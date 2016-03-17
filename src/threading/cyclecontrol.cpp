@@ -1,7 +1,6 @@
 #include "cyclecontrol.hpp"
 
 #include <stdexcept>
-#include <cassert>
 #include <algorithm>
 
 namespace fc

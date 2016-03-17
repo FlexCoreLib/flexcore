@@ -6,7 +6,6 @@
 #include <vector>
 
 #include <core/traits.hpp>
-#include <core/connection.hpp>
 #include <ports/detail/port_traits.hpp>
 
 namespace fc
@@ -38,44 +37,7 @@ struct event_sink
 		event_handler(std::forward<T>(in_event));
 	}
 
-	event_sink() = delete;
-	event_sink(const event_sink&) = delete;
-	event_sink(event_sink&&) = default;
-	~event_sink()
-	{
-		auto self = std::hash<decltype(this)>{}(this);
-		for (auto& breaker_ptr : connection_breakers)
-		{
-			auto breaker = breaker_ptr.lock();
-			if (breaker)
-				(*breaker)(self);
-		}
-	}
-
-	void register_callback(std::shared_ptr<std::function<void(size_t)>>& visit_fun)
-	{
-		assert(visit_fun);
-		assert(*visit_fun);
-		connection_breakers.emplace_back(visit_fun);
-	}
-
-private:
-	handler_t event_handler;
-	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
-};
-
-/// specialisation of event_sink with void , necessary since operator() has no parameter.
-template<>
-struct event_sink<void>
-{
-	typedef typename detail::handle_type<void>::type handler_t;
-
-	explicit event_sink(handler_t handler) :
-			event_handler(handler)
-	{
-		assert(event_handler);
-	}
-
+	template <class T = event_t, typename = std::enable_if_t<std::is_void<T>{}>>
 	void operator()()
 	{
 		assert(event_handler);
