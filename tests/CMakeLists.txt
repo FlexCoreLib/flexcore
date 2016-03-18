@@ -18,6 +18,7 @@ ADD_EXECUTABLE( test_executable
 	nodes/test_region_worker_node.cpp
 	nodes/test_state_nodes.cpp
 	ports/test_event_buffer.cpp
+	ports/test_mux_ports.cpp
 	ports/test_node_aware.cpp
 	ports/test_state_buffer.cpp
 	ports/events/test_events.cpp
