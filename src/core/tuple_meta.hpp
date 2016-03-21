@@ -15,6 +15,11 @@ namespace tuple
 
 namespace detail
 {
+template <class tuple>
+constexpr auto make_index_sequence()
+{
+	return std::make_index_sequence<std::tuple_size<std::decay_t<tuple>>::value>{};
+}
 
 template<class lhs_tuple, class rhs_tuple, std::size_t ... index,
 class operation>
@@ -48,8 +53,7 @@ decltype(auto) unary_invoke_helper(lhs_tuple&& lsh,
 template<class tuple, class operation>
 void for_each(tuple&& tup, operation&& op)
 {
-	unary_invoke_helper(std::forward<tuple>(tup),
-	                    std::make_index_sequence<std::tuple_size<tuple>::value>{}, op);
+	unary_invoke_helper(std::forward<tuple>(tup), detail::make_index_sequence<tuple>(), op);
 }
 
 ///transform, returns tuple of transformed elements
@@ -57,19 +61,19 @@ template<class tuple, class operation>
 decltype(auto) transform(tuple&& tup, const operation& op)
 {
 	return detail::unary_invoke_helper(std::forward<tuple>(tup),
-			std::make_index_sequence<std::tuple_size<tuple>::value> { }, op);
+	                                   detail::make_index_sequence<tuple>(), op);
 }
 ///binary_transform, returns tuple of results of bin_op on elements of first and second tuple
 template<class first_tuple, class second_tuple, class operation>
 decltype(auto) transform(first_tuple&& first, second_tuple&& second, const operation& op)
 {
-	static_assert(std::tuple_size<first_tuple>::value ==
-			std::tuple_size<second_tuple>::value ,
-			"Binary tuple transform needs tuples to have same nr of elements.");
+	static_assert(std::tuple_size<std::decay_t<first_tuple>>::value ==
+	                  std::tuple_size<std::decay_t<second_tuple>>::value,
+	              "Binary tuple transform needs tuples to have same nr of elements.");
 
-	return detail::binary_invoke_helper(
-	    std::forward<first_tuple>(first), std::forward<second_tuple>(second),
-	    std::make_index_sequence<std::tuple_size<first_tuple>::value>{}, op);
+	return detail::binary_invoke_helper(std::forward<first_tuple>(first),
+	                                    std::forward<second_tuple>(second),
+	                                    detail::make_index_sequence<first_tuple>(), op);
 }
 
 }  // namespace tuple
