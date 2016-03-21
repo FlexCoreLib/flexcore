@@ -26,4 +26,12 @@ BOOST_FIXTURE_TEST_CASE(mux_to_mux_connection, mux_fixture)
 	BOOST_CHECK_EQUAL(sink_c.get(), 3);
 }
 
+BOOST_FIXTURE_TEST_CASE(mux_to_mux_with_lambda, mux_fixture)
+{
+	muxed_sources >> [] (int i) { return -i; } >> muxed_sinks;
+	BOOST_CHECK_EQUAL(sink_a.get(), -1);
+	BOOST_CHECK_EQUAL(sink_b.get(), -2);
+	BOOST_CHECK_EQUAL(sink_c.get(), -3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

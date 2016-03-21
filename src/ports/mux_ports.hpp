@@ -27,6 +27,18 @@ struct mux_port
 	}
 
 	template <class T>
+	auto connect(T&& t, std::false_type)
+	{
+		auto connect_to_copy = [&t](auto&& elem)
+		{
+			// t needs to be copied if it's not an lvalue ref, forward won't work because can't move
+			// from smth multiple times.
+			return std::forward<decltype(elem)>(elem) >> static_cast<T>(t);
+		};
+		return mux_from_tuple(fc::tuple::transform(std::move(ports), connect_to_copy));
+	}
+
+	template <class T>
 	auto operator>>(T&& t)
 	{
 		using is_mux_port = fc::is_instantiation_of<fc::mux_port, std::decay_t<T>>;
@@ -40,5 +52,9 @@ auto mux(port_ts&... ports)
 	return mux_port<std::remove_const_t<port_ts>&...>{std::tie(ports...)};
 }
 
-
+template <class... conn_ts>
+mux_port<conn_ts...> mux_from_tuple(std::tuple<conn_ts...> tuple_)
+{
+	return mux_port<conn_ts...>{std::move(tuple_)};
+}
 } // namespace fc
