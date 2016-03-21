@@ -37,6 +37,22 @@ struct port_traits<unloaded_merge_port<op>>
 	using mux_category = merge_tag;
 };
 
+namespace detail
+{
+template <bool... vals>
+constexpr bool any()
+{
+	bool values[] = {vals...};
+	for (auto value : values)
+		if (value)
+			return true;
+	return false;
+}
+} // namespace detail
+
+template <class base>
+struct node_aware;
+
 template <class... port_ts>
 struct mux_port
 {
@@ -48,6 +64,8 @@ struct mux_port
 		static_assert(
 		    sizeof...(port_ts) == utils::function_traits<decltype(t.merge)>::arity,
 		    "Number of argument in merge function must be compatible with number of muxed ports.");
+		static_assert(!detail::any<detail::is_derived_from<node_aware, port_ts>::value...>(),
+		              "Merge port can not be used with node aware ports. See merge_node.");
 		return loaded_merge_port<decltype(t.merge), port_ts...>{t.merge, std::move(ports)};
 	}
 
