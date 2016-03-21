@@ -4,6 +4,7 @@
 #include <core/traits.hpp>
 #include <core/tuple_meta.hpp>
 #include <ports/ports.hpp>
+#include <ports/mux_ports.hpp>
 #include <nodes/base_node.hpp>
 #include <nodes/region_worker_node.hpp>
 
@@ -30,6 +31,14 @@ namespace fc
  */
 template<class operation, class signature>
 struct merge_node;
+
+namespace detail
+{
+auto as_ref = [](auto& sink)
+{
+	return std::ref(sink);
+};
+}
 
 template<class operation, class result, class... args>
 struct merge_node<operation, result (args...)> : public tree_base_node
@@ -63,6 +72,11 @@ struct merge_node<operation, result (args...)> : public tree_base_node
 	/// State Sink corresponding to i-th argument of merge operation.
 	template<size_t i>
 	auto& in() noexcept { return std::get<i>(in_ports); }
+
+	mux_port<state_sink<args>&...> mux() noexcept
+	{
+		return {tuple::transform(in_ports, detail::as_ref)};
+	}
 
 protected:
 	in_ports_t in_ports;
