@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include <utility>
+#include <core/function_traits.hpp>
 #include <core/traits.hpp>
 #include <core/tuple_meta.hpp>
 
@@ -9,8 +10,13 @@ namespace fc
 {
 template <class... ports>
 struct mux_port;
+template <class op>
+struct unloaded_merge_port;
+template <class op, class... ports>
+struct loaded_merge_port;
 
 struct default_tag {};
+struct merge_tag {};
 struct mux_tag {};
 
 template <typename T>
@@ -25,10 +31,25 @@ struct port_traits<mux_port<ports...>>
 	using mux_category = mux_tag;
 };
 
+template <class op>
+struct port_traits<unloaded_merge_port<op>>
+{
+	using mux_category = merge_tag;
+};
+
 template <class... port_ts>
 struct mux_port
 {
 	std::tuple<port_ts...> ports;
+
+	template <class T>
+	auto connect(T t, merge_tag)
+	{
+		static_assert(
+		    sizeof...(port_ts) == utils::function_traits<decltype(t.merge)>::arity,
+		    "Number of argument in merge function must be compatible with number of muxed ports.");
+		return loaded_merge_port<decltype(t.merge), port_ts...>{t.merge, std::move(ports)};
+	}
 
 	template <class... other_ports>
 	auto connect(mux_port<other_ports...> other, mux_tag)
@@ -74,5 +95,35 @@ template <class... conn_ts>
 mux_port<conn_ts...> mux_from_tuple(std::tuple<conn_ts...> tuple_)
 {
 	return mux_port<conn_ts...>{std::move(tuple_)};
+}
+
+template <class merge_op>
+struct unloaded_merge_port
+{
+	merge_op merge;
+};
+
+template <class merge_op, class... port_ts>
+struct loaded_merge_port
+{
+	merge_op op;
+	std::tuple<port_ts...> ports;
+
+	auto operator()()
+	{
+		auto op = this->op;
+		auto call_and_apply = [op](auto&&... src)
+		{
+			return op(std::forward<decltype(src)>(src)()...);
+		};
+		return tuple::invoke_function(call_and_apply, ports,
+		                              std::make_index_sequence<sizeof...(port_ts)>{});
+	}
+};
+
+template <class merge_op>
+auto merge(merge_op op)
+{
+	return unloaded_merge_port<merge_op>{op};
 }
 } // namespace fc
