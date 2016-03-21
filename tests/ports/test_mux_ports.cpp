@@ -34,10 +34,15 @@ BOOST_FIXTURE_TEST_CASE(mux_to_mux_with_lambda, mux_fixture)
 	BOOST_CHECK_EQUAL(sink_c.get(), -3);
 }
 
-BOOST_FIXTURE_TEST_CASE(mux_to_sink, mux_fixture)
+BOOST_FIXTURE_TEST_CASE(mux_merge_sink, mux_fixture)
 {
 	pure::state_sink<int> sink;
-	muxed_sources >> merge([](int a, int b, int c) { return a + b + c; }) >> sink;
+	auto negate = [](auto x) { return -x; };
+	muxed_sources
+	    >> negate
+	    >> merge([](auto a, auto b, auto c) { return a + b + c; })
+	    >> negate
+	    >> sink;
 	BOOST_CHECK_EQUAL(sink.get(), 6);
 }
 BOOST_AUTO_TEST_SUITE_END()

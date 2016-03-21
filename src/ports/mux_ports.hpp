@@ -62,8 +62,8 @@ struct mux_port
 	auto connect(T t, merge_tag)
 	{
 		static_assert(
-		    sizeof...(port_ts) == utils::function_traits<decltype(t.merge)>::arity,
-		    "Number of argument in merge function must be compatible with number of muxed ports.");
+		    detail::has_result_of_type<decltype(t.merge), decltype(std::declval<port_ts>()())...>(),
+		    "The muxed ports can not be merged using the provided merge function.");
 		static_assert(!detail::any<detail::is_derived_from<node_aware, port_ts>::value...>(),
 		              "Merge port can not be used with node aware ports. See merge_node.");
 		return loaded_merge_port<decltype(t.merge), port_ts...>{t.merge, std::move(ports)};
