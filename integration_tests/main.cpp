@@ -55,11 +55,11 @@ int main()
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
 	auto child_a = infrastructure.node_owner().
-			make_child_r<null>(first_region, "source_a");
+			make_child<null>(first_region, "source_a");
 	auto child_b = infrastructure.node_owner().
-			make_child_r<null>(second_region, "sink_b");
+			make_child<null>(second_region, "sink_b");
 	auto child_c = infrastructure.node_owner().
-			make_child_r<null>(second_region, "source_c");
+			make_child<null>(second_region, "source_c");
 
 	event_source<std::string> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,

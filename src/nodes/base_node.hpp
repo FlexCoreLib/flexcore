@@ -124,6 +124,8 @@ struct node_owner : base_t
 	 * \brief creates child node of type node_t with constructor arguments args.
 	 *
 	 * Inserts new child into tree.
+	 * Child node is attached to region of parent node.
+	 *
 	 * \tparam node_t type of node to be created
 	 * \param args constructor arguments passed to node_t
 	 * \return pointer to child node
@@ -138,9 +140,16 @@ struct node_owner : base_t
 				this->region()));
 	}
 
+	/**
+	 * \brief  Overload of make_child with region.
+	 *
+	 * @param r Child is attached to this region
+	 * @param args onstructor arguments passed to node_t
+	 * @return pointer to child node
+	 */
 	template<class node_t, class ... args_t>
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child_r(const std::shared_ptr<parallel_region>& r, args_t&&... args)
+	make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
 		return add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
@@ -166,9 +175,16 @@ struct node_owner : base_t
 				this->forest()));
 	}
 
+	/**
+	 * \brief  Overload of make_child with region.
+	 *
+	 * @param r Child is attached to this region
+	 * @param args onstructor arguments passed to node_t
+	 * @return pointer to child node
+	 */
 	template<class node_t, class ... args_t>
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child_r(std::shared_ptr<parallel_region>& r, args_t&&... args)
+	make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
 		return add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
