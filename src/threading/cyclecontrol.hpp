@@ -1,11 +1,11 @@
 #ifndef SRC_THREADING_CYCLECONTROL_HPP_
 #define SRC_THREADING_CYCLECONTROL_HPP_
 
-#include <vector>
-
 #include <clock/clock.hpp>
-#include <ports/pure_ports.hpp>
+#include <ports/events/event_sources.hpp>
 #include "parallelscheduler.hpp"
+
+#include <vector>
 
 namespace fc
 {
@@ -13,20 +13,17 @@ namespace thread
 {
 
 /**
- * \brief class representing a periodic task with cycle rate
+ * \brief class representing a periodic task.
  */
 struct periodic_task final
 {
 	/**
 	 * \brief Constructor taking a job and the cycle rate.
 	 * \param job task which is to be executed every cycle
-	 * \param cycle_duration duration of one cycle of the task in virtual time
 	 */
-	periodic_task(std::function<void(void)> job,
-			virtual_clock::duration cycle_duration) :
+	periodic_task(std::function<void(void)> job) :
 				work_to_do(false),
 				work_to_do_mtx(std::make_unique<std::mutex>()),
-				interval(cycle_duration),
 				work(job)
 	{
 	}
@@ -41,7 +38,6 @@ struct periodic_task final
 		std::lock_guard<std::mutex> lock(*work_to_do_mtx);
 		work_to_do = todo;
 	}
-	bool is_due(virtual_clock::steady::time_point now) const;
 	void send_switch_tick() { switch_tick.fire(); }
 	auto& out_switch_tick() { return switch_tick; }
 
@@ -54,7 +50,6 @@ private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
 	std::unique_ptr<std::mutex> work_to_do_mtx;
-	virtual_clock::duration interval;
 	/// work to be done every cycle
 	std::function<void(void)> work;
 
@@ -85,28 +80,31 @@ public:
 	/// stops the main loop in all threads
 	void stop();
 
-	/// advances the clock by a single tick and executes all tasks for a single cycle.
+	/// advances the clock by a single tick and executes all tasks for the cycle.
 	void work();
 
 	/**
-	 * \brief adds a new cyclic task.
+	 * \brief adds a new cyclic task with the given tick_rate.
 	 * Tasks can only be added as long as the cycle_control has not been started. A
 	 * std::runtime_error exception will be thrown if an attempt is made to add a task to a running
 	 * cycle_control.
 	 *
 	 * \pre cycle_control is not running
-	 * \post list of tasks is not empty
+	 * \post list of tasks for given tick_rate is not empty
 	 */
-	void add_task(periodic_task task);
+	void add_task(periodic_task task, virtual_clock::duration tick_rate);
 	size_t nr_of_tasks() { return scheduler.nr_of_waiting_tasks(); }
 
 	std::exception_ptr last_exception();
 
 private:
-	/// contains the main loop, which is running as as long as it is not stopped
+	/// contains the main loop, which runs until it is stopped
 	void main_loop();
-	void run_periodic_tasks();
-	std::vector<periodic_task> tasks;
+	/// runs the tasks in this vector; returns false if any task is not done, true otherwise
+	bool run_periodic_tasks(std::vector<periodic_task>& tasks);
+	std::vector<periodic_task> tasks_slow;
+	std::vector<periodic_task> tasks_medium;
+	std::vector<periodic_task> tasks_fast;
 	parallel_scheduler scheduler;
 	bool keep_working = false;
 	bool running = false;

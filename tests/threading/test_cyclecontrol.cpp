@@ -30,9 +30,9 @@ BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time)
 		    {
 			    while (!terminate_thread)
 				    usleep(100);
-			},
-		    fc::thread::cycle_control::fast_tick);
-		thread_manager.add_task(std::move(tick_cycle));
+		    });
+
+		thread_manager.add_task(std::move(tick_cycle), fc::thread::cycle_control::fast_tick);
 	}
 	thread_manager.start();
 

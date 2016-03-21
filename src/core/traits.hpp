@@ -10,6 +10,7 @@
 
 #include <type_traits>
 #include <functional>
+#include <memory>
 
 #include "function_traits.hpp"
 
@@ -265,6 +266,21 @@ constexpr auto void_callable(int) -> decltype(std::declval<T>()(), bool())
 
 template<class T>
 constexpr bool void_callable(...)
+{
+	return false;
+}
+
+template <class T>
+constexpr auto has_register_function(int)
+    -> decltype(std::declval<T>().register_callback(
+                    std::declval<std::shared_ptr<std::function<void(size_t)>>&>()),
+                bool())
+{
+	return true;
+}
+
+template<class T>
+constexpr bool has_register_function(...)
 {
 	return false;
 }
