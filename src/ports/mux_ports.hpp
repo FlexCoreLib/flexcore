@@ -7,6 +7,23 @@
 
 namespace fc
 {
+template <class... ports>
+struct mux_port;
+
+struct default_tag {};
+struct mux_tag {};
+
+template <typename T>
+struct port_traits
+{
+	using mux_category = default_tag;
+};
+
+template <class... ports>
+struct port_traits<mux_port<ports...>>
+{
+	using mux_category = mux_tag;
+};
 
 template <class... port_ts>
 struct mux_port
@@ -14,7 +31,7 @@ struct mux_port
 	std::tuple<port_ts...> ports;
 
 	template <class... other_ports>
-	auto connect(mux_port<other_ports...> other, std::true_type)
+	auto connect(mux_port<other_ports...> other, mux_tag)
 	{
 		constexpr size_t N = sizeof...(port_ts);
 		constexpr size_t M = sizeof...(other_ports);
@@ -27,7 +44,7 @@ struct mux_port
 	}
 
 	template <class T>
-	auto connect(T&& t, std::false_type)
+	auto connect(T&& t, default_tag)
 	{
 		auto connect_to_copy = [&t](auto&& elem)
 		{
@@ -41,8 +58,9 @@ struct mux_port
 	template <class T>
 	auto operator>>(T&& t)
 	{
-		using is_mux_port = fc::is_instantiation_of<fc::mux_port, std::decay_t<T>>;
-		return this->connect(std::forward<T>(t), is_mux_port{});
+		using decayed = std::decay_t<T>;
+		using tag = typename fc::port_traits<decayed>::mux_category;
+		return this->connect(std::forward<T>(t), tag{});
 	}
 };
 
