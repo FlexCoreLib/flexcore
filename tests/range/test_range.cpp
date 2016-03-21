@@ -69,5 +69,20 @@ BOOST_AUTO_TEST_CASE(test_actions)
 	BOOST_CHECK_EQUAL(con(vec), -20);
 }
 
+BOOST_AUTO_TEST_CASE(test_zip)
+{
+	std::vector<int> vec {0, 1, 2, 3, 4};
+	std::vector<int> correct_result {0,1,4,9,16};
+
+	auto source = [&vec](){ return boost::make_iterator_range(std::begin(vec), std::end(vec)); };
+
+	auto connection = source
+			>> views::zip([](auto a, auto b){return a*b;}, vec);
+
+	std::vector<int> result;
+	boost::push_back(result, connection());
+	BOOST_CHECK(result == correct_result);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

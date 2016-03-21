@@ -3,6 +3,8 @@
 
 #include <boost/range.hpp>
 #include <boost/range/adaptors.hpp>
+#include <boost/range/combine.hpp>
+#include "boost/tuple/tuple.hpp"
 
 #include <iterator>
 #include <numeric>
@@ -65,6 +67,29 @@ auto map(operation op)
 	return map_view<operation> { op };
 }
 
+template<class binop, class arg_range>
+struct zip_view
+{
+	template<class in_range>
+	auto operator()(in_range&& input)
+	{
+		assert(static_cast<size_t>(input.size()) ==
+				static_cast<size_t>(zip_with.size()));
+
+		return boost::adaptors::transform(
+				boost::combine(zip_with, input), //zips ranges to tuple
+				[op = this->op](auto&& in){ return op(boost::get<0>(in), boost::get<1>(in)); });
+	}
+
+	binop op;
+	arg_range zip_with;
+};
+
+template<class binop, class arg_range>
+auto zip(binop op, arg_range args)
+{
+	return zip_view<binop, arg_range>{op, args};
+}
 
 } //namespace views
 

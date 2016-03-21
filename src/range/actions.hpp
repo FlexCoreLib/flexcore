@@ -66,6 +66,30 @@ auto filter(predicate pred)
 	return filter_action<predicate> { pred };
 }
 
+template<class binop, class arg_range>
+struct zip_action
+{
+	template<class in_range>
+	auto operator()(in_range input)
+	{
+		assert(static_cast<size_t>(input.size()) ==
+				static_cast<size_t>(zip_with.size()));
+
+		std::transform(
+				begin(input), end(input), begin(zip_with), begin(input), op);
+		return input;
+	}
+
+	binop op;
+	arg_range zip_with;
+};
+
+template<class binop, class arg_range>
+auto zip(binop op, arg_range args)
+{
+	return zip_action<binop, arg_range>{op, args};
+}
+
 
 }  // namespace actions
 }  // namespace fc
