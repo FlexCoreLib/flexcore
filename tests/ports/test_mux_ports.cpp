@@ -45,4 +45,29 @@ BOOST_FIXTURE_TEST_CASE(mux_merge_sink, mux_fixture)
 	    >> sink;
 	BOOST_CHECK_EQUAL(sink.get(), 6);
 }
+
+BOOST_AUTO_TEST_CASE(event_src_mux_to_sink)
+{
+	int counter = 0;
+	pure::event_source<int> a, b;
+	pure::event_sink<int> sink{[&] (int i) { counter += i; }};
+	mux(a,
+	    b) >> sink;
+	BOOST_CHECK_EQUAL(counter, 0);
+	a.fire(3);
+	BOOST_CHECK_EQUAL(counter, 3);
+	b.fire(-4);
+	BOOST_CHECK_EQUAL(counter, -1);
+}
+
+BOOST_AUTO_TEST_CASE(event_src_to_mux_sink)
+{
+	const int fire_val = 12345;
+	pure::event_source<int> src;
+	pure::event_sink<int> sink_a{[=](int i) { BOOST_CHECK_EQUAL(fire_val, i); }};
+	pure::event_sink<int> sink_b{[=](int i) { BOOST_CHECK_EQUAL(fire_val, i); }};
+	src >> mux(sink_a,
+	           sink_b);
+	src.fire(fire_val);
+}
 BOOST_AUTO_TEST_SUITE_END()

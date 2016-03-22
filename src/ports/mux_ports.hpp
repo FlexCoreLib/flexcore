@@ -53,12 +53,24 @@ constexpr bool always_false_fun(T...)
 {
 	return false;
 }
+
+template <bool... vals>
+constexpr bool all()
+{
+	bool values[] = {vals...};
+	for (auto value : values)
+		if (!value)
+			return false;
+	return true;
+}
 } // namespace detail
 
 template <class base>
 struct node_aware;
 
 struct many_to_many_tag {};
+struct one_to_many_tag {};
+struct many_to_one_tag {};
 
 template <size_t left_ports, size_t right_ports>
 struct mux_traits
@@ -71,6 +83,16 @@ template <size_t ports>
 struct mux_traits<ports, ports>
 {
 	using connection_category = many_to_many_tag;
+};
+template <size_t ports>
+struct mux_traits<ports, 1>
+{
+	using connection_category = many_to_one_tag;
+};
+template <size_t ports>
+struct mux_traits<1, ports>
+{
+	using connection_category = one_to_many_tag;
 };
 
 template <class... port_ts>
@@ -109,6 +131,32 @@ struct mux_port
 		                            pairwise_connect);
 	}
 
+	template <class sink_t>
+	auto connect_mux(mux_port<sink_t>&& other, many_to_one_tag)
+	{
+		sink_t&& sink = std::get<0>(std::move(other).ports);
+		auto all_to_sink = [&sink](auto&& port)
+		{
+			return std::forward<decltype(port)>(port) >> static_cast<sink_t>(sink);
+		};
+		return fc::tuple::transform(std::move(ports), all_to_sink);
+	}
+
+	template <class other_mux_port>
+	auto connect_mux(other_mux_port&& other, one_to_many_tag)
+	{
+		static_assert(
+		    sizeof...(port_ts) == 1,
+		    "(*this).ports should have a single port; if you are here, your logic must be wrong.");
+		using src_t = typename std::tuple_element<0, decltype(ports)>::type;
+		src_t&& src = std::get<0>(std::move(ports));
+		auto src_to_all = [&src](auto&& port)
+		{
+			return static_cast<src_t>(src) >> std::forward<decltype(port)>(port);
+		};
+		return fc::tuple::transform(std::forward<other_mux_port>(other).ports, src_to_all);
+	}
+
 	template <class T>
 	auto connect(T&& t, default_tag)
 	{
@@ -129,6 +177,14 @@ struct mux_port
 		return this->connect(std::forward<T>(t), tag{});
 	}
 };
+
+template <class T, class... ports,
+          class = std::enable_if_t<is_active_source<std::remove_reference_t<T>>{} &&
+                                   detail::all<is_connectable<ports>{}...>()>>
+auto operator>>(T&& src, mux_port<ports...> mux)
+{
+	return mux_port<T>{std::forward_as_tuple(std::forward<T>(src))} >> std::move(mux);
+}
 
 template <class... port_ts>
 auto mux(port_ts&... ports)
