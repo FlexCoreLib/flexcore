@@ -67,7 +67,17 @@ auto map(operation op)
 	return map_view<operation> { op };
 }
 
-template<class binop, class arg_range>
+/**
+ * \brief Lazy Version of Zip Higher Order Function.
+ *
+ * Takes range as input and provides a single range as output.
+ * Elements of single range are result of pairwise application of binop.
+ * Calculations are only done when the output range is used.
+ *
+ * \tparam binop Operation type to apply to elements input and parameter range.
+ * \tparam param_range type of range which serves as parameter to algorithm.
+ */
+template<class binop, class param_range>
 struct zip_view
 {
 	template<class in_range>
@@ -82,13 +92,19 @@ struct zip_view
 	}
 
 	binop op;
-	arg_range zip_with;
+	param_range zip_with;
 };
 
-template<class binop, class arg_range>
-auto zip(binop op, arg_range args)
+/**
+ * \brief Generates Lazy Zip View with binary Operation and parameter range.
+ * \param op Binary Operator which is applied pairwise to elements of param and input.
+ * \param param Second Range of Zip. Elements of this are the rhs of op.
+ * \return zip_view with op and param.
+ */
+template<class binop, class param_range>
+auto zip(binop op, param_range param)
 {
-	return zip_view<binop, arg_range>{op, args};
+	return zip_view<binop, param_range>{op, param};
 }
 
 } //namespace views

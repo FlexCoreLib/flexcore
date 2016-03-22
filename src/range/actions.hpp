@@ -66,9 +66,19 @@ auto filter(predicate pred)
 	return filter_action<predicate> { pred };
 }
 
-template<class binop, class arg_range>
+/**
+ * \brief Eager Version of Zip Higher Order Function.
+ *
+ * Takes range as input and provides a single range as output.
+ * Manipulates input range!
+ *
+ * \tparam binop Operation type to apply to elements input and parameter range.
+ * \tparam param_range type of range which serves as parameter to algorithm.
+ */
+template<class binop, class param_range>
 struct zip_action
 {
+	///
 	template<class in_range>
 	auto operator()(in_range input)
 	{
@@ -81,13 +91,19 @@ struct zip_action
 	}
 
 	binop op;
-	arg_range zip_with;
+	param_range zip_with;
 };
 
-template<class binop, class arg_range>
-auto zip(binop op, arg_range args)
+/**
+ * \brief Generates Eager Zip Action with binary Operation and parameter range.
+ * \param op Binary Operator which is applied pairwise to elements of param and input.
+ * \param param Second Range of Zip. Elements of this are the rhs of op.
+ * \return zip_action with op and param.
+ */
+template<class binop, class param_range>
+auto zip(binop op, param_range param)
 {
-	return zip_action<binop, arg_range>{op, args};
+	return zip_action<binop, param_range>{op, param};
 }
 
 
