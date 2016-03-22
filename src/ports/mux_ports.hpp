@@ -100,6 +100,7 @@ struct mux_port
 {
 	std::tuple<port_ts...> ports;
 
+private:
 	template <class T>
 	auto connect(T t, merge_tag)
 	{
@@ -169,6 +170,7 @@ struct mux_port
 		return mux_from_tuple(fc::tuple::transform(std::move(ports), connect_to_copy));
 	}
 
+public:
 	template <class T>
 	auto operator>>(T&& t)
 	{
