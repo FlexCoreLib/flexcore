@@ -48,10 +48,30 @@ constexpr bool any()
 			return true;
 	return false;
 }
+template <typename... T>
+constexpr bool always_false_fun(T...)
+{
+	return false;
+}
 } // namespace detail
 
 template <class base>
 struct node_aware;
+
+struct many_to_many_tag {};
+
+template <size_t left_ports, size_t right_ports>
+struct mux_traits
+{
+	static_assert(
+	    detail::always_false_fun(left_ports, right_ports),
+	    "Only N->N, 1->N and N->1 connections possible between muxed ports. PS: don't try 1->1.");
+};
+template <size_t ports>
+struct mux_traits<ports, ports>
+{
+	using connection_category = many_to_many_tag;
+};
 
 template <class... port_ts>
 struct mux_port
@@ -69,17 +89,24 @@ struct mux_port
 		return loaded_merge_port<decltype(t.merge), port_ts...>{t.merge, std::move(ports)};
 	}
 
-	template <class... other_ports>
-	auto connect(mux_port<other_ports...> other, mux_tag)
+	template <class other_mux>
+	auto connect(other_mux&& other, mux_tag)
 	{
-		constexpr size_t N = sizeof...(port_ts);
-		constexpr size_t M = sizeof...(other_ports);
-		static_assert(N == M, "Mux ports need to have the same number of subports.");
+		constexpr size_t this_ports = sizeof...(port_ts);
+		constexpr size_t other_ports = std::tuple_size<decltype(other.ports)>::value;
+		using connection_tag = typename mux_traits<this_ports, other_ports>::connection_category;
+		return connect_mux(std::forward<other_mux>(other), connection_tag{});
+	}
+
+	template <class other_mux_port>
+	auto connect_mux(other_mux_port&& other, many_to_many_tag)
+	{
 		auto pairwise_connect = [](auto&& l, auto&& r)
 		{
 			return std::forward<decltype(l)>(l) >> std::forward<decltype(r)>(r);
 		};
-		return fc::tuple::transform(std::move(ports), std::move(other.ports), pairwise_connect);
+		return fc::tuple::transform(std::move(ports), std::forward<other_mux_port>(other).ports,
+		                            pairwise_connect);
 	}
 
 	template <class T>
