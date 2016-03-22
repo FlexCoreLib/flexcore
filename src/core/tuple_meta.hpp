@@ -76,6 +76,12 @@ decltype(auto) transform(first_tuple&& first, second_tuple&& second, const opera
 	                                    detail::make_index_sequence<first_tuple>(), op);
 }
 
+///Helper function to call variadic functions with tuple
+template<class operation, class tuple, std::size_t... index>
+decltype(auto) invoke_function(operation&& op, tuple&& tup, std::index_sequence<index...>)
+{
+	return op(std::get<index>(std::forward<tuple>(tup))...);
+}
 }  // namespace tuple
 }  // namespace fc
 

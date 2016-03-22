@@ -2,6 +2,7 @@
 #define SRC_NODES_STATE_NODES_HPP_
 
 #include <core/traits.hpp>
+#include <core/tuple_meta.hpp>
 #include <ports/ports.hpp>
 #include <nodes/base_node.hpp>
 #include <nodes/region_worker_node.hpp>
@@ -50,7 +51,13 @@ struct merge_node<operation, result (args...)> : public tree_base_node
 	///calls all in ports, converts their results from tuple to varargs and calls operation
 	result_type operator()()
 	{
-		return invoke_helper(in_ports, std::make_index_sequence<nr_of_arguments>{});
+		auto op = this->op;
+		auto get_and_apply = [op](auto&&... sink)
+		{
+			return op(std::forward<decltype(sink)>(sink).get()...);
+		};
+		return tuple::invoke_function(get_and_apply, in_ports,
+		                              std::make_index_sequence<nr_of_arguments>{});
 	}
 
 	/// State Sink corresponding to i-th argument of merge operation.
@@ -60,14 +67,6 @@ struct merge_node<operation, result (args...)> : public tree_base_node
 protected:
 	in_ports_t in_ports;
 	operation op;
-
-private:
-	///Helper function to get varargs index from nr of arguments by type deduction.
-	template<class tuple, std::size_t... index>
-	decltype(auto) invoke_helper(tuple&& tup, std::index_sequence<index...>)
-	{
-		return op(std::get<index>(std::forward<tuple>(tup)).get()...);
-	}
 };
 
 ///creats a merge node which applies the operation to all inputs and returns single state.
