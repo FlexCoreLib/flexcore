@@ -3,12 +3,17 @@
 
 #include <boost/range.hpp>
 #include <boost/range/adaptors.hpp>
+#include <boost/range/combine.hpp>
+#include "boost/tuple/tuple.hpp"
 
 #include <iterator>
 #include <numeric>
 
 namespace fc
 {
+namespace views
+{
+
 
 /**
  * \brief Higher order function filter as a connectable.
@@ -38,7 +43,7 @@ auto filter(predicate pred)
 }
 
 /**
- * \brief Higher order map aka transform filter as a connectable.
+ * \brief Higher order map aka transform as a connectable.
  *
  * \tparam operation operation to apply to each element of range.
  *
@@ -63,6 +68,49 @@ auto map(operation op)
 }
 
 /**
+ * \brief Lazy Version of Zip Higher Order Function.
+ *
+ * Takes range as input and provides a single range as output.
+ * Elements of single range are result of pairwise application of binop.
+ * Calculations are only done when the output range is used.
+ *
+ * \tparam binop Operation type to apply to elements input and parameter range.
+ * \tparam param_range type of range which serves as parameter to algorithm.
+ */
+template<class binop, class param_range>
+struct zip_view
+{
+	template<class in_range>
+	auto operator()(in_range&& input)
+	{
+		assert(static_cast<size_t>(input.size()) ==
+				static_cast<size_t>(zip_with.size()));
+
+		return boost::adaptors::transform(
+				boost::combine(zip_with, input), //zips ranges to tuple
+				[op = this->op](auto&& in){ return op(boost::get<0>(in), boost::get<1>(in)); });
+	}
+
+	binop op;
+	param_range zip_with;
+};
+
+/**
+ * \brief Generates Lazy Zip View with binary Operation and parameter range.
+ * \param op Binary Operator which is applied pairwise to elements of param and input.
+ * \param param Second Range of Zip. Elements of this are the rhs of op.
+ * \return zip_view with op and param.
+ */
+template<class binop, class param_range>
+auto zip(binop op, param_range param)
+{
+	return zip_view<binop, param_range>{op, param};
+}
+
+} //namespace views
+
+
+/**
  * \brief Higher order function reduce aka fold as a connectable.
  *
  * \tparam binop binary operation to repeatedly apply to the whole range.
@@ -78,7 +126,7 @@ struct reduce_view
 	}
 
 	template<class in_range>
-	auto operator()(const in_range&& input)
+	auto operator()(in_range&& input)
 	{
 		using std::begin;
 		using std::end;
