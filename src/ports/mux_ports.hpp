@@ -308,7 +308,31 @@ struct loaded_merge_port
 	}
 };
 
-/// Create a merge_port proxy that only holds the merge operation.
+/** \brief Create a merge_port proxy that only holds the merge operation.
+ *
+ * A merge port is an entity that can merge incoming states from several state
+ * sources. It does not take into account region information and so it can't be
+ * used with node aware ports.
+ *
+ * A merge port needs to appear to the right of a mux port in a connection and
+ * can _only_ be connected to a mux port. Changing connection precedence using
+ * parentheses is not supported. Example:
+ *
+ *     mux(a,b,c) >> lambda >> merge(op) >> state_sink
+ *
+ * This connection will work because `mux(a,b,c) >> lambda` returns another mux
+ * port. Changing the connection precedence:
+ *
+ *     mux(a,b,c) >> lambda >> (merge(op) >> state_sink)
+ *
+ * will not work because a merge port can not be connected to anything but a mux
+ * port.
+ *
+ * **Impl detail**: Connecting a merge port to a mux_port does not call
+ *                  operator>> of any underlying port, so any mixins (including
+ *                  graph information) will not get a chance to perform their
+ *                  job.
+ */
 template <class merge_op>
 auto merge(merge_op op)
 {
