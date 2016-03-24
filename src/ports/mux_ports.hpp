@@ -264,12 +264,13 @@ auto operator>>(T&& src, mux_port<ports...> mux)
 
 /** \brief Create a mux port from lvalue references to the supplied ports.
  *
- * \params ports should be non-const lvalue references to ports.
+ * \params ports should be non-const connectables.
  */
 template <class... port_ts>
-auto mux(port_ts&... ports)
+auto mux(port_ts&&... ports)
 {
-	return mux_port<std::remove_const_t<port_ts>&...>{std::tie(ports...)};
+	return mux_port<std::remove_const_t<port_ts>...>{
+	    std::forward_as_tuple(std::forward<port_ts>(ports)...)};
 }
 
 template <class... conn_ts>
