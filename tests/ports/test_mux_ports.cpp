@@ -20,7 +20,7 @@ struct mux_fixture
 
 BOOST_FIXTURE_TEST_CASE(mux_to_mux_connection, mux_fixture)
 {
-	muxed_sources >> muxed_sinks;
+	std::move(muxed_sources) >> std::move(muxed_sinks);
 	BOOST_CHECK_EQUAL(sink_a.get(), 1);
 	BOOST_CHECK_EQUAL(sink_b.get(), 2);
 	BOOST_CHECK_EQUAL(sink_c.get(), 3);
@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_CASE(mux_to_mux_connection, mux_fixture)
 
 BOOST_FIXTURE_TEST_CASE(mux_to_mux_with_lambda, mux_fixture)
 {
-	muxed_sources >> [] (int i) { return -i; } >> muxed_sinks;
+	std::move(muxed_sources) >> [] (int i) { return -i; } >> std::move(muxed_sinks);
 	BOOST_CHECK_EQUAL(sink_a.get(), -1);
 	BOOST_CHECK_EQUAL(sink_b.get(), -2);
 	BOOST_CHECK_EQUAL(sink_c.get(), -3);
@@ -38,7 +38,7 @@ BOOST_FIXTURE_TEST_CASE(mux_merge_sink, mux_fixture)
 {
 	pure::state_sink<int> sink;
 	auto negate = [](auto x) { return -x; };
-	muxed_sources
+	std::move(muxed_sources)
 	    >> negate
 	    >> merge([](auto a, auto b, auto c) { return a + b + c; })
 	    >> negate

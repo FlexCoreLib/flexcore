@@ -245,12 +245,14 @@ private:
 public:
 	/// Function to forward to the correct connect overload based on the type of T.
 	template <class T>
-	auto operator>>(T&& t)
+	auto operator>>(T&& t) &&
 	{
 		using decayed = std::decay_t<T>;
 		using tag = typename fc::port_traits<decayed>::mux_category;
 		return this->connect(std::forward<T>(t), tag{});
 	}
+	template <class T>
+	auto operator>>(T&&) & = delete;
 };
 
 /// Connect src with all ports in mux. Useful only with event_sources.
