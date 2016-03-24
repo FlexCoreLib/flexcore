@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SRC_PORTS_MUX_PORTS_HPP_
+#define SRC_PORTS_MUX_PORTS_HPP_
 
 #include <tuple>
 #include <utility>
@@ -314,3 +315,5 @@ auto merge(merge_op op)
 	return unloaded_merge_port<merge_op>{op};
 }
 } // namespace fc
+#endif // SRC_PORTS_MUX_PORTS_HPP_
+
