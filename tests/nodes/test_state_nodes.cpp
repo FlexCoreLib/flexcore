@@ -12,8 +12,7 @@ BOOST_AUTO_TEST_CASE( test_merge )
 	auto multiply = make_merge( root, [](int a, int b){return a*b;} );
 	state_source<size_t> three(&root, [](){ return 3; });
 	state_source<size_t> two(&root, [](){ return 2; });
-	three >> multiply->in<0>();
-	two >> multiply->in<1>();
+	mux(three, two) >> multiply->mux();
 	BOOST_CHECK_EQUAL((*multiply)(), 6);
 }
 
