@@ -13,8 +13,7 @@ BOOST_AUTO_TEST_CASE( test_merge )
 	auto multiply = make_merge([](int a, int b){return a*b;} );
 	pure::state_source<size_t> three([](){ return 3; });
 	pure::state_source<size_t> two([](){ return 2; });
-	three >> multiply.in<0>();
-	two >> multiply.in<1>();
+	mux(three, two) >> multiply.mux();
 	BOOST_CHECK_EQUAL(multiply(), 6);
 }
 

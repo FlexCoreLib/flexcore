@@ -120,10 +120,10 @@ constexpr bool has_result_of_type_impl(...)
 {
 	return false;
 }
-template <class F, typename Arg>
+template <class F, typename... Args>
 struct result_of_fwd
 {
-	using type = std::result_of<F(Arg)>;
+	using type = std::result_of<F(Args...)>;
 };
 template <class F>
 struct result_of_fwd<F, void>
@@ -136,10 +136,10 @@ struct result_of_fwd<F, void>
  *
  * Is done by checking whether std::result_of has a type typedef.
  */
-template <class F, typename Arg>
+template <class F, typename... Arg>
 constexpr bool has_result_of_type()
 {
-	return has_result_of_type_impl<typename result_of_fwd<F, Arg>::type>(0);
+	return has_result_of_type_impl<typename result_of_fwd<F, Arg...>::type>(0);
 }
 
 } // namespace detail
