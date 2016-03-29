@@ -13,7 +13,7 @@ public:
 	infrastructure();
 
 	std::shared_ptr<parallel_region> add_region(const std::string& name,
-			const virtual_clock::steady::duration& tick);
+			const virtual_clock::steady::duration& tick_rate);
 
 	auto& node_owner() { return forest_root.nodes(); }
 	void infinite_main_loop();

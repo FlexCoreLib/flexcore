@@ -34,19 +34,22 @@ struct merge_node;
 template<class operation, class result, class... args, class base_t>
 struct merge_node<operation, result (args...), base_t> : public base_t
 {
-	typedef std::tuple<args...> arguments;
-	typedef std::tuple<
-			typename base_t::template state_sink<args> ...> in_ports_t;
-	typedef result result_type;
+	using arguments = std::tuple<args...>;
+	template <typename arg>
+	using base_sink_t = typename base_t::template state_sink<arg>;
+	using result_type = result ;
+
+	using in_ports_t = std::tuple<base_sink_t<args>...>;
+
 	static constexpr auto nr_of_arguments = sizeof...(args);
 
 	static_assert(nr_of_arguments > 0,
 			"Tried to create merge_node with a function taking no arguments");
 
 	template<class... ctr_args_t>
-    explicit merge_node(operation o, ctr_args_t&&... ctr_args)
+	explicit merge_node(operation o, ctr_args_t&&... ctr_args)
 		: base_t(std::forward<ctr_args_t>(ctr_args)...)
-  		, in_ports(typename base_t::template state_sink<args>(this)...)
+		, in_ports(base_sink_t<args>(this)...)
 		, op(o)
 	{}
 

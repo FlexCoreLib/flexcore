@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE( test_region_propagation )
 
 namespace
 {
-class test_owning_node : public node_owner<owning_base_node>
+class test_owning_node : public owning_base_node
 {
 public:
 	explicit test_owning_node(std::shared_ptr<parallel_region> r, forest_t* f ) :
-			node_owner<owning_base_node>(r, "test_owning_node", f) {}
+			owning_base_node(r, "test_owning_node", f) {}
 	tree_base_node::forest_t::iterator add_child()
 	{
 		make_child<test_owning_node>();
@@ -71,7 +71,7 @@ public:
 	}
 
 	explicit test_owning_node(std::shared_ptr<parallel_region> r, std::string name, forest_t* f ) :
-			node_owner<owning_base_node>(r, name, f) {}
+			owning_base_node(r, name, f) {}
 
 	size_t nr_of_children()
 	{
@@ -118,14 +118,14 @@ BOOST_AUTO_TEST_CASE( test_deletion )
 	auto temp_it = test_node->add_child();
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 1);
 
-	erase_with_subtree(*(test_node->forest()), temp_it);
+	erase_with_subtree(*(root.forest()), temp_it);
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
 
 	auto temp_it_2 = test_node->add_child();
 	static_cast<test_owning_node*>(temp_it_2->get())->add_child();
 
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 2);
-	erase_with_subtree(*(test_node->forest()), temp_it);
+	erase_with_subtree(*(root.forest()), temp_it);
 
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
 }

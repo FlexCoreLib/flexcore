@@ -61,7 +61,7 @@ class gate_with_predicate: public generic_event_node<event_t, base_t>
 {
 public:
 	explicit gate_with_predicate(const predicate& p) :
-		generic_event_node<event_t, pure::pure_node>(
+		generic_event_node<event_t, base_t>(
 				[this](const event_t& in)
 				{
 					if (pred(in))
@@ -87,7 +87,7 @@ class gate_with_control: public generic_event_node<event_t, base_t>
 {
 public:
 	gate_with_control() :
-		generic_event_node<event_t, pure::pure_node>(
+		generic_event_node<event_t, base_t>(
 				[this](const event_t& in)
 				{
 					if (control.get())

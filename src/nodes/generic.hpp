@@ -85,7 +85,9 @@ public:
 		, out_port(this, [this](){return in_ports.at(switch_state.get()).get();} )
 	{}
 
-	using in_port_t = typename base_node::template state_sink<data_t>;
+	using data_sink_t = typename base_node::template state_sink<data_t>;
+	using key_sink_t = typename base_node::template state_sink<key_t>;
+	using state_source_t = typename base_node::template state_source<data_t>;
 
 	/**
 	 * \brief input port for state of type data_t corresponding to key port.
@@ -99,7 +101,7 @@ public:
 		auto it = in_ports.find(port);
 		if (it == in_ports.end())
 			it = in_ports.emplace(std::make_pair(port,
-					in_port_t(this))).first;
+					data_sink_t{this})).first;
 		return it->second;
 	}
 	/// parameter port controlling the switch, expects state of key_t
@@ -107,15 +109,20 @@ public:
 	auto& out() noexcept { return out_port; }
 private:
 	/// provides the current state of the switch.
-	typename base_node::template state_sink<key_t> switch_state;
-	std::map<key_t, in_port_t> in_ports;
-	typename base_node::template state_source<data_t> out_port;
+	key_sink_t switch_state;
+	std::map<key_t, data_sink_t> in_ports;
+	state_source_t out_port;
 };
 
 template<class data_t, class key_t, class base_node>
 class n_ary_switch<data_t, event_tag, key_t, base_node> : public base_node
 {
 public:
+	using data_sink_t = typename base_node::template event_sink<data_t>;
+	using key_sink_t = typename base_node::template state_sink<key_t>;
+	using event_source_t = typename base_node::template event_source<data_t>;
+
+
 	template<class... base_args>
 	explicit n_ary_switch(base_args&&... args)
 		: base_node(std::forward<base_args>(args)...)
@@ -138,7 +145,7 @@ public:
 		{
 			it = in_ports.emplace(std::make_pair
 				(	port,
-					typename base_node::template event_sink<data_t>( this,
+					data_sink_t( this,
 							[this, port](const data_t& in){ forward_call(in, port); })
 				)
 			).first;
@@ -154,9 +161,9 @@ public:
 
 
 private:
-	typename base_node::template state_sink<key_t> switch_state;
-	typename base_node::template event_source<data_t> out_port;
-	std::map<key_t, typename base_node::template event_sink<data_t>> in_ports;
+	key_sink_t switch_state;
+	event_source_t out_port;
+	std::map<key_t, data_sink_t> in_ports;
 	/// fires incoming event if and only if it is from the currently chosen port.
 	void forward_call(data_t event, key_t port)
 	{

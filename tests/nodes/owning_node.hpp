@@ -29,8 +29,8 @@ public:
 		assert(r);
 		assert(owned_forest);
 
-		owner.self_ = adobe::trailing_of(owner.forest()->insert(
-				owner.forest()->begin(), std::make_unique<tree_base_node>(r, name)));
+		owner.self_ = adobe::trailing_of(owned_forest->insert(
+				owned_forest->begin(), std::make_unique<tree_base_node>(r, name)));
 
 	}
 
@@ -68,7 +68,7 @@ public:
 
 private:
 	std::unique_ptr<forest_t> owned_forest;
-	node_owner<owning_base_node> owner;
+	owning_base_node owner;
 
 };
 

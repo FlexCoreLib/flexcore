@@ -74,9 +74,6 @@ public:
 	pure::event_source<void>& switch_tick();
 	pure::event_source<void>& work_tick();
 
-protected:
-
-public:
 	tick_controller ticks;
 	region_id id;
 };

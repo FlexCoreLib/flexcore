@@ -8,17 +8,17 @@
 #include <cassert>
 #include <string>
 #include <memory>
-#include <stack>
 
 #include <ports/ports.hpp>
 
 namespace fc
 {
 
-static constexpr auto name_seperator = "/";
-
 /**
  * \brief base class for nodes contained in forest
+ *
+ *  Nodes are neither copy_constructyble nor copy_assignable.
+ *
  *
  * \invariant region_ != null_ptr
  * \invariant self_ is always valid
@@ -33,72 +33,39 @@ public:
 	template<class data_t> using state_source = ::fc::state_source<data_t>;
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
+	tree_base_node(std::shared_ptr<parallel_region> r, std::string name);
 	virtual ~tree_base_node() = default;
 
 	const std::shared_ptr<parallel_region>& region() const { return region_; }
 
-	std::string own_name() const { return graph_info_.name(); }
+	std::string name() const { return graph_info_.name(); }
 
 	graph::graph_node_properties graph_info() const { return graph_info_; }
-
-	explicit tree_base_node(std::shared_ptr<parallel_region> r, std::string name)
-		: graph_info_(name)
-		, self_() // todo this currently allows construction of node with invalid iterator self_
-		, region_(r)
-	{
-		assert(region_);
-	}
-protected:
-
-	/* Information for abstract graph */
-	//stores the metainformation of the node used by the abstract graph
-	graph::graph_node_properties graph_info_;
-
 
 	/*
 	 * iterator self_ allows access to the node inside the forest.
 	 * Unfortunately this creates a circular reference of the node to itself.
 	 */
-public: forest_t::iterator self_;
+	forest_t::iterator self_;
 
+private:
 	/* Information about which region the node belongs to */
-private: std::shared_ptr<parallel_region> region_;
+	std::shared_ptr<parallel_region> region_;
+	/* Information for abstract graph */
+	//stores the metainformation of the node used by the abstract graph
+	graph::graph_node_properties graph_info_;
+
 };
 
 /**
  * \brief base class for nodes which own other nodes, aka nested nodes.
  *
  * \invariant forest_ != nullptr
- */
-class owning_base_node : public tree_base_node
-{
-public:
-	owning_base_node(std::shared_ptr<parallel_region> r, std::string name, forest_t* f)
-		: tree_base_node(r, name)
-		, forest_(f)
-	{
-		assert(forest_); //check invariant
-	}
-
-	/// returns access to forest containing this node
-	forest_t* forest() { return forest_; }
-
-protected:
-	// stores the access to the forest this node is contained in.
-	forest_t* forest_;
-};
-
-/**
- * \brief extension of tree_base_node which creates an aggregate node.
  *
  * Nodes of this type may have children nodes.
- * Adds several methods which allow adding new nodes as children.
- * Does not add additional state.
  *
  * Use make_child/make_child_named to create a node already inserted into
  * the ownership tree.
- *
- * Nodes are not copyable.
  *
  * Node creation examples:
  * \code{cpp}
@@ -109,15 +76,14 @@ protected:
  * root.make_child_named<node_tmpl<int>>("name");
  * \endcode
  */
-template<class base_t>
-struct node_owner : base_t
+class owning_base_node : public tree_base_node
 {
-	using forest_t = typename base_t::forest_t;
-
-	template<class... arg_types>
-	node_owner(arg_types&&... args)
-			: base_t(std::forward<arg_types>(args)...)
+public:
+	owning_base_node(std::shared_ptr<parallel_region> r, std::string name, forest_t* f)
+		: tree_base_node(r, name)
+		, forest_(f)
 	{
+		assert(forest_); //check invariant
 	}
 
 	/**
@@ -135,9 +101,9 @@ struct node_owner : base_t
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(
+		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				this->region()));
+				region())));
 	}
 
 	/**
@@ -151,9 +117,9 @@ struct node_owner : base_t
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(
+		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				r));
+				r)));
 	}
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
@@ -169,10 +135,10 @@ struct node_owner : base_t
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(
+		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				this->region(),
-				this->forest()));
+				region(),
+				forest_)));
 	}
 
 	/**
@@ -186,10 +152,10 @@ struct node_owner : base_t
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(
+		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
 				r,
-				this->forest()));
+				forest_)));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args.
@@ -202,10 +168,10 @@ struct node_owner : base_t
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(
+		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				this->region(),
-				name));
+				region(),
+				name)));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args
@@ -220,12 +186,15 @@ struct node_owner : base_t
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t&&... args)
 	{
-		return add_child(std::make_unique<node_t>(
+		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				this->region(),
+				region(),
 				name,
-				this->forest()));
+				forest_)));
 	}
+protected:
+	// stores the access to the forest this node is contained in.
+	forest_t* forest_;
 
 private:
 	/**
@@ -233,23 +202,7 @@ private:
 	 * \return pointer to child node
 	 * \pre child != nullptr
 	 */
-	template<class node_t>
-	node_t* add_child(std::unique_ptr<node_t> child)
-	{
-		assert(this->forest_); //check invariant
-		assert(child);
-
-		//we need to store an iterator and then cast back to node_t*
-		//to avoid use after move on child.
-		typename forest_t::iterator child_it = adobe::trailing_of(
-				this->forest_->insert(this->self_, std::move(child)));
-		(*child_it)->self_ = child_it;
-
-		assert(adobe::find_parent(child_it) == this->self_);
-		assert(adobe::find_parent(child_it) != this->forest_->end());
-
-		return static_cast<node_t*>(child_it->get());
-	}
+	tree_base_node* add_child(std::unique_ptr<tree_base_node> child);
 
 };
 
@@ -264,27 +217,14 @@ class root_node
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
-	root_node(std::string n, std::shared_ptr<parallel_region> r)
-		: forest_(std::make_unique<forest_t>())
-		, tree_root(nullptr)
-	{
-		auto temp_it = adobe::trailing_of(forest_->insert(
-				forest_->begin(),
-				std::make_unique<node_owner<owning_base_node>>(r, n, forest_.get())));
-
-		tree_root = static_cast<node_owner<owning_base_node>*>(temp_it->get());
-		tree_root->self_ = temp_it;
-
-		assert(forest_);
-		assert(tree_root);
-	}
+	root_node(std::string n, std::shared_ptr<parallel_region> r);
 
 	auto& nodes() { return *tree_root; }
 
 private:
 	std::unique_ptr<forest_t> forest_;
 	/// non_owning access to first node in tree, ownership is in forest.
-	node_owner<owning_base_node>* tree_root;
+	owning_base_node* tree_root;
 };
 
 /**
@@ -314,34 +254,9 @@ erase_with_subtree(
  * and the name of the node itself.
  * The names are separated by a separation token.
  */
-inline std::string
-full_name(
+std::string full_name(
 		const tree_base_node::forest_t& forest,
-		tree_base_node::forest_t::const_iterator position)
-{
-
-	if (position == forest.end())
-		return (*position)->own_name();
-
-	//push names of parent / grandparent ... to stack to later reverse order.
-	std::stack<std::string> name_stack;
-	for (auto parent =  adobe::find_parent(position);
-			parent != forest.end();
-			parent =  adobe::find_parent(parent))
-	{
-		name_stack.emplace((*parent)->own_name());
-	}
-
-	std::string full_name;
-	while (!name_stack.empty())
-	{
-		full_name = full_name + name_stack.top() + name_seperator;
-		name_stack.pop();
-	}
-
-	full_name += (*position)->own_name();
-	return full_name;
-}
+		tree_base_node::forest_t::const_iterator position);
 
 } // namespace fc
 

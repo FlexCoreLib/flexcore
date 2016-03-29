@@ -189,7 +189,7 @@ protected:
 			action_t&& action, args_t&&... args) :
 			base_t(std::forward<args_t>(args)...),
 		buffer_collect(std::make_unique<std::vector<data_t>>()),
-		out_port(this, action)
+		out_port(this, std::forward<action_t>(action))
 	{
 	}
 

@@ -6,6 +6,7 @@ ADD_LIBRARY( flexcore
 	clock/clock.cpp
 	graph/graph.cpp
 	logging/logger.cpp
+	nodes/base_node.cpp
 	threading/parallelregion.cpp
 	threading/cyclecontrol.cpp
     threading/minimalscheduler.cpp

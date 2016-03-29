@@ -4,19 +4,16 @@ namespace fc
 {
 
 std::shared_ptr<parallel_region> infrastructure::add_region(const std::string& name,
-		const virtual_clock::steady::duration& tick)
+		const virtual_clock::steady::duration& tick_rate)
 {
 	auto region = std::make_shared<parallel_region>(name);
 
-	auto& ticks = region->ticks;
+	auto work_tick = region->ticks.in_work();
 	auto tick_cycle = fc::thread::periodic_task(
-			[&ticks]()
-			{
-				ticks.in_work()();
-			});
+			[work_tick](){ work_tick(); });
 
 	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
-	scheduler.add_task(std::move(tick_cycle),tick);
+	scheduler.add_task(std::move(tick_cycle),tick_rate);
 
 	return region;
 }
