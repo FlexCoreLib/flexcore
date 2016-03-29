@@ -14,6 +14,11 @@ constexpr virtual_clock::steady::duration cycle_control::fast_tick;
 constexpr virtual_clock::steady::duration cycle_control::medium_tick;
 constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 
+cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler) : scheduler_(std::move(scheduler))
+{
+	assert(scheduler_);
+}
+
 void cycle_control::start()
 {
 	keep_working = true;
@@ -29,7 +34,7 @@ void cycle_control::stop()
 		keep_working = false;
 		main_loop_control.notify_one(); //in case main loop is currently waiting
 	}
-	scheduler.stop();
+	scheduler_->stop();
 	if (main_loop_thread.joinable())
 		main_loop_thread.join();
 	running = false;
@@ -85,7 +90,7 @@ bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 	{
 		task.set_work_to_do(true);
 		task.send_switch_tick();
-		scheduler.add_task([&task] { task(); });
+		scheduler_->add_task([&task] { task(); });
 	}
 	return true;
 }

@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include <threading/cyclecontrol.hpp>
+#include <threading/parallelscheduler.hpp>
 
 using namespace fc;
 
@@ -22,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(test_cyclecontrol)
 
 BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time)
 {
-	fc::thread::cycle_control thread_manager;
+	fc::thread::cycle_control thread_manager{std::make_unique<thread::parallel_scheduler>()};
 	std::atomic<bool> terminate_thread(false);
 	{
 		auto tick_cycle = fc::thread::periodic_task(

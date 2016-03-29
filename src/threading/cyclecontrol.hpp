@@ -3,8 +3,13 @@
 
 #include <clock/clock.hpp>
 #include <ports/events/event_sources.hpp>
-#include "parallelscheduler.hpp"
+#include "scheduler.hpp"
 
+#include <condition_variable>
+#include <deque>
+#include <mutex>
+#include <memory>
+#include <thread>
 #include <vector>
 
 namespace fc
@@ -72,7 +77,7 @@ public:
 	static constexpr virtual_clock::steady::duration medium_tick = min_tick_length * 10;
 	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
 
-	cycle_control() = default;
+	explicit cycle_control(std::unique_ptr<scheduler> scheduler);
 	~cycle_control();
 
 	/// starts the main loop
@@ -93,7 +98,7 @@ public:
 	 * \post list of tasks for given tick_rate is not empty
 	 */
 	void add_task(periodic_task task, virtual_clock::duration tick_rate);
-	size_t nr_of_tasks() { return scheduler.nr_of_waiting_tasks(); }
+	size_t nr_of_tasks() { return scheduler_->nr_of_waiting_tasks(); }
 
 	std::exception_ptr last_exception();
 
@@ -105,7 +110,7 @@ private:
 	std::vector<periodic_task> tasks_slow;
 	std::vector<periodic_task> tasks_medium;
 	std::vector<periodic_task> tasks_fast;
-	parallel_scheduler scheduler;
+	std::unique_ptr<scheduler> scheduler_;
 	bool keep_working = false;
 	bool running = false;
 	std::condition_variable main_loop_control;

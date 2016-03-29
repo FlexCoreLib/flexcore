@@ -7,6 +7,7 @@
 #include <thread>
 
 #include <threading/cyclecontrol.hpp>
+#include <threading/parallelscheduler.hpp>
 #include <threading/parallelregion.hpp>
 #include <ports/ports.hpp>
 
@@ -43,7 +44,7 @@ int main()
 	std::cout << "Starting Dummy Solution\n";
 
 	std::cout << "build up infrastructure \n";
-	fc::thread::cycle_control thread_manager;
+	fc::thread::cycle_control thread_manager{std::make_unique<fc::thread::parallel_scheduler>()};
 	auto first_region = setup_parallel_region("first_region",
 			fc::thread::cycle_control::medium_tick,
 			thread_manager);

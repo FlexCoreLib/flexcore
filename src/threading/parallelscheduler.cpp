@@ -90,7 +90,7 @@ parallel_scheduler::~parallel_scheduler()
 	stop();
 }
 
-size_t parallel_scheduler::nr_of_waiting_tasks()
+size_t parallel_scheduler::nr_of_waiting_tasks() const
 {
 	queue_lock lock(task_queue_mutex);
 	return task_queue.size();
