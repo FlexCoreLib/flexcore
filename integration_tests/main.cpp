@@ -67,9 +67,9 @@ int main()
 
 	string_source >> string_sink;
 	first_region->ticks.work_tick()
-			>>	[&string_source, first_region]() mutable
+			>>	[&string_source, id = first_region->get_id().key]() mutable
 				{
-					string_source.fire("a magic string from " + first_region->get_id().key);
+					string_source.fire("a magic string from " + id);
 				};
 
 	event_source<std::string> string_source_2(child_c);
