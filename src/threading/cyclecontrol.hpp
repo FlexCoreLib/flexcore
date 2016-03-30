@@ -17,6 +17,12 @@ namespace fc
 namespace thread
 {
 
+struct condition_pair
+{
+	std::mutex mtx;
+	std::condition_variable cv;
+};
+
 /**
  * \brief class representing a periodic task.
  */
@@ -28,19 +34,19 @@ struct periodic_task final
 	 */
 	periodic_task(std::function<void(void)> job) :
 				work_to_do(false),
-				work_to_do_mtx(std::make_unique<std::mutex>()),
+				sync(std::make_unique<condition_pair>()),
 				work(job)
 	{
 	}
 
 	bool done()
 	{
-		std::lock_guard<std::mutex> lock(*work_to_do_mtx);
+		std::lock_guard<std::mutex> lock(sync->mtx);
 		return !work_to_do;
 	}
 	void set_work_to_do(bool todo)
 	{
-		std::lock_guard<std::mutex> lock(*work_to_do_mtx);
+		std::lock_guard<std::mutex> lock(sync->mtx);
 		work_to_do = todo;
 	}
 	void send_switch_tick() { switch_tick.fire(); }
@@ -54,7 +60,7 @@ struct periodic_task final
 private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
-	std::unique_ptr<std::mutex> work_to_do_mtx;
+	std::unique_ptr<condition_pair> sync;
 	/// work to be done every cycle
 	std::function<void(void)> work;
 
