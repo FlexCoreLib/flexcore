@@ -11,6 +11,7 @@ class infrastructure
 {
 public:
 	infrastructure();
+	~infrastructure();
 
 	std::shared_ptr<parallel_region> add_region(const std::string& name,
 			const virtual_clock::steady::duration& tick_rate);

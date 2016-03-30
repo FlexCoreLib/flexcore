@@ -29,6 +29,11 @@ infrastructure::infrastructure() :
 {
 }
 
+infrastructure::~infrastructure()
+{
+	stop_scheduler();
+}
+
 void infrastructure::iterate_main_loop()
 {
 	using namespace std::chrono_literals;
