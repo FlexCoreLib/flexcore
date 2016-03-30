@@ -17,6 +17,9 @@ struct node_aware_mixin : graph::graph_connectable<node_aware<port_t>>
 {
 	using base = graph::graph_connectable<node_aware<port_t>>;
 
+	// TODO: this T should really be tree_base_node. It can't be because this
+	// requires a full declaration of tree_base_node and tree_base_node
+	// requires a full declaration of node_aware_mixin.
 	template <class T, class ... args>
 	node_aware_mixin(T* node_ptr, args&&... base_constructor_args)
 		: base(node_ptr->graph_info(),
