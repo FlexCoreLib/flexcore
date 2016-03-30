@@ -23,20 +23,9 @@ struct region_id
 
 bool operator==(const region_id& lhs, const region_id& rhs);
 
-/// Interface of parallel regions
-class region_info
-{
-public:
-	virtual region_id get_id() const = 0;
-	virtual pure::event_source<void>& switch_tick() = 0;
-	virtual pure::event_source<void>& work_tick() = 0;
-
-protected:
-	///destructor is not public, as no ownership to regions is given through this.
-	~region_info() = default;
-};
-
-
+/**
+ * \brief class providing the interface to cyclic ticks for nodes.
+ */
 class tick_controller
 {
 public:
@@ -73,22 +62,18 @@ public:
  * Provides switch ticks and work ticks for all nodes contained in the region.
  * \see https://gitlab-test.site.x/flexcore/flexcore/wikis/ParallelRegion
  */
-class parallel_region : public region_info
+class parallel_region
 {
 public:
-	virtual ~parallel_region() = default;
 	explicit parallel_region(std::string id = "default");
 
-	region_id get_id() const override;
-	pure::event_source<void>& switch_tick() override;
-	pure::event_source<void>& work_tick() override;
+	parallel_region(const parallel_region&) = delete;
+	parallel_region(parallel_region&&) = default;
 
-protected:
-	//copy constructor is protected to avoid slicing, since this is meant as base class
-	parallel_region(const parallel_region&) = default;
-	parallel_region& operator=(const parallel_region&) = default;
+	region_id get_id() const;
+	pure::event_source<void>& switch_tick();
+	pure::event_source<void>& work_tick();
 
-public:
 	tick_controller ticks;
 	region_id id;
 };
