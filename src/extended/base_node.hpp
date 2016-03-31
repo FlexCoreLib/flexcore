@@ -1,8 +1,9 @@
 #ifndef SRC_NODES_BASE_NODE_HPP_
 #define SRC_NODES_BASE_NODE_HPP_
 
-#include <threading/parallelregion.hpp>
 #include <extended/graph/graph.hpp>
+
+#include <scheduler/parallelregion.hpp>
 #include <3rdparty/adobe/forest.hpp>
 
 #include <cassert>

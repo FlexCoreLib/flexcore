@@ -4,8 +4,8 @@
 #include <pure/detail/port_traits.hpp>
 #include <core/connection_util.hpp>
 #include <core/connection.hpp>
-#include <threading/parallelregion.hpp>
 #include "connection_buffer.hpp"
+#include <scheduler/parallelregion.hpp>
 
 namespace fc
 {

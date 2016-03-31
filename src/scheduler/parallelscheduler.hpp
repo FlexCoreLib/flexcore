@@ -1,5 +1,5 @@
-#ifndef SRC_THREADING_PARALLELSCHEDULER_HPP_
-#define SRC_THREADING_PARALLELSCHEDULER_HPP_
+#ifndef SRC_SCHEDULER_PARALLELSCHEDULER_HPP_
+#define SRC_SCHEDULER_PARALLELSCHEDULER_HPP_
 
 #include <atomic>
 #include <thread>
@@ -56,4 +56,4 @@ private:
 } /* namespace thread */
 } /* namespace fc */
 
-#endif /* SRC_THREADING_PARALLELSCHEDULER_HPP_ */
+#endif /* SRC_SCHEDULER_PARALLELSCHEDULER_HPP_ */

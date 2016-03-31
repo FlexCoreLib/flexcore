@@ -1,6 +1,6 @@
+#include <scheduler/parallelregion.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <threading/parallelregion.hpp>
 #include <pure/pure_ports.hpp>
 
 using namespace fc;

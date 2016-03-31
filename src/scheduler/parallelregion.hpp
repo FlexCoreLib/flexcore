@@ -5,8 +5,8 @@
  *      Author: ckielwein
  */
 
-#ifndef SRC_THREADING_PARALLELREGION_HPP_
-#define SRC_THREADING_PARALLELREGION_HPP_
+#ifndef SRC_SCHEDULER_PARALLELREGION_HPP_
+#define SRC_SCHEDULER_PARALLELREGION_HPP_
 
 #include <pure/event_sources.hpp>
 #include <string>
@@ -80,4 +80,4 @@ public:
 
 } /* namespace fc */
 
-#endif /* SRC_THREADING_PARALLELREGION_HPP_ */
+#endif /* SRC_SCHEDULER_PARALLELREGION_HPP_ */

@@ -8,8 +8,8 @@
 #ifndef SRC_NODES_REGION_WORKER_NODE_HPP_
 #define SRC_NODES_REGION_WORKER_NODE_HPP_
 
+#include <scheduler/parallelregion.hpp>
 #include <extended/base_node.hpp>
-#include <threading/parallelregion.hpp>
 #include <core/connection.hpp>
 
 namespace fc

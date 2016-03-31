@@ -1,4 +1,4 @@
-#include "parallelscheduler.hpp"
+#include <scheduler/parallelscheduler.hpp>
 
 #include <cassert>
 #include <utility>

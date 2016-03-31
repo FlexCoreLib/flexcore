@@ -5,7 +5,7 @@
  *      Author: ckielwein
  */
 
-#include "clock.hpp"
+#include <scheduler/clock.hpp>
 
 namespace fc
 {

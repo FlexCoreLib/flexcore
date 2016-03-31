@@ -3,9 +3,9 @@
  */
 
 // boost
+#include <scheduler/clock.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <clock/clock.hpp>
 
 using namespace fc;
 namespace chr = std::chrono;

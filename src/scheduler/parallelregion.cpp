@@ -5,7 +5,7 @@
  *      Author: ckielwein
  */
 
-#include "parallelregion.hpp"
+#include <scheduler/parallelregion.hpp>
 
 namespace fc
 {

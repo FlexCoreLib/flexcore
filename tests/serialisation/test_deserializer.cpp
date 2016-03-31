@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
-#include <serialisation/serializer.hpp>
-#include <serialisation/deserializer.hpp>
+#include <utils/serialisation/serializer.hpp>
+#include <utils/serialisation/deserializer.hpp>
 
 #include <core/connection.hpp>
 

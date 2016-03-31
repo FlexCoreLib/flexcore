@@ -1,4 +1,4 @@
-#include "cyclecontrol.hpp"
+#include <scheduler/cyclecontrol.hpp>
 
 #include <stdexcept>
 #include <algorithm>

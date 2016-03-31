@@ -1,10 +1,9 @@
-#ifndef SRC_THREADING_CYCLECONTROL_HPP_
-#define SRC_THREADING_CYCLECONTROL_HPP_
+#ifndef SRC_SCHEDULER_CYCLECONTROL_HPP_
+#define SRC_SCHEDULER_CYCLECONTROL_HPP_
 
-#include <clock/clock.hpp>
+#include <scheduler/clock.hpp>
+#include <scheduler/parallelscheduler.hpp>
 #include <pure/event_sources.hpp>
-#include "parallelscheduler.hpp"
-
 #include <vector>
 
 namespace fc
@@ -129,4 +128,4 @@ struct out_of_time_exception: std::runtime_error
 };
 } /* namespace fc */
 
-#endif /* SRC_THREADING_CYCLECONTROL_HPP_ */
+#endif /* SRC_SCHEDULER_CYCLECONTROL_HPP_ */

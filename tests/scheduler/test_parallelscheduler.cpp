@@ -5,10 +5,9 @@
  *      Author: ckielwein
  */
 
+#include <scheduler/cyclecontrol.hpp>
+#include <scheduler/parallelscheduler.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <threading/parallelscheduler.hpp>
-#include <threading/cyclecontrol.hpp>
 
 #include <functional>
 

@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <pure/pure_ports.hpp>
-#include <ports/mux_ports.hpp>
+#include <pure/mux_ports.hpp>
 #include <core/connection.hpp>
 
 using namespace fc;

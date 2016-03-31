@@ -2,7 +2,7 @@
 #define SRC_INFRASTRUCTURE_HPP_
 
 #include <extended/base_node.hpp>
-#include <threading/cyclecontrol.hpp>
+#include <scheduler/cyclecontrol.hpp>
 
 namespace fc
 {

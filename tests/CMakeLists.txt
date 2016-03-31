@@ -7,7 +7,6 @@ ADD_EXECUTABLE( test_executable
 	core/test_connection.cpp
 	core/test_connectables.cpp
 	core/test_traits.cpp
-	clock/TestClock.cpp
 	logging/test_logging.cpp
 	nodes/test_buffer.cpp
 	nodes/test_list_manipulation.cpp
@@ -30,9 +29,10 @@ ADD_EXECUTABLE( test_executable
 	runner.cpp 
 	serialisation/test_deserializer.cpp
 	settings/test_settings.cpp
-	threading/test_cyclecontrol.cpp
-	threading/test_parallel_region.cpp
-	threading/test_parallelscheduler.cpp
+	scheduler/TestClock.cpp
+	scheduler/test_cyclecontrol.cpp
+	scheduler/test_parallel_region.cpp
+	scheduler/test_parallelscheduler.cpp
 	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
