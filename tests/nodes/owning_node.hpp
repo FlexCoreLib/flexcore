@@ -1,7 +1,7 @@
 #ifndef TESTS_NODES_OWNING_NODE_HPP_
 #define TESTS_NODES_OWNING_NODE_HPP_
 
-#include <nodes/base_node.hpp>
+#include <extended/base_node.hpp>
 
 namespace fc
 {

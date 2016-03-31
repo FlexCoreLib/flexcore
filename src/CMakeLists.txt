@@ -4,9 +4,9 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8.12 )
 ADD_LIBRARY( flexcore
 	infrastructure.cpp
 	clock/clock.cpp
-	graph/graph.cpp
+	extended/graph/graph.cpp
 	logging/logger.cpp
-	nodes/base_node.cpp
+	extended/base_node.cpp
 	threading/parallelregion.cpp
 	threading/cyclecontrol.cpp
     threading/minimalscheduler.cpp

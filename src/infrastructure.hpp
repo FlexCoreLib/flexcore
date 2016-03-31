@@ -1,7 +1,7 @@
 #ifndef SRC_INFRASTRUCTURE_HPP_
 #define SRC_INFRASTRUCTURE_HPP_
 
-#include <nodes/base_node.hpp>
+#include <extended/base_node.hpp>
 #include <threading/cyclecontrol.hpp>
 
 namespace fc

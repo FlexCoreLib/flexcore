@@ -2,7 +2,7 @@
 #define SRC_THREADING_CYCLECONTROL_HPP_
 
 #include <clock/clock.hpp>
-#include <ports/events/event_sources.hpp>
+#include <pure/event_sources.hpp>
 #include "parallelscheduler.hpp"
 
 #include <vector>
