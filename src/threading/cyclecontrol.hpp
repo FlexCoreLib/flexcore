@@ -127,6 +127,7 @@ private:
 	//Thread exception handling
 	std::mutex task_exception_mutex;
 	std::deque<std::exception_ptr> task_exceptions;
+	void store_exception();
 };
 
 } /* namespace thread */

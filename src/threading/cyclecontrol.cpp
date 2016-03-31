@@ -40,6 +40,14 @@ void cycle_control::stop()
 	running = false;
 }
 
+void cycle_control::store_exception()
+{
+	auto ep = std::make_exception_ptr(out_of_time_exception());
+	std::lock_guard<std::mutex> lock(task_exception_mutex);
+	task_exceptions.push_back(ep);
+	keep_working = false;
+}
+
 void cycle_control::work()
 {
 	auto now = virtual_clock::steady::now();
@@ -79,10 +87,7 @@ bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 	//todo specify error model
 	if (any_of(begin(tasks), end(tasks), [](auto& task) { return !task.done(); }))
 	{
-		auto ep = std::make_exception_ptr(out_of_time_exception());
-		std::lock_guard<std::mutex> lock(task_exception_mutex);
-		task_exceptions.push_back(ep);
-		keep_working = false;
+		store_exception();
 		return false;
 	}
 
