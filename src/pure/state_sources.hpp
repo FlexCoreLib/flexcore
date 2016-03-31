@@ -66,10 +66,6 @@ private:
 };
 
 } // namespace pure
-
-// traits
-template<class T> struct is_passive_source<pure::state_source<T>> : std::true_type {};
-
 } // namespace fc
 
 #endif /* SRC_PORTS_STREAM_SOURCES_STREAM_QUERY_FUNCTION_HPP_ */

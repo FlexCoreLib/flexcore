@@ -186,7 +186,6 @@ auto operator >>(source_t&& source, sink_t&& sink)
 	return connect(std::forward<source_t>(source), std::forward<sink_t>(sink));
 }
 
-//todo: does not belong here
 template <class source_t, class sink_t>
 struct is_passive_sink<connection<source_t, sink_t>> : is_passive_sink<rm_ref_t<sink_t>>
 {};

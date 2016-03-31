@@ -103,6 +103,8 @@ void check_mixins()
 	test_out >> test_in;
 	static_assert(is_active<source_t>{}, "not active source.");
 	static_assert(is_connectable<sink_t&>{}, "no connectable sink.");
+	static_assert(is_passive<sink_t>{}, "no passive sink.");
+
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_out.fire(1);
@@ -127,7 +129,34 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 	typedef useless_mixin<node_aware<pure::event_sink<int>>> test_mixin_sink;
 	typedef useless_mixin<node_aware<pure::event_source<int>>> test_mixin_source;
 	check_mixins<test_mixin_source, test_mixin_sink>();
+}
 
+BOOST_AUTO_TEST_CASE(test_traits)
+{
+	using full_state_sink = state_sink<int>;
+	using full_state_source = state_source<int>;
+	using full_event_sink = event_sink<int>;
+	using full_event_source = event_source<int>;
+
+	BOOST_CHECK( is_active_sink   <full_state_sink>{});
+	BOOST_CHECK(!is_active_source <full_state_sink>{});
+	BOOST_CHECK(!is_passive_sink  <full_state_sink>{});
+	BOOST_CHECK(!is_passive_source<full_state_sink>{});
+
+	BOOST_CHECK(!is_active_sink   <full_state_source>{});
+	BOOST_CHECK(!is_active_source <full_state_source>{});
+	BOOST_CHECK(!is_passive_sink  <full_state_source>{});
+	BOOST_CHECK( is_passive_source<full_state_source>{});
+
+	BOOST_CHECK(!is_active_sink   <full_event_sink>{});
+	BOOST_CHECK(!is_active_source <full_event_sink>{});
+	BOOST_CHECK( is_passive_sink  <full_event_sink>{});
+	BOOST_CHECK(!is_passive_source<full_event_sink>{});
+
+	BOOST_CHECK(!is_active_sink   <full_event_source>{});
+	BOOST_CHECK( is_active_source <full_event_source>{});
+	BOOST_CHECK(!is_passive_sink  <full_event_source>{});
+	BOOST_CHECK(!is_passive_source<full_event_source>{});
 }
 
 BOOST_AUTO_TEST_CASE(test_connectable_in_between)

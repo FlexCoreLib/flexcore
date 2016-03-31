@@ -126,8 +126,6 @@ auto named(const base_t& con, const std::string& name)
 
 template<class T> struct is_active_sink<graph::graph_connectable<T>> : is_active_sink<T> {};
 template<class T> struct is_active_source<graph::graph_connectable<T>> : is_active_source<T> {};
-template<class T> struct is_passive_sink<graph::graph_connectable<T>> : is_passive_sink<T> {};
-template<class T> struct is_passive_source<graph::graph_connectable<T>> : is_passive_source<T> {};
 
 }  // namespace fc
 
