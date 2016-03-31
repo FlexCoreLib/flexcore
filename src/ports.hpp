@@ -64,12 +64,6 @@ using state_sink = default_mixin<pure::state_sink<data_t>>;
 template<class data_t>
 using state_source = default_mixin<pure::state_source<data_t>>;
 
-template<class lambda_t>
-using state_source_tmpl = default_mixin<pure::state_source_tmpl<lambda_t>>;
-
-template<class lambda_t>
-auto make_state_source_tmpl(lambda_t h) { return state_source_tmpl<lambda_t>{h}; }
-
 // -- dispatch --
 
 /// template input port, tag object creates either event_sink or state_sink

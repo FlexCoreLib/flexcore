@@ -65,60 +65,10 @@ private:
 	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
 };
 
-
-} //ns pure
-/**
- * Universal type proxy
- */
-template<class T>
-struct Type
-{
-	typedef T type;
-};
-namespace pure {
-
-/**
- * \brief Templated state source port
- *
- * Call a (generic) lambda when a state is requested. This allows to defer
- * the actual type of the token until the port is called and also allows it to be
- * called for different types.
- *
- * When calling the lambda, you need to give the requested type as pseudo-parameter
- * because there is no type inference based on the return type.
- * The OUT_PORT_TMPL macro can be used to define a getter for the port and a header
- * a node member in one go.
- *
- * see test_state_source_tmpl for an example.
- *
- * \tparam lambda_t Lambda to call for the state value
- */
-template<class lambda_t>
-struct state_source_tmpl
-{
-	explicit state_source_tmpl(lambda_t h)
-		: lambda(h)
-	{}
-
-	template<class token_t>
-	auto operator()(Type<token_t> f) { return lambda(f); }
-
-	state_source_tmpl() = delete;
-
-	lambda_t lambda;
-};
-
-/*
- * Helper needed for type inference
- */
-template<class lambda_t>
-auto make_state_source_tmpl(lambda_t h) { return state_source_tmpl<lambda_t>{h}; }
-
 } // namespace pure
 
 // traits
 template<class T> struct is_passive_source<pure::state_source<T>> : std::true_type {};
-template<class T> struct is_passive_source<pure::state_source_tmpl<T>> : std::true_type {};
 
 } // namespace fc
 

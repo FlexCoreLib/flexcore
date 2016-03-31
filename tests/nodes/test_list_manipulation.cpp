@@ -131,4 +131,3 @@ BOOST_AUTO_TEST_CASE( test_list_collector_pure )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

@@ -9,7 +9,6 @@ ADD_LIBRARY( flexcore
 	extended/base_node.cpp
 	threading/parallelregion.cpp
 	threading/cyclecontrol.cpp
-    threading/minimalscheduler.cpp
     threading/parallelscheduler.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( flexcore

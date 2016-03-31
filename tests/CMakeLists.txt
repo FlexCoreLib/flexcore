@@ -26,14 +26,12 @@ ADD_EXECUTABLE( test_executable
 	pure/states/test_node_with_lambda.cpp
 	pure/states/test_state_source_call_function.cpp
 	pure/states/test_state_source_with_setter.cpp
-	pure/states/test_state_source_tmpl.cpp
 	range/test_range.cpp
 	runner.cpp 
 	serialisation/test_deserializer.cpp
 	settings/test_settings.cpp
 	threading/test_cyclecontrol.cpp
 	threading/test_parallel_region.cpp
-	threading/test_minimalscheduler.cpp
 	threading/test_parallelscheduler.cpp
 	tokens/test_moving.cpp )
 
