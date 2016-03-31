@@ -33,9 +33,9 @@ void cycle_control::start(bool fast)
 void cycle_control::stop()
 {
 	keep_working.store(false);
-	scheduler_->stop();
 	if (main_loop_thread.joinable())
 		main_loop_thread.join();
+	scheduler_->stop();
 	running = false;
 }
 
