@@ -21,7 +21,7 @@ cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler) : scheduler_(
 
 void cycle_control::start()
 {
-	keep_working = true;
+	keep_working.store(true);
 	running = true;
 	// give the main thread some actual work to do (execute infinite main loop)
 	main_loop_thread = std::thread([this](){ main_loop();});
@@ -29,11 +29,7 @@ void cycle_control::start()
 
 void cycle_control::stop()
 {
-	{
-		std::lock_guard<std::mutex> lock(main_loop_mutex);
-		keep_working = false;
-		main_loop_control.notify_one(); //in case main loop is currently waiting
-	}
+	keep_working.store(false);
 	scheduler_->stop();
 	if (main_loop_thread.joinable())
 		main_loop_thread.join();
@@ -45,7 +41,7 @@ void cycle_control::store_exception()
 	auto ep = std::make_exception_ptr(out_of_time_exception());
 	std::lock_guard<std::mutex> lock(task_exception_mutex);
 	task_exceptions.push_back(ep);
-	keep_working = false;
+	keep_working.store(false);
 }
 
 void cycle_control::work()
@@ -66,14 +62,11 @@ void cycle_control::work()
 
 void cycle_control::main_loop()
 {
-	// the mutex needs to be held to check the condition; wait_until releases the lock while waiting.
-	std::unique_lock<std::mutex> loop_lock(main_loop_mutex);
-	while(keep_working)
+	while (keep_working.load())
 	{
 		const auto now = wall_clock::steady::now();
 		work();
-		main_loop_control.wait_until(
-				loop_lock, now + min_tick_length);
+		std::this_thread::sleep_until(now + min_tick_length);
 	}
 }
 

@@ -117,11 +117,9 @@ private:
 	std::vector<periodic_task> tasks_medium;
 	std::vector<periodic_task> tasks_fast;
 	std::unique_ptr<scheduler> scheduler_;
-	bool keep_working = false;
+	std::atomic<bool> keep_working{false};
 	bool running = false;
-	std::condition_variable main_loop_control;
-	//Todo refactor main loop and task queue to locked class together with their mutex
-	std::mutex main_loop_mutex;
+	//Todo refactor main loop and task queue to locked class together
 	std::thread main_loop_thread;
 
 	//Thread exception handling
