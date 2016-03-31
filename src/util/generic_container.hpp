@@ -8,6 +8,9 @@
 #ifndef SRC_UTIL_GENERIC_CONTAINER_HPP_
 #define SRC_UTIL_GENERIC_CONTAINER_HPP_
 
+#include <vector>
+#include <memory>
+
 namespace fc
 {
 
