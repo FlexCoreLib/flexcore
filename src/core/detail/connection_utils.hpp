@@ -1,10 +1,12 @@
 #ifndef SRC_CORE_DETAIL_CONNECTION_UTILS_HPP_
 #define SRC_CORE_DETAIL_CONNECTION_UTILS_HPP_
 
-#include <core/detail/connection.hpp>
-
 namespace fc
 {
+
+template<class source, class sink>
+struct connection;
+
 namespace detail
 {
 

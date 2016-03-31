@@ -7,7 +7,7 @@
 
 #include <core/connection.hpp>
 #include <core/traits.hpp>
-#include <core/type_proxy.hpp>
+#include <pure/detail/active_connection_proxy.hpp>
 
 namespace fc
 {
@@ -64,6 +64,18 @@ private:
 	std::function<data_t()> call;
 	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
 };
+
+
+} //ns pure
+/**
+ * Universal type proxy
+ */
+template<class T>
+struct Type
+{
+	typedef T type;
+};
+namespace pure {
 
 /**
  * \brief Templated state source port

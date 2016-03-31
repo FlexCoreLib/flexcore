@@ -7,6 +7,7 @@
 
 #include <core/traits.hpp>
 #include <pure/detail/port_traits.hpp>
+#include <pure/detail/active_connection_proxy.hpp>
 
 namespace fc
 {

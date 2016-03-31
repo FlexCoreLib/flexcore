@@ -3,11 +3,12 @@
 
 #include <functional>
 
-#include <core/detail/connection.hpp>
-#include <core/ports.hpp>
+#include <core/connection.hpp>
+#include <pure/port_connection.hpp>
 
 namespace fc
 {
+
 
 namespace detail
 {

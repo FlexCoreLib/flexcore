@@ -1,16 +1,6 @@
 #ifndef SRC_CORE_PORTS_H_
 #define SRC_CORE_PORTS_H_
 
-#include <core/traits.hpp>
-
-/**
- * This file contains all information the core package has and needs about ports
- * Ports are types which are used by nodes to serve as access points to connections.
- *
- * Thus this is the access point for the interaction between the ports package
- * and core package.
- */
-
 namespace fc
 {
 /**

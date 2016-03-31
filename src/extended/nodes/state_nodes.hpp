@@ -3,7 +3,7 @@
 
 #include <core/traits.hpp>
 #include <core/tuple_meta.hpp>
-#include <ports.hpp>
+#include <extended/ports/node_aware.hpp>
 #include <ports/mux_ports.hpp>
 #include <extended/base_node.hpp>
 #include <pure/pure_node.hpp>

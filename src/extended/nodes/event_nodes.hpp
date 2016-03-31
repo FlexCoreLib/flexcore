@@ -4,7 +4,6 @@
 #include <pure/state_sink.hpp>
 #include <pure/event_sinks.hpp>
 #include <pure/event_sources.hpp>
-#include <ports.hpp>
 #include <pure/pure_node.hpp>
 
 namespace fc

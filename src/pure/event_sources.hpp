@@ -7,11 +7,12 @@
 #include <vector>
 
 #include <core/traits.hpp>
-#include <core/ports.hpp>
-
 #include <core/connection_util.hpp>
 #include <pure/detail/port_traits.hpp>
 #include <pure/detail/port_utils.hpp>
+
+#include <pure/port_connection.hpp>
+#include <pure/detail/active_connection_proxy.hpp>
 
 #include <iostream>
 
