@@ -31,7 +31,7 @@ public :
 	template <class T, class... Args>
 	T& add (Args&&... args)
 	{
-		auto tmp_ptr = std::make_shared<T>(args...);
+		auto tmp_ptr = std::make_shared<T>(std::forward<Args>(args)...);
 		store.push_back(tmp_ptr);
 		return *tmp_ptr;
 	}

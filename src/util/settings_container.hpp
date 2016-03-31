@@ -14,18 +14,24 @@
 namespace fc
 {
 
+template <class backend_t>
 class settings_container
 {
 public:
-
-	template <class data_t, class backed_t>
-	fc::setting<data_t, backed_t>& add(const std::string& name, backed_t backend, data_t value)
+	settings_container(backend_t& backend) :
+		mBackend(backend)
 	{
-		return container.add<fc::setting<data_t, backed_t>>(setting_id{name}, backend, value);
+	}
+
+	template <class data_t>
+	fc::setting<data_t, backend_t>& add(const std::string& name, data_t value)
+	{
+		return container.add<fc::setting<data_t, backend_t>>(setting_id{name}, mBackend, value);
 	}
 
 private:
 	generic_container container;
+	backend_t& mBackend;
 };
 
 }
