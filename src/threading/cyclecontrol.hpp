@@ -44,11 +44,30 @@ struct periodic_task final
 		std::lock_guard<std::mutex> lock(sync->mtx);
 		return !work_to_do;
 	}
+
 	void set_work_to_do(bool todo)
 	{
-		std::lock_guard<std::mutex> lock(sync->mtx);
-		work_to_do = todo;
+		{
+			std::lock_guard<std::mutex> lock(sync->mtx);
+			work_to_do = todo;
+		}
+		// if we're done then notify all waiters
+		if (todo == false)
+			sync->cv.notify_all();
 	}
+
+	/** \brief waits for this task to be done, but only until the provided timeout.
+	 * \return true if the task is done.
+	 */
+	bool wait_until_done(virtual_clock::steady::duration timeout)
+	{
+		std::unique_lock<std::mutex> lock(sync->mtx);
+		return sync->cv.wait_for(lock, timeout, [&]
+		                         {
+			                         return !work_to_do;
+		                         });
+	}
+
 	void send_switch_tick() { switch_tick.fire(); }
 	auto& out_switch_tick() { return switch_tick; }
 
@@ -87,7 +106,7 @@ public:
 	~cycle_control();
 
 	/// starts the main loop
-	void start();
+	void start(bool fast=false);
 	/// stops the main loop in all threads
 	void stop();
 
@@ -109,10 +128,13 @@ public:
 	std::exception_ptr last_exception();
 
 private:
-	/// contains the main loop, which runs until it is stopped
-	void main_loop();
+	/// normal main loop, which run tasks and sticks to tick lengths
+	void normal_main_loop();
+	/// accelerated main loop, which maintains ratios of execution counts of tasks
+	void fast_main_loop();
 	/// runs the tasks in this vector; returns false if any task is not done, true otherwise
 	bool run_periodic_tasks(std::vector<periodic_task>& tasks);
+	void wait_for_current_tasks();
 	std::vector<periodic_task> tasks_slow;
 	std::vector<periodic_task> tasks_medium;
 	std::vector<periodic_task> tasks_fast;
