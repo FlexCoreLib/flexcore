@@ -4,13 +4,10 @@ PROJECT( flexcore )
 
 SET( ENABLE_COVERAGE_ANALYSIS FALSE CACHE BOOL "" )
 
-# TODO: use profiling args only in debug mode
-SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y" )
 ADD_COMPILE_OPTIONS(  
     "-Wall"
     "-Wextra"
     "-pedantic"
-    "-pthread"
     $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-fprofile-arcs>
     $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-ftest-coverage>
     )
@@ -21,6 +18,7 @@ IF( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" )
 	    )
 ENDIF()
 
+FIND_PACKAGE( Threads REQUIRED )
 FIND_PACKAGE( Boost 1.54 REQUIRED COMPONENTS log thread system)
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
 
