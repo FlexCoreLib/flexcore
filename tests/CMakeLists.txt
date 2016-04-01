@@ -35,6 +35,7 @@ ADD_EXECUTABLE( test_executable
 	threading/test_parallel_region.cpp
 	threading/test_minimalscheduler.cpp
 	threading/test_parallelscheduler.cpp
+	threading/test_serialscheduler.cpp
 	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 

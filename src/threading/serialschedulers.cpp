@@ -21,7 +21,10 @@ void blocking_scheduler::stop()
 
 size_t blocking_scheduler::nr_of_waiting_tasks() const
 {
-	return mutex.try_lock() ? 1 : 0;
+	if (!mutex.try_lock())
+		return 1;
+	mutex.unlock();
+	return 0;
 }
 
 blocking_scheduler::~blocking_scheduler()
