@@ -1,78 +1,82 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/buffer.hpp>
-#include <ports/events/event_sources.hpp>
-#include <ports/states/state_sink.hpp>
+#include <extended/nodes/buffer.hpp>
+#include <extended/base_node.hpp>
+
+#include <pure/event_sources.hpp>
+#include <pure/state_sink.hpp>
+
+#include "owning_node.hpp"
 
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_buffers)
 
+using collector_t = list_collector<int, swap_on_tick, tree_base_node>;
+
 BOOST_AUTO_TEST_CASE(single_event_to_state)
 {
-	root_node root;
+	tests::owning_node root;
+	auto buffer = root.make_child_named<collector_t>("collector");
+	event_source<int> source{&root.node()};
 
-	list_collector<int, swap_on_tick> buffer;
+	source >> buffer->in();
 
-	event_source<int> source{&root};
-
-	source >> buffer.in();
-
-	BOOST_CHECK(buffer.out()().empty());
+	BOOST_CHECK(buffer->out()().empty());
 
 	source.fire(1);
-	BOOST_CHECK(buffer.out()().empty());
+	BOOST_CHECK(buffer->out()().empty());
 
-	buffer.swap_buffers()();
-	BOOST_CHECK(!buffer.out()().empty());
-	BOOST_CHECK_EQUAL(buffer.out()().front(), 1);
+	buffer->swap_buffers()();
+	BOOST_CHECK(!buffer->out()().empty());
+	BOOST_CHECK_EQUAL(buffer->out()().front(), 1);
 
-	buffer.swap_buffers()();
-	BOOST_CHECK(buffer.out()().empty());
+	buffer->swap_buffers()();
+	BOOST_CHECK(buffer->out()().empty());
 
-	buffer.swap_buffers()();
-	buffer.swap_buffers()();
-	BOOST_CHECK(buffer.out()().empty());
+	buffer->swap_buffers()();
+	buffer->swap_buffers()();
+	BOOST_CHECK(buffer->out()().empty());
 }
 
 BOOST_AUTO_TEST_CASE(event_range_to_state)
 {
-	root_node root;
+	tests::owning_node root;
 
-	list_collector<int, swap_on_tick> buffer;
+	auto buffer = root.make_child_named<collector_t>("collector");
 	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
-	event_source<int_range> source{&root};
+	event_source<int_range> source{&root.node()};
 	std::vector<int> vec {1,2,3,4};
 
-	source >> buffer.in();
+	source >> buffer->in();
 
-	BOOST_CHECK(buffer.out()().empty());
-
-	source.fire(int_range(vec.begin(), vec.end()));
-	BOOST_CHECK(buffer.out()().empty());
-
-	buffer.swap_buffers()();
-	BOOST_CHECK(!buffer.out()().empty());
-	BOOST_CHECK(buffer.out()().size() == static_cast<int>(vec.size()));
+	BOOST_CHECK(buffer->out()().empty());
 
 	source.fire(int_range(vec.begin(), vec.end()));
+	BOOST_CHECK(buffer->out()().empty());
+
+	buffer->swap_buffers()();
+	BOOST_CHECK(!buffer->out()().empty());
+	BOOST_CHECK(buffer->out()().size() == static_cast<int>(vec.size()));
+
 	source.fire(int_range(vec.begin(), vec.end()));
-	buffer.swap_buffers()();
-	BOOST_CHECK(buffer.out()().size() == static_cast<int>(vec.size())*2);
+	source.fire(int_range(vec.begin(), vec.end()));
+	buffer->swap_buffers()();
+	BOOST_CHECK(buffer->out()().size() == static_cast<int>(vec.size())*2);
 
 }
 
 BOOST_AUTO_TEST_CASE(test_hold_last)
 {
-	root_node root;
+	tests::owning_node root;
 
-	hold_last<int> buffer;
+	auto buffer = root.make_child<hold_last<int, tree_base_node>>(0);
 
-	event_source<int> source{&root};
-	state_sink<int> sink{&root};
+	event_source<int> source{&root.node()};
+	state_sink<int> sink{&root.node()};
 
-	source >> buffer.in();
-	buffer.out() >> sink;
+	source >> buffer->in();
+	buffer->out() >> sink;
 	BOOST_CHECK_EQUAL(sink.get(), 0);
 
 	source.fire(1);
@@ -81,14 +85,15 @@ BOOST_AUTO_TEST_CASE(test_hold_last)
 
 BOOST_AUTO_TEST_CASE(test_hold_n)
 {
-	root_node root;
+	tests::owning_node root;
 
-	hold_n<int> buffer{3};
-	event_source<int> source{&root};
-	state_sink<hold_n<int>::out_range_t> sink{&root};
+	auto buffer = root.make_child<hold_n<int, tree_base_node>>(3);
 
-	source >> buffer.in();
-	buffer.out() >> sink;
+	event_source<int> source{&root.node()};
+	state_sink<hold_n<int, tree_base_node>::out_range_t> sink{&root.node()};
+
+	source >> buffer->in();
+	buffer->out() >> sink;
 	BOOST_CHECK(sink.get().empty());
 
 	source.fire(0);
@@ -115,16 +120,17 @@ BOOST_AUTO_TEST_CASE(test_hold_n)
 
 BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
 {
-	root_node root;
+	tests::owning_node root;
 
-	hold_n<int> buffer{5};
-	state_sink<hold_n<int>::out_range_t> sink{&root};
+	auto buffer = root.make_child<hold_n<int, tree_base_node>>(5);
+
+	state_sink<hold_n<int, tree_base_node>::out_range_t> sink{&root.node()};
 	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
-	event_source<int_range> source{&root};
+	event_source<int_range> source{&root.node()};
 	std::vector<int> vec {1,2,3,4};
 
-	source >> buffer.in();
-	buffer.out() >> sink;
+	source >> buffer->in();
+	buffer->out() >> sink;
 	BOOST_CHECK(sink.get().empty());
 
 	source.fire(int_range(vec.begin(), vec.end()));

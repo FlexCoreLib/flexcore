@@ -1,7 +1,10 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/list_manipulation.hpp>
-#include <nodes/buffer.hpp>
+#include <pure/pure_node.hpp>
+#include <range/nodes/list_manipulation.hpp>
+#include <extended/nodes/buffer.hpp>
+
+#include "owning_node.hpp"
 
 // std
 #include <deque>
@@ -40,20 +43,19 @@ BOOST_AUTO_TEST_SUITE( test_list_manipulation )
 
 BOOST_AUTO_TEST_CASE( test_list_splitter )
 {
-	root_node root;
-	typedef list_splitter <std::list<std::string>, size_t> splitter_t;
+	typedef list_splitter <std::list<std::string>, size_t, pure::pure_node> splitter_t;
 	auto predicate = [](const std::string& s) { return s.size(); };
-	auto splitter = root.make_child<splitter_t>(predicate);
+	auto splitter = splitter_t{predicate};
 
 	std::vector<std::vector<std::string>> output(5);
 
 	for (size_t i = 0; i < 5; ++i)
-		splitter->out(i) >> [&output, i](const typename splitter_t::out_range_t& v)
+		splitter.out(i) >> [&output, i](const typename splitter_t::out_range_t& v)
 				{ output.at(i) = std::vector<std::string>(std::begin(v), std::end(v)); };
 
 	// send data
 	std::list<std::string> input { "aa", "bbb", "c", "d", "too long 1", "too long 2  " };
-	splitter->in(input);
+	splitter.in(input);
 
 	// check result
 	range_compare(output.at(0), std::list<std::string>{ });
@@ -62,18 +64,18 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
 	range_compare(output.at(3), std::list<std::string>{"bbb"});
 	range_compare(output.at(4), std::list<std::string>{ });
 
-	BOOST_CHECK_EQUAL(splitter->out_num_dropped(), 2);
+	BOOST_CHECK_EQUAL(splitter.out_num_dropped(), 2);
 
 	// send again
 	std::list<std::string> input2 { "a", "b", "cd", "too long 3" };
-	splitter->in(input2);
+	splitter.in(input2);
 
 	// check result
 	range_compare(output.at(0), std::list<std::string>{ });
 	range_compare(output.at(1), std::list<std::string>{"a", "b"});
 	range_compare(output.at(2), std::list<std::string>{"cd"});
 
-	BOOST_CHECK_EQUAL(splitter->out_num_dropped(), 3);
+	BOOST_CHECK_EQUAL(splitter.out_num_dropped(), 3);
 }
 
 /*
@@ -81,52 +83,51 @@ BOOST_AUTO_TEST_CASE( test_list_splitter )
  */
 BOOST_AUTO_TEST_CASE( test_list_splitter_bool )
 {
-	typedef list_splitter <std::list<int>, bool> splitter_t;
+	typedef list_splitter <std::list<int>, bool, pure::pure_node> splitter_t;
 	auto predicate = [](int v) { return v >= 0; };
-	root_node root;
-	auto splitter = root.make_child<splitter_t>(predicate);
+	auto splitter = splitter_t{predicate};
 
 	std::vector<int> out_true;
 	std::vector<int> out_false;
 
-	splitter->out(true) >> [&out_true](const typename splitter_t::out_range_t& v)
+	splitter.out(true) >> [&out_true](const typename splitter_t::out_range_t& v)
 			{ out_true = std::vector<int>(boost::begin(v), boost::end(v)); };
-	splitter->out(false) >> [&out_false](const typename splitter_t::out_range_t& v)
+	splitter.out(false) >> [&out_false](const typename splitter_t::out_range_t& v)
 			{ out_false = std::vector<int>(boost::begin(v), boost::end(v)); };
 
 	// send data
 	std::list<int> input { 1, -1, 5, -6, -6, 1 };
-	splitter->in(input);
+	splitter.in(input);
 
 	range_compare(out_true, std::vector<int>{ 1, 5, 1 });
 	range_compare(out_false, std::vector<int>{ -1, -6, -6});
 }
 
-BOOST_AUTO_TEST_CASE( test_list_collector )
+BOOST_AUTO_TEST_CASE( test_list_collector_pure )
 {
-	typedef list_splitter <std::list<int>, bool> splitter_t;
-	root_node root;
-	auto splitter = root.make_child<splitter_t>( [](int) { return 0; } );
+	// test case of list collector without region context
 
-	typedef list_collector<int, swap_on_pull> collector_t;
-	auto collector = root.make_child<collector_t>();
+	typedef list_splitter <std::list<int>, bool, pure::pure_node> splitter_t;
+	typedef list_collector<int, swap_on_pull, pure::pure_node> collector_t;
 
-	state_sink<collector_t::out_range_t> sink(&root);
+	splitter_t splitter{ [](int) { return 0; }};
+	collector_t collector;
 
-	splitter->out(0) >> collector->in();
-	collector->out() >> sink;
+	pure::state_sink<collector_t::out_range_t> sink;
+
+	splitter.out(0) >> collector.in();
+	collector.out() >> sink;
 
 	// send data
-	splitter->in( std::list<int>{1, 2} );
-	splitter->in( std::list<int>{3} );
+	splitter.in( std::list<int>{1, 2} );
+	splitter.in( std::list<int>{3} );
 
 	range_compare(sink.get(), std::forward_list<int>{ 1, 2, 3 });
 
-	splitter->in( std::list<int>{4, 5} );
+	splitter.in( std::list<int>{4, 5} );
 
 	range_compare(sink.get(), std::forward_list<int>{ 4, 5 });
 	range_compare(sink.get(), std::forward_list<int>{ });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

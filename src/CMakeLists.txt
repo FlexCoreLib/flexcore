@@ -2,14 +2,15 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8.12 )
 
 # creates the executable
 ADD_LIBRARY( flexcore
-	clock/clock.cpp
-	graph/graph.cpp
-	logging/logger.cpp
-	threading/parallelregion.cpp
-	threading/cyclecontrol.cpp
-    threading/minimalscheduler.cpp
-    threading/parallelscheduler.cpp
-    threading/serialschedulers.cpp )
+	infrastructure.cpp
+	extended/graph/graph.cpp
+	utils/logging/logger.cpp
+	extended/base_node.cpp
+	scheduler/clock.cpp
+	scheduler/cyclecontrol.cpp
+	scheduler/parallelregion.cpp
+	scheduler/parallelscheduler.cpp
+	scheduler/serialschedulers.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( flexcore
     PUBLIC ${FLEXCORE_INCLUDE_DIRECTORIES} )

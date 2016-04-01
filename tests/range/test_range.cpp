@@ -1,8 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <core/connection.hpp>
-#include <ports/states/state_sources.hpp>
-#include <ports/states/state_sink.hpp>
+#include <pure/state_sources.hpp>
+#include <pure/state_sink.hpp>
 
 #include <range/algorithm.hpp>
 #include <range/actions.hpp>

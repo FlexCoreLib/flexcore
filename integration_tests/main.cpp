@@ -1,58 +1,40 @@
 
-#include <nodes/base_node.hpp>
+#include <extended/base_node.hpp>
 #include <iostream>
 #include <chrono>
 #include <iomanip>
 #include <ctime>
 #include <thread>
 
-#include <threading/cyclecontrol.hpp>
-#include <threading/parallelscheduler.hpp>
-#include <threading/parallelregion.hpp>
-#include <ports/ports.hpp>
+#include <ports.hpp>
+#include <infrastructure.hpp>
 
 #include <boost/scope_exit.hpp>
 
 using namespace fc;
 
-struct null : base_node
+struct null : tree_base_node
 {
-	null() : base_node("null") {}
+	null(std::string name, std::shared_ptr<fc::parallel_region> r)
+			: tree_base_node(r, name) {}
 };
-
-auto setup_parallel_region(const std::string& name,
-		const virtual_clock::steady::duration& tick,
-		fc::thread::cycle_control& thread_manager)
-{
-	auto region = std::make_shared<fc::parallel_region>(name);
-
-	auto tick_cycle = fc::thread::periodic_task(
-			[region]()
-			{
-				region->ticks.in_work()();
-			});
-
-	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
-	thread_manager.add_task(std::move(tick_cycle), tick);
-
-	return region;
-}
 
 int main()
 {
 
 	std::cout << "Starting Dummy Solution\n";
-
 	std::cout << "build up infrastructure \n";
-	fc::thread::cycle_control thread_manager{std::make_unique<fc::thread::parallel_scheduler>()};
-	auto first_region = setup_parallel_region("first_region",
-			fc::thread::cycle_control::medium_tick,
-			thread_manager);
+	fc::infrastructure infrastructure;
+
+	auto first_region = infrastructure.add_region(
+			"first_region",
+			fc::thread::cycle_control::medium_tick);
 
 	std::cout << "start building connections\n";
 
 	using clock = fc::virtual_clock::system;
 	using time_point = clock::time_point;
+
 	fc::pure::event_source<time_point> source;
 	first_region->ticks.work_tick()
 			>> [&source](){ source.fire(clock::now()); };
@@ -66,16 +48,18 @@ int main()
 
 
 	//create a connection with region transition
-	auto second_region = setup_parallel_region("region two",
-			fc::thread::cycle_control::slow_tick,
-			thread_manager);
+	auto second_region = infrastructure.add_region(
+			"region two",
+			fc::thread::cycle_control::slow_tick);
 
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
-	fc::root_node root;
-	auto child_a = root.make_child_named<null>("source_a")->region(first_region);
-	auto child_b = root.make_child_named<null>("sink_b")->region(second_region);
-	auto child_c = root.make_child_named<null>("source_c")->region(second_region);
+	auto child_a = infrastructure.node_owner().
+			make_child<null>(first_region, "source_a");
+	auto child_b = infrastructure.node_owner().
+			make_child<null>(second_region, "sink_b");
+	auto child_c = infrastructure.node_owner().
+			make_child<null>(second_region, "source_c");
 
 	event_source<std::string> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,
@@ -83,9 +67,9 @@ int main()
 
 	string_source >> string_sink;
 	first_region->ticks.work_tick()
-			>>	[&string_source, first_region]() mutable
+			>>	[&string_source, id = first_region->get_id().key]() mutable
 				{
-					string_source.fire("a magic string from " + first_region->get_id().key);
+					string_source.fire("a magic string from " + id);
 				};
 
 	event_source<std::string> string_source_2(child_c);
@@ -93,29 +77,16 @@ int main()
 
 	graph::connection_graph::access().print(std::cout);
 
-	thread_manager.start();
-	BOOST_SCOPE_EXIT(&thread_manager) {
-		thread_manager.stop();
+	infrastructure.start_scheduler();
+	BOOST_SCOPE_EXIT(&infrastructure) {
+		infrastructure.stop_scheduler();
 	} BOOST_SCOPE_EXIT_END
 
 	using namespace std::chrono_literals;
 	int iterations = 7;
 	while (iterations--)
 	{
-		auto exception = thread_manager.last_exception();
-		if (exception)
-		{
-			try
-			{
-				std::rethrow_exception(exception);
-			}
-			catch (const fc::out_of_time_exception& ex)
-			{
-				std::cout << "Scheduler out of time: " << ex.what() << "\n";
-				return EXIT_FAILURE;
-			}
-		}
-		std::this_thread::sleep_for(0.5s);
+		infrastructure.iterate_main_loop();
 	}
 
 	return 0;
