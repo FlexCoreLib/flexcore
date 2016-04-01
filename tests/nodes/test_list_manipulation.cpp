@@ -1,8 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/pure_node.hpp>
-#include <nodes/list_manipulation.hpp>
-#include <nodes/buffer.hpp>
+#include <pure/pure_node.hpp>
+#include <range/nodes/list_manipulation.hpp>
+#include <extended/nodes/buffer.hpp>
 
 #include "owning_node.hpp"
 
@@ -131,4 +131,3 @@ BOOST_AUTO_TEST_CASE( test_list_collector_pure )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

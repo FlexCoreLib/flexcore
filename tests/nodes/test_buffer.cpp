@@ -1,10 +1,10 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/buffer.hpp>
-#include <nodes/base_node.hpp>
+#include <extended/nodes/buffer.hpp>
+#include <extended/base_node.hpp>
 
-#include <ports/events/event_sources.hpp>
-#include <ports/states/state_sink.hpp>
+#include <pure/event_sources.hpp>
+#include <pure/state_sink.hpp>
 
 #include "owning_node.hpp"
 

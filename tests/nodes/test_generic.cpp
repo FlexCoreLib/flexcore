@@ -1,30 +1,13 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/generic.hpp>
-#include <ports/events/event_sink_with_queue.hpp>
+#include <extended/nodes/generic.hpp>
+#include <pure/events/event_sink_with_queue.hpp>
 
 #include "owning_node.hpp"
 
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_generic_nodes)
-
-BOOST_AUTO_TEST_CASE(test_transform)
-{
-	auto multiply = transform( [](int a, int b){ return a * b;});
-
-	auto three = [](){ return 3; };
-	three >> multiply.param;
-
-	BOOST_CHECK_EQUAL(multiply(2), 6);
-
-	auto add = transform( [](int a, int b){ return a + b;});
-
-	auto con = [](){return 4;} >> add >> [](int i) { return i+1; };
-	three >> add.param;
-
-	BOOST_CHECK_EQUAL(con(), 8);
-}
 
 BOOST_AUTO_TEST_CASE(test_n_ary_switch_state)
 {

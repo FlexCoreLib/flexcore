@@ -1,8 +1,9 @@
+
 #if !defined(__clang__)
 #define BOOST_ALL_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include <logging/logger.hpp>
-#include <threading/parallelregion.hpp>
+#include <utils/logging/logger.hpp>
+#include <scheduler/parallelregion.hpp>
 #include <sstream>
 
 using fc::logger;
