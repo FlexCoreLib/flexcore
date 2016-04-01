@@ -14,8 +14,12 @@ ADD_LIBRARY( flexcore
 
 TARGET_COMPILE_OPTIONS( flexcore
 	PUBLIC "-std=c++1y" )
-TARGET_INCLUDE_DIRECTORIES( flexcore
-    PUBLIC ${FLEXCORE_INCLUDE_DIRECTORIES} )
+TARGET_INCLUDE_DIRECTORIES( flexcore PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/cereal/include>
+	$<INSTALL_INTERFACE:include/flexcore>
+	$<INSTALL_INTERFACE:include/flexcore/3rdparty>
+	)
 
 # TODO only use coverage flags in debug mode
 TARGET_LINK_LIBRARIES( flexcore $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-lgcov>
