@@ -9,7 +9,8 @@ ADD_LIBRARY( flexcore
 	scheduler/clock.cpp
 	scheduler/cyclecontrol.cpp
 	scheduler/parallelregion.cpp
-	scheduler/parallelscheduler.cpp )
+	scheduler/parallelscheduler.cpp
+	scheduler/serialschedulers.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( flexcore
     PUBLIC ${FLEXCORE_INCLUDE_DIRECTORIES} )

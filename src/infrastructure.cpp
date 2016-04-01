@@ -1,4 +1,5 @@
 #include "infrastructure.hpp"
+#include <scheduler/parallelscheduler.hpp>
 
 namespace fc
 {
@@ -23,7 +24,7 @@ std::shared_ptr<parallel_region> infrastructure::add_region(const std::string& n
 
 infrastructure::infrastructure() :
 	// abstract_graph(),
-		scheduler(),
+		scheduler(std::make_unique<fc::thread::parallel_scheduler>()),
 		forest_root("root",
 				add_region("root_region", thread::cycle_control::medium_tick))
 {

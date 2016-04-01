@@ -33,6 +33,7 @@ ADD_EXECUTABLE( test_executable
 	scheduler/test_cyclecontrol.cpp
 	scheduler/test_parallel_region.cpp
 	scheduler/test_parallelscheduler.cpp
+	scheduler/test_serialscheduler.cpp
 	tokens/test_moving.cpp )
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
