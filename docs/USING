@@ -25,8 +25,7 @@ and will force building in c++14 mode.
 
 When checking out your project remember to also checkout submodules:
 
-    $ git submodule init && git submodule update
-	$ (cd flexcore && git submodule init && git submodule update)
+    $ git submodule init && git submodule update --recursive
 
 It is not necessary to integrate flexcore as a git submodule; if you know where
 the source tree is located you can call add_subdirectory with the full path to
