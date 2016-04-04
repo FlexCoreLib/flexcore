@@ -19,6 +19,7 @@ TARGET_INCLUDE_DIRECTORIES( flexcore PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/cereal/include>
 	$<INSTALL_INTERFACE:include/flexcore>
 	$<INSTALL_INTERFACE:include/flexcore/3rdparty>
+	${Boost_INCLUDE_DIRS}
 	)
 
 # TODO only use coverage flags in debug mode
