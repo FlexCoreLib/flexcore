@@ -17,8 +17,8 @@ The root CMakeLists.txt of your project should then include the line:
 
 To link flexcore with one of your targets add the commands:
 
-	add_executeable(main main.cpp)
-	target_link_libraries(main flexcore)
+    add_executeable(main main.cpp)
+    target_link_libraries(main flexcore)
 
 to CMakeLists.txt. This will add the proper include directories, link flags
 and will force building in c++14 mode.
@@ -37,20 +37,20 @@ find_package
 This is the recommended way of including flexcore. First build and install flexcore.
 
     $ git clone <flexcore repo URL> flexcore
-	$ mkdir -p flexcore/build && cd flexcore/build
-	$ cmake .. -DCMAKE_INSTALL_PREFIX=<my_prefix>
-	$ make install
+    $ mkdir -p flexcore/build && cd flexcore/build
+    $ cmake .. -DCMAKE_INSTALL_PREFIX=<my_prefix>
+    $ make install
 
 Once flexcore has been installed, your projects may use flexcore by including
 the following in their CMakeLists.txt:
 
     find_package(flexcore)
-	include_directories(${FLEXCORE_INCLUDE_DIRS})
-	add_executable(main main.cpp)
-	target_compile_options(main ${FLEXCORE_COMPILE_OPTIONS})
-	# if you need the library components of flexcore, then this is sufficient
-	# without specifying include_directories and target_compile_options)
-	target_link_libraries(main ${FLEXCORE_LIBRARIES})
+    include_directories(${FLEXCORE_INCLUDE_DIRS})
+    add_executable(main main.cpp)
+    target_compile_options(main ${FLEXCORE_COMPILE_OPTIONS})
+    # if you need the library components of flexcore, then this is sufficient
+    # without specifying include_directories and target_compile_options)
+    target_link_libraries(main ${FLEXCORE_LIBRARIES})
 
 If you installed flexcore in a custom location then your cmake invocation will
 probably need to include a value for flexcore_DIR (the path to the installed
