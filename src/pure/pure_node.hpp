@@ -45,8 +45,7 @@ public:
 
 template<class T> struct is_active_sink<pure::pure_port_mixin<T>> : is_active_sink<T> {};
 template<class T> struct is_active_source<pure::pure_port_mixin<T>> : is_active_source<T> {};
-template<class T> struct is_passive_sink<pure::pure_port_mixin<T>> : is_passive_sink<T> {};
-template<class T> struct is_passive_source<pure::pure_port_mixin<T>> : is_passive_source<T> {};
+
 }  // namespace fc
 
 #endif /* SRC_NODES_PURE_NODE_HPP_ */

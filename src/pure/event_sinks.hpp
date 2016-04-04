@@ -110,11 +110,6 @@ template<class lambda_t>
 auto make_event_sink_tmpl(lambda_t h) { return event_sink_tmpl<lambda_t>{h}; }
 
 } // namespace pure
-
-// traits
-template<class T> struct is_passive_sink<pure::event_sink<T>> : std::true_type {};
-template<class T> struct is_passive_sink<pure::event_sink_tmpl<T>> : std::true_type {};
-
 } // namespace fc
 
 #endif /* SRC_PORTS_EVENTS_EVENT_SINKS_HPP_ */

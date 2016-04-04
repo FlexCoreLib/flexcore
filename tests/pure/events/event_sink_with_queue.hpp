@@ -54,9 +54,6 @@ private:
 
 } // namespace pure
 
-// traits
-template<class T> struct is_passive_sink<pure::event_sink_queue<T>> : std::true_type {};
-
 template<class data_t>
 using event_sink_queue = default_mixin<pure::event_sink_queue<data_t>>;
 

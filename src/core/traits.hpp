@@ -155,6 +155,12 @@ struct is_callable:
 {
 };
 
+/**
+ *  \brief Checks if type T is connectable.
+ *
+ *  This requires to to be callable
+ *  and to be either an lvalue reference or copy constructible.
+ */
 template <class T>
 struct is_connectable :
 	std::integral_constant<bool,
@@ -243,21 +249,7 @@ struct param_type
 	typedef typename argtype_of<T,0>::type type;
 };
 
-template<class T>
-struct is_active_sink: std::false_type
-{
-};
-
-template<class T>
-struct is_active_source: std::false_type
-{
-};
-
-template<class T, class enable = void>
-struct is_passive_source_impl: std::false_type
-{
-};
-
+///Checks if type T can be called with void
 template<class T>
 constexpr auto void_callable(int) -> decltype(std::declval<T>()(), bool())
 {
@@ -270,6 +262,7 @@ constexpr bool void_callable(...)
 	return false;
 }
 
+///Checks if type T has a member function register_callback
 template <class T>
 constexpr auto has_register_function(int)
     -> decltype(std::declval<T>().register_callback(
@@ -285,6 +278,7 @@ constexpr bool has_register_function(...)
 	return false;
 }
 
+///Checks if type T has a member source
 template <class T>
 constexpr bool has_source(...)
 {
@@ -298,6 +292,7 @@ constexpr auto has_source(int) -> decltype(
 	return true;
 }
 
+///Checks if type T has a member sink
 template <class T>
 constexpr bool has_sink(...)
 {
@@ -311,22 +306,7 @@ constexpr auto has_sink(int) -> decltype(
 	return true;
 }
 
-//template<class T>
-//struct is_passive_source_impl<T, std::enable_if_t<is_callable<T>{}>>
-//		: std::integral_constant<bool, void_callable<T>(0)>
-//{
-//};
-
-template<class T>
-struct is_passive_source_impl<T, std::enable_if_t<void_callable<T>(0)>> : std::true_type
-{
-};
-
-template<class T, class enable = void>
-struct is_passive_sink_impl: std::false_type
-{
-};
-
+///Checks if type T has an overloaded call operator
 template<class T>
 constexpr auto overloaded(int) -> decltype(&T::operator(), bool())
 {
@@ -339,6 +319,36 @@ constexpr bool overloaded(...)
 {
 	return true;
 }
+
+/**
+ * \brief Trait to check if type T instantiates a template
+ * \tparam T type to check
+ * \tparam template_type template T is asked to instantiate
+ */
+template<template<class ...> class template_type, class T >
+struct is_instantiation_of : std::false_type
+{};
+
+template<template<class ...> class template_type, class... Args >
+struct is_instantiation_of< template_type, template_type<Args...> > : std::true_type {};
+
+
+//************* Checks if types are active or passive connectables ************/
+
+template<class T, class enable = void>
+struct is_passive_source_impl: std::false_type
+{
+};
+
+template<class T>
+struct is_passive_source_impl<T, std::enable_if_t<void_callable<T>(0)>> : std::true_type
+{
+};
+
+template<class T, class enable = void>
+struct is_passive_sink_impl: std::false_type
+{
+};
 
 template<class T>
 struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
@@ -355,38 +365,61 @@ struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
 {
 };
 
-
+/**
+ * \brief Checks if type T is a passive sink.
+ *
+ * It checks if the type has a call operator which returns void.
+ */
 template<class T>
 struct is_passive_sink: is_passive_sink_impl<T>
 {
 };
 
+/**
+ * \brief Checks if type T is a passive sink.
+ *
+ * It checks if the type has a call operator which takes void.
+ */
 template<class T>
 struct is_passive_source: is_passive_source_impl<T>
 {
 };
 
-
-//todo cleanup of diverse redundant traits
+///checks if type T is either a passive sink or a passive source.
 template<class T>
 struct is_passive: std::integral_constant<bool,
 		is_passive_source<T>{} || is_passive_sink<T>{}>
 {
 };
 
-//todo cleanup of diverse redundant traits
+/**
+ * \brief Trait to define an active sink.
+ *
+ * define is_active_sink<my_type> : std::true_type
+ * for your own types, if they are active sinks.
+ */
+template<class T>
+struct is_active_sink: std::false_type
+{
+};
+
+/**
+ * \brief  Trait to define an active source.
+ *
+ * define is_active_source<my_type> : std::true_type
+ * for your own types, if they are active sources.
+ */
+template<class T>
+struct is_active_source: std::false_type
+{
+};
+
+/// Checks if type T is either active_source or active_sink
 template<class T>
 struct is_active: std::integral_constant<bool,
 is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
-
-template<template<class ...> class template_type, class T >
-struct is_instantiation_of : std::false_type
-{};
-
-template<template<class ...> class template_type, class... Args >
-struct is_instantiation_of< template_type, template_type<Args...> > : std::true_type {};
 
 } // namespace fc
 

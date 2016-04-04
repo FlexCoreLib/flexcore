@@ -27,10 +27,6 @@ struct event_sink_vector
 };
 
 } // namespace pure
-
-template<class T> struct is_passive_sink<pure::event_sink_value<T>> : std::true_type {};
-template<class T> struct is_passive_sink<pure::event_sink_vector<T>> : std::true_type {};
-
 } // namespace fc
 
 namespace
@@ -135,21 +131,6 @@ BOOST_AUTO_TEST_CASE( connections )
 	BOOST_CHECK_EQUAL(*(test_handler.storage), 4);
 }
 
-
-BOOST_AUTO_TEST_CASE( queue_sink )
-{
-	auto inc = [](int i) { return i + 1; };
-
-	pure::event_source<int> source;
-	pure::event_sink_queue<int> sink;
-	source >> inc >> sink;
-	source.fire(4);
-	BOOST_CHECK_EQUAL(sink.empty(), false);
-	int received = sink.get();
-	BOOST_CHECK_EQUAL(received, 5);
-	BOOST_CHECK_EQUAL(sink.empty(), true);
-}
-
 BOOST_AUTO_TEST_CASE( merge_events )
 {
 	pure::event_source<int> test_event;
@@ -241,7 +222,7 @@ void test_connection(const T& connection)
 {
 	int storage = 0;
 	pure::event_source<int> a;
-	pure::event_sink_queue<int> d;
+	pure::event_sink<int> d{[](int in){ BOOST_CHECK_EQUAL(in, 3);}};
 	auto c = [&](int i) { storage = i; return i; };
 	auto b = [](int i) { return i + 1; };
 
@@ -249,7 +230,6 @@ void test_connection(const T& connection)
 
 	a.fire(2);
 	BOOST_CHECK_EQUAL(storage, 3);
-	BOOST_CHECK_EQUAL(d.get(), 3);
 }
 }
 

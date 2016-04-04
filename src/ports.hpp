@@ -32,8 +32,6 @@ struct node_aware_mixin : graph::graph_connectable<node_aware<port_t>>
 
 template<class T> struct is_active_sink<node_aware_mixin<T>> : is_active_sink<T> {};
 template<class T> struct is_active_source<node_aware_mixin<T>> : is_active_source<T> {};
-template<class T> struct is_passive_sink<node_aware_mixin<T>> : is_passive_sink<T> {};
-template<class T> struct is_passive_source<node_aware_mixin<T>> : is_passive_source<T> {};
 
 template<class port_t>
 using default_mixin = node_aware_mixin<port_t>;

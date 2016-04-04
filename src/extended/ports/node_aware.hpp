@@ -113,8 +113,6 @@ private:
 
 template<class T> struct is_active_sink<node_aware<T>> : is_active_sink<T> {};
 template<class T> struct is_active_source<node_aware<T>> : is_active_source<T> {};
-template<class T> struct is_passive_sink<node_aware<T>> : is_passive_sink<T> {};
-template<class T> struct is_passive_source<node_aware<T>> : is_passive_source<T> {};
 
 template<class source_t, class sink_t>
 struct result_of<node_aware<connection<source_t, sink_t>>>
