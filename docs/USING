@@ -38,7 +38,7 @@ This is the recommended way of including flexcore. First build and install flexc
 
     $ git clone <flexcore repo URL> flexcore
     $ mkdir -p flexcore/build && cd flexcore/build
-    $ cmake .. -DCMAKE_INSTALL_PREFIX=<my_prefix>
+    $ cmake .. -DCMAKE_INSTALL_PREFIX=<path prefix>
     $ make install
 
 Once flexcore has been installed, your projects may use flexcore by including
@@ -56,6 +56,7 @@ If you installed flexcore in a custom location then your cmake invocation will
 probably need to include a value for flexcore_DIR (the path to the installed
 flexcore-config.cmake).
 
-    $ cmake -Dflexcore_DIR=<my_prefix>/lib(32|64)/cmake/flexcore
+    $ cmake -Dflexcore_DIR=<path prefix>/lib(32|64)/cmake/flexcore
 
-
+The prefix is the one specified as CMAKE_INSTALL_PREFIX when installing
+flexcore.
