@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
-#include <utils/settings/settings.hpp>
-#include <utils/settings/jsonfile_setting_backend.hpp>
+#include <flexcore/utils/settings/settings.hpp>
+#include <flexcore/utils/settings/jsonfile_setting_backend.hpp>
 
 using namespace fc;
 

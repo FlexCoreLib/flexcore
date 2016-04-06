@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <extended/ports/connection_buffer.hpp>
+#include <flexcore/extended/ports/connection_buffer.hpp>
 
 using namespace fc;
 

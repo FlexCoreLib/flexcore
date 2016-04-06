@@ -5,9 +5,9 @@
 #include <functional>
 #include <queue>
 
-#include <core/traits.hpp>
-#include <core/connection.hpp>
-#include <ports.hpp>
+#include <flexcore/core/traits.hpp>
+#include <flexcore/core/connection.hpp>
+#include <flexcore/ports.hpp>
 
 namespace fc
 {

@@ -8,12 +8,9 @@
 //
 //
 
-// Code:
-
-// boost
 #include <boost/test/unit_test.hpp>
 
-#include <core/traits.hpp>
+#include <flexcore/core/traits.hpp>
 
 #include <iostream>
 #include <type_traits>

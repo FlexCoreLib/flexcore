@@ -1,11 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
-#include <core/connection.hpp>
+#include <flexcore/core/connection.hpp>
 #include <pure/events/event_sink_with_queue.hpp>
 #include <vector>
 #include <algorithm>
 
-#include <pure/pure_ports.hpp>
+#include <flexcore/pure/pure_ports.hpp>
 #include "move_token.hpp"
 
 using namespace fc;

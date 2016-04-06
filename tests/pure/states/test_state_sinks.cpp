@@ -1,8 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
-#include <pure/state_sink.hpp>
-#include <pure/state_sources.hpp>
-#include <core/connection.hpp>
+#include <flexcore/pure/state_sink.hpp>
+#include <flexcore/pure/state_sources.hpp>
+#include <flexcore/core/connection.hpp>
 
 using namespace fc;
 

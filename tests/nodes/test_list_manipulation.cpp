@@ -1,8 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
-#include <pure/pure_node.hpp>
-#include <range/nodes/list_manipulation.hpp>
-#include <extended/nodes/buffer.hpp>
+#include <flexcore/pure/pure_node.hpp>
+#include <flexcore/range/nodes/list_manipulation.hpp>
+#include <flexcore/extended/nodes/buffer.hpp>
 
 #include "owning_node.hpp"
 

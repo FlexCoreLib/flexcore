@@ -1,13 +1,13 @@
 
-#include <extended/base_node.hpp>
 #include <iostream>
 #include <chrono>
 #include <iomanip>
 #include <ctime>
 #include <thread>
 
-#include <ports.hpp>
-#include <infrastructure.hpp>
+#include <flexcore/extended/base_node.hpp>
+#include <flexcore/ports.hpp>
+#include <flexcore/infrastructure.hpp>
 
 #include <boost/scope_exit.hpp>
 

@@ -1,11 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
-#include <core/connection.hpp>
-#include <pure/state_sources.hpp>
-#include <pure/state_sink.hpp>
+#include <flexcore/core/connection.hpp>
+#include <flexcore/pure/state_sources.hpp>
+#include <flexcore/pure/state_sink.hpp>
 
-#include <range/algorithm.hpp>
-#include <range/actions.hpp>
+#include <flexcore/range/algorithm.hpp>
+#include <flexcore/range/actions.hpp>
 
 #include <boost/range/any_range.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>

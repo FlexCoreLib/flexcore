@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <extended/nodes/state_nodes.hpp>
+#include <flexcore/extended/nodes/state_nodes.hpp>
 
 #include "owning_node.hpp"
 
