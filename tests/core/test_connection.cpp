@@ -1,5 +1,5 @@
-#include "core/connection.hpp"
-#include "core/detail/connection_utils.hpp"
+#include <flexcore/core/connection.hpp>
+#include <flexcore/core/detail/connection_utils.hpp>
 #include "movable_connectable.hpp"
 
 // boost

@@ -1,10 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/buffer.hpp>
-#include <nodes/base_node.hpp>
-
-#include <ports/events/event_sources.hpp>
-#include <ports/states/state_sink.hpp>
+#include <flexcore/extended/nodes/buffer.hpp>
+#include <flexcore/extended/base_node.hpp>
+#include <flexcore/pure/event_sources.hpp>
+#include <flexcore/pure/state_sink.hpp>
 
 #include "owning_node.hpp"
 

@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
-#include <core/connectables.hpp>
-#include <core/connection.hpp>
+#include <flexcore/core/connectables.hpp>
+#include <flexcore/core/connection.hpp>
 
 using namespace fc;
 

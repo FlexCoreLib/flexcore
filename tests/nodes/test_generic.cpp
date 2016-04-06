@@ -1,30 +1,13 @@
 #include <boost/test/unit_test.hpp>
 
-#include <nodes/generic.hpp>
-#include <ports/events/event_sink_with_queue.hpp>
+#include <flexcore/extended/nodes/generic.hpp>
+#include <pure/events/event_sink_with_queue.hpp>
 
 #include "owning_node.hpp"
 
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_generic_nodes)
-
-BOOST_AUTO_TEST_CASE(test_transform)
-{
-	auto multiply = transform( [](int a, int b){ return a * b;});
-
-	auto three = [](){ return 3; };
-	three >> multiply.param;
-
-	BOOST_CHECK_EQUAL(multiply(2), 6);
-
-	auto add = transform( [](int a, int b){ return a + b;});
-
-	auto con = [](){return 4;} >> add >> [](int i) { return i+1; };
-	three >> add.param;
-
-	BOOST_CHECK_EQUAL(con(), 8);
-}
 
 BOOST_AUTO_TEST_CASE(test_n_ary_switch_state)
 {
@@ -54,7 +37,9 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	auto test_switch = root.make_child_named<n_ary_switch<int, event_tag>>("switch");
 	size_t switch_param = 0;
 	state_source<size_t> config(&root.node(), [&switch_param](){ return switch_param; });
-	event_sink_queue<int> buffer(&root.node());
+
+	std::vector<int> result_buffer;
+	event_sink<int> buffer(&root.node(), [&result_buffer](auto in){result_buffer.push_back(in);});
 
 	static_assert(!is_active_sink   <event_source<int>>{}, "");
 	static_assert( is_active_source <event_source<int>>{}, "");
@@ -67,18 +52,19 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	test_switch->out() >> buffer;
 
 	source_2.fire(2); //tick source, currently not forwarded by switch
-	BOOST_CHECK_EQUAL(buffer.empty(), true);
+	BOOST_CHECK_EQUAL(result_buffer.empty(), true);
 	source_1.fire(1); // tick forwarded source
-	BOOST_CHECK_EQUAL(buffer.get(), 1);
-	BOOST_CHECK_EQUAL(buffer.empty(), true);
+	BOOST_CHECK_EQUAL(result_buffer.back(), 1);
+	BOOST_CHECK_EQUAL(result_buffer.empty(), false);
 
 	switch_param = 1;
+	result_buffer.clear();
 
 	source_1.fire(1); //tick source, currently not forwarded by switch
-	BOOST_CHECK_EQUAL(buffer.empty(), true);
+	BOOST_CHECK_EQUAL(result_buffer.empty(), true);
 	source_2.fire(2); // tick forwarded source
-	BOOST_CHECK_EQUAL(buffer.get(), 2);
-	BOOST_CHECK_EQUAL(buffer.empty(), true);
+	BOOST_CHECK_EQUAL(result_buffer.back(), 2);
+	BOOST_CHECK_EQUAL(result_buffer.empty(), false);
 }
 
 BOOST_AUTO_TEST_CASE(watch_node)
