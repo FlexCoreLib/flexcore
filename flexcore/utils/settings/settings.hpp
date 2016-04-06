@@ -1,6 +1,8 @@
 #ifndef SRC_SETTINGS_SETTINGS_HPP_
 #define SRC_SETTINGS_SETTINGS_HPP_
 
+#include <string>
+
 namespace fc
 {
 

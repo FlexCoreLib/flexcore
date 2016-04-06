@@ -2,7 +2,7 @@
 #define SRC_PORTS_CONNECTION_UTIL_HPP_
 
 #include <utility>
-#include <core/traits.hpp>
+#include <flexcore/core/traits.hpp>
 
 namespace fc
 {

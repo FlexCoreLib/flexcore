@@ -5,8 +5,8 @@
  *      Author: jschwan
  */
 
-#include <scheduler/cyclecontrol.hpp>
-#include <scheduler/parallelscheduler.hpp>
+#include <flexcore/scheduler/cyclecontrol.hpp>
+#include <flexcore/scheduler/parallelscheduler.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 

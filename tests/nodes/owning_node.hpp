@@ -1,7 +1,7 @@
 #ifndef TESTS_NODES_OWNING_NODE_HPP_
 #define TESTS_NODES_OWNING_NODE_HPP_
 
-#include <extended/base_node.hpp>
+#include <flexcore/extended/base_node.hpp>
 
 namespace fc
 {

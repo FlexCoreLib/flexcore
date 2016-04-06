@@ -3,8 +3,8 @@
 
 #include <functional>
 
-#include <core/connection.hpp>
-#include <pure/port_connection.hpp>
+#include <flexcore/core/connection.hpp>
+#include <flexcore/pure/port_connection.hpp>
 
 namespace fc
 {

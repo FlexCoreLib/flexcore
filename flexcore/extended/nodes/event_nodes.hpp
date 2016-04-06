@@ -1,10 +1,10 @@
 #ifndef SRC_NODES_EVENT_NODES_HPP_
 #define SRC_NODES_EVENT_NODES_HPP_
 
-#include <pure/state_sink.hpp>
-#include <pure/event_sinks.hpp>
-#include <pure/event_sources.hpp>
-#include <pure/pure_node.hpp>
+#include <flexcore/pure/state_sink.hpp>
+#include <flexcore/pure/event_sinks.hpp>
+#include <flexcore/pure/event_sources.hpp>
+#include <flexcore/pure/pure_node.hpp>
 
 namespace fc
 {

@@ -1,16 +1,16 @@
 #ifndef SRC_NODES_BASE_NODE_HPP_
 #define SRC_NODES_BASE_NODE_HPP_
 
-#include <extended/graph/graph.hpp>
+#include <flexcore/extended/graph/graph.hpp>
 
-#include <scheduler/parallelregion.hpp>
-#include <3rdparty/adobe/forest.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
+#include <adobe/forest.hpp>
 
 #include <cassert>
 #include <string>
 #include <memory>
 
-#include <ports.hpp>
+#include <flexcore/ports.hpp>
 
 namespace fc
 {

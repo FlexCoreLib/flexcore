@@ -1,7 +1,7 @@
 #ifndef SRC_PORTS_TOKEN_TAGS_HPP_
 #define SRC_PORTS_TOKEN_TAGS_HPP_
 
-#include <pure/pure_ports.hpp>
+#include <flexcore/pure/pure_ports.hpp>
 
 namespace fc
 {

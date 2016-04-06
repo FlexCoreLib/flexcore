@@ -1,13 +1,13 @@
 #ifndef SRC_NODES_STATE_NODES_HPP_
 #define SRC_NODES_STATE_NODES_HPP_
 
-#include <core/traits.hpp>
-#include <core/tuple_meta.hpp>
-#include <extended/ports/node_aware.hpp>
-#include <pure/mux_ports.hpp>
-#include <extended/base_node.hpp>
-#include <pure/pure_node.hpp>
-#include <extended/nodes/region_worker_node.hpp>
+#include <flexcore/core/traits.hpp>
+#include <flexcore/core/tuple_meta.hpp>
+#include <flexcore/extended/ports/node_aware.hpp>
+#include <flexcore/pure/mux_ports.hpp>
+#include <flexcore/extended/base_node.hpp>
+#include <flexcore/pure/pure_node.hpp>
+#include <flexcore/extended/nodes/region_worker_node.hpp>
 
 #include <utility>
 #include <tuple>

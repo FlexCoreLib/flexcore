@@ -6,13 +6,12 @@
 #include <memory>
 #include <vector>
 
-#include <core/traits.hpp>
-#include <core/connection_util.hpp>
-#include <pure/detail/port_traits.hpp>
-#include <pure/detail/port_utils.hpp>
-
-#include <pure/port_connection.hpp>
-#include <pure/detail/active_connection_proxy.hpp>
+#include <flexcore/core/traits.hpp>
+#include <flexcore/core/connection_util.hpp>
+#include <flexcore/pure/detail/port_traits.hpp>
+#include <flexcore/pure/detail/port_utils.hpp>
+#include <flexcore/pure/port_connection.hpp>
+#include <flexcore/pure/detail/active_connection_proxy.hpp>
 
 #include <iostream>
 

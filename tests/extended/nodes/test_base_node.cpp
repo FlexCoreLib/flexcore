@@ -1,7 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <extended/base_node.hpp>
-
+#include <flexcore/extended/base_node.hpp>
 #include <nodes/owning_node.hpp>
 
 // std

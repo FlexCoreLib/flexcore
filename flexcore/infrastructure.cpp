@@ -1,5 +1,5 @@
-#include "infrastructure.hpp"
-#include <scheduler/parallelscheduler.hpp>
+#include <flexcore/infrastructure.hpp>
+#include <flexcore/scheduler/parallelscheduler.hpp>
 
 namespace fc
 {

@@ -1,7 +1,7 @@
 #ifndef SRC_THREADING_SERIALSCHEDULER_HPP_
 #define SRC_THREADING_SERIALSCHEDULER_HPP_
 
-#include "scheduler.hpp"
+#include <flexcore/scheduler/scheduler.hpp>
 #include <mutex>
 
 namespace fc

@@ -1,7 +1,7 @@
 #ifndef SRC_NODES_LIST_MANIPULATION_HPP_
 #define SRC_NODES_LIST_MANIPULATION_HPP_
 
-#include <core/traits.hpp>
+#include <flexcore/core/traits.hpp>
 #include <map>
 
 // boost

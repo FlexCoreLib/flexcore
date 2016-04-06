@@ -6,10 +6,10 @@
 #include <memory>
 
 // flexcore
-#include <pure/detail/port_traits.hpp>
-#include <pure/detail/port_utils.hpp>
-#include <core/connection_util.hpp>
-#include <pure/detail/active_connection_proxy.hpp>
+#include <flexcore/pure/detail/port_traits.hpp>
+#include <flexcore/pure/detail/port_utils.hpp>
+#include <flexcore/core/connection_util.hpp>
+#include <flexcore/pure/detail/active_connection_proxy.hpp>
 
 namespace fc
 {

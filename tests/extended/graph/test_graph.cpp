@@ -1,12 +1,10 @@
 #include <boost/test/unit_test.hpp>
-
-#include <extended/graph/graph.hpp>
-#include <extended/graph/graph_connectable.hpp>
-
 #include <boost/graph/graph_utility.hpp>
 
-#include <extended/base_node.hpp>
-#include <ports.hpp>
+#include <flexcore/extended/graph/graph.hpp>
+#include <flexcore/extended/graph/graph_connectable.hpp>
+#include <flexcore/extended/base_node.hpp>
+#include <flexcore/ports.hpp>
 
 
 using namespace fc;

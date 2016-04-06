@@ -1,9 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
-#include "pure/event_sinks.hpp"
-#include "pure/event_sources.hpp"
+#include <flexcore/pure/event_sinks.hpp>
+#include <flexcore/pure/event_sources.hpp>
+#include <flexcore/core/connection.hpp>
 #include "event_sink_with_queue.hpp"
-#include "core/connection.hpp"
 
 using namespace fc;
 

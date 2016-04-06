@@ -8,7 +8,7 @@
 #ifndef SRC_SCHEDULER_PARALLELREGION_HPP_
 #define SRC_SCHEDULER_PARALLELREGION_HPP_
 
-#include <pure/event_sources.hpp>
+#include <flexcore/pure/event_sources.hpp>
 #include <string>
 
 namespace fc

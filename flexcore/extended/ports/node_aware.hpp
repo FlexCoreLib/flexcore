@@ -1,11 +1,11 @@
 #ifndef SRC_PORTS_NODE_AWARE_HPP_
 #define SRC_PORTS_NODE_AWARE_HPP_
 
-#include <pure/detail/port_traits.hpp>
-#include <core/connection_util.hpp>
-#include <core/connection.hpp>
-#include "connection_buffer.hpp"
-#include <scheduler/parallelregion.hpp>
+#include <flexcore/pure/detail/port_traits.hpp>
+#include <flexcore/core/connection_util.hpp>
+#include <flexcore/core/connection.hpp>
+#include <flexcore/extended/ports/connection_buffer.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
 
 namespace fc
 {

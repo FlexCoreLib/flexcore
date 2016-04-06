@@ -1,8 +1,7 @@
 #include <boost/test/unit_test.hpp>
-#include <utils/serialisation/serializer.hpp>
-#include <utils/serialisation/deserializer.hpp>
-
-#include <core/connection.hpp>
+#include <flexcore/utils/serialisation/serializer.hpp>
+#include <flexcore/utils/serialisation/deserializer.hpp>
+#include <flexcore/core/connection.hpp>
 
 #include <limits>
 #include <vector>

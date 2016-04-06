@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <extended/nodes/event_nodes.hpp>
+#include <flexcore/extended/nodes/event_nodes.hpp>
 
 
 using namespace fc;

@@ -1,13 +1,11 @@
 #ifndef SRC_NODES_GENERIC_HPP_
 #define SRC_NODES_GENERIC_HPP_
 
-#include <core/traits.hpp>
-#include <extended/ports/token_tags.hpp>
-
-#include <pure/pure_ports.hpp>
-
-#include <pure/pure_node.hpp>
-#include <extended/base_node.hpp>
+#include <flexcore/core/traits.hpp>
+#include <flexcore/extended/ports/token_tags.hpp>
+#include <flexcore/pure/pure_ports.hpp>
+#include <flexcore/pure/pure_node.hpp>
+#include <flexcore/extended/base_node.hpp>
 
 #include <utility>
 #include <map>

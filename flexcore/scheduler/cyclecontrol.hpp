@@ -1,9 +1,9 @@
 #ifndef SRC_THREADING_CYCLECONTROL_HPP_
 #define SRC_THREADING_CYCLECONTROL_HPP_
 
-#include "clock.hpp"
-#include "scheduler.hpp"
-#include <pure/event_sources.hpp>
+#include <flexcore/scheduler/clock.hpp>
+#include <flexcore/scheduler/scheduler.hpp>
+#include <flexcore/pure/event_sources.hpp>
 
 #include <condition_variable>
 #include <deque>

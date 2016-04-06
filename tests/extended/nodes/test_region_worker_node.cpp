@@ -1,9 +1,8 @@
-#include <scheduler/parallelregion.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <core/connectables.hpp>
-#include <extended/nodes/region_worker_node.hpp>
-#include <ports.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
+#include <flexcore/core/connectables.hpp>
+#include <flexcore/extended/nodes/region_worker_node.hpp>
+#include <flexcore/ports.hpp>
 
 using namespace fc;
 

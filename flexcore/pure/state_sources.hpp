@@ -5,9 +5,9 @@
 #include <functional>
 #include <memory>
 
-#include <core/connection.hpp>
-#include <core/traits.hpp>
-#include <pure/detail/active_connection_proxy.hpp>
+#include <flexcore/core/connection.hpp>
+#include <flexcore/core/traits.hpp>
+#include <flexcore/pure/detail/active_connection_proxy.hpp>
 
 namespace fc
 {

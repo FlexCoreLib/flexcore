@@ -1,8 +1,8 @@
 // boost
 #include <boost/test/unit_test.hpp>
 
-#include <extended/ports/connection_buffer.hpp>
-#include <pure/pure_ports.hpp>
+#include <flexcore/extended/ports/connection_buffer.hpp>
+#include <flexcore/pure/pure_ports.hpp>
 
 
 using namespace fc;

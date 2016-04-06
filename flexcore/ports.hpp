@@ -1,11 +1,10 @@
 #ifndef SRC_PORTS_PORTS_HPP_
 #define SRC_PORTS_PORTS_HPP_
 
-#include <extended/ports/node_aware.hpp>
-#include <extended/ports/token_tags.hpp>
-#include <pure/pure_ports.hpp>
-
-#include <extended/graph/graph_connectable.hpp>
+#include <flexcore/extended/ports/node_aware.hpp>
+#include <flexcore/extended/ports/token_tags.hpp>
+#include <flexcore/extended/graph/graph_connectable.hpp>
+#include <flexcore/pure/pure_ports.hpp>
 
 namespace fc
 {

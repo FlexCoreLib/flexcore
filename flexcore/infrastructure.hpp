@@ -1,8 +1,8 @@
 #ifndef SRC_INFRASTRUCTURE_HPP_
 #define SRC_INFRASTRUCTURE_HPP_
 
-#include <extended/base_node.hpp>
-#include <scheduler/cyclecontrol.hpp>
+#include <flexcore/extended/base_node.hpp>
+#include <flexcore/scheduler/cyclecontrol.hpp>
 
 namespace fc
 {

@@ -1,4 +1,4 @@
-#include <scheduler/parallelscheduler.hpp>
+#include <flexcore/scheduler/parallelscheduler.hpp>
 
 #include <cassert>
 #include <utility>

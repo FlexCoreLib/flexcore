@@ -1,4 +1,4 @@
-#include "base_node.hpp"
+#include <flexcore/extended/base_node.hpp>
 
 #include <stack>
 

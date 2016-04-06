@@ -1,4 +1,4 @@
-#include <scheduler/cyclecontrol.hpp>
+#include <flexcore/scheduler/cyclecontrol.hpp>
 
 #include <stdexcept>
 #include <algorithm>

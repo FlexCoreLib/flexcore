@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <extended/nodes/generic.hpp>
+#include <flexcore/extended/nodes/generic.hpp>
 #include <pure/events/event_sink_with_queue.hpp>
 
 #include "owning_node.hpp"

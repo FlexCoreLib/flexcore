@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scheduler/serialschedulers.hpp>
+#include <flexcore/scheduler/serialschedulers.hpp>
 #include <future>
 
 auto make_blocking_scheduler()

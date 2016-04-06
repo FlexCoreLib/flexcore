@@ -1,7 +1,7 @@
-#include <scheduler/parallelregion.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <pure/pure_ports.hpp>
+#include <flexcore/pure/pure_ports.hpp>
 
 using namespace fc;
 

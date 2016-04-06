@@ -1,4 +1,4 @@
-#include "serialschedulers.hpp"
+#include <flexcore/scheduler/serialschedulers.hpp>
 
 namespace fc
 {

@@ -1,13 +1,13 @@
 #ifndef SRC_GRAPH_GRAPH_CONNECTABLE_HPP_
 #define SRC_GRAPH_GRAPH_CONNECTABLE_HPP_
 
-#include <extended/graph/graph.hpp>
-#include <extended/graph/traits.hpp>
-#include <core/connection.hpp>
-#include <core/connection_util.hpp>
+#include <flexcore/extended/graph/graph.hpp>
+#include <flexcore/extended/graph/traits.hpp>
+#include <flexcore/core/connection.hpp>
+#include <flexcore/core/connection_util.hpp>
 
-#include <core/detail/connection_utils.hpp>
-#include <core/connection_util.hpp>
+#include <flexcore/core/detail/connection_utils.hpp>
+#include <flexcore/core/connection_util.hpp>
 
 namespace fc
 {

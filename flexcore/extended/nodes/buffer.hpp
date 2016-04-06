@@ -1,7 +1,7 @@
 #ifndef SRC_NODES_BUFFER_HPP_
 #define SRC_NODES_BUFFER_HPP_
 
-#include <core/traits.hpp>
+#include <flexcore/core/traits.hpp>
 
 #include <boost/range.hpp>
 #include <boost/circular_buffer.hpp>
