@@ -1,7 +1,11 @@
-flexcore
+flexcore {#mainpage}
 ========
 
 A generic C++ library for dataflow programming.
+
+Usage
+-----
+See the [getting started](GETTING_STARTED.md) page.
 
 Installation
 ------------
