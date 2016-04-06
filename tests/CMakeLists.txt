@@ -34,7 +34,8 @@ ADD_EXECUTABLE( test_executable
 	scheduler/test_parallel_region.cpp
 	scheduler/test_parallelscheduler.cpp
 	scheduler/test_serialscheduler.cpp
-	tokens/test_moving.cpp )
+	tokens/test_moving.cpp
+	util/test_generic_container.cpp)
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
 	PRIVATE "." )
