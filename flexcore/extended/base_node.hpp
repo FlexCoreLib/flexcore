@@ -193,6 +193,17 @@ public:
 				name,
 				forest_)));
 	}
+
+	template<class node_t, class ... args_t>
+	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
+	make_child_named(std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
+	{
+		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				std::move(r),
+				std::move(name),
+				forest_)));
+	}
 protected:
 	// stores the access to the forest this node is contained in.
 	forest_t* forest_;
