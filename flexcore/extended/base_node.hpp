@@ -220,7 +220,7 @@ public:
 
 	root_node(std::string n, std::shared_ptr<parallel_region> r);
 
-	auto& nodes() { return *tree_root; }
+	owning_base_node& nodes() { return *tree_root; }
 
 private:
 	std::unique_ptr<forest_t> forest_;
