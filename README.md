@@ -5,7 +5,7 @@ A generic C++ library for dataflow programming.
 
 Usage
 -----
-See the [getting started](GETTING_STARTED.md) page.
+See the [getting started](docs/GETTING_STARTED.md) page.
 
 Installation
 ------------
@@ -32,7 +32,7 @@ To override the library dir suffix specify the variable -DLIB_SUFFIX= in the
 call to cmake. The libraries will then be installed in
 <prefix>/lib${LIB_SUFFIX}
 
-To use flexcore in a cmake based project check the [usage](USING.md) document.
+To use flexcore in a cmake based project check the [usage](docs/USING.md) document.
 
 Dependencies
 ------------
