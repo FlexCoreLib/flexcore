@@ -146,10 +146,10 @@ at given intervals.
 #include <iostream>
 #include <sstream>
 
-struct my_region_node : fc::owning_base_node
+struct my_region_node : fc::tree_base_node
 {
-	 my_region_node(std::shared_ptr<fc::parallel_region> reg, std::string name, forest_t* f)
-		: owning_base_node(reg, name, f)
+	 my_region_node(std::string name, std::shared_ptr<fc::parallel_region> reg)
+		: tree_base_node(reg, name)
 		, i(0)
 		, src(this, [this] { return i++; })
 		, sink(this)
@@ -175,9 +175,9 @@ int main()
 	auto region_b = infra.add_region("region b", fc::thread::cycle_control::fast_tick);
 
 	my_region_node* node_a = infra.node_owner()
-	                              .make_child_named<my_region_node>(region_a, "node a");
+	                              .make_child<my_region_node>(region_a, "node a");
 	my_region_node* node_b = infra.node_owner()
-	                              .make_child_named<my_region_node>(region_b, "node b");
+	                              .make_child<my_region_node>(region_b, "node b");
 
 	node_a->src >> node_b->sink;
 	node_b->src >> node_a->sink;
