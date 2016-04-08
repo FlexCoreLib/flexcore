@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	test_in_port test_in(*(root_2.region()), write_param);
 	test_out_port test_out(*(root_1.region()));
 
-	test_out >> [](int i){ return i+1;} >> test_in;
+	test_out >> [](auto i){ return i+1;} >> test_in;
 
 	BOOST_CHECK_EQUAL(test_value, 0);
 	test_out.fire(1);
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	static_assert(std::is_same<int,
 			result_of_t<test_out_port>>{},
 			"return value of source is defined to be int");
-	source >> sink;
+	source >> [](auto in){ return in;} >> sink;
 
 
 	BOOST_CHECK_EQUAL(sink.get(), 0);

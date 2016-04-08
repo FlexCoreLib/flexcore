@@ -236,4 +236,5 @@ BOOST_AUTO_TEST_CASE( apply_to_connection )
 	BOOST_CHECK(b_visited);
 	BOOST_CHECK(c_visited);
 }
+
 BOOST_AUTO_TEST_SUITE_END()
