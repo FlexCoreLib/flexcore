@@ -16,9 +16,11 @@ public:
 	void stop() override;
 	size_t nr_of_waiting_tasks() const override;
 	~blocking_scheduler() override;
+
+	blocking_scheduler() = default;
 private:
 	mutable std::mutex mutex;
-	bool stopped;
+	bool stopped = false;
 };
 } /* namespace thread */
 } /* namespace fc */

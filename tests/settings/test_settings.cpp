@@ -61,4 +61,26 @@ BOOST_AUTO_TEST_CASE(test_setting_from_json_file)
 	BOOST_CHECK_EQUAL(float_setting(), 0.5);
 }
 
+BOOST_AUTO_TEST_CASE(test_incorrect_data_type)
+{
+	std::stringstream ss;
+	ss << "{ "
+			"\"test_int\": 1,"
+			"\"test_float\": 0.5 "
+			"}";
+
+	json_file_setting_facade backend{ss};
+
+	//try to read string setting from float value
+	auto generate_illegal_setting = [&backend]()
+	{
+		setting<std::string, json_file_setting_facade> float_setting =
+				{setting_id{"test_float"}, backend, "blabla"};
+
+		return std::move(float_setting);
+	};
+
+	BOOST_CHECK_THROW(generate_illegal_setting(),cereal::Exception);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
