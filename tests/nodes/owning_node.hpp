@@ -28,7 +28,7 @@ public:
 	{
 		assert(r);
 		assert(owned_forest);
-		auto node = std::make_unique<owning_base_node>(owned_forest.get(), r, name);
+		auto node = std::make_unique<root_node>(owned_forest.get(), r, name);
 		owner = static_cast<owning_base_node*>(
 		    owned_forest->insert(owned_forest->begin(), std::move(node))->get());
 		assert(owner);

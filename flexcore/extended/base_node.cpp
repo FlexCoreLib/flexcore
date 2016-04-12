@@ -54,7 +54,8 @@ tree_base_node::tree_base_node(
 
 graph::connection_graph& tree_base_node::get_graph() const
 {
-	return graph::connection_graph::access();
+	auto* root_node = forest_->begin()->get();
+	return dynamic_cast<fc::root_node&>(*root_node).graph();
 }
 
 forest_t::iterator owning_base_node::self() const

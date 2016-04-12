@@ -75,7 +75,7 @@ int main()
 	event_source<std::string> string_source_2(child_c);
 	string_source_2 >> string_sink;
 
-	graph::connection_graph::access().print(std::cout);
+	infrastructure.get_graph().print(std::cout);
 
 	infrastructure.start_scheduler();
 	BOOST_SCOPE_EXIT(&infrastructure) {

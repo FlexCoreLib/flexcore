@@ -39,9 +39,8 @@ namespace
 
 BOOST_AUTO_TEST_CASE(test_graph_creation)
 {
-	graph::connection_graph::access().clear_graph();
-	auto& graph = graph::connection_graph::access();
 	forest_owner forest{"forest", std::make_shared<parallel_region>("r")};
+	auto& graph = forest.get_graph();
 	auto& r = forest.nodes();
 	auto dummy_node_factory = [&](auto name) { return r.make_child_named<dummy_node>(name); };
 	dummy_node& source_1 = *dummy_node_factory("state_source 1");
@@ -67,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 
 	std::ostringstream out_stream;
 
-	graph::connection_graph::access().print(out_stream);
+	graph.print(out_stream);
 	g_source.fire(1);
 
 	auto dot_string = out_stream.str();
@@ -79,8 +78,6 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	// nr of lines in dot graph is nr of nodes and named lambdas
 	// + nr of connections + 2 (one for begin one for end)
 	BOOST_CHECK_EQUAL(line_count, 10 + 8 + 2);
-
-	graph::connection_graph::access().clear_graph();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

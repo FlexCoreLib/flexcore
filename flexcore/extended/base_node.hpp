@@ -221,6 +221,9 @@ class root_node : public owning_base_node
 {
 public:
 	root_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string n);
+	graph::connection_graph& graph() { return graph_; }
+private:
+	graph::connection_graph graph_;
 };
 
 /**
@@ -237,6 +240,7 @@ public:
 	forest_owner(std::string n, std::shared_ptr<parallel_region> r);
 
 	owning_base_node& nodes() { return *tree_root; }
+	graph::connection_graph& get_graph() { return tree_root->graph(); }
 
 private:
 	std::unique_ptr<forest_t> forest_;

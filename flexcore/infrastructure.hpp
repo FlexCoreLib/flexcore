@@ -17,13 +17,13 @@ public:
 			const virtual_clock::steady::duration& tick_rate);
 
 	owning_base_node& node_owner() { return forest_root.nodes(); }
+	graph::connection_graph& get_graph() { return forest_root.get_graph(); }
 	void infinite_main_loop();
 	void start_scheduler() { scheduler.start(); }
 	void stop_scheduler() { scheduler.stop(); }
 	void iterate_main_loop();
 
 private:
-//	graph::connection_graph abstract_graph;
 	thread::cycle_control scheduler;
 	forest_owner forest_root;
 };

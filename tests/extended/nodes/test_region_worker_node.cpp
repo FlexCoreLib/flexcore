@@ -3,18 +3,18 @@
 #include <flexcore/core/connectables.hpp>
 #include <flexcore/extended/nodes/region_worker_node.hpp>
 #include <flexcore/ports.hpp>
+#include "nodes/owning_node.hpp"
 
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_region_worker)
 
-static tree_base_node::forest_t f;
 struct triggered_counter : public region_worker_node
 {
 public:
-	triggered_counter(std::string name, std::shared_ptr<parallel_region> parent_region)
+	triggered_counter(forest_t* f, std::shared_ptr<parallel_region> parent_region, std::string name)
 		: region_worker_node([this](){out_event_source.fire(++work_counter);},
-				 &f, parent_region, name)
+		                     f, parent_region, name)
 		, out_event_source(this)
 		, work_counter(0)
 	{
@@ -33,8 +33,9 @@ struct container_sink
 BOOST_AUTO_TEST_CASE(test_worker)
 {
 	auto region = std::make_shared<parallel_region>("MyRegion");
+	tests::owning_node owner(region);
 
-	triggered_counter function_gen("Counter", region);
+	triggered_counter& function_gen = *owner.make_child_named<triggered_counter>("Counter");
 
 	container_sink sink;
 

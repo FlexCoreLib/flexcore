@@ -72,18 +72,12 @@ private:
 class connection_graph
 {
 public:
-	/// Static access to the singleton.
-	static connection_graph& access()
-	{
-		static connection_graph s;
-		return s;
-	}
-
+	connection_graph();
 	connection_graph(const connection_graph&) = delete;
 
 	/// Adds a new Connection without ports to the graph.
 	void add_connection(const graph_node_properties& source_node,
-			const graph_node_properties& sink_node);
+	                    const graph_node_properties& sink_node);
 
 	/// Prints current state of the abstract graph in graphviz format to stream.
 	void print(std::ostream& stream);
@@ -94,8 +88,6 @@ public:
 	~connection_graph();
 
 private:
-	connection_graph();
-
 	struct impl;
 	std::unique_ptr<impl> pimpl;
 };

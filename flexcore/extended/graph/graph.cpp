@@ -52,7 +52,7 @@ connection_graph::~connection_graph() = default;
 void connection_graph::print(std::ostream& stream)
 {
 	std::lock_guard<std::mutex> lock(pimpl->graph_mutex);
-	const auto& graph = connection_graph::access().pimpl->dataflow_graph;
+	const auto& graph = pimpl->dataflow_graph;
 	boost::write_graphviz(stream, graph,
 		boost::make_label_writer(boost::get(&vertex::name, graph)),
 		boost::make_label_writer(boost::get(&edge::name, graph)));
@@ -85,8 +85,7 @@ void connection_graph::add_connection(const graph_node_properties& source_node,
 void connection_graph::clear_graph()
 {
 	std::lock_guard<std::mutex> lock(pimpl->graph_mutex);
-	auto& graph = connection_graph::access().pimpl->dataflow_graph;
-
+	auto& graph = pimpl->dataflow_graph;
 	graph.clear();
 }
 
