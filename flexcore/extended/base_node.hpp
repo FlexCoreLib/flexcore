@@ -214,6 +214,12 @@ private:
 
 };
 
+class root_node : public owning_base_node
+{
+public:
+	root_node(std::shared_ptr<parallel_region> r, std::string n, forest_t* f);
+};
+
 /**
  * \brief Root node for building node trees.
  *
@@ -232,7 +238,7 @@ public:
 private:
 	std::unique_ptr<forest_t> forest_;
 	/// non_owning access to first node in tree, ownership is in forest.
-	owning_base_node* tree_root;
+	root_node* tree_root;
 };
 
 /**

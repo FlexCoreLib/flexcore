@@ -71,10 +71,15 @@ forest_owner::forest_owner(std::string n, std::shared_ptr<parallel_region> r)
 {
 	auto temp_it = adobe::trailing_of(
 	        forest_->insert(forest_->begin(),
-	                std::make_unique<owning_base_node>(r, n, forest_.get())));
-	tree_root = static_cast<owning_base_node*>(temp_it->get());
+	                std::make_unique<root_node>(r, n, forest_.get())));
+	tree_root = static_cast<root_node*>(temp_it->get());
 	assert(forest_);
 	assert(tree_root);
+}
+
+root_node::root_node(std::shared_ptr<parallel_region> r, std::string n, forest_t* f)
+    : owning_base_node(r, n, f)
+{
 }
 
 }
