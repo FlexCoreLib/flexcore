@@ -43,12 +43,6 @@ public:
 
 	graph::graph_node_properties graph_info() const { return graph_info_; }
 
-	/*
-	 * iterator self_ allows access to the node inside the forest.
-	 * Unfortunately this creates a circular reference of the node to itself.
-	 */
-	forest_t::iterator self_;
-
 private:
 	/* Information about which region the node belongs to */
 	std::shared_ptr<parallel_region> region_;
@@ -204,7 +198,9 @@ public:
 				std::move(name),
 				forest_)));
 	}
+
 protected:
+	forest_t::iterator self() const;
 	// stores the access to the forest this node is contained in.
 	forest_t* forest_;
 
@@ -266,9 +262,8 @@ erase_with_subtree(
  * and the name of the node itself.
  * The names are separated by a separation token.
  */
-std::string full_name(
-		const tree_base_node::forest_t& forest,
-		tree_base_node::forest_t::const_iterator position);
+std::string full_name(tree_base_node::forest_t& forest,
+                      const tree_base_node* node);
 
 } // namespace fc
 

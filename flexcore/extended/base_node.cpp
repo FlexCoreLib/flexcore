@@ -4,13 +4,24 @@
 
 namespace fc
 {
+using forest_t = tree_base_node::forest_t;
+
+static forest_t::iterator find_self(forest_t* forest, const tree_base_node* node)
+{
+	auto self = std::find_if(forest->begin(), forest->end(), [=](auto& other_uniq_ptr)
+	                         {
+		                         return node == other_uniq_ptr.get();
+	                         });
+	assert(self != forest->end());
+	return adobe::trailing_of(self);
+}
 
 static constexpr auto name_seperator = "/";
 
-std::string full_name(
-        const tree_base_node::forest_t& forest,
-        tree_base_node::forest_t::const_iterator position)
+std::string full_name(forest_t& forest,
+                      const tree_base_node* node)
 {
+	auto position = find_self(&forest, node);
 	assert(position != forest.end());
 	//push names of parent / grandparent ... to stack to later reverse order.
 	std::stack<std::string> name_stack;
@@ -32,24 +43,23 @@ std::string full_name(
 tree_base_node::tree_base_node(
 		std::shared_ptr<parallel_region> r,
 		std::string name)
-	: self_() // todo this currently allows construction of node with invalid iterator self_
-	, region_(r)
+	: region_(r)
 	, graph_info_(name)
 {
-assert(region_);
+	assert(region_);
 }
 
-fc::tree_base_node* owning_base_node::add_child(
-		std::unique_ptr<tree_base_node> child)
+forest_t::iterator owning_base_node::self() const
+{
+	return find_self(this->forest_, this);
+}
+
+fc::tree_base_node* owning_base_node::add_child(std::unique_ptr<tree_base_node> child)
 {
 	assert(forest_);
 	assert(child);
-	//we need to store an iterator and then cast back to node_t*
-	//to avoid use after move on child.
-	typename forest_t::iterator child_it = adobe::trailing_of(
-	        forest_->insert(self_, std::move(child)));
-	(*child_it)->self_ = child_it;
-	assert(adobe::find_parent(child_it) == self_);
+	auto child_it = adobe::trailing_of(forest_->insert(self(), std::move(child)));
+	assert(adobe::find_parent(child_it) == self());
 	assert(adobe::find_parent(child_it) != forest_->end());
 	return child_it->get();
 }
@@ -63,7 +73,6 @@ root_node::root_node(std::string n, std::shared_ptr<parallel_region> r)
 	        forest_->insert(forest_->begin(),
 	                std::make_unique<owning_base_node>(r, n, forest_.get())));
 	tree_root = static_cast<owning_base_node*>(temp_it->get());
-	tree_root->self_ = temp_it;
 	assert(forest_);
 	assert(tree_root);
 }

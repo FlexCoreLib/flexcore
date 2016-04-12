@@ -24,14 +24,14 @@ public:
 			= std::make_shared<parallel_region>("test_root_region"),
 			std::string name = "owner")
 		: owned_forest(std::make_unique<forest_t>())
-		, owner(r , name, owned_forest.get())
+		, owner(nullptr)
 	{
 		assert(r);
 		assert(owned_forest);
-
-		owner.self_ = adobe::trailing_of(owned_forest->insert(
-				owned_forest->begin(), std::make_unique<tree_base_node>(r, name)));
-
+		auto node = std::make_unique<owning_base_node>(r, name, owned_forest.get());
+		owner = static_cast<owning_base_node*>(
+		    owned_forest->insert(owned_forest->begin(), std::move(node))->get());
+		assert(owner);
 	}
 
 	explicit owning_node(std::string name)
@@ -42,33 +42,33 @@ public:
 	template <class node_t, class ... args_t>
 	node_t* make_child(args_t&& ... args)
 	{
-		return owner.make_child<node_t>(std::forward<args_t>(args)...);
+		return owner->make_child<node_t>(std::forward<args_t>(args)...);
 	}
 
 	template<class node_t, class ... args_t>
 	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t&& ... args)
 	{
-		return owner.make_child_named<node_t>(name, std::forward<args_t>(args)...);
+		return owner->make_child_named<node_t>(name, std::forward<args_t>(args)...);
 	}
 
 	template<class node_t, class ... args_t>
 	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
 	make_child_named(std::string name, args_t&& ... args)
 	{
-		return owner.make_child_named<node_t>(name, std::forward<args_t>(args)...);
+		return owner->make_child_named<node_t>(name, std::forward<args_t>(args)...);
 	}
 
 	forest_t* forest() { return owned_forest.get(); }
 	const forest_t* forest() const { return owned_forest.get(); }
 
-	auto region() const { return owner.region(); }
+	auto region() const { return owner->region(); }
 
-	auto& node() { return owner; };
+	auto& node() { return *owner; };
 
 private:
 	std::unique_ptr<forest_t> owned_forest;
-	owning_base_node owner;
+	owning_base_node* owner;
 
 };
 
