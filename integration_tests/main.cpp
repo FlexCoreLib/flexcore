@@ -15,8 +15,8 @@ using namespace fc;
 
 struct null : tree_base_node
 {
-	null(std::string name, std::shared_ptr<fc::parallel_region> r)
-			: tree_base_node(r, name) {}
+	null(std::string name, forest_t* f, std::shared_ptr<fc::parallel_region> r)
+			: tree_base_node(f, r, name) {}
 };
 
 int main()

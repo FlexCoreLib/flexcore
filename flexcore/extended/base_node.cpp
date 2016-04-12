@@ -41,11 +41,14 @@ std::string full_name(forest_t& forest,
 }
 
 tree_base_node::tree_base_node(
+		forest_t* f,
 		std::shared_ptr<parallel_region> r,
 		std::string name)
-	: region_(r)
+	: forest_(f)
+	, region_(r)
 	, graph_info_(name)
 {
+	assert(forest_);
 	assert(region_);
 }
 
@@ -69,16 +72,16 @@ forest_owner::forest_owner(std::string n, std::shared_ptr<parallel_region> r)
 		: forest_(std::make_unique<forest_t>()),
 		  tree_root(nullptr)
 {
+	assert(forest_);
 	auto temp_it = adobe::trailing_of(
 	        forest_->insert(forest_->begin(),
-	                std::make_unique<root_node>(r, n, forest_.get())));
+	                std::make_unique<root_node>(forest_.get(), r, n)));
 	tree_root = static_cast<root_node*>(temp_it->get());
-	assert(forest_);
 	assert(tree_root);
 }
 
-root_node::root_node(std::shared_ptr<parallel_region> r, std::string n, forest_t* f)
-    : owning_base_node(r, n, f)
+root_node::root_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string n)
+    : owning_base_node(f, r, n)
 {
 }
 

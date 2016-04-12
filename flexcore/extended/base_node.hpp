@@ -34,7 +34,7 @@ public:
 	template<class data_t> using state_source = ::fc::state_source<data_t>;
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
-	tree_base_node(std::shared_ptr<parallel_region> r, std::string name);
+	tree_base_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string name);
 	virtual ~tree_base_node() = default;
 
 	const std::shared_ptr<parallel_region>& region() const { return region_; }
@@ -43,6 +43,8 @@ public:
 
 	graph::graph_node_properties graph_info() const { return graph_info_; }
 
+protected:
+	forest_t* forest_;
 private:
 	/* Information about which region the node belongs to */
 	std::shared_ptr<parallel_region> region_;
@@ -74,11 +76,9 @@ private:
 class owning_base_node : public tree_base_node
 {
 public:
-	owning_base_node(std::shared_ptr<parallel_region> r, std::string name, forest_t* f)
-		: tree_base_node(r, name)
-		, forest_(f)
+	owning_base_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string name)
+		: tree_base_node(f, r, name)
 	{
-		assert(forest_); //check invariant
 	}
 
 	/**
@@ -98,6 +98,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
+				forest_,
 				region())));
 	}
 
@@ -114,6 +115,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
+				forest_,
 				r)));
 	}
 	/**
@@ -132,8 +134,9 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				region(),
-				forest_)));
+				forest_,
+				region()
+				)));
 	}
 
 	/**
@@ -149,8 +152,8 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				r,
-				forest_)));
+				forest_,
+				r)));
 	}
 	/**
 	 * \brief Creates a new child node of type node_t from args.
@@ -165,6 +168,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
+				forest_,
 				region(),
 				name)));
 	}
@@ -183,9 +187,9 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
+				forest_,
 				region(),
-				name,
-				forest_)));
+				name)));
 	}
 
 	template<class node_t, class ... args_t>
@@ -194,16 +198,14 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
+				forest_,
 				std::move(r),
-				std::move(name),
-				forest_)));
+				std::move(name))));
 	}
 
 protected:
 	forest_t::iterator self() const;
 	// stores the access to the forest this node is contained in.
-	forest_t* forest_;
-
 private:
 	/**
 	 * Takes ownership of child node and inserts into tree.
@@ -217,7 +219,7 @@ private:
 class root_node : public owning_base_node
 {
 public:
-	root_node(std::shared_ptr<parallel_region> r, std::string n, forest_t* f);
+	root_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string n);
 };
 
 /**

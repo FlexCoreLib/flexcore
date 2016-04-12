@@ -8,12 +8,13 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_region_worker)
 
+static tree_base_node::forest_t f;
 struct triggered_counter : public region_worker_node
 {
 public:
 	triggered_counter(std::string name, std::shared_ptr<parallel_region> parent_region)
 		: region_worker_node([this](){out_event_source.fire(++work_counter);},
-				parent_region, name)
+				 &f, parent_region, name)
 		, out_event_source(this)
 		, work_counter(0)
 	{

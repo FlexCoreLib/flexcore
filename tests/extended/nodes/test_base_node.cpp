@@ -13,13 +13,13 @@ namespace // unnamed
 template<class data_t>
 struct node_class : tree_base_node
 {
-	node_class(data_t a, std::shared_ptr<parallel_region> r)
-		: tree_base_node(r, "test_node")
+	node_class(data_t a, forest_t* f, std::shared_ptr<parallel_region> r)
+		: tree_base_node(f, r, "test_node")
 		, value(a)
 	{}
 
-	node_class(data_t a, std::shared_ptr<parallel_region> r, std::string name)
-		: tree_base_node(r, name)
+	node_class(data_t a, forest_t* f, std::shared_ptr<parallel_region> r, std::string name)
+		: tree_base_node(f, r, name)
 		, value(a)
 	{}
 
@@ -36,9 +36,9 @@ struct node_class : tree_base_node
 
 struct null : tree_base_node
 {
-	explicit null(std::shared_ptr<parallel_region> r,
+	explicit null(forest_t* f, std::shared_ptr<parallel_region> r,
 			std::string name = "null")
-	: tree_base_node(r, name) {}
+	: tree_base_node(f, r, name) {}
 };
 } // unnamed namespace
 
@@ -61,16 +61,16 @@ namespace
 class test_owning_node : public owning_base_node
 {
 public:
-	explicit test_owning_node(std::shared_ptr<parallel_region> r, forest_t* f ) :
-			owning_base_node(r, "test_owning_node", f) {}
+	explicit test_owning_node(forest_t* f, std::shared_ptr<parallel_region> r) :
+			owning_base_node(f, r, "test_owning_node") {}
 	tree_base_node::forest_t::iterator add_child()
 	{
 		make_child<test_owning_node>();
 		return ++adobe::trailing_of(adobe::child_begin(self()).base());
 	}
 
-	explicit test_owning_node(std::shared_ptr<parallel_region> r, std::string name, forest_t* f ) :
-			owning_base_node(r, name, f) {}
+	explicit test_owning_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string name) :
+			owning_base_node(f, r, name) {}
 
 	size_t nr_of_children()
 	{

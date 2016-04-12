@@ -15,8 +15,8 @@ namespace
 {
 	struct dummy_node : tree_base_node
 	{
-		dummy_node( const std::string& name)
-			: tree_base_node(std::make_shared<parallel_region>(name), name)
+		dummy_node(forest_t* f, std::shared_ptr<parallel_region> r, const std::string& name)
+			: tree_base_node(f, r, name)
 			, out_port(this, [](){ return 0;})
 			, in_port(this)
 		{
@@ -40,11 +40,13 @@ namespace
 BOOST_AUTO_TEST_CASE(test_graph_creation)
 {
 	graph::connection_graph::access().clear_graph();
-
-	dummy_node source_1{"state_source 1"};
-	dummy_node source_2{"state_source 2"};
-	dummy_node intermediate{"intermediate"};
-	dummy_node sink{"state_sink"};
+	forest_owner forest{"forest", std::make_shared<parallel_region>("r")};
+	auto& r = forest.nodes();
+	auto dummy_node_factory = [&](auto name) { return r.make_child_named<dummy_node>(name); };
+	dummy_node& source_1 = *dummy_node_factory("state_source 1");
+	dummy_node& source_2 = *dummy_node_factory("state_source 2");
+	dummy_node& intermediate = *dummy_node_factory("intermediate");
+	dummy_node& sink = *dummy_node_factory("state_sink");
 
 	source_1.out() >> [](int i){ return i; } >> intermediate.in();
 	source_2.out() >> (graph::named([](int i){ return i; }, "incr") >> intermediate.in());
