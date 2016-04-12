@@ -40,6 +40,7 @@ namespace
 BOOST_AUTO_TEST_CASE(test_graph_creation)
 {
 	graph::connection_graph::access().clear_graph();
+	auto& graph = graph::connection_graph::access();
 	forest_owner forest{"forest", std::make_shared<parallel_region>("r")};
 	auto& r = forest.nodes();
 	auto dummy_node_factory = [&](auto name) { return r.make_child_named<dummy_node>(name); };
@@ -57,9 +58,9 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	typedef graph::graph_connectable<pure::event_source<int>> graph_source;
 	typedef graph::graph_connectable<pure::event_sink<int>> graph_sink;
 
-	auto g_source = graph_source{graph::graph_node_properties{"event_source"}};
+	auto g_source = graph_source{graph, graph::graph_node_properties{"event_source"}};
 	int test_val = 0;
-	auto g_sink = graph_sink{graph::graph_node_properties{"event_sink"},
+	auto g_sink = graph_sink{graph, graph::graph_node_properties{"event_sink"},
 			[&test_val](int i){test_val = i;}};
 
 	g_source >> graph::named([](int i){ return i; }, "l 3") >> g_sink;

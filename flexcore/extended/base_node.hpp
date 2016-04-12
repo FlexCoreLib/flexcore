@@ -42,6 +42,7 @@ public:
 	std::string name() const { return graph_info_.name(); }
 
 	graph::graph_node_properties graph_info() const { return graph_info_; }
+	graph::connection_graph& get_graph() const;
 
 protected:
 	forest_t* forest_;

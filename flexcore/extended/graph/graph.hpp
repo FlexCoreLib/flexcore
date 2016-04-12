@@ -100,14 +100,6 @@ private:
 	std::unique_ptr<impl> pimpl;
 };
 
-/**
- * \brief Adds a new edge to the graph representation.
- *
- * The edge is leading from source to sink without ports.
- */
-void add_to_graph(const graph_node_properties& source_node,
-		const graph_node_properties& sink_node);
-
 }  // namespace graph
 }  // namespace fc
 

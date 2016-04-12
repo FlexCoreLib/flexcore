@@ -49,14 +49,6 @@ connection_graph::connection_graph()
 
 connection_graph::~connection_graph() = default;
 
-void add_to_graph(const graph_node_properties& source_node,
-		const graph_node_properties& sink_node)
-{
-	connection_graph::access().add_connection(
-			source_node,
-			sink_node);
-}
-
 void connection_graph::print(std::ostream& stream)
 {
 	std::lock_guard<std::mutex> lock(pimpl->graph_mutex);

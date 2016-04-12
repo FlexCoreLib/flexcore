@@ -50,10 +50,16 @@ struct graph_adder
 template<class base_t>
 struct graph_connectable : base_t
 {
-	template<class... base_t_args>
-	graph_connectable(const graph_node_properties& graph_info, base_t_args&&... args)
-		: base_t(std::forward<base_t_args>(args)...)
-		, graph_info(graph_info)
+	template <class... base_t_args>
+	graph_connectable(graph::connection_graph& graph, const graph_node_properties& graph_info,
+	                  base_t_args&&... args)
+	: base_t(std::forward<base_t_args>(args)...), graph_info(graph_info), graph(&graph)
+	{
+	}
+	template <class... base_args>
+	graph_connectable(const graph_node_properties& graph_info,
+	                  base_args&&... args)
+	: base_t(std::forward<base_args>(args)...), graph_info(graph_info), graph(nullptr)
 	{
 	}
 
@@ -62,6 +68,9 @@ struct graph_connectable : base_t
 			class = std::enable_if_t<is_active<base_check>::value>>
 	decltype(auto) connect(arg_t&& conn)
 	{
+		if (!graph)
+			return base_t::connect(std::forward<arg_t>(conn));
+
 		//traverse connection and build up graph
 		if (is_active_sink<base_t>{}) //condition set at compile_time
 		{
@@ -76,6 +85,7 @@ struct graph_connectable : base_t
 	}
 
 	graph_node_properties graph_info;
+	graph::connection_graph* graph;
 
 private:
 	template<class connection_t>
@@ -89,7 +99,7 @@ private:
 
 		if (node_list.size() >= 2)
 			for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
-				add_to_graph(*(it-1), *it);
+				graph->add_connection(*(it-1), *it);
 	}
 
 template<class connection_t>
@@ -103,7 +113,7 @@ void add_event_connection(connection_t& conn)
 
 	if (node_list.size() >= 2)
 		for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
-			add_to_graph(*(it-1), *it);
+			graph->add_connection(*(it-1), *it);
 }
 };
 

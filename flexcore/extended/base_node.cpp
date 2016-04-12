@@ -52,6 +52,11 @@ tree_base_node::tree_base_node(
 	assert(region_);
 }
 
+graph::connection_graph& tree_base_node::get_graph() const
+{
+	return graph::connection_graph::access();
+}
+
 forest_t::iterator owning_base_node::self() const
 {
 	return find_self(this->forest_, this);
