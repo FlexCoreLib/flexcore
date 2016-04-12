@@ -64,7 +64,7 @@ private:
  *
  * Node creation examples:
  * \code{cpp}
- * root_node root;
+ * owning_base_node root;
  * // simple creation
  * root.make_child<node>();
  * root.make_child<node_tmpl<int>>();
@@ -220,12 +220,12 @@ private:
  * Has ownership of the forest and thus serves
  * as the root node for all other nodes in the forest.
  */
-class root_node
+class forest_owner
 {
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
-	root_node(std::string n, std::shared_ptr<parallel_region> r);
+	forest_owner(std::string n, std::shared_ptr<parallel_region> r);
 
 	owning_base_node& nodes() { return *tree_root; }
 

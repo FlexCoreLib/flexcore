@@ -25,7 +25,7 @@ public:
 private:
 //	graph::connection_graph abstract_graph;
 	thread::cycle_control scheduler;
-	root_node forest_root;
+	forest_owner forest_root;
 };
 
 } /* namespace fc */

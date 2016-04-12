@@ -65,7 +65,7 @@ fc::tree_base_node* owning_base_node::add_child(std::unique_ptr<tree_base_node> 
 }
 
 
-root_node::root_node(std::string n, std::shared_ptr<parallel_region> r)
+forest_owner::forest_owner(std::string n, std::shared_ptr<parallel_region> r)
 		: forest_(std::make_unique<forest_t>()),
 		  tree_root(nullptr)
 {
