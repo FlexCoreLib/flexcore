@@ -94,8 +94,7 @@ public:
 	 * \post nr of children > 0
 	 */
 	template<class node_t, class ... args_t>
-	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child(args_t&&... args)
+	node_t* make_child(args_t&&... args)
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
@@ -111,68 +110,14 @@ public:
 	 * @return pointer to child node
 	 */
 	template<class node_t, class ... args_t>
-	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
+	node_t* make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
 				forest_,
 				r)));
-	}
-	/**
-	 * \brief creates child node of type node_t with constructor arguments args.
-	 *
-	 * Inserts new child into tree.
-	 * Sets forest of child to forest of parent.
-	 * \tparam node_t type of node to be created, needs to inherit from owning_base_node.
-	 * \param args constructor arguments passed to node_t
-	 * \return pointer to child node
-	 * \post nr of children > 0
-	 */
-	template<class node_t, class ... args_t>
-	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child(args_t&&... args)
-	{
-		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				forest_,
-				region()
-				)));
 	}
 
-	/**
-	 * \brief  Overload of make_child with region.
-	 *
-	 * @param r Child is attached to this region
-	 * @param args onstructor arguments passed to node_t
-	 * @return pointer to child node
-	 */
-	template<class node_t, class ... args_t>
-	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
-	{
-		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				forest_,
-				r)));
-	}
-	/**
-	 * \brief Creates a new child node of type node_t from args.
-	 *
-	 * sets name of child to n and inserts child into tree.
-	 * \return pointer to child node
-	 * \post nr of children > 0
-	 */
-	template<class node_t, class ... args_t>
-	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child_named(std::string name, args_t&&... args)
-	{
-		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				forest_,
-				region(),
-				name)));
-	}
 	/**
 	 * \brief Creates a new child node of type node_t from args
 	 * if node_t inherits from owning_base_node
@@ -183,8 +128,7 @@ public:
 	 * \post nr of children > 0
 	 */
 	template<class node_t, class ... args_t>
-	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child_named(std::string name, args_t&&... args)
+	node_t* make_child_named(std::string name, args_t&&... args)
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
@@ -194,8 +138,7 @@ public:
 	}
 
 	template<class node_t, class ... args_t>
-	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
-	make_child_named(std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
+	node_t* make_child_named(std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
