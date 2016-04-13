@@ -82,6 +82,14 @@ public:
 	{
 	}
 
+	tree_base_node* new_node(std::string name)
+	{
+		return add_child(std::make_unique<tree_base_node>(forest_, region(), name));
+	}
+	tree_base_node* new_node(std::shared_ptr<parallel_region> r, std::string name)
+	{
+		return add_child(std::make_unique<tree_base_node>(forest_, r, name));
+	}
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
 	 *
