@@ -52,6 +52,16 @@ tree_base_node::tree_base_node(
 	assert(region_);
 }
 
+std::string tree_base_node::name() const
+{
+	return graph_info_.name();
+}
+
+graph::graph_node_properties tree_base_node::graph_info() const
+{
+	return graph_info_;
+}
+
 graph::connection_graph& tree_base_node::get_graph() const
 {
 	auto* root_node = forest_->begin()->get();

@@ -38,10 +38,9 @@ public:
 	virtual ~tree_base_node() = default;
 
 	const std::shared_ptr<parallel_region>& region() const { return region_; }
+	std::string name() const;
 
-	std::string name() const { return graph_info_.name(); }
-
-	graph::graph_node_properties graph_info() const { return graph_info_; }
+	graph::graph_node_properties graph_info() const;
 	graph::connection_graph& get_graph() const;
 
 protected:
