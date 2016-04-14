@@ -13,16 +13,11 @@ namespace // unnamed
 template<class data_t>
 struct node_class : tree_base_node
 {
-	node_class(data_t a, forest_t* f, std::shared_ptr<parallel_region> r)
-		: tree_base_node(f, r, "test_node")
+	static constexpr auto default_name = "test_node";
+	node_class(data_t a, const tree_base_node& node)
+		: tree_base_node(node)
 		, value(a)
 	{}
-
-	node_class(data_t a, forest_t* f, std::shared_ptr<parallel_region> r, std::string name)
-		: tree_base_node(f, r, name)
-		, value(a)
-	{}
-
 
 	data_t get_value() { return value; }
 
@@ -36,9 +31,8 @@ struct node_class : tree_base_node
 
 struct null : tree_base_node
 {
-	explicit null(forest_t* f, std::shared_ptr<parallel_region> r,
-			std::string name = "null")
-	: tree_base_node(f, r, name) {}
+	static constexpr auto default_name = "null";
+	explicit null(const tree_base_node& node) : tree_base_node(node) {}
 };
 } // unnamed namespace
 
@@ -61,8 +55,15 @@ namespace
 class test_owning_node : public owning_base_node
 {
 public:
-	explicit test_owning_node(forest_t* f, std::shared_ptr<parallel_region> r) :
-			owning_base_node(f, r, "test_owning_node") {}
+	static constexpr auto default_name = "test_owning_node";
+	explicit test_owning_node(forest_t* f, std::shared_ptr<parallel_region> r)
+	    : owning_base_node(f, r, default_name)
+	{
+	}
+	explicit test_owning_node(const tree_base_node& node)
+	    : owning_base_node(node)
+	{
+	}
 	forest_t::iterator add_child()
 	{
 		make_child<test_owning_node>();

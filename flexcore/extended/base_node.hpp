@@ -112,6 +112,10 @@ public:
 		: tree_base_node(f, r, name)
 	{
 	}
+	owning_base_node(const tree_base_node& node)
+		: tree_base_node(node)
+	{
+	}
 
 	tree_base_node* new_node(std::string name)
 	{
@@ -137,8 +141,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				forest_,
-				region())));
+				tree_base_node{forest_, region(), node_t::default_name})));
 	}
 
 	/**
@@ -153,8 +156,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				forest_,
-				r)));
+				tree_base_node{forest_, r, node_t::default_name})));
 	}
 
 	/**
@@ -171,9 +173,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				forest_,
-				region(),
-				name)));
+				tree_base_node{forest_, region(), name})));
 	}
 
 	template<class node_t, class ... args_t>
@@ -181,9 +181,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				forest_,
-				std::move(r),
-				std::move(name))));
+				tree_base_node{forest_, std::move(r), std::move(name)})));
 	}
 
 protected:

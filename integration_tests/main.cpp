@@ -15,8 +15,7 @@ using namespace fc;
 
 struct null : tree_base_node
 {
-	null(std::string name, forest_t* f, std::shared_ptr<fc::parallel_region> r)
-			: tree_base_node(f, r, name) {}
+	null(const tree_base_node& node) : tree_base_node(node) {}
 };
 
 int main()
@@ -55,11 +54,11 @@ int main()
 	second_region->ticks.work_tick() >> [](){ std::cout << "Zonk!\n"; };
 
 	auto child_a = infrastructure.node_owner().
-			make_child<null>(first_region, "source_a");
+			make_child_named<null>(first_region, "source_a");
 	auto child_b = infrastructure.node_owner().
-			make_child<null>(second_region, "sink_b");
+			make_child_named<null>(second_region, "sink_b");
 	auto child_c = infrastructure.node_owner().
-			make_child<null>(second_region, "source_c");
+			make_child_named<null>(second_region, "source_c");
 
 	event_source<std::string> string_source(child_a);
 	fc::event_sink<std::string> string_sink(child_b,
