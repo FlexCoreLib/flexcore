@@ -38,14 +38,14 @@ std::string full_name(forest_t& forest,
 }
 
 tree_base_node::tree_base_node(
-		forest_t* f,
+		forest_graph* fg,
 		std::shared_ptr<parallel_region> r,
 		std::string name)
-	: forest_(f)
+	: fg_(fg)
 	, region_(r)
 	, graph_info_(name)
 {
-	assert(forest_);
+	assert(fg_);
 	assert(region_);
 }
 
@@ -61,41 +61,37 @@ graph::graph_node_properties tree_base_node::graph_info() const
 
 graph::connection_graph& tree_base_node::get_graph() const
 {
-	auto* root_node = forest_->begin()->get();
-	return dynamic_cast<fc::root_node&>(*root_node).graph();
+	return fg_->graph;
 }
 
 forest_t::iterator owning_base_node::self() const
 {
-	return find_self(*forest_, this);
+	return find_self(fg_->forest, this);
 }
 
 fc::tree_base_node* owning_base_node::add_child(std::unique_ptr<tree_base_node> child)
 {
-	assert(forest_);
+	assert(fg_);
 	assert(child);
-	auto child_it = adobe::trailing_of(forest_->insert(self(), std::move(child)));
+	auto& forest = fg_->forest;
+	auto child_it = adobe::trailing_of(forest.insert(self(), std::move(child)));
 	assert(adobe::find_parent(child_it) == self());
-	assert(adobe::find_parent(child_it) != forest_->end());
+	assert(adobe::find_parent(child_it) != forest.end());
 	return child_it->get();
 }
 
 
 forest_owner::forest_owner(std::string n, std::shared_ptr<parallel_region> r)
-		: forest_(std::make_unique<forest_t>()),
+		: fg_(std::make_unique<forest_graph>()),
 		  tree_root(nullptr)
 {
-	assert(forest_);
+	assert(fg_);
+	auto& forest = fg_->forest;
 	auto temp_it = adobe::trailing_of(
-	        forest_->insert(forest_->begin(),
-	                std::make_unique<root_node>(forest_.get(), r, n)));
-	tree_root = static_cast<root_node*>(temp_it->get());
+	        forest.insert(forest.begin(),
+	                std::make_unique<owning_base_node>(fg_.get(), r, n)));
+	tree_root = static_cast<owning_base_node*>(temp_it->get());
 	assert(tree_root);
-}
-
-root_node::root_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string n)
-    : owning_base_node(f, r, n)
-{
 }
 
 }

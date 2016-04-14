@@ -52,6 +52,12 @@ class tree_base_node;
 
 using forest_t = adobe::forest<std::unique_ptr<tree_base_node>>;
 
+struct forest_graph
+{
+	forest_t forest;
+	graph::connection_graph graph;
+};
+
 /**
  * \brief base class for nodes contained in forest
  *
@@ -68,7 +74,7 @@ public:
 	template<class data_t> using state_source = ::fc::state_source<data_t>;
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
-	tree_base_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string name);
+	tree_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name);
 	const std::shared_ptr<parallel_region>& region() const { return region_; }
 	std::string name() const;
 
@@ -76,7 +82,7 @@ public:
 	graph::connection_graph& get_graph() const;
 
 protected:
-	forest_t* forest_;
+	forest_graph* fg_;
 private:
 	/* Information about which region the node belongs to */
 	std::shared_ptr<parallel_region> region_;
@@ -108,8 +114,8 @@ private:
 class owning_base_node : public tree_base_node
 {
 public:
-	owning_base_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string name)
-		: tree_base_node(f, r, name)
+	owning_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name)
+	    : tree_base_node(fg, r, name)
 	{
 	}
 	owning_base_node(const tree_base_node& node)
@@ -119,11 +125,11 @@ public:
 
 	tree_base_node* new_node(std::string name)
 	{
-		return add_child(std::make_unique<tree_base_node>(forest_, region(), name));
+		return add_child(std::make_unique<tree_base_node>(fg_, region(), name));
 	}
 	tree_base_node* new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
-		return add_child(std::make_unique<tree_base_node>(forest_, r, name));
+		return add_child(std::make_unique<tree_base_node>(fg_, r, name));
 	}
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
@@ -141,7 +147,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{forest_, region(), node_t::default_name})));
+				tree_base_node{fg_, region(), node_t::default_name})));
 	}
 
 	/**
@@ -156,7 +162,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{forest_, r, node_t::default_name})));
+				tree_base_node{fg_, r, node_t::default_name})));
 	}
 
 	/**
@@ -173,7 +179,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{forest_, region(), name})));
+				tree_base_node{fg_, region(), name})));
 	}
 
 	template<class node_t, class ... args_t>
@@ -181,7 +187,7 @@ public:
 	{
 		return static_cast<node_t*>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{forest_, std::move(r), std::move(name)})));
+				tree_base_node{fg_, std::move(r), std::move(name)})));
 	}
 
 protected:
@@ -197,15 +203,6 @@ private:
 
 };
 
-class root_node : public owning_base_node
-{
-public:
-	root_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string n);
-	graph::connection_graph& graph() { return graph_; }
-private:
-	graph::connection_graph graph_;
-};
-
 /**
  * \brief Root node for building node trees.
  *
@@ -219,12 +216,12 @@ public:
 	forest_owner(std::string n, std::shared_ptr<parallel_region> r);
 
 	owning_base_node& nodes() { return *tree_root; }
-	graph::connection_graph& get_graph() { return tree_root->graph(); }
+	graph::connection_graph& get_graph() { return fg_->graph; }
 
 private:
-	std::unique_ptr<forest_t> forest_;
+	std::unique_ptr<forest_graph> fg_;
 	/// non_owning access to first node in tree, ownership is in forest.
-	root_node* tree_root;
+	owning_base_node* tree_root;
 };
 
 /**

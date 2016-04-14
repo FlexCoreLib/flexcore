@@ -56,8 +56,8 @@ class test_owning_node : public owning_base_node
 {
 public:
 	static constexpr auto default_name = "test_owning_node";
-	explicit test_owning_node(forest_t* f, std::shared_ptr<parallel_region> r)
-	    : owning_base_node(f, r, default_name)
+	explicit test_owning_node(forest_graph* fg, std::shared_ptr<parallel_region> r)
+	    : owning_base_node(fg, r, default_name)
 	{
 	}
 	explicit test_owning_node(const tree_base_node& node)
@@ -70,12 +70,12 @@ public:
 		return ++adobe::trailing_of(adobe::child_begin(self()).base());
 	}
 
-	explicit test_owning_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string name) :
-			owning_base_node(f, r, name) {}
+	explicit test_owning_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name) :
+			owning_base_node(fg, r, name) {}
 
 	size_t nr_of_children()
 	{
-		return this->forest_->size() -2; //-1 for this. -1 for root node
+		return fg_->forest.size() -2; //-1 for this. -1 for root node
 	}
 };
 }

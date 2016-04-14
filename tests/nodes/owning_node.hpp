@@ -23,14 +23,14 @@ public:
 	explicit owning_node(const std::shared_ptr<parallel_region>&  r
 			= std::make_shared<parallel_region>("test_root_region"),
 			std::string name = "owner")
-		: owned_forest(std::make_unique<forest_t>())
+		: fg_(std::make_unique<forest_graph>())
 		, owner(nullptr)
 	{
 		assert(r);
-		assert(owned_forest);
-		auto node = std::make_unique<root_node>(owned_forest.get(), r, name);
+		assert(fg_);
+		auto node = std::make_unique<owning_base_node>(fg_.get(), r, name);
 		owner = static_cast<owning_base_node*>(
-		    owned_forest->insert(owned_forest->begin(), std::move(node))->get());
+		    forest()->insert(forest()->begin(), std::move(node))->get());
 		assert(owner);
 	}
 
@@ -59,15 +59,14 @@ public:
 		return owner->make_child_named<node_t>(name, std::forward<args_t>(args)...);
 	}
 
-	forest_t* forest() { return owned_forest.get(); }
-	const forest_t* forest() const { return owned_forest.get(); }
+	forest_t* forest() { return &fg_->forest; }
+	const forest_t* forest() const { return &fg_->forest; }
 
 	auto region() const { return owner->region(); }
-
 	auto& node() { return *owner; };
 
 private:
-	std::unique_ptr<forest_t> owned_forest;
+	std::unique_ptr<forest_graph> fg_;
 	owning_base_node* owner;
 
 };
