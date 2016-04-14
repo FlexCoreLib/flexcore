@@ -102,19 +102,19 @@ private:
 				graph->add_connection(*(it-1), *it);
 	}
 
-template<class connection_t>
-void add_event_connection(connection_t& conn)
-{
-	std::vector<graph_node_properties> node_list;
+	template<class connection_t>
+	void add_event_connection(connection_t& conn)
+	{
+		std::vector<graph_node_properties> node_list;
 
-	//event source is first, thus added before connection
-	node_list.push_back(graph_info);
-	::fc::detail::apply(detail::graph_adder{node_list}, conn);
+		//event source is first, thus added before connection
+		node_list.push_back(graph_info);
+		::fc::detail::apply(detail::graph_adder{node_list}, conn);
 
-	if (node_list.size() >= 2)
-		for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
-			graph->add_connection(*(it-1), *it);
-}
+		if (node_list.size() >= 2)
+			for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
+				graph->add_connection(*(it-1), *it);
+	}
 };
 
 
