@@ -16,15 +16,47 @@ namespace fc
 {
 
 /**
+ * \brief Interface for all nodes (whether part of forest+graph or only graph)
+ */
+class node
+{
+public:
+	virtual ~node() = default;
+	virtual graph::graph_node_properties graph_info() const = 0;
+};
+
+class graph_node : public node
+{
+public:
+	graph_node(graph::connection_graph& graph, const std::string& name)
+	    : graph_node(graph, {}, name)
+	{
+	}
+	graph_node(graph::connection_graph& graph, std::shared_ptr<parallel_region> r,
+	           const std::string& name)
+	    : region_(std::move(r)), props_(name), graph_(&graph)
+	{
+		assert(graph_);
+	}
+	graph::graph_node_properties graph_info() const
+	{
+		return props_;
+	}
+private:
+	std::shared_ptr<parallel_region> region_;
+	graph::graph_node_properties props_;
+	graph::connection_graph* graph_;
+};
+
+/**
  * \brief base class for nodes contained in forest
  *
  *  Nodes are neither copy_constructyble nor copy_assignable.
  *
  *
  * \invariant region_ != null_ptr
- * \invariant self_ is always valid
  */
-class tree_base_node
+class tree_base_node : public node
 {
 public:
 	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
@@ -35,12 +67,10 @@ public:
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
 	tree_base_node(forest_t* f, std::shared_ptr<parallel_region> r, std::string name);
-	virtual ~tree_base_node() = default;
-
 	const std::shared_ptr<parallel_region>& region() const { return region_; }
 	std::string name() const;
 
-	graph::graph_node_properties graph_info() const;
+	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() const;
 
 protected:
