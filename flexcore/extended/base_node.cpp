@@ -4,13 +4,13 @@
 
 namespace fc
 {
-static forest_t::iterator find_self(forest_t* forest, const tree_base_node* node)
+static forest_t::iterator find_self(forest_t& forest, const tree_base_node* node)
 {
-	auto self = std::find_if(forest->begin(), forest->end(), [=](auto& other_uniq_ptr)
+	auto self = std::find_if(forest.begin(), forest.end(), [=](auto& other_uniq_ptr)
 	                         {
 		                         return node == other_uniq_ptr.get();
 	                         });
-	assert(self != forest->end());
+	assert(self != forest.end());
 	return adobe::trailing_of(self);
 }
 
@@ -19,8 +19,7 @@ static constexpr auto name_seperator = "/";
 std::string full_name(forest_t& forest,
                       const tree_base_node* node)
 {
-	auto position = find_self(&forest, node);
-	assert(position != forest.end());
+	auto position = find_self(forest, node);
 	//push names of parent / grandparent ... to stack to later reverse order.
 	std::stack<std::string> name_stack;
 	for (auto parent = adobe::find_parent(position); parent != forest.end();
@@ -68,7 +67,7 @@ graph::connection_graph& tree_base_node::get_graph() const
 
 forest_t::iterator owning_base_node::self() const
 {
-	return find_self(this->forest_, this);
+	return find_self(*forest_, this);
 }
 
 fc::tree_base_node* owning_base_node::add_child(std::unique_ptr<tree_base_node> child)
