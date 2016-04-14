@@ -4,8 +4,6 @@
 
 namespace fc
 {
-using forest_t = tree_base_node::forest_t;
-
 static forest_t::iterator find_self(forest_t* forest, const tree_base_node* node)
 {
 	auto self = std::find_if(forest->begin(), forest->end(), [=](auto& other_uniq_ptr)

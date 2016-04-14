@@ -48,6 +48,10 @@ private:
 	graph::connection_graph* graph_;
 };
 
+class tree_base_node;
+
+using forest_t = adobe::forest<std::unique_ptr<tree_base_node>>;
+
 /**
  * \brief base class for nodes contained in forest
  *
@@ -59,8 +63,6 @@ private:
 class tree_base_node : public node
 {
 public:
-	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
-
 	template<class data_t> using event_source = ::fc::event_source<data_t>;
 	template<class data_t> using event_sink = ::fc::event_sink<data_t>;
 	template<class data_t> using state_source = ::fc::state_source<data_t>;
@@ -215,7 +217,6 @@ private:
 class forest_owner
 {
 public:
-	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 
 	forest_owner(std::string n, std::shared_ptr<parallel_region> r);
 
@@ -238,10 +239,10 @@ private:
  *
  * invalidates iterators pointing to deleted node.
  */
-inline tree_base_node::forest_t::iterator
+inline forest_t::iterator
 erase_with_subtree(
-		tree_base_node::forest_t& forest,
-		tree_base_node::forest_t::iterator position)
+		forest_t& forest,
+		forest_t::iterator position)
 {
 	return forest.erase(
 			adobe::child_begin(position).base(),
@@ -255,8 +256,7 @@ erase_with_subtree(
  * and the name of the node itself.
  * The names are separated by a separation token.
  */
-std::string full_name(tree_base_node::forest_t& forest,
-                      const tree_base_node* node);
+std::string full_name(forest_t& forest, const tree_base_node* node);
 
 } // namespace fc
 

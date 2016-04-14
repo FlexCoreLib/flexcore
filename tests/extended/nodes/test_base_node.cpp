@@ -63,7 +63,7 @@ class test_owning_node : public owning_base_node
 public:
 	explicit test_owning_node(forest_t* f, std::shared_ptr<parallel_region> r) :
 			owning_base_node(f, r, "test_owning_node") {}
-	tree_base_node::forest_t::iterator add_child()
+	forest_t::iterator add_child()
 	{
 		make_child<test_owning_node>();
 		return ++adobe::trailing_of(adobe::child_begin(self()).base());
