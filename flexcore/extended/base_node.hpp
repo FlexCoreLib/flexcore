@@ -247,8 +247,8 @@ erase_with_subtree(
 		forest_t::iterator position)
 {
 	return forest.erase(
-			adobe::child_begin(position).base(),
-			adobe::child_end(position).base());
+			adobe::leading_of(position),
+			++adobe::trailing_of(position));
 }
 
 /**
