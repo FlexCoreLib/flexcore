@@ -45,9 +45,9 @@ public:
 		, out_port(this, [this](){return in_ports.at(switch_state.get()).get();} )
 	{}
 
-	using data_sink_t = typename base_node::template state_sink<data_t>;
-	using key_sink_t = typename base_node::template state_sink<key_t>;
-	using state_source_t = typename base_node::template state_source<data_t>;
+	using data_sink_t = typename node_traits<base_node>::template state_sink<data_t>;
+	using key_sink_t = typename node_traits<base_node>::template state_sink<key_t>;
+	using state_source_t = typename node_traits<base_node>::template state_source<data_t>;
 
 	/**
 	 * \brief input port for state of type data_t corresponding to key port.
@@ -78,9 +78,9 @@ template<class data_t, class key_t, class base_node>
 class n_ary_switch<data_t, event_tag, key_t, base_node> : public base_node
 {
 public:
-	using data_sink_t = typename base_node::template event_sink<data_t>;
-	using key_sink_t = typename base_node::template state_sink<key_t>;
-	using event_source_t = typename base_node::template event_source<data_t>;
+	using data_sink_t = typename node_traits<base_node>::template event_sink<data_t>;
+	using key_sink_t = typename node_traits<base_node>::template state_sink<key_t>;
+	using event_source_t = typename node_traits<base_node>::template event_source<data_t>;
 
 
 	template<class... base_args>
@@ -178,8 +178,8 @@ public:
 
 private:
 	predicate pred;
-	typename base_node::template state_sink<data_t> in_port;
-	typename base_node::template event_source<data_t> out_port;
+	typename node_traits<base_node>::template state_sink<data_t> in_port;
+	typename node_traits<base_node>::template event_source<data_t> out_port;
 };
 
 /// Creates a watch node with a predicate.

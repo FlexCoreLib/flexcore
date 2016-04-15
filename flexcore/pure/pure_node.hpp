@@ -9,7 +9,7 @@ namespace fc
 namespace pure
 {
 
-class pure_node;
+class pure_node {};
 
 template<class port>
 struct pure_port_mixin : port
@@ -28,20 +28,20 @@ struct pure_port_mixin : port
   }
 };
 
-class pure_node
-{
-public:
-	template<class data_t>
-	using event_sink = pure_port_mixin<event_sink<data_t>>;
-	template<class data_t>
-	using state_sink = pure_port_mixin<state_sink<data_t>>;
-	template<class data_t>
-	using event_source = pure_port_mixin<event_source<data_t>>;
-	template<class data_t>
-	using state_source = pure_port_mixin<state_source<data_t>>;
-};
-
 }  // namespace pure
+
+template <>
+struct node_traits<pure::pure_node>
+{
+	template<class data_t>
+	using event_sink = pure::pure_port_mixin<pure::event_sink<data_t>>;
+	template<class data_t>
+	using state_sink = pure::pure_port_mixin<pure::state_sink<data_t>>;
+	template<class data_t>
+	using event_source = pure::pure_port_mixin<pure::event_source<data_t>>;
+	template<class data_t>
+	using state_source = pure::pure_port_mixin<pure::state_source<data_t>>;
+};
 
 template<class T> struct is_active_sink<pure::pure_port_mixin<T>> : is_active_sink<T> {};
 template<class T> struct is_active_source<pure::pure_port_mixin<T>> : is_active_source<T> {};

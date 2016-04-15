@@ -39,7 +39,7 @@ public:
 		, predicate(pred)
 	{}
 
-	typename base_t::template event_sink<range_t> in;
+	typename node_traits<base_t>::template event_sink<range_t> in;
 	auto& out(predicate_result_t value)
 	{
 		auto it = entries.find(value);
@@ -51,7 +51,7 @@ public:
 	 * number of dropped elements (due to unconnected output ports)
 	 * (Can be used for verification)
 	 */
-	typename base_t::template state_source<size_t> out_num_dropped;
+	typename node_traits<base_t>::template state_source<size_t> out_num_dropped;
 
 private:
 	size_t dropped_counter = 0;
@@ -82,7 +82,7 @@ private:
 	struct entry_t
 	{
 		entry_t(list_splitter* p) : port(p), data() {}
-		typename base_t::template event_source<out_range_t> port;
+		typename node_traits<base_t>::template event_source<out_range_t> port;
 		std::vector<value_t> data;
 	};
 

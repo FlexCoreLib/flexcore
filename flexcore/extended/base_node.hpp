@@ -12,6 +12,15 @@
 
 namespace fc
 {
+template <class node>
+struct node_traits
+{
+	template<class data_t> using event_source = ::fc::event_source<data_t>;
+	template<class data_t> using event_sink = ::fc::event_sink<data_t>;
+	template<class data_t> using state_source = ::fc::state_source<data_t>;
+	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
+};
+
 class graph_node : public node
 {
 public:
@@ -58,10 +67,6 @@ struct forest_graph
 class tree_base_node : public node
 {
 public:
-	template<class data_t> using event_source = ::fc::event_source<data_t>;
-	template<class data_t> using event_sink = ::fc::event_sink<data_t>;
-	template<class data_t> using state_source = ::fc::state_source<data_t>;
-	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
 	tree_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name);
 	std::shared_ptr<parallel_region> region() override { return region_; }

@@ -46,7 +46,7 @@ struct merge_node<operation, result (args...), base_t> : public base_t
 {
 	using arguments = std::tuple<args...>;
 	template <typename arg>
-	using base_sink_t = typename base_t::template state_sink<arg>;
+	using base_sink_t = typename node_traits<base_t>::template state_sink<arg>;
 	using result_type = result ;
 
 	using in_ports_t = std::tuple<base_sink_t<args>...>;
@@ -200,7 +200,7 @@ private:
 	}
 	std::unique_ptr<data_t> cache;
 	bool load_new;
-	typename base_t::template state_sink<data_t> in_port;
+	typename node_traits<base_t>::template state_sink<data_t> in_port;
 };
 
 } // namespace fc

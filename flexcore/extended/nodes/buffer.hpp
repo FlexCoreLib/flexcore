@@ -196,7 +196,7 @@ protected:
 	std::unique_ptr<container_t<data_t>> buffer_collect;
 	container_t<data_t> buffer_state;
 
-	typename base_t::template state_source<out_range_t> out_port;
+	typename node_traits<base_t>::template state_source<out_range_t> out_port;
 };
 } //namespace detail
 
@@ -281,7 +281,7 @@ public:
 	auto& out() noexcept { return out_port; }
 private:
 	std::unique_ptr<buffer_t> storage;
-	typename base_t::template state_source<out_range_t> out_port;
+	typename node_traits<base_t>::template state_source<out_range_t> out_port;
 };
 
 }  // namespace fc
