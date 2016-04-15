@@ -52,8 +52,9 @@ using forest_t = adobe::forest<std::unique_ptr<tree_base_node>>;
 
 struct forest_graph
 {
+	forest_graph(graph::connection_graph& graph) : graph(graph) {}
 	forest_t forest;
-	graph::connection_graph graph;
+	graph::connection_graph& graph;
 };
 
 /**
@@ -206,11 +207,8 @@ private:
 class forest_owner
 {
 public:
-
-	forest_owner(std::string n, std::shared_ptr<parallel_region> r);
-
+	forest_owner(graph::connection_graph& graph, std::string n, std::shared_ptr<parallel_region> r);
 	owning_base_node& nodes() { return *tree_root; }
-	graph::connection_graph& get_graph() { return fg_->graph; }
 
 private:
 	std::unique_ptr<forest_graph> fg_;

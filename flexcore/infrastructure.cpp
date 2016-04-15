@@ -22,11 +22,10 @@ std::shared_ptr<parallel_region> infrastructure::add_region(const std::string& n
 	return region;
 }
 
-infrastructure::infrastructure() :
-	// abstract_graph(),
-		scheduler(std::make_unique<fc::thread::parallel_scheduler>()),
-		forest_root("root",
-				add_region("root_region", thread::cycle_control::medium_tick))
+infrastructure::infrastructure()
+    : scheduler(std::make_unique<fc::thread::parallel_scheduler>())
+    , graph()
+    , forest_root(graph, "root", add_region("root_region", thread::cycle_control::medium_tick))
 {
 }
 

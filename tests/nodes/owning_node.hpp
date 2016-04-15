@@ -23,7 +23,7 @@ public:
 	explicit owning_node(const std::shared_ptr<parallel_region>&  r
 			= std::make_shared<parallel_region>("test_root_region"),
 			std::string name = "owner")
-		: fg_(std::make_unique<forest_graph>())
+		: fg_(std::make_unique<forest_graph>(graph))
 		, owner(nullptr)
 	{
 		assert(r);
@@ -66,6 +66,7 @@ public:
 	auto& node() { return *owner; };
 
 private:
+	graph::connection_graph graph;
 	std::unique_ptr<forest_graph> fg_;
 	owning_base_node* owner;
 
