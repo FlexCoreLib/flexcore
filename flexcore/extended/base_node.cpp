@@ -80,6 +80,22 @@ fc::tree_base_node* owning_base_node::add_child(std::unique_ptr<tree_base_node> 
 	return child_it->get();
 }
 
+std::shared_ptr<parallel_region> owner_holder::region()
+{
+	assert(owner_);
+	return owner_->region();
+}
+graph::graph_node_properties owner_holder::graph_info() const
+{
+	assert(owner_);
+	return owner_->graph_info();
+}
+graph::connection_graph& owner_holder::get_graph()
+{
+	assert(owner_);
+	return owner_->get_graph();
+}
+
 forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
                            std::shared_ptr<parallel_region> r)
     : fg_(std::make_unique<forest_graph>(graph)), tree_root(nullptr)

@@ -82,6 +82,20 @@ private:
 
 };
 
+class owning_base_node;
+
+class owner_holder : public node
+{
+public:
+	void set_owner(std::unique_ptr<owning_base_node> node) { owner_ = std::move(node); }
+	std::shared_ptr<parallel_region> region() override;
+	graph::graph_node_properties graph_info() const override;
+	graph::connection_graph& get_graph() override;
+
+private:
+	std::unique_ptr<owning_base_node> owner_;
+};
+
 /**
  * \brief base class for nodes which own other nodes, aka nested nodes.
  *
@@ -157,7 +171,6 @@ public:
 
 	/**
 	 * \brief Creates a new child node of type node_t from args
-	 * if node_t inherits from owning_base_node
 	 *
 	 * Sets name of child to n and inserts child into tree.
 	 * Sets forest of of child to forest of parent.
