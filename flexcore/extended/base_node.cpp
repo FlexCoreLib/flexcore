@@ -69,7 +69,7 @@ forest_t::iterator owning_base_node::self() const
 	return find_self(fg_->forest, this);
 }
 
-fc::tree_base_node* owning_base_node::add_child(std::unique_ptr<tree_base_node> child)
+fc::tree_node* owning_base_node::add_child(std::unique_ptr<tree_node> child)
 {
 	assert(fg_);
 	assert(child);
@@ -94,6 +94,12 @@ graph::connection_graph& owner_holder::get_graph()
 {
 	assert(owner_);
 	return owner_->get_graph();
+}
+
+std::string owner_holder::name() const
+{
+	assert(owner_);
+	return owner_->name();
 }
 
 forest_owner::forest_owner(graph::connection_graph& graph, std::string n,

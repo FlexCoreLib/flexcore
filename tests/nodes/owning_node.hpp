@@ -19,7 +19,6 @@ namespace tests
 class owning_node
 {
 public:
-	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 	explicit owning_node(const std::shared_ptr<parallel_region>&  r
 			= std::make_shared<parallel_region>("test_root_region"),
 			std::string name = "owner")

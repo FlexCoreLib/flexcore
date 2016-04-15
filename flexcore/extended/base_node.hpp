@@ -37,9 +37,13 @@ private:
 	graph::connection_graph* graph_;
 };
 
-class tree_base_node;
+class tree_node : public node
+{
+public:
+	virtual std::string name() const = 0;
+};
 
-using forest_t = adobe::forest<std::unique_ptr<tree_base_node>>;
+using forest_t = adobe::forest<std::unique_ptr<tree_node>>;
 
 struct forest_graph
 {
@@ -56,7 +60,7 @@ struct forest_graph
  *
  * \invariant region_ != null_ptr
  */
-class tree_base_node : public node
+class tree_base_node : public tree_node
 {
 public:
 	template<class data_t> using event_source = ::fc::event_source<data_t>;
@@ -66,7 +70,7 @@ public:
 
 	tree_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name);
 	std::shared_ptr<parallel_region> region() override { return region_; }
-	std::string name() const;
+	std::string name() const override;
 
 	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() override;
@@ -84,13 +88,14 @@ private:
 
 class owning_base_node;
 
-class owner_holder : public node
+class owner_holder : public tree_node
 {
 public:
 	void set_owner(std::unique_ptr<owning_base_node> node) { owner_ = std::move(node); }
 	std::shared_ptr<parallel_region> region() override;
 	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() override;
+	std::string name() const override;
 
 private:
 	std::unique_ptr<owning_base_node> owner_;
@@ -129,11 +134,13 @@ public:
 
 	tree_base_node* new_node(std::string name)
 	{
-		return add_child(std::make_unique<tree_base_node>(fg_, region(), name));
+		return static_cast<tree_base_node*>(
+		    add_child(std::make_unique<tree_base_node>(fg_, region(), name)));
 	}
 	tree_base_node* new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
-		return add_child(std::make_unique<tree_base_node>(fg_, r, name));
+		return static_cast<tree_base_node*>(
+		    add_child(std::make_unique<tree_base_node>(fg_, r, name)));
 	}
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
@@ -202,7 +209,7 @@ private:
 	 * \return pointer to child node
 	 * \pre child != nullptr
 	 */
-	tree_base_node* add_child(std::unique_ptr<tree_base_node> child);
+	tree_node* add_child(std::unique_ptr<tree_node> child);
 
 };
 
