@@ -1,32 +1,17 @@
 #ifndef SRC_NODES_BASE_NODE_HPP_
 #define SRC_NODES_BASE_NODE_HPP_
 
-#include <flexcore/extended/graph/graph.hpp>
-
-#include <flexcore/scheduler/parallelregion.hpp>
+#include <flexcore/extended/node_fwd.hpp>
+#include <flexcore/ports.hpp>
 #include <adobe/forest.hpp>
 
 #include <cassert>
 #include <string>
 #include <memory>
 
-#include <flexcore/ports.hpp>
 
 namespace fc
 {
-
-/**
- * \brief Interface for all nodes (whether part of forest+graph or only graph)
- */
-class node
-{
-public:
-	virtual ~node() = default;
-	virtual graph::graph_node_properties graph_info() const = 0;
-	virtual graph::connection_graph& get_graph() = 0;
-	virtual std::shared_ptr<parallel_region> region() = 0;
-};
-
 class graph_node : public node
 {
 public:
