@@ -258,7 +258,7 @@ erase_with_subtree(
  * and the name of the node itself.
  * The names are separated by a separation token.
  */
-std::string full_name(forest_t& forest, const tree_base_node* node);
+std::string full_name(forest_t& forest, const tree_node* node);
 
 } // namespace fc
 
