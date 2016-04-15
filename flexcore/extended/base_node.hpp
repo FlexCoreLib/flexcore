@@ -23,6 +23,8 @@ class node
 public:
 	virtual ~node() = default;
 	virtual graph::graph_node_properties graph_info() const = 0;
+	virtual graph::connection_graph& get_graph() = 0;
+	virtual std::shared_ptr<parallel_region> region() = 0;
 };
 
 class graph_node : public node
@@ -38,10 +40,12 @@ public:
 	{
 		assert(graph_);
 	}
-	graph::graph_node_properties graph_info() const
+	graph::graph_node_properties graph_info() const override
 	{
 		return props_;
 	}
+	graph::connection_graph& get_graph() override { return *graph_; }
+	std::shared_ptr<parallel_region> region() override { return region_; }
 private:
 	std::shared_ptr<parallel_region> region_;
 	graph::graph_node_properties props_;
@@ -75,11 +79,11 @@ public:
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 
 	tree_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name);
-	const std::shared_ptr<parallel_region>& region() const { return region_; }
+	std::shared_ptr<parallel_region> region() override { return region_; }
 	std::string name() const;
 
 	graph::graph_node_properties graph_info() const override;
-	graph::connection_graph& get_graph() const;
+	graph::connection_graph& get_graph() override;
 
 protected:
 	forest_graph* fg_;

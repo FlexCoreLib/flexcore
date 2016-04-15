@@ -59,7 +59,7 @@ graph::graph_node_properties tree_base_node::graph_info() const
 	return graph_info_;
 }
 
-graph::connection_graph& tree_base_node::get_graph() const
+graph::connection_graph& tree_base_node::get_graph()
 {
 	return fg_->graph;
 }
