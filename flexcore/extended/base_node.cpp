@@ -67,7 +67,7 @@ graph::connection_graph& tree_base_node::get_graph()
 
 forest_t::iterator owning_base_node::self() const
 {
-	return find_self(fg_->forest, this);
+	return self_;
 }
 
 fc::tree_node* owning_base_node::add_child(std::unique_ptr<tree_node> child)
@@ -109,10 +109,9 @@ forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
 {
 	assert(fg_);
 	auto& forest = fg_->forest;
-	auto temp_it = adobe::trailing_of(
-	        forest.insert(forest.begin(),
-	                std::make_unique<owning_base_node>(fg_.get(), r, n)));
-	tree_root = static_cast<owning_base_node*>(temp_it->get());
+	auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<owner_holder>()));
+	auto& holder = static_cast<owner_holder&>(*iter->get());
+	tree_root = holder.set_owner(std::make_unique<owning_base_node>(iter, fg_.get(), r, n));
 	assert(tree_root);
 }
 

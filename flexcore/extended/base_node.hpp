@@ -91,7 +91,11 @@ class owning_base_node;
 class owner_holder : public tree_node
 {
 public:
-	void set_owner(std::unique_ptr<owning_base_node> node) { owner_ = std::move(node); }
+	owning_base_node* set_owner(std::unique_ptr<owning_base_node> node)
+	{
+		owner_ = std::move(node);
+		return owner_.get();
+	}
 	std::shared_ptr<parallel_region> region() override;
 	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() override;
@@ -123,13 +127,23 @@ private:
 class owning_base_node : public tree_base_node
 {
 public:
-	owning_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name)
-	    : tree_base_node(fg, r, name)
+	owning_base_node(forest_t::iterator self, forest_graph* fg, std::shared_ptr<parallel_region> r,
+	                 std::string name)
+	    : tree_base_node(fg, r, name), self_(self)
 	{
 	}
-	owning_base_node(const tree_base_node& node)
-		: tree_base_node(node)
+	owning_base_node(forest_t::iterator self, const tree_base_node& node)
+		: tree_base_node(node), self_(self)
 	{
+	}
+
+	template <class node_t, class... Args>
+	node_t* make_owner(std::shared_ptr<parallel_region> r, std::string name, Args&&... args)
+	{
+		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
+		auto& holder = static_cast<owner_holder&>(*iter->get());
+		return static_cast<node_t*>(holder.set_owner(std::make_unique<node_t>(
+		    std::forward<Args>(args)..., iter, tree_base_node{fg_, r, name})));
 	}
 
 	tree_base_node* new_node(std::string name)
@@ -142,6 +156,7 @@ public:
 		return static_cast<tree_base_node*>(
 		    add_child(std::make_unique<tree_base_node>(fg_, r, name)));
 	}
+
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
 	 *
@@ -200,10 +215,9 @@ public:
 				tree_base_node{fg_, std::move(r), std::move(name)})));
 	}
 
-protected:
 	forest_t::iterator self() const;
-	// stores the access to the forest this node is contained in.
 private:
+	forest_t::iterator self_;
 	/**
 	 * Takes ownership of child node and inserts into tree.
 	 * \return pointer to child node
