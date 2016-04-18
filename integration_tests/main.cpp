@@ -1,4 +1,4 @@
-
+#include <fstream>
 #include <iostream>
 #include <chrono>
 #include <iomanip>
@@ -74,7 +74,11 @@ int main()
 	event_source<std::string> string_source_2(child_c);
 	string_source_2 >> string_sink;
 
-	infrastructure.print(std::cout, std::cout);
+	{
+		std::ofstream graph_out{"./graph.dot"};
+		std::ofstream forest_out{"./forest.json"};
+		infrastructure.print(graph_out, forest_out);
+	}
 
 	infrastructure.start_scheduler();
 	BOOST_SCOPE_EXIT(&infrastructure) {
