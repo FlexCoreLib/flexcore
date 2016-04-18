@@ -46,8 +46,8 @@ public:
 	auto& out() { return out_state; }
 
 private:
-	typename node_traits<base_node>::template state_sink<T> in_state;
-	typename node_traits<base_node>::template state_source<T> out_state;
+	typename base_node::template state_sink<T> in_state;
+	typename base_node::template state_source<T> out_state;
 };
 
 /**
@@ -83,8 +83,8 @@ public:
 	auto& out() { return out_event; }
 
 private:
-	typename node_traits<base_node>::template event_sink<T> in_event;
-	typename node_traits<base_node>::template event_source<T> out_event;
+	typename base_node::template event_sink<T> in_event;
+	typename base_node::template event_source<T> out_event;
 };
 
 }  // namespace fc

@@ -421,8 +421,6 @@ is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
 
-template <class node>
-struct node_traits;
 } // namespace fc
 
 #endif /* SRC_CORE_TRAITS_H_ */

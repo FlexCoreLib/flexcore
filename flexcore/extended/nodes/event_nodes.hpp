@@ -44,8 +44,8 @@ public:
 		return out_port;
 	}
 protected:
-	typename node_traits<base>::template event_sink<event_t> in_port;
-	typename node_traits<base>::template event_source<event_t> out_port;
+	typename base::template event_sink<event_t> in_port;
+	typename base::template event_source<event_t> out_port;
 };
 
 /**
@@ -99,7 +99,7 @@ public:
 	auto& in_control() noexcept { return control; }
 
 private:
-	typename node_traits<base_t>::template state_sink<bool> control;
+	typename base_t::template state_sink<bool> control;
 };
 
 /// Creates gate_with_predicate with predicate p of type event_t.
