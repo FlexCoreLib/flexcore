@@ -44,7 +44,7 @@ tree_base_node::tree_base_node(
 		std::string name)
 	: fg_(fg)
 	, region_(r)
-	, graph_info_(name)
+	, graph_info_(name, r.get())
 {
 	assert(fg_);
 	assert(region_);

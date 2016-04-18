@@ -15,6 +15,7 @@ struct vertex
 {
 	std::string name;
 	std::size_t uuid;
+	std::size_t region;
 };
 
 /// Class containing the information of a connection/edge in the boost graph.
@@ -51,7 +52,9 @@ struct vertex_printer
 	{
 		auto Name = boost::get(&vertex::name, graph);
 		auto Uuid = boost::get(&vertex::uuid, graph);
-		out << "[label=\"" << Name[v] << "\", uuid=\"" << std::hex << Uuid[v] << "\"]";
+		auto Region = boost::get(&vertex::region, graph);
+		out << "[label=\"" << Name[v] << "\", uuid=\"" << std::hex << Uuid[v] << "\", region=\""
+		    << Region[v] << "\"]";
 	}
 };
 
@@ -75,15 +78,26 @@ void connection_graph::impl::add_connection(const graph_node_properties& source_
 		const graph_node_properties& sink_node)
 {
 	std::lock_guard<std::mutex> lock(graph_mutex);
+	auto region_to_hash = [] (parallel_region* reg) {
+		if (!reg)
+			return ~std::size_t(0);
+		return std::hash<std::string>{}(reg->get_id().key);
+	};
 
 	//check if vertex is already included, as add_vertex would add it again.
 	if (vertex_map.find(source_node.get_id()) == vertex_map.end())
-		vertex_map.emplace(source_node.get_id(), boost::add_vertex(vertex {
-				source_node.name(), hash_value(source_node.get_id())}, dataflow_graph));
+		vertex_map.emplace(
+		    source_node.get_id(),
+		    boost::add_vertex(vertex{source_node.name(), hash_value(source_node.get_id()),
+		                             region_to_hash(source_node.region())},
+		                      dataflow_graph));
 
 	if (vertex_map.find(sink_node.get_id()) == vertex_map.end())
-		vertex_map.emplace(sink_node.get_id(), boost::add_vertex(vertex {
-				sink_node.name(), hash_value(sink_node.get_id())}, dataflow_graph));
+		vertex_map.emplace(
+		    sink_node.get_id(),
+		    boost::add_vertex(vertex{sink_node.name(), hash_value(sink_node.get_id()),
+		                             region_to_hash(source_node.region())},
+		                      dataflow_graph));
 
 	boost::add_edge(vertex_map[source_node.get_id()],
 			vertex_map[sink_node.get_id()], edge { "" }, dataflow_graph);
