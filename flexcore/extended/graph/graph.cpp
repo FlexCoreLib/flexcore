@@ -53,8 +53,10 @@ struct vertex_printer
 		auto Name = boost::get(&vertex::name, graph);
 		auto Uuid = boost::get(&vertex::uuid, graph);
 		auto Region = boost::get(&vertex::region, graph);
-		out << "[label=\"" << Name[v] << "\", uuid=\"" << std::hex << Uuid[v] << "\", region=\""
+		out << std::hex;
+		out << "[label=\"" << Name[v] << "\", uuid=\"0x" << Uuid[v] << "\", region=\"0x"
 		    << Region[v] << "\"]";
+		out << std::dec;
 	}
 };
 

@@ -238,6 +238,7 @@ class forest_owner
 public:
 	forest_owner(graph::connection_graph& graph, std::string n, std::shared_ptr<parallel_region> r);
 	owning_base_node& nodes() { return *tree_root; }
+	void print_forest(std::ostream& out) const;
 
 private:
 	std::unique_ptr<forest_graph> fg_;

@@ -1,4 +1,6 @@
 #include <flexcore/extended/base_node.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/format.hpp>
 
 #include <stack>
 
@@ -115,4 +117,29 @@ forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
 	assert(tree_root);
 }
 
+void forest_owner::print_forest(std::ostream& out) const
+{
+	auto id = [](auto& node)
+	{
+		return hash_value(node->graph_info().get_id());
+	};
+	out << "{\n";
+	auto range = adobe::preorder_range(fg_->forest);
+	std::vector<std::string> lines;
+	for (auto node = range.first, last = range.second; node != last; ++node)
+	{
+		std::vector<std::string> parents;
+		// first entry in the parents array is the name of the node
+		parents.emplace_back(str(boost::format("\"%s\"") % (*node)->name()));
+		for (auto parent = adobe::find_parent(node.base()); parent != fg_->forest.end();
+		     parent = adobe::find_parent(parent))
+		{
+			parents.emplace_back((boost::format("\"0x%x\"") % id(*parent)).str());
+		}
+		auto parents_str = boost::algorithm::join(parents, ",");
+		lines.emplace_back((boost::format("\t\"0x%x\": [%s]") % id(*node) % parents_str).str());
+	}
+	out << boost::algorithm::join(lines, ",\n");
+	out << "\n}\n";
+}
 }
