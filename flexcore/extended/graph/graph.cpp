@@ -14,6 +14,7 @@ namespace graph
 struct vertex
 {
 	std::string name;
+	std::size_t uuid;
 };
 
 /// Class containing the information of a connection/edge in the boost graph.
@@ -42,6 +43,18 @@ struct connection_graph::impl
 	mutable std::mutex graph_mutex;
 };
 
+struct vertex_printer
+{
+	const dataflow_graph_t& graph;
+	template <class Vertex>
+	void operator()(std::ostream& out, const Vertex& v) const
+	{
+		auto Name = boost::get(&vertex::name, graph);
+		auto Uuid = boost::get(&vertex::uuid, graph);
+		out << "[label=\"" << Name[v] << "\", uuid=\"" << std::hex << Uuid[v] << "\"]";
+	}
+};
+
 connection_graph::connection_graph()
 	: pimpl(std::make_unique<impl>())
 {
@@ -54,7 +67,7 @@ void connection_graph::print(std::ostream& stream)
 	std::lock_guard<std::mutex> lock(pimpl->graph_mutex);
 	const auto& graph = pimpl->dataflow_graph;
 	boost::write_graphviz(stream, graph,
-		boost::make_label_writer(boost::get(&vertex::name, graph)),
+		vertex_printer{graph},
 		boost::make_label_writer(boost::get(&edge::name, graph)));
 }
 
@@ -66,11 +79,11 @@ void connection_graph::impl::add_connection(const graph_node_properties& source_
 	//check if vertex is already included, as add_vertex would add it again.
 	if (vertex_map.find(source_node.get_id()) == vertex_map.end())
 		vertex_map.emplace(source_node.get_id(), boost::add_vertex(vertex {
-				source_node.name() }, dataflow_graph));
+				source_node.name(), hash_value(source_node.get_id())}, dataflow_graph));
 
 	if (vertex_map.find(sink_node.get_id()) == vertex_map.end())
 		vertex_map.emplace(sink_node.get_id(), boost::add_vertex(vertex {
-				sink_node.name() }, dataflow_graph));
+				sink_node.name(), hash_value(sink_node.get_id())}, dataflow_graph));
 
 	boost::add_edge(vertex_map[source_node.get_id()],
 			vertex_map[sink_node.get_id()], edge { "" }, dataflow_graph);
