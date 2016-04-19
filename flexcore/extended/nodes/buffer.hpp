@@ -171,7 +171,8 @@ public:
 	/// Input Port accepting both ranges and single events of type data_t
 	auto in() noexcept
 	{
-		return detail::collector<data_t, container_t>{buffer_collect.get()};
+		using collector = detail::collector<data_t, container_t>;
+		return typename base_t::template mixin<collector>{this, collector{buffer_collect.get()}};
 	}
 
 	/// Output Port providing a range of data_t

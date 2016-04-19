@@ -67,6 +67,7 @@ public:
 	template<class data_t> using event_sink = ::fc::event_sink<data_t>;
 	template<class data_t> using state_source = ::fc::state_source<data_t>;
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
+	template<class port_t> using mixin = ::fc::default_mixin<port_t>;
 
 	tree_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name);
 	std::shared_ptr<parallel_region> region() override { return region_; }
