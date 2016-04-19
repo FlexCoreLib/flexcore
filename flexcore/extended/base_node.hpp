@@ -216,6 +216,7 @@ public:
 				tree_base_node{fg_, std::move(r), std::move(name)})));
 	}
 
+protected:
 	forest_t::iterator self() const;
 private:
 	forest_t::iterator self_;

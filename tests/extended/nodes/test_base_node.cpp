@@ -73,6 +73,8 @@ public:
 	{
 		return fg_->forest.size() -2; //-1 for this. -1 for root node
 	}
+
+	using owning_base_node::self;
 };
 }
 
