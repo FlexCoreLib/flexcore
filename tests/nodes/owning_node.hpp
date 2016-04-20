@@ -19,7 +19,6 @@ namespace tests
 class owning_node
 {
 public:
-	typedef adobe::forest<std::unique_ptr<tree_base_node>> forest_t;
 	explicit owning_node(const std::shared_ptr<parallel_region>&  r
 			= std::make_shared<parallel_region>("test_root_region"),
 			std::string name = "owner")
@@ -28,9 +27,11 @@ public:
 	{
 		assert(r);
 		assert(fg_);
-		auto node = std::make_unique<owning_base_node>(fg_.get(), r, name);
-		owner = static_cast<owning_base_node*>(
-		    forest()->insert(forest()->begin(), std::move(node))->get());
+		auto holder_node = std::make_unique<owner_holder>();
+		auto iter = adobe::trailing_of(forest()->insert(forest()->begin(), std::move(holder_node)));
+		auto owning_node = std::make_unique<owning_base_node>(iter, fg_.get(), r, name);
+		auto& holder = static_cast<owner_holder&>(*iter->get());
+		owner = holder.set_owner(std::move(owning_node));
 		assert(owner);
 	}
 

@@ -18,6 +18,11 @@ public:
 
 	owning_base_node& node_owner() { return forest_root.nodes(); }
 	graph::connection_graph& get_graph() { return graph; }
+	void print(std::ostream& graph_out, std::ostream& forest_out)
+	{
+		graph.print(graph_out);
+		forest_root.print_forest(forest_out);
+	}
 	void infinite_main_loop();
 	void start_scheduler() { scheduler.start(); }
 	void stop_scheduler() { scheduler.stop(); }

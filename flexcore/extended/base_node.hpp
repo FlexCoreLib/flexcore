@@ -12,7 +12,15 @@
 
 namespace fc
 {
-class graph_node : public node
+/** \brief A node that is part of a graph.
+ *
+ * The idea is that client code that wants to create nodes outside of the
+ * forest can hold a graph_node member and pass it on to all ports that require
+ * the node interface.
+ *
+ * Currently not used anywhere inside flexcore.
+ */
+class graph_node final : public node
 {
 public:
 	graph_node(graph::connection_graph& graph, const std::string& name)
@@ -37,9 +45,19 @@ private:
 	graph::connection_graph* graph_;
 };
 
-class tree_base_node;
+/** \brief Interface for nodes that are part of a hierarchical tree.
+ *
+ * In principle it could have the same abstract methods as node - the objective
+ * was to have type safety (so that graph_nodes are not inserted into forest).
+ * The name() method is just a convenience.
+ */
+class tree_node : public node
+{
+public:
+	virtual std::string name() const = 0;
+};
 
-using forest_t = adobe::forest<std::unique_ptr<tree_base_node>>;
+using forest_t = adobe::forest<std::unique_ptr<tree_node>>;
 
 struct forest_graph
 {
@@ -48,25 +66,25 @@ struct forest_graph
 	graph::connection_graph& graph;
 };
 
-/**
- * \brief base class for nodes contained in forest
+/** \brief Base class for nodes contained in forest.
  *
- *  Nodes are neither copy_constructyble nor copy_assignable.
+ * These should only be constructed through an owning_base_node's
+ * make_child()/make_child_named()/new_node() methods.
  *
- *
- * \invariant region_ != null_ptr
+ * \invariant fg_ != nullptr
  */
-class tree_base_node : public node
+class tree_base_node : public tree_node
 {
 public:
 	template<class data_t> using event_source = ::fc::event_source<data_t>;
 	template<class data_t> using event_sink = ::fc::event_sink<data_t>;
 	template<class data_t> using state_source = ::fc::state_source<data_t>;
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
+	template<class port_t> using mixin = ::fc::default_mixin<port_t>;
 
 	tree_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name);
 	std::shared_ptr<parallel_region> region() override { return region_; }
-	std::string name() const;
+	std::string name() const override;
 
 	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() override;
@@ -74,23 +92,54 @@ public:
 protected:
 	forest_graph* fg_;
 private:
-	/* Information about which region the node belongs to */
+	/// Information about which region the node belongs to
 	std::shared_ptr<parallel_region> region_;
-	/* Information for abstract graph */
-	//stores the metainformation of the node used by the abstract graph
+	/// Stores the metainformation of the node used by the abstract graph
 	graph::graph_node_properties graph_info_;
 
 };
 
-/**
- * \brief base class for nodes which own other nodes, aka nested nodes.
+class owning_base_node;
+
+/** \brief Helper to allow for two phase insertion of owning_base_nodes into forest.
  *
- * \invariant forest_ != nullptr
+ * owning_base_nodes need an iterator to self in the forest, and since we
+ * cannot emplace something directly in the forest, we instead:
+ *
+ *  1. insert an owner_holder into forest
+ *  2. construct an owner (derived from owning_base_node) with the owner_holder's iterator
+ *  3. assign the owner to the owner_holder
+ *
+ * \pre Before any calls to tree_node interface methods, set_owner must have
+ *      been called with a valid unique_ptr<owning_base_node>.
+ */
+class owner_holder final : public tree_node
+{
+public:
+	owning_base_node* set_owner(std::unique_ptr<owning_base_node> node)
+	{
+		owner_ = std::move(node);
+		return owner_.get();
+	}
+	std::shared_ptr<parallel_region> region() override;
+	graph::graph_node_properties graph_info() const override;
+	graph::connection_graph& get_graph() override;
+	std::string name() const override;
+
+private:
+	std::unique_ptr<owning_base_node> owner_;
+};
+
+/**
+ * \brief Base class for nodes which own other nodes, aka compound nodes.
+ *
+ * \invariant self_ points to self in forest.
  *
  * Nodes of this type may have children nodes.
- *
  * Use make_child/make_child_named to create a node already inserted into
  * the ownership tree.
+ * Use new_node to create a tree_base_node that carries metadata (about its
+ * position in tree) but which can be passed onto a node for use with ports.
  *
  * Node creation examples:
  * \code{cpp}
@@ -104,23 +153,36 @@ private:
 class owning_base_node : public tree_base_node
 {
 public:
-	owning_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name)
-	    : tree_base_node(fg, r, name)
+	owning_base_node(forest_t::iterator self, forest_graph* fg, std::shared_ptr<parallel_region> r,
+	                 std::string name)
+	    : tree_base_node(fg, r, name), self_(self)
 	{
 	}
-	owning_base_node(const tree_base_node& node)
-		: tree_base_node(node)
+	owning_base_node(forest_t::iterator self, const tree_base_node& node)
+		: tree_base_node(node), self_(self)
 	{
+	}
+
+	template <class node_t, class... Args>
+	node_t* make_owner(std::shared_ptr<parallel_region> r, std::string name, Args&&... args)
+	{
+		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
+		auto& holder = static_cast<owner_holder&>(*iter->get());
+		return static_cast<node_t*>(holder.set_owner(std::make_unique<node_t>(
+		    std::forward<Args>(args)..., iter, tree_base_node{fg_, r, name})));
 	}
 
 	tree_base_node* new_node(std::string name)
 	{
-		return add_child(std::make_unique<tree_base_node>(fg_, region(), name));
+		return static_cast<tree_base_node*>(
+		    add_child(std::make_unique<tree_base_node>(fg_, region(), name)));
 	}
 	tree_base_node* new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
-		return add_child(std::make_unique<tree_base_node>(fg_, r, name));
+		return static_cast<tree_base_node*>(
+		    add_child(std::make_unique<tree_base_node>(fg_, r, name)));
 	}
+
 	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
 	 *
@@ -157,7 +219,6 @@ public:
 
 	/**
 	 * \brief Creates a new child node of type node_t from args
-	 * if node_t inherits from owning_base_node
 	 *
 	 * Sets name of child to n and inserts child into tree.
 	 * Sets forest of of child to forest of parent.
@@ -182,14 +243,14 @@ public:
 
 protected:
 	forest_t::iterator self() const;
-	// stores the access to the forest this node is contained in.
 private:
+	forest_t::iterator self_;
 	/**
 	 * Takes ownership of child node and inserts into tree.
 	 * \return pointer to child node
 	 * \pre child != nullptr
 	 */
-	tree_base_node* add_child(std::unique_ptr<tree_base_node> child);
+	tree_node* add_child(std::unique_ptr<tree_node> child);
 
 };
 
@@ -204,6 +265,7 @@ class forest_owner
 public:
 	forest_owner(graph::connection_graph& graph, std::string n, std::shared_ptr<parallel_region> r);
 	owning_base_node& nodes() { return *tree_root; }
+	void print_forest(std::ostream& out) const;
 
 private:
 	std::unique_ptr<forest_graph> fg_;
@@ -227,8 +289,8 @@ erase_with_subtree(
 		forest_t::iterator position)
 {
 	return forest.erase(
-			adobe::child_begin(position).base(),
-			adobe::child_end(position).base());
+			adobe::leading_of(position),
+			++adobe::trailing_of(position));
 }
 
 /**
@@ -238,7 +300,7 @@ erase_with_subtree(
  * and the name of the node itself.
  * The names are separated by a separation token.
  */
-std::string full_name(forest_t& forest, const tree_base_node* node);
+std::string full_name(forest_t& forest, const tree_node* node);
 
 } // namespace fc
 

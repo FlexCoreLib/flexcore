@@ -55,28 +55,26 @@ namespace
 class test_owning_node : public owning_base_node
 {
 public:
-	static constexpr auto default_name = "test_owning_node";
-	explicit test_owning_node(forest_graph* fg, std::shared_ptr<parallel_region> r)
-	    : owning_base_node(fg, r, default_name)
+	static constexpr auto default_name = "test_owning_node_";
+	explicit test_owning_node(forest_t::iterator self, forest_graph* fg, std::shared_ptr<parallel_region> r)
+	    : owning_base_node(self, fg, r, default_name)
 	{
 	}
-	explicit test_owning_node(const tree_base_node& node)
-	    : owning_base_node(node)
+	explicit test_owning_node(forest_t::iterator self, const tree_base_node& node)
+	    : owning_base_node(self, node)
 	{
 	}
-	forest_t::iterator add_child()
+	test_owning_node*  add_child()
 	{
-		make_child<test_owning_node>();
-		return ++adobe::trailing_of(adobe::child_begin(self()).base());
+		return make_owner<test_owning_node>(region(), default_name);
 	}
-
-	explicit test_owning_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name) :
-			owning_base_node(fg, r, name) {}
 
 	size_t nr_of_children()
 	{
 		return fg_->forest.size() -2; //-1 for this. -1 for root node
 	}
+
+	using owning_base_node::self;
 };
 }
 
@@ -86,7 +84,8 @@ public:
 BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
 	tests::owning_node root("root");
-	auto child1 = root.make_child_named<test_owning_node>("test_owning_node");
+	auto child1 =
+	    root.node().make_owner<test_owning_node>(root.node().region(), "test_owning_node");
 	auto child2 = root.make_child_named<null>("2");
 	auto child1a = child1->make_child_named<null>("a");
 
@@ -105,27 +104,30 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/name");
 }
 
-
-
 BOOST_AUTO_TEST_CASE( test_deletion )
 {
-	tests::owning_node root;
+	tests::owning_node root_;
+	auto& root = root_.node();
 
-	auto test_node = root.make_child<test_owning_node>();
+	auto test_node =
+	    root.make_owner<test_owning_node>(root.region(), test_owning_node::default_name);
 
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
 
 	auto temp_it = test_node->add_child();
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 1);
 
-	erase_with_subtree(*(root.forest()), temp_it);
+	erase_with_subtree(*(root_.forest()), temp_it->self());
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
 
 	auto temp_it_2 = test_node->add_child();
-	static_cast<test_owning_node*>(temp_it_2->get())->add_child();
+	temp_it_2->add_child();
+	auto temp_it_3 = test_node->add_child();
 
-	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 2);
-	erase_with_subtree(*(root.forest()), temp_it);
+	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 3);
+	erase_with_subtree(*(root_.forest()), temp_it_2->self());
+	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 1);
+	erase_with_subtree(*(root_.forest()), temp_it_3->self());
 
 	BOOST_CHECK_EQUAL(test_node->nr_of_children(), 0);
 }
