@@ -9,6 +9,8 @@ namespace fc
 {
 /**
  * \brief Interface for all nodes (whether part of forest+graph or only graph)
+ *
+ * This interface is required to construct node_aware_mixin ports.
  */
 class node
 {

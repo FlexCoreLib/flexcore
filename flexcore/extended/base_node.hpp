@@ -12,7 +12,15 @@
 
 namespace fc
 {
-class graph_node : public node
+/** \brief A node that is part of a graph.
+ *
+ * The idea is that client code that wants to create nodes outside of the
+ * forest can hold a graph_node member and pass it on to all ports that require
+ * the node interface.
+ *
+ * Currently not used anywhere inside flexcore.
+ */
+class graph_node final : public node
 {
 public:
 	graph_node(graph::connection_graph& graph, const std::string& name)
@@ -37,6 +45,12 @@ private:
 	graph::connection_graph* graph_;
 };
 
+/** \brief Interface for nodes that are part of a hierarchical tree.
+ *
+ * In principle it could have the same abstract methods as node - the objective
+ * was to have type safety (so that graph_nodes are not inserted into forest).
+ * The name() method is just a convenience.
+ */
 class tree_node : public node
 {
 public:
@@ -52,13 +66,12 @@ struct forest_graph
 	graph::connection_graph& graph;
 };
 
-/**
- * \brief base class for nodes contained in forest
+/** \brief Base class for nodes contained in forest.
  *
- *  Nodes are neither copy_constructyble nor copy_assignable.
+ * These should only be constructed through an owning_base_node's
+ * make_child()/make_child_named()/new_node() methods.
  *
- *
- * \invariant region_ != null_ptr
+ * \invariant fg_ != nullptr
  */
 class tree_base_node : public tree_node
 {
@@ -79,17 +92,28 @@ public:
 protected:
 	forest_graph* fg_;
 private:
-	/* Information about which region the node belongs to */
+	/// Information about which region the node belongs to
 	std::shared_ptr<parallel_region> region_;
-	/* Information for abstract graph */
-	//stores the metainformation of the node used by the abstract graph
+	/// Stores the metainformation of the node used by the abstract graph
 	graph::graph_node_properties graph_info_;
 
 };
 
 class owning_base_node;
 
-class owner_holder : public tree_node
+/** \brief Helper to allow for two phase insertion of owning_base_nodes into forest.
+ *
+ * owning_base_nodes need an iterator to self in the forest, and since we
+ * cannot emplace something directly in the forest, we instead:
+ *
+ *  1. insert an owner_holder into forest
+ *  2. construct an owner (derived from owning_base_node) with the owner_holder's iterator
+ *  3. assign the owner to the owner_holder
+ *
+ * \pre Before any calls to tree_node interface methods, set_owner must have
+ *      been called with a valid unique_ptr<owning_base_node>.
+ */
+class owner_holder final : public tree_node
 {
 public:
 	owning_base_node* set_owner(std::unique_ptr<owning_base_node> node)
@@ -107,14 +131,15 @@ private:
 };
 
 /**
- * \brief base class for nodes which own other nodes, aka nested nodes.
+ * \brief Base class for nodes which own other nodes, aka compound nodes.
  *
- * \invariant forest_ != nullptr
+ * \invariant self_ points to self in forest.
  *
  * Nodes of this type may have children nodes.
- *
  * Use make_child/make_child_named to create a node already inserted into
  * the ownership tree.
+ * Use new_node to create a tree_base_node that carries metadata (about its
+ * position in tree) but which can be passed onto a node for use with ports.
  *
  * Node creation examples:
  * \code{cpp}
