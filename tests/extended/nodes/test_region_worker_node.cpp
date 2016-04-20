@@ -12,9 +12,9 @@ BOOST_AUTO_TEST_SUITE(test_region_worker)
 struct triggered_counter : public region_worker_node
 {
 public:
-	triggered_counter(forest_t* f, std::shared_ptr<parallel_region> parent_region, std::string name)
+	triggered_counter(const tree_base_node& node)
 		: region_worker_node([this](){out_event_source.fire(++work_counter);},
-		                     f, parent_region, name)
+		                     node)
 		, out_event_source(this)
 		, work_counter(0)
 	{

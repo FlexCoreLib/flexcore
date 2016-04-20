@@ -39,6 +39,8 @@ public:
 	using event_source = pure_port_mixin<event_source<data_t>>;
 	template<class data_t>
 	using state_source = pure_port_mixin<state_source<data_t>>;
+	template<class port_t>
+	using mixin = pure_port_mixin<port_t>;
 };
 
 }  // namespace pure

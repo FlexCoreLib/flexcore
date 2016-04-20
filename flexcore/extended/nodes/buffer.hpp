@@ -171,7 +171,8 @@ public:
 	/// Input Port accepting both ranges and single events of type data_t
 	auto in() noexcept
 	{
-		return detail::collector<data_t, container_t>{buffer_collect.get()};
+		using collector = detail::collector<data_t, container_t>;
+		return typename base_t::template mixin<collector>{this, collector{buffer_collect.get()}};
 	}
 
 	/// Output Port providing a range of data_t
@@ -209,13 +210,15 @@ template<class data_t, class base_t>
 class hold_last : public base_t
 {
 public:
+	static constexpr auto default_name = "hold_last";
+
 	static_assert(!std::is_void<data_t>(),
 			"data stored in hold_last cannot be void");
 
 	/// Constructs hold_last with initial state.
 	template<class... args_t>
 	explicit hold_last(const data_t& initial_value, args_t&&... args)
-		: base_t(std::forward<args_t>(args)..., "hold_last")
+		: base_t(std::forward<args_t>(args)...)
 		, storage(initial_value)
 	{
 	}
@@ -241,6 +244,7 @@ template<class data_t, class base_t>
 class hold_n : public base_t
 {
 public:
+	static constexpr auto default_name = "hold_n";
 	typedef boost::circular_buffer<data_t> buffer_t;
 	typedef boost::iterator_range<
 			typename buffer_t::const_iterator> out_range_t;
@@ -255,7 +259,7 @@ public:
 	 */
 	template<class... args_t>
 	explicit hold_n(size_t capacity, args_t&&... args)
-		: base_t(std::forward<args_t>(args)..., "hold")
+		: base_t(std::forward<args_t>(args)...)
 		, storage(std::make_unique<buffer_t>(capacity))
 		, out_port(this,
 				[this]()

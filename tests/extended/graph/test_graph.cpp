@@ -15,8 +15,8 @@ namespace
 {
 	struct dummy_node : tree_base_node
 	{
-		dummy_node(forest_t* f, std::shared_ptr<parallel_region> r, const std::string& name)
-			: tree_base_node(f, r, name)
+		dummy_node(const tree_base_node& node)
+			: tree_base_node(node)
 			, out_port(this, [](){ return 0;})
 			, in_port(this)
 		{
@@ -39,8 +39,8 @@ namespace
 
 BOOST_AUTO_TEST_CASE(test_graph_creation)
 {
-	forest_owner forest{"forest", std::make_shared<parallel_region>("r")};
-	auto& graph = forest.get_graph();
+	graph::connection_graph graph;
+	forest_owner forest{graph, "forest", std::make_shared<parallel_region>("r")};
 	auto& r = forest.nodes();
 	auto dummy_node_factory = [&](auto name) { return r.make_child_named<dummy_node>(name); };
 	dummy_node& source_1 = *dummy_node_factory("state_source 1");
