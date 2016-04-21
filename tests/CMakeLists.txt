@@ -15,6 +15,7 @@ ADD_EXECUTABLE( test_executable
 	nodes/test_state_nodes.cpp
 	extended/graph/test_graph.cpp
 	extended/nodes/test_base_node.cpp
+	extended/nodes/test_infrastructure.cpp
 	extended/nodes/test_region_worker_node.cpp
 	extended/nodes/test_terminal_node.cpp
 	extended/ports/test_event_buffer.cpp

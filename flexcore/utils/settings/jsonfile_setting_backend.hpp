@@ -30,6 +30,15 @@ public:
 				+ ". you should check for json syntax errors.");
 	}
 
+	/**
+	 * \brief Registers Setting and immediately tries to read value from archive.
+	 * @param id Key of Setting in json format.
+	 * @param initial_v intial value of setting, here for completeness of interface,
+	 * as value is read immediatly from archive
+	 * @param setter callback to write value from archive to setting.
+	 * @tparam data_t type of data stored in setting.
+	 * @throw ::cereal::Exception if json value under @p id cannot be converted to data_t.
+	 */
 	template<class data_t, class setter_t>
 	void register_setting(
 			setting_id id,
@@ -39,16 +48,16 @@ public:
 		auto value = initial_v;
 		try
 		{
-			//tries to read value from json parser.
-			//the value remains unchanged if an error occurs.
 			archive(cereal::make_nvp(id.key, value));
+			setter(value);
 		}
-		catch(const cereal::Exception& ex)
+		catch (const ::cereal::Exception& ex)
 		{
-			std::cerr << "json_file_setting_facade.register_setting():"
-					" '"	<< ex.what() << "'" << std::endl;
+			throw ::cereal::Exception(std::string(ex.what())
+					+ ". Value of Setting "
+					+ id.key
+					+ " could not be read from json archive");
 		}
-		setter(value);
 	}
 
 	/**
