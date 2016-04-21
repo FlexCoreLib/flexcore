@@ -127,12 +127,18 @@ template<class data_t>
 class current_state : public region_worker_node
 {
 public:
-	explicit current_state(std::shared_ptr<parallel_region> r, const data_t& initial_value = data_t()) :
-			region_worker_node(
+	static constexpr auto default_name = "cache";
+
+	explicit current_state(const tree_base_node& node)
+		: current_state(data_t{}, node)
+	{
+	}
+	explicit current_state(const data_t& initial_value, const tree_base_node& node)
+		: region_worker_node(
 			[this]()
 			{
 				stored_state = in_port.get();
-			}, r, "cache"),
+			}, node),
 			in_port(this),
 			out_port(this, [this](){ return stored_state;}),
 			stored_state(initial_value)

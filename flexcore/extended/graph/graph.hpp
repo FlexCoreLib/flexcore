@@ -3,6 +3,7 @@
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
 
 #include <map>
 
@@ -23,19 +24,23 @@ class graph_node_properties
 public:
 	typedef boost::uuids::uuid unique_id;
 
-	explicit graph_node_properties(const std::string& name,
-			unique_id id = boost::uuids::random_generator()())
-		: human_readable_name(name)
-		, id(id)
+	explicit graph_node_properties(const std::string& name, parallel_region* region,
+	                               unique_id id = boost::uuids::random_generator()())
+	    : human_readable_name(name), id(id), region_(region)
+	{
+	}
+	explicit graph_node_properties(const std::string& name) : graph_node_properties(name, nullptr)
 	{
 	}
 
 	const std::string& name() const { return human_readable_name; }
 	std::string& name() { return human_readable_name; }
 	unique_id get_id() const { return id; }
+	parallel_region* region() const { return region_; }
 private:
 	std::string human_readable_name;
 	unique_id id;
+	parallel_region* region_;
 };
 
 /**
@@ -72,18 +77,12 @@ private:
 class connection_graph
 {
 public:
-	/// Static access to the singleton.
-	static connection_graph& access()
-	{
-		static connection_graph s;
-		return s;
-	}
-
+	connection_graph();
 	connection_graph(const connection_graph&) = delete;
 
 	/// Adds a new Connection without ports to the graph.
 	void add_connection(const graph_node_properties& source_node,
-			const graph_node_properties& sink_node);
+	                    const graph_node_properties& sink_node);
 
 	/// Prints current state of the abstract graph in graphviz format to stream.
 	void print(std::ostream& stream);
@@ -94,19 +93,9 @@ public:
 	~connection_graph();
 
 private:
-	connection_graph();
-
 	struct impl;
 	std::unique_ptr<impl> pimpl;
 };
-
-/**
- * \brief Adds a new edge to the graph representation.
- *
- * The edge is leading from source to sink without ports.
- */
-void add_to_graph(const graph_node_properties& source_node,
-		const graph_node_properties& sink_node);
 
 }  // namespace graph
 }  // namespace fc

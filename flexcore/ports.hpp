@@ -1,6 +1,7 @@
 #ifndef SRC_PORTS_PORTS_HPP_
 #define SRC_PORTS_PORTS_HPP_
 
+#include <flexcore/extended/node_fwd.hpp>
 #include <flexcore/extended/ports/node_aware.hpp>
 #include <flexcore/extended/ports/token_tags.hpp>
 #include <flexcore/extended/graph/graph_connectable.hpp>
@@ -16,12 +17,9 @@ struct node_aware_mixin : graph::graph_connectable<node_aware<port_t>>
 {
 	using base = graph::graph_connectable<node_aware<port_t>>;
 
-	// TODO: this T should really be tree_base_node. It can't be because this
-	// requires a full declaration of tree_base_node and tree_base_node
-	// requires a full declaration of node_aware_mixin.
-	template <class T, class ... args>
-	node_aware_mixin(T* node_ptr, args&&... base_constructor_args)
-		: base(node_ptr->graph_info(),
+	template <class ... args>
+	node_aware_mixin(node* node_ptr, args&&... base_constructor_args)
+		: base(node_ptr->get_graph(), node_ptr->graph_info(),
 				*(node_ptr->region().get()),
 				std::forward<args>(base_constructor_args)...)
 	{
