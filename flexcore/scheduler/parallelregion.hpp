@@ -9,7 +9,9 @@
 #define SRC_SCHEDULER_PARALLELREGION_HPP_
 
 #include <flexcore/pure/event_sources.hpp>
+#include <flexcore/scheduler/clock.hpp>
 #include <string>
+#include <memory>
 
 namespace fc
 {
@@ -73,6 +75,9 @@ public:
 	region_id get_id() const;
 	pure::event_source<void>& switch_tick();
 	pure::event_source<void>& work_tick();
+	/// Create new region from existing one.
+	virtual std::shared_ptr<parallel_region> new_region(std::string name,
+	                                                    virtual_clock::steady::duration) const;
 
 	tick_controller ticks;
 	region_id id;

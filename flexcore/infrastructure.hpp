@@ -6,6 +6,9 @@
 
 namespace fc
 {
+namespace detail {
+class region_factory;
+}
 
 class infrastructure
 {
@@ -30,6 +33,7 @@ public:
 
 private:
 	thread::cycle_control scheduler;
+	std::shared_ptr<detail::region_factory> region_maker;
 	graph::connection_graph graph;
 	forest_owner forest_root;
 };
