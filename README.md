@@ -34,6 +34,10 @@ call to cmake. The libraries will then be installed in
 
 To use flexcore in a cmake based project check the [usage](docs/USING.md) document.
 
+To access the documentation in doxygen, execute doxygen from top level directory, not from /docs :
+
+`doxygen docs/doxyfile`
+
 Dependencies
 ------------
 - C++14 compatible compiler (tested with GCC-5.2, Clang-3.6)
