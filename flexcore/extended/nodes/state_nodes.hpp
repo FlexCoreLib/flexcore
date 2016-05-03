@@ -47,7 +47,7 @@ struct merge_node<operation, result (args...), base_t> : public base_t
 	using arguments = std::tuple<args...>;
 	template <typename arg>
 	using base_sink_t = typename base_t::template state_sink<arg>;
-	using result_type = result ;
+	using result_t = result ;
 
 	using in_ports_t = std::tuple<base_sink_t<args>...>;
 
@@ -64,7 +64,7 @@ struct merge_node<operation, result (args...), base_t> : public base_t
 	{}
 
 	///calls all in ports, converts their results from tuple to varargs and calls operation
-	result_type operator()()
+	result_t operator()()
 	{
 		auto op = this->op;
 		auto get_and_apply = [op](auto&&... sink)
@@ -106,7 +106,7 @@ auto make_merge(parent_t& parent, operation op, std::string name = "merger")
 	return parent.template make_child<node_t>(op, name);
 }
 
-///creats a merge node which applies the operation to all inputs and returns single state.
+///creates a merge node which applies the operation to all inputs and returns single state.
 template<class operation>
 auto make_merge(operation op)
 {
@@ -117,6 +117,60 @@ auto make_merge(operation op)
 			> node_t;
 	return node_t{op};
 }
+
+/**
+ * \brief Merges inputs combining incoming elements to a range of elements.
+ *
+ * Incoming ranges will thus be converted to a range of ranges.
+ *
+ * \tparam data_t type of data flowing through node.
+ * \tparam out_container_t type of range used as output. Default is std::vector
+ *
+ */
+template<class data_t, class base_t, class out_container_t = std::vector<data_t>>
+class dynamic_merger final : public base_t
+{
+public:
+	using in_port_t = typename base_t::template state_sink<data_t>;
+	using out_port_t = typename base_t::template state_source<out_container_t>;
+
+	static constexpr auto default_name = "merger";
+
+	template<class... args_t>
+		explicit dynamic_merger(args_t&&... args) :
+		base_t(std::forward<args_t>(args)...),
+		in_ports(),
+		out_buffer(),
+		out_port(this,[this](){return merge_inputs();})
+	{
+	}
+
+	/// state_sink of type data_t, creates a new port for each call.
+	in_port_t& in()
+		{
+			in_ports.emplace_back(std::make_unique<in_port_t>(this));
+			return *(in_ports.back());
+		}
+
+	/// State Output Port of type out_container_t<data_t>.
+	out_port_t& out() { return out_port; }
+
+private:
+	auto merge_inputs()
+	{
+		out_buffer.clear();
+		for(auto& port : in_ports)
+		{
+			out_buffer.push_back(port->get());
+		}
+
+		return out_buffer;
+	}
+
+	std::vector<std::unique_ptr<in_port_t>> in_ports;
+	out_container_t out_buffer;
+	out_port_t out_port;
+};
 
 /*****************************************************************************/
 /*                                   Caches                                  */
@@ -171,26 +225,25 @@ public:
 	base_t(std::forward<args_t>(args)...),
 		cache(std::make_unique<data_t>()),
 		load_new(true),
-		in_port(this)
-	{
-	}
-
-	/// State Output Port of type data_t
-	auto out() noexcept // todo: make lambda member and only return reference
-	{
-		return [this]()
+		in_port(this),
+		out_port(this, [this]()
 		{
 			if (load_new)
 				refresh_cache();
 			return *cache;
-		};
+		}),
+		update_port(this,  [this](){ load_new = true; })
+	{
 	}
+
+	/// State Output Port of type data_t
+	auto& out() noexcept { return out_port; }
 
 	/// State Input Port of type data_t
 	auto& in() noexcept { return in_port; }
 
 	/// Events to this port mark the cache as dirty. Expects events of type void.
-	auto update() noexcept { return [this](){ load_new = true; }; } // todo: make lambda member and only return reference
+	auto& update() noexcept { return update_port; }
 
 private:
 	void refresh_cache()
@@ -201,6 +254,8 @@ private:
 	std::unique_ptr<data_t> cache;
 	bool load_new;
 	typename base_t::template state_sink<data_t> in_port;
+	typename base_t::template state_source<data_t> out_port;
+	typename base_t::template event_sink<void> update_port;
 };
 
 } // namespace fc

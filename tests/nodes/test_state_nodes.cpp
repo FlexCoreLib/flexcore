@@ -17,6 +17,24 @@ BOOST_AUTO_TEST_CASE( test_merge )
 	BOOST_CHECK_EQUAL(multiply(), 6);
 }
 
+BOOST_AUTO_TEST_CASE(test_dynamic_merge)
+{
+	dynamic_merger<int, pure::pure_node> merger;
+
+	pure::state_source<int> three([](){ return 3; });
+	pure::state_source<int> two([](){ return 2; });
+	two >> merger.in();
+	three >> merger.in();
+
+	std::vector<int> result = {two(), three()};
+	BOOST_CHECK(merger.out()()==result);
+
+	[](){return 4;} >> merger.in();
+	result.push_back(4);
+	BOOST_CHECK(merger.out()()==result);
+}
+
+
 BOOST_AUTO_TEST_CASE(test_state_cache)
 {
 	state_cache<int, pure::pure_node> cache;
