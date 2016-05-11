@@ -37,4 +37,28 @@ BOOST_AUTO_TEST_CASE(test_arithmetic_and_logical)
 	BOOST_CHECK_EQUAL(([](){ return -1;} >> clamp(0,2))(), 0);
 }
 
+BOOST_AUTO_TEST_CASE(test_helpers)
+{
+	auto zero = constant(0);
+	BOOST_CHECK_EQUAL(zero(),0);
+
+	auto pi = constant(3.14159);
+	BOOST_CHECK_EQUAL(pi(),3.14159);
+
+	int test_value = 0;
+	BOOST_CHECK_EQUAL(test_value, 0);
+	auto connection = constant(1) >> tee([&test_value](int in){test_value = in;});
+	BOOST_CHECK_EQUAL(connection(), 1); //this call triggers the side effect from tee
+	BOOST_CHECK_EQUAL(test_value, 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_print)
+{
+	std::ostringstream test_stream;
+	auto connection = constant(1) >> print(test_stream);
+	connection();
+
+	BOOST_CHECK_EQUAL(test_stream.str(), "1\n");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

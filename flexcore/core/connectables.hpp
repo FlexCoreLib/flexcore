@@ -67,6 +67,51 @@ auto clamp = [](auto min, auto max)
 	};
 };
 
+/**
+ * \brief State Source, which returns a given constant every time it is called.
+ *
+ * \pre constant value needs to fulfill copy_constructible.
+ */
+auto constant = [](auto x)
+{
+	return [x]()
+	{
+		return x;
+	};
+};
+
+/**
+ * \brief Calls a given callback and then returns value every time it is called.
+ *
+ * \pre @param callback needs to fulfill copy_constructible.
+ */
+auto tee = [](auto callback)
+{
+	return [callback](const auto& in)
+	{
+		callback(in);
+		return in;
+	};
+};
+
+/**
+ * \brief Event_sink, which prints all incoming tokens to given stream.
+ *
+ * Ends every token with a new_line character.
+ * Use this together with tee to print tokens in chains.
+ * source >> tee(print(std::cout)) >> sink;
+ *
+ * \param stream Results are printed to this using operator <<.
+ * print does not take ownership of stream.
+ */
+auto print = [](auto& stream)
+{
+	return [&](auto in)
+	{
+		stream << in << "\n";
+	};
+};
+
 }  // namespace fc
 
 #endif /* SRC_CORE_CONNECTABLES_HPP_ */
