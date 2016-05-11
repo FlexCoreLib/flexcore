@@ -118,10 +118,10 @@ int main()
        fc::pure::event_sink<int> sink{print_temperature};
 
        fc::infrastructure infra;
-       my_node* node = infra.node_owner().make_child_named<my_node>("my node");
+       my_node& node = infra.node_owner().make_child_named<my_node>("my node");
 
-       go_signal >> node->trigger;
-       node->curr_temp >> sink;
+       go_signal >> node.trigger;
+       node.curr_temp >> sink;
 
        go_signal.fire();
 }
@@ -174,15 +174,15 @@ int main()
 	auto region_a = infra.add_region("region a", fc::thread::cycle_control::medium_tick);
 	auto region_b = infra.add_region("region b", fc::thread::cycle_control::fast_tick);
 
-	my_region_node* node_a = infra.node_owner()
+	my_region_node& node_a = infra.node_owner()
 	                              .make_child<my_region_node>(region_a, "node a");
-	my_region_node* node_b = infra.node_owner()
+	my_region_node& node_b = infra.node_owner()
 	                              .make_child<my_region_node>(region_b, "node b");
 
-	node_a->src >> node_b->sink;
-	node_b->src >> node_a->sink;
-	region_a->work_tick() >> node_a->do_work;
-	region_b->work_tick() >> node_b->do_work;
+	node_a.src >> node_b.sink;
+	node_b.src >> node_a.sink;
+	region_a->work_tick() >> node_a.do_work;
+	region_b->work_tick() >> node_b.do_work;
 
 	infra.start_scheduler();
 	infra.iterate_main_loop();

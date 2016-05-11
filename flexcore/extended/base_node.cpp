@@ -6,9 +6,9 @@
 
 namespace fc
 {
-static forest_t::iterator find_self(forest_t& forest, const tree_node* node)
+static forest_t::iterator find_self(forest_t& forest, const tree_node& node)
 {
-	auto node_id = node->graph_info().get_id();
+	auto node_id = node.graph_info().get_id();
 	auto self = std::find_if(forest.begin(), forest.end(), [=](auto& other_uniq_ptr)
 	                         {
 		                         return node_id == other_uniq_ptr->graph_info().get_id();
@@ -20,7 +20,7 @@ static forest_t::iterator find_self(forest_t& forest, const tree_node* node)
 static constexpr auto name_seperator = "/";
 
 std::string full_name(forest_t& forest,
-                      const tree_node* node)
+                      const tree_node& node)
 {
 	auto position = find_self(forest, node);
 	//push names of parent / grandparent ... to stack to later reverse order.
@@ -72,7 +72,7 @@ forest_t::iterator owning_base_node::self() const
 	return self_;
 }
 
-fc::tree_node* owning_base_node::add_child(std::unique_ptr<tree_node> child)
+fc::tree_node& owning_base_node::add_child(std::unique_ptr<tree_node> child)
 {
 	assert(fg_);
 	assert(child);
@@ -80,7 +80,7 @@ fc::tree_node* owning_base_node::add_child(std::unique_ptr<tree_node> child)
 	auto child_it = adobe::trailing_of(forest.insert(self(), std::move(child)));
 	assert(adobe::find_parent(child_it) == self());
 	assert(adobe::find_parent(child_it) != forest.end());
-	return child_it->get();
+	return *(child_it->get());
 }
 
 std::shared_ptr<parallel_region> owner_holder::region()
@@ -113,7 +113,7 @@ forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
 	auto& forest = fg_->forest;
 	auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<owner_holder>()));
 	auto& holder = static_cast<owner_holder&>(*iter->get());
-	tree_root = holder.set_owner(std::make_unique<owning_base_node>(iter, fg_.get(), r, n));
+	tree_root = &holder.set_owner(std::make_unique<owning_base_node>(iter, fg_.get(), r, n));
 	assert(tree_root);
 }
 

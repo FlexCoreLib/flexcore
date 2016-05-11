@@ -93,7 +93,7 @@ protected:
  * \brief creates a merge node which applies the operation to all inputs and returns single state.
  * @param parent nodes the created merge_node is attached to.
  * @param op operation to apply to inputs of merge_node
- * @return pointer to created merge_node
+ * @return reference to created merge_node
  */
 template<class parent_t, class operation>
 auto make_merge(parent_t& parent, operation op, std::string name = "merger")

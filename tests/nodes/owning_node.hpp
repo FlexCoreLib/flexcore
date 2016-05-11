@@ -31,7 +31,7 @@ public:
 		auto iter = adobe::trailing_of(forest()->insert(forest()->begin(), std::move(holder_node)));
 		auto owning_node = std::make_unique<owning_base_node>(iter, fg_.get(), r, name);
 		auto& holder = static_cast<owner_holder&>(*iter->get());
-		owner = holder.set_owner(std::move(owning_node));
+		owner = &holder.set_owner(std::move(owning_node));
 		assert(owner);
 	}
 
@@ -41,20 +41,20 @@ public:
 	}
 
 	template <class node_t, class ... args_t>
-	node_t* make_child(args_t&& ... args)
+	node_t& make_child(args_t&& ... args)
 	{
 		return owner->make_child<node_t>(std::forward<args_t>(args)...);
 	}
 
 	template<class node_t, class ... args_t>
-	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
+	typename std::enable_if<!std::is_base_of<owning_base_node, node_t>{}, node_t>::type&
 	make_child_named(std::string name, args_t&& ... args)
 	{
 		return owner->make_child_named<node_t>(name, std::forward<args_t>(args)...);
 	}
 
 	template<class node_t, class ... args_t>
-	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type*
+	typename std::enable_if<std::is_base_of<owning_base_node, node_t>{}, node_t>::type&
 	make_child_named(std::string name, args_t&& ... args)
 	{
 		return owner->make_child_named<node_t>(name, std::forward<args_t>(args)...);

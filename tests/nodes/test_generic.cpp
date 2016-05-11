@@ -15,18 +15,18 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_state)
 	state_source<int> one(&root.node(), [](){ return 1; });
 	state_source<int> two(&root.node(), [](){ return 2; });
 
-	auto test_switch = root.make_child_named<n_ary_switch<int, state_tag>>("switch");
+	auto& test_switch = root.make_child_named<n_ary_switch<int, state_tag>>("switch");
 	size_t switch_param = 0;
 	state_source<size_t> config(&root.node(), [&switch_param](){ return switch_param; });
 
-	one >> test_switch->in(0);
-	two >> test_switch->in(1);
-	config >> test_switch->control();
+	one >> test_switch.in(0);
+	two >> test_switch.in(1);
+	config >> test_switch.control();
 
-	BOOST_CHECK_EQUAL(test_switch->out()(), 1);
+	BOOST_CHECK_EQUAL(test_switch.out()(), 1);
 
 	switch_param = 1; //change switch to second port
-	BOOST_CHECK_EQUAL(test_switch->out()(), 2);
+	BOOST_CHECK_EQUAL(test_switch.out()(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	tests::owning_node root;
 	event_source<int> source_1(&root.node());
 	event_source<int> source_2(&root.node());
-	auto test_switch = root.make_child_named<n_ary_switch<int, event_tag>>("switch");
+	auto& test_switch = root.make_child_named<n_ary_switch<int, event_tag>>("switch");
 	size_t switch_param = 0;
 	state_source<size_t> config(&root.node(), [&switch_param](){ return switch_param; });
 
@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(test_n_ary_switch_events)
 	static_assert(!is_passive_sink  <event_source<int>>{}, "");
 	static_assert(!is_passive_source<event_source<int>>{}, "");
 
-	source_1 >> test_switch->in(0);
-	source_2 >> test_switch->in(1);
-	config >> test_switch->control();
-	test_switch->out() >> buffer;
+	source_1 >> test_switch.in(0);
+	source_2 >> test_switch.in(1);
+	config >> test_switch.control();
+	test_switch.out() >> buffer;
 
 	source_2.fire(2); //tick source, currently not forwarded by switch
 	BOOST_CHECK_EQUAL(result_buffer.empty(), true);

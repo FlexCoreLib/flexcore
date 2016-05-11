@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(test_buildup)
 	auto region = test_is.add_region("test_region",thread::cycle_control::fast_tick);
 	BOOST_CHECK(region != nullptr);
 
-	auto& test_node = *test_is.node_owner().make_child<null>(region);
+	auto& test_node = test_is.node_owner().make_child<null>(region);
 	BOOST_CHECK(test_node.region()->get_id() == region->get_id());
 	BOOST_CHECK_EQUAL(test_node.name(), "null");
 }
