@@ -15,14 +15,14 @@ BOOST_AUTO_TEST_CASE(test_arithmetic_and_logical)
 
 	BOOST_CHECK_EQUAL((zero >> identity)(), zero());
 
-	BOOST_CHECK_EQUAL((zero >> add_to(2))(), 2);
+	BOOST_CHECK_EQUAL((zero >> add(2))(), 2);
 
-	BOOST_CHECK_EQUAL((zero >> subtract_value(2))(), -2);
+	BOOST_CHECK_EQUAL((zero >> subtract(2))(), -2);
 
-	BOOST_CHECK_EQUAL((zero >> multiply_with(2))(), 0);
-	BOOST_CHECK_EQUAL((zero >> increment >> multiply_with(2))(), 2);
+	BOOST_CHECK_EQUAL((zero >> multiply(2))(), 0);
+	BOOST_CHECK_EQUAL((zero >> increment >> multiply(2))(), 2);
 
-	BOOST_CHECK_EQUAL(([](){ return 4;} >> divide_by(2))(), 2);
+	BOOST_CHECK_EQUAL(([](){ return 4;} >> divide(2))(), 2);
 
 	BOOST_CHECK_EQUAL(([](){ return -1;} >> absolute)(), 1);
 	BOOST_CHECK_EQUAL(([](){ return -1.f;} >> absolute)(), 1.f);
@@ -50,6 +50,24 @@ BOOST_AUTO_TEST_CASE(test_helpers)
 	auto connection = constant(1) >> tee([&test_value](int in){test_value = in;});
 	BOOST_CHECK_EQUAL(connection(), 1); //this call triggers the side effect from tee
 	BOOST_CHECK_EQUAL(test_value, 1);
+}
+
+BOOST_AUTO_TEST_CASE(tee_move_only)
+{
+	auto src = [] { return std::make_unique<int>(42); };
+	std::unique_ptr<int> target{nullptr};
+	int tee_target{0};
+	auto sink = [&target](auto&& in){ target = std::move(in); };
+
+	auto test_con =
+			src >>
+			tee([&tee_target](const auto& ptr) { tee_target = *ptr; })
+			>> sink;
+
+	test_con();
+
+	BOOST_CHECK_EQUAL(tee_target, 42);
+	BOOST_CHECK_EQUAL(*target, 42);
 }
 
 BOOST_AUTO_TEST_CASE(test_print)

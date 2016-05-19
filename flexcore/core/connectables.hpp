@@ -20,25 +20,25 @@ auto decrement = [](auto in) { return --in; };
 auto identity = [](auto in) { return in; };
 
 /// Adds a constant addend to inputs.
-auto add_to = [](const auto summand)
+auto add = [](const auto summand)
 {
 	return [summand](auto in){ return in + summand; };
 };
 
 /// Subtracts a constant subtrahend from inputs.
-auto subtract_value = [](const auto subtrahend)
+auto subtract = [](const auto subtrahend)
 {
 	return [subtrahend](auto in){ return in - subtrahend; };
 };
 
 /// Multiples input by a constant factor.
-auto multiply_with = [](const auto factor)
+auto multiply = [](const auto factor)
 {
 	return [factor](auto in) { return factor * in; };
 };
 
 /// Divides inputs by a constant divisor.
-auto divide_by = [](const auto divisor)
+auto divide = [](const auto divisor)
 {
 	return [divisor](auto in) { return in / divisor; };
 };
@@ -87,10 +87,14 @@ auto constant = [](auto x)
  */
 auto tee = [](auto callback)
 {
-	return [callback](const auto& in)
+	return [callback](auto&& in)
 	{
-		callback(in);
-		return in;
+		// call callback with const_ref to make sure it cannot change token
+		// But token can still be move_only
+		const auto& temp_ref = in;
+		callback(temp_ref);
+
+		return std::forward<decltype(in)>(in);
 	};
 };
 
