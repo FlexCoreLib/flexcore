@@ -4,6 +4,7 @@
 #include <flexcore/extended/node_fwd.hpp>
 #include <flexcore/ports.hpp>
 #include <adobe/forest.hpp>
+#include <boost/noncopyable.hpp>
 
 #include <cassert>
 #include <string>
@@ -66,6 +67,16 @@ struct forest_graph
 	graph::connection_graph& graph;
 };
 
+namespace detail
+{
+struct node_args
+{
+	forest_graph* fg;
+	std::shared_ptr<parallel_region> r;
+	std::string name;
+};
+} // namespace detail
+
 /** \brief Base class for nodes contained in forest.
  *
  * These should only be constructed through an owning_base_node's
@@ -73,7 +84,7 @@ struct forest_graph
  *
  * \invariant fg_ != nullptr
  */
-class tree_base_node : public tree_node
+class tree_base_node : public tree_node, private boost::noncopyable
 {
 public:
 	template<class data_t> using event_source = ::fc::event_source<data_t>;
@@ -82,7 +93,7 @@ public:
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 	template<class port_t> using mixin = ::fc::default_mixin<port_t>;
 
-	tree_base_node(forest_graph* fg, std::shared_ptr<parallel_region> r, std::string name);
+	tree_base_node(const detail::node_args& args);
 	std::shared_ptr<parallel_region> region() override { return region_; }
 	std::string name() const override;
 
@@ -153,12 +164,7 @@ private:
 class owning_base_node : public tree_base_node
 {
 public:
-	owning_base_node(forest_t::iterator self, forest_graph* fg, std::shared_ptr<parallel_region> r,
-	                 std::string name)
-	    : tree_base_node(fg, r, name), self_(self)
-	{
-	}
-	owning_base_node(forest_t::iterator self, const tree_base_node& node)
+	owning_base_node(forest_t::iterator self, const detail::node_args& node)
 		: tree_base_node(node), self_(self)
 	{
 	}
@@ -169,18 +175,18 @@ public:
 		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
 		auto& holder = static_cast<owner_holder&>(*iter->get());
 		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-		    std::forward<Args>(args)..., iter, tree_base_node{fg_, r, name})));
+		    std::forward<Args>(args)..., iter, detail::node_args{fg_, r, name})));
 	}
 
 	tree_base_node* new_node(std::string name)
 	{
 		return static_cast<tree_base_node*>(
-		    &add_child(std::make_unique<tree_base_node>(fg_, region(), name)));
+		    &add_child(std::make_unique<tree_base_node>(detail::node_args{fg_, region(), name})));
 	}
 	tree_base_node* new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
 		return static_cast<tree_base_node*>(
-		    &add_child(std::make_unique<tree_base_node>(fg_, r, name)));
+		    &add_child(std::make_unique<tree_base_node>(detail::node_args{fg_, r, name})));
 	}
 
 	/**
@@ -199,7 +205,7 @@ public:
 	{
 		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{fg_, region(), node_t::default_name})));
+				detail::node_args{fg_, region(), node_t::default_name})));
 	}
 
 	/**
@@ -214,7 +220,7 @@ public:
 	{
 		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{fg_, r, node_t::default_name})));
+				detail::node_args{fg_, r, node_t::default_name})));
 	}
 
 	/**
@@ -230,7 +236,7 @@ public:
 	{
 		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{fg_, region(), name})));
+				detail::node_args{fg_, region(), name})));
 	}
 
 	template<class node_t, class ... args_t>
@@ -238,7 +244,7 @@ public:
 	{
 		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				tree_base_node{fg_, std::move(r), std::move(name)})));
+				detail::node_args{fg_, std::move(r), std::move(name)})));
 	}
 
 protected:
@@ -251,7 +257,6 @@ private:
 	 * \pre child != nullptr
 	 */
 	tree_node& add_child(std::unique_ptr<tree_node> child);
-
 };
 
 /**

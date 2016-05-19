@@ -40,13 +40,10 @@ std::string full_name(forest_t& forest,
 	return full_name;
 }
 
-tree_base_node::tree_base_node(
-		forest_graph* fg,
-		std::shared_ptr<parallel_region> r,
-		std::string name)
-	: fg_(fg)
-	, region_(r)
-	, graph_info_(name, r.get())
+tree_base_node::tree_base_node(const detail::node_args& args)
+	: fg_(args.fg)
+	, region_(args.r)
+	, graph_info_(args.name, region_.get())
 {
 	assert(fg_);
 	assert(region_);
@@ -113,7 +110,7 @@ forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
 	auto& forest = fg_->forest;
 	auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<owner_holder>()));
 	auto& holder = static_cast<owner_holder&>(*iter->get());
-	tree_root = &holder.set_owner(std::make_unique<owning_base_node>(iter, fg_.get(), r, n));
+	tree_root = &holder.set_owner(std::make_unique<owning_base_node>(iter, detail::node_args{fg_.get(), r, n}));
 	assert(tree_root);
 }
 

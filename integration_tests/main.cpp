@@ -15,7 +15,7 @@ using namespace fc;
 
 struct null : tree_base_node
 {
-	null(const tree_base_node& node) : tree_base_node(node) {}
+	null(const detail::node_args& node) : tree_base_node(node) {}
 };
 
 int main()

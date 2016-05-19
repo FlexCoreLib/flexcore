@@ -15,7 +15,7 @@ namespace
 {
 	struct dummy_node : tree_base_node
 	{
-		dummy_node(const tree_base_node& node)
+		dummy_node(const detail::node_args& node)
 			: tree_base_node(node)
 			, out_port(this, [](){ return 0;})
 			, in_port(this)

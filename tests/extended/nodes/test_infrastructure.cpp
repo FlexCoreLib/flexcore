@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE( test_infrastructure )
 struct null : tree_base_node
 {
 	static constexpr auto default_name = "null";
-	explicit null(const tree_base_node& node)
+	explicit null(const detail::node_args& node)
 	: tree_base_node(node) {}
 };
 

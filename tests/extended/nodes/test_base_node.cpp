@@ -14,7 +14,7 @@ template<class data_t>
 struct node_class : tree_base_node
 {
 	static constexpr auto default_name = "test_node";
-	node_class(data_t a, const tree_base_node& node)
+	node_class(data_t a, const detail::node_args& node)
 		: tree_base_node(node)
 		, value(a)
 	{}
@@ -32,7 +32,7 @@ struct node_class : tree_base_node
 struct null : tree_base_node
 {
 	static constexpr auto default_name = "null";
-	explicit null(const tree_base_node& node) : tree_base_node(node) {}
+	explicit null(const detail::node_args& node) : tree_base_node(node) {}
 };
 } // unnamed namespace
 
@@ -56,11 +56,13 @@ class test_owning_node : public owning_base_node
 {
 public:
 	static constexpr auto default_name = "test_owning_node_";
+	/*
 	explicit test_owning_node(forest_t::iterator self, forest_graph* fg, std::shared_ptr<parallel_region> r)
 	    : owning_base_node(self, fg, r, default_name)
 	{
 	}
-	explicit test_owning_node(forest_t::iterator self, const tree_base_node& node)
+	*/
+	explicit test_owning_node(forest_t::iterator self, const detail::node_args& node)
 	    : owning_base_node(self, node)
 	{
 	}
