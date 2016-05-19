@@ -137,28 +137,27 @@ public:
 	static constexpr auto default_name = "merger";
 
 	template<class... args_t>
-		explicit dynamic_merger(args_t&&... args) :
+	explicit dynamic_merger(args_t&&... args) :
 		base_t(std::forward<args_t>(args)...),
 		in_ports(),
-		out_buffer(),
 		out_port(this,[this](){return merge_inputs();})
 	{
 	}
 
 	/// state_sink of type data_t, creates a new port for each call.
 	in_port_t& in()
-		{
-			in_ports.emplace_back(std::make_unique<in_port_t>(this));
-			return *(in_ports.back());
-		}
+	{
+		in_ports.emplace_back(std::make_unique<in_port_t>(this));
+		return *(in_ports.back());
+	}
 
 	/// State Output Port of type out_container_t<data_t>.
 	out_port_t& out() { return out_port; }
 
 private:
-	auto merge_inputs()
+	out_container_t merge_inputs()
 	{
-		out_buffer.clear();
+		out_container_t out_buffer;
 		for(auto& port : in_ports)
 		{
 			out_buffer.push_back(port->get());
@@ -168,7 +167,6 @@ private:
 	}
 
 	std::vector<std::unique_ptr<in_port_t>> in_ports;
-	out_container_t out_buffer;
 	out_port_t out_port;
 };
 
