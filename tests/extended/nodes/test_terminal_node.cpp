@@ -33,14 +33,14 @@ BOOST_AUTO_TEST_CASE(test_event_terminal)
 	{
 	float test_out = 0.0;
 	tests::owning_node root;
-	auto tree_terminal = root.make_child_named<event_terminal<float>>("terminal");
+	auto& tree_terminal = root.make_child_named<event_terminal<float>>("terminal");
 
 	event_source<float> tree_source{&root.node()};
 	event_sink<float> tree_sink{&root.node(), [&test_out](float in)
 		{test_out = in;}};
 
-	tree_source >> tree_terminal->in();
-	tree_terminal->out() >> tree_sink;
+	tree_source >> tree_terminal.in();
+	tree_terminal.out() >> tree_sink;
 
 	tree_source.fire(test_val);
 	BOOST_CHECK_EQUAL(test_val, test_out);
@@ -62,13 +62,13 @@ BOOST_AUTO_TEST_CASE(test_state_terminal)
 	BOOST_CHECK_EQUAL(test_val, pure_sink.get());
 
 	tests::owning_node root;
-	auto tree_terminal = root.make_child_named<state_terminal<float>>("terminal");
+	auto& tree_terminal = root.make_child_named<state_terminal<float>>("terminal");
 
 	state_source<float> tree_source{&root.node(),[test_val](){ return test_val;}};
 	state_sink<float> tree_sink{&root.node()};
 
-	tree_source >> tree_terminal->in();
-	tree_terminal->out() >> tree_sink;
+	tree_source >> tree_terminal.in();
+	tree_terminal.out() >> tree_sink;
 
 	BOOST_CHECK_EQUAL(test_val, tree_sink.get());
 

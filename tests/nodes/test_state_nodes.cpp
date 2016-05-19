@@ -58,14 +58,14 @@ BOOST_AUTO_TEST_CASE(test_current_state)
 
 	{ //check constructor
 	auto region_2 = std::make_shared<parallel_region>("MyRegion");
-	auto& test_node_1 = *root.make_child<current_state<int>>(region_2,1);
+	auto& test_node_1 = root.make_child<current_state<int>>(region_2,1);
 	BOOST_CHECK_EQUAL(test_node_1.out()(), 1);
 
-	auto& test_node_2 = *root.make_child<current_state<int>>(region_2);
+	auto& test_node_2 = root.make_child<current_state<int>>(region_2);
 	BOOST_CHECK_EQUAL(test_node_2.out()(), int()); //default is int()
 	}
 
-	auto& test_node = *root.make_child<current_state<int>>(region);
+	auto& test_node = root.make_child<current_state<int>>(region);
 	BOOST_CHECK_EQUAL(test_node.out()(), 0);
 
 	int test_val = 1;

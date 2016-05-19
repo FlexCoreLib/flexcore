@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(test_region_worker)
 struct triggered_counter : public region_worker_node
 {
 public:
-	triggered_counter(const tree_base_node& node)
+	triggered_counter(const detail::node_args& node)
 		: region_worker_node([this](){out_event_source.fire(++work_counter);},
 		                     node)
 		, out_event_source(this)
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(test_worker)
 	auto region = std::make_shared<parallel_region>("MyRegion");
 	tests::owning_node owner(region);
 
-	triggered_counter& function_gen = *owner.make_child_named<triggered_counter>("Counter");
+	triggered_counter& function_gen = owner.make_child_named<triggered_counter>("Counter");
 
 	container_sink sink;
 
