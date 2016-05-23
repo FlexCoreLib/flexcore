@@ -31,7 +31,6 @@ struct node_class : tree_base_node
 
 struct null : tree_base_node
 {
-	static constexpr auto default_name = "null";
 	explicit null(const detail::node_args& node) : tree_base_node(node) {}
 };
 } // unnamed namespace
