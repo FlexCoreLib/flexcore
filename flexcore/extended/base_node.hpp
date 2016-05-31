@@ -74,7 +74,12 @@ struct node_args
 	forest_graph* fg;
 	std::shared_ptr<parallel_region> r;
 	std::string name;
+	forest_t::iterator self = forest_t::iterator();
 };
+
+struct owning_tag {};
+struct leaf_tag {};
+
 } // namespace detail
 
 /** \brief Base class for nodes contained in forest.
@@ -100,6 +105,7 @@ public:
 	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() override;
 
+	using tag = detail::leaf_tag;
 protected:
 	forest_graph* fg_;
 private:
@@ -169,24 +175,9 @@ public:
 	{
 	}
 
-	template <class node_t, class... Args>
-	node_t& make_owner(std::shared_ptr<parallel_region> r, std::string name, Args&&... args)
+	explicit owning_base_node(const detail::node_args& node)
+		: tree_base_node(node), self_(node.self)
 	{
-		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
-		auto& holder = static_cast<owner_holder&>(*iter->get());
-		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-		    std::forward<Args>(args)..., iter, detail::node_args{fg_, r, name})));
-	}
-
-	tree_base_node* new_node(std::string name)
-	{
-		return static_cast<tree_base_node*>(
-		    &add_child(std::make_unique<tree_base_node>(detail::node_args{fg_, region(), name})));
-	}
-	tree_base_node* new_node(std::shared_ptr<parallel_region> r, std::string name)
-	{
-		return static_cast<tree_base_node*>(
-		    &add_child(std::make_unique<tree_base_node>(detail::node_args{fg_, r, name})));
 	}
 
 	/**
@@ -203,9 +194,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child(args_t&&... args)
 	{
-		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				detail::node_args{fg_, region(), node_t::default_name})));
+		return make_child_impl<node_t>(typename node_t::tag{},
+				std::forward<args_t>(args)...);
 	}
 
 	/**
@@ -218,9 +208,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
-		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				detail::node_args{fg_, r, node_t::default_name})));
+		return make_child_impl<node_t>(typename node_t::tag{},
+				r, std::forward<args_t>(args)...);
 	}
 
 	/**
@@ -234,22 +223,95 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child_named(std::string name, args_t&&... args)
 	{
-		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				detail::node_args{fg_, region(), name})));
+		return make_child_named_impl<node_t>(typename node_t::tag{},
+					name, std::forward<args_t>(args)...);
 	}
 
 	template<class node_t, class ... args_t>
 	node_t& make_child_named(std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
+	{
+		return make_child_named_impl<node_t>(typename node_t::tag{},
+				r, name, std::forward<args_t>(args)...);
+	}
+
+
+	using tag = detail::owning_tag;
+protected:
+	forest_t::iterator self() const;
+private:
+	template <class node_t, class... Args>
+	node_t& make_child_impl(detail::owning_tag,
+			std::shared_ptr<parallel_region> r, Args&&... args)
+	{
+		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
+		auto& holder = static_cast<owner_holder&>(*iter->get());
+		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
+			std::forward<Args>(args)..., detail::node_args{fg_, r, node_t::default_name, iter})));
+	}
+
+	template <class node_t, class... Args>
+	node_t& make_child_impl(detail::owning_tag, Args&&... args)
+	{
+		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
+		auto& holder = static_cast<owner_holder&>(*iter->get());
+		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
+			std::forward<Args>(args)..., detail::node_args{fg_, region(), node_t::default_name, iter})));
+	}
+
+	template <class node_t, class... Args>
+	node_t& make_child_named_impl(detail::owning_tag,
+			std::string name, Args&&... args)
+	{
+		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
+		auto& holder = static_cast<owner_holder&>(*iter->get());
+		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
+			std::forward<Args>(args)..., detail::node_args{fg_, region(), name, iter})));
+	}
+
+	template <class node_t, class... Args>
+	node_t& make_child_named_impl(detail::owning_tag,
+			std::shared_ptr<parallel_region> r, std::string name, Args&&... args)
+	{
+		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
+		auto& holder = static_cast<owner_holder&>(*iter->get());
+		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
+			std::forward<Args>(args)..., detail::node_args{fg_, r, name, iter})));
+	}
+
+
+	template<class node_t, class ... args_t>
+	node_t& make_child_named_impl(detail::leaf_tag,
+			std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
 	{
 		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
 				detail::node_args{fg_, std::move(r), std::move(name)})));
 	}
 
-protected:
-	forest_t::iterator self() const;
-private:
+	template<class node_t, class ... args_t>
+	node_t& make_child_named_impl(detail::leaf_tag, std::string name, args_t&&... args)
+	{
+		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				detail::node_args{fg_, region(), name})));
+	}
+
+	template<class node_t, class ... args_t>
+	node_t& make_child_impl(detail::leaf_tag, std::shared_ptr<parallel_region> r, args_t&&... args)
+	{
+		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				detail::node_args{fg_, r, node_t::default_name})));
+	}
+
+	template<class node_t, class ... args_t>
+	node_t& make_child_impl(detail::leaf_tag, args_t&&... args)
+	{
+		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
+				std::forward<args_t>(args)...,
+				detail::node_args{fg_, region(), node_t::default_name})));
+	}
+
 	forest_t::iterator self_;
 	/**
 	 * Takes ownership of child node and inserts into tree.

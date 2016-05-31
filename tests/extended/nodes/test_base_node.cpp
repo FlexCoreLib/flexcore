@@ -61,13 +61,13 @@ public:
 	{
 	}
 	*/
-	explicit test_owning_node(forest_t::iterator self, const detail::node_args& node)
-	    : owning_base_node(self, node)
+	explicit test_owning_node(const detail::node_args& node)
+	    : owning_base_node(node)
 	{
 	}
 	test_owning_node&  add_child()
 	{
-		return make_owner<test_owning_node>(region(), default_name);
+		return make_child_named<test_owning_node>(region(), default_name);
 	}
 
 	size_t nr_of_children()
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
 	tests::owning_node root("root");
 	auto& child1 =
-	    root.node().make_owner<test_owning_node>(root.node().region(), "test_owning_node");
+	    root.node().make_child_named<test_owning_node>(root.node().region(), "test_owning_node");
 	auto& child2 = root.make_child_named<null>("2");
 	auto& child1a = child1.make_child_named<null>("a");
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE( test_deletion )
 	auto& root = root_.node();
 
 	auto& test_node =
-	    root.make_owner<test_owning_node>(root.region(), test_owning_node::default_name);
+	    root.make_child<test_owning_node>(root.region());
 
 	BOOST_CHECK_EQUAL(test_node.nr_of_children(), 0);
 
