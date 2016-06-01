@@ -220,15 +220,19 @@ public:
 	explicit hold_last(const data_t& initial_value, args_t&&... args)
 		: base_t(std::forward<args_t>(args)...)
 		, storage(initial_value)
+		, in_port{this, [this](data_t in){ storage = in; }}
+		, out_port{this,[this](){ return storage;} }
 	{
 	}
 
 	/// Event in Port expecting data_t.
-	auto in() noexcept { return [this](data_t in){ storage = in; }; }
+	auto& in() { return in_port; }
 	/// State out port supplying data_t.
-	auto out() const noexcept { return [this](){ return storage;}; }
+	auto& out() { return out_port; }
 private:
 	data_t storage;
+	typename base_t::template event_sink<data_t> in_port;
+	typename base_t::template state_source<data_t> out_port;
 };
 
 /**
@@ -276,7 +280,9 @@ public:
 	/// Event in Port expecting data_t or range of data_t.
 	auto in() noexcept
 	{
-		return detail::collector<data_t, boost::circular_buffer>{storage.get()};
+		using collector = detail::collector<data_t, boost::circular_buffer>;
+
+		return typename base_t::template mixin<collector>{this, collector{storage.get()}};
 	}
 	/// State out port supplying range of data_t.
 	auto& out() noexcept { return out_port; }
