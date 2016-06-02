@@ -109,6 +109,23 @@ private:
 	std::unique_ptr<log_client_impl> log_client_pimpl;
 };
 
+class stream_log_client
+{
+public:
+	stream_log_client(log_client log, level severity = level::info) : log(log), severity(severity)
+	{
+	}
+	stream_log_client& operator<<(const std::string& msg)
+	{
+		log.write(msg, severity);
+		return *this;
+	}
+
+private:
+	log_client log;
+	const level severity;
+};
+
 } // namespace fc
 #endif // SRC_LOGGING_LOGGER_HPP_
 

@@ -44,6 +44,18 @@ BOOST_FIXTURE_TEST_CASE( node_logging, log_test )
 	client.write("another log message.");
 }
 
+BOOST_AUTO_TEST_CASE( stream_log_msg )
+{
+	log_test t1, t2, t3;
+	fc::stream_log_client stream({}, fc::level::debug);
+	auto msg1 = std::string("log message");
+	auto msg2 = std::string("and another");
+	stream << msg1 << msg2;
+	t1.expected_in_output = msg1;
+	t2.expected_in_output = msg2;
+	t3.expected_in_output = "<" + std::to_string(static_cast<int>(fc::level::debug)) + ">";
+}
+
 namespace
 {
 std::ostringstream global_stream;
