@@ -1,6 +1,7 @@
 #ifndef SRC_LOGGING_LOGGER_HPP_
 #define SRC_LOGGING_LOGGER_HPP_
 
+#include "flexcore/extended/node_fwd.hpp"
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -9,7 +10,6 @@
 
 namespace fc
 {
-class parallel_region;
 
 /**
  * \brief Enumeration of severity levels corresponding to the posix syslog api.
@@ -98,7 +98,7 @@ public:
 	/// Construct a log_client with the region name "null"
 	log_client();
 	/// Construct a log_client which logs from the passed region.
-	log_client(const parallel_region* region);
+	log_client(const node* node_);
 
 	log_client(const log_client&);
 	log_client& operator=(log_client);
