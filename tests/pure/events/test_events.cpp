@@ -377,5 +377,44 @@ BOOST_AUTO_TEST_CASE(test_delete_with_lambda_in_connection)
 	BOOST_CHECK_EQUAL(*(test_sink.storage), 12);
 }
 
+BOOST_AUTO_TEST_CASE(test_connect_after_move_of_active)
+{
+	pure::event_source<int> p;
+	pure::event_source<int> p2 = std::move(p);
+	bool fired = false;
+	pure::event_sink<int> sink([&](int v) { fired = true; BOOST_CHECK_EQUAL(v, 99); });
+	p2 >> sink;
+	p2.fire(99);
+	BOOST_CHECK(fired);
+}
+
+BOOST_AUTO_TEST_CASE(test_connect_after_move_of_passive)
+{
+	pure::event_source<int> src;
+	int sink_val = 0;
+	int ctr = 0;
+	std::unique_ptr<pure::event_sink<int>> sink1;
+	{
+		pure::event_sink<int> sink2{[&](int v) { ++ctr; sink_val = v; }};
+		sink1 = std::make_unique<decltype(sink2)>(std::move(sink2));
+		src >> *sink1;
+		src >> sink2;
+		// after the block ends sink2 should be disconnected
+	}
+	src.fire(99);
+	BOOST_CHECK_EQUAL(sink_val, 99);
+	BOOST_CHECK_EQUAL(ctr, 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_move_active_after_connect)
+{
+	pure::event_source<int> p;
+	bool fired = false;
+	pure::event_sink<int> sink([&](int v) { fired = true; BOOST_CHECK_EQUAL(v, 99); });
+	p >> sink;
+	pure::event_source<int> p2 = std::move(p);
+	p2.fire(99);
+	BOOST_CHECK(fired);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

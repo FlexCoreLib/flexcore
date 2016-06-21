@@ -74,3 +74,16 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 	source_3 >> (increment >> (increment >> sink));
 	BOOST_CHECK_EQUAL(sink.get(), 4);
 }
+
+BOOST_AUTO_TEST_CASE(state_source_connect_after_move)
+{
+	pure::state_source<int> src{[] { return 99; }};
+	pure::state_sink<int> sink;
+	auto new_src = std::move(src);
+	new_src >> sink;
+	BOOST_CHECK_EQUAL(sink.get(), 99);
+	// object after move is in valid state, but should not have access to the
+	// old callback anymore.
+	src >> sink;
+	BOOST_CHECK_THROW(sink.get(), std::bad_function_call);
+}

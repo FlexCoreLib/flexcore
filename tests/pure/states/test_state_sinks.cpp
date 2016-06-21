@@ -42,4 +42,24 @@ BOOST_AUTO_TEST_CASE( polymorphic_connectables)
 
 	BOOST_CHECK_EQUAL(sink.get(), 4.);
 }
+
+BOOST_AUTO_TEST_CASE(connect_after_move)
+{
+	pure::state_sink<int> s1;
+	pure::state_sink<int> s2 = std::move(s1);
+	pure::state_source<int> src([] { return 99; });
+	src >> s2;
+	BOOST_CHECK_EQUAL(s2.get(), 99);
+}
+
+BOOST_AUTO_TEST_CASE(move_active_after_connect)
+{
+	pure::state_sink<int> s1;
+	pure::state_source<int> src([] { return 99; });
+	src >> s1;
+	pure::state_sink<int> s2 = std::move(s1);
+	BOOST_CHECK_EQUAL(s2.get(), 99);
+	BOOST_CHECK_THROW(s1.get(), std::bad_function_call);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
