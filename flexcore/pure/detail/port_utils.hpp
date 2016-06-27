@@ -100,13 +100,17 @@ struct active_port_base
 public:
 	/// \param handlers is used by the active side to store the connection.
 	///        Needs to be compatible with what the policy expects.
-	active_port_base() :
-	      sink_callback(std::make_shared<std::function<void(size_t)>>([this](size_t hash)
-	                                                                  {
-		                                                                  storage.remove_handler(
-		                                                                      hash);
-	                                                                  }))
+	active_port_base()
+	    : callback(std::make_shared<std::function<void(size_t)>>([this](size_t hash)
+	                                                             {
+		                                                             storage.remove_handler(hash);
+	                                                             }))
 	{
+	}
+	active_port_base(active_port_base&& p)
+	    : storage(std::move(p.storage)), callback(std::move(p.callback))
+	{
+		*callback = [this](size_t hash) { storage.remove_handler(hash); };
 	}
 
 	/** \brief Register a callback with sink, that breaks the connection to source.
@@ -116,7 +120,7 @@ public:
 	void add_handler(handler_t handler, sink_t& sink)
 	{
 		storage.add_handler(std::move(handler), std::hash<sink_t*>{}(&sink));
-		sink.register_callback(sink_callback);
+		sink.register_callback(callback);
 	}
 	/// Do-nothing when sink does not support registering callbacks.
 	template <class sink_t, std::enable_if_t<!fc::has_register_function<sink_t>(0), int> = 0>
@@ -128,7 +132,7 @@ public:
 	storage_policy<handler_t> storage;
 private:
 	/// Callback from connected passive port to *this that deletes the connection when invoked.
-	std::shared_ptr<std::function<void(size_t)>> sink_callback;
+	std::shared_ptr<std::function<void(size_t)>> callback;
 };
 
 } //namespace detail
