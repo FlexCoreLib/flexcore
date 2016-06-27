@@ -38,6 +38,14 @@ struct single_handler_policy
 {
 public:
 	single_handler_policy() : handler_hash(0) {}
+	single_handler_policy(single_handler_policy&& p)
+	    : handler_hash(p.handler_hash)
+	{
+		// libc++ doesn't correctly handle move ctr of std::function, it just copies.
+		// swap takes care of that.
+		swap(handlers, p.handlers);
+	}
+
 	void add_handler(const handler_t& handler_, size_t hash)
 	{
 		handlers = handler_;
