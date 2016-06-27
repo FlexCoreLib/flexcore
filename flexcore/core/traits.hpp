@@ -345,6 +345,13 @@ struct is_passive_source_impl<T, std::enable_if_t<void_callable<T>(0)>> : std::t
 {
 };
 
+template <class T, class Arg, typename = void>
+struct is_passive_sink_for : std::false_type {};
+template <class T>
+struct is_passive_sink_for<T, void, std::result_of_t<T()>> : std::true_type {};
+template <class T, class Arg>
+struct is_passive_sink_for<T, Arg, std::result_of_t<T(Arg)>> : std::true_type {};
+
 template<class T, class enable = void>
 struct is_passive_sink_impl: std::false_type
 {
