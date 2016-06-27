@@ -28,9 +28,7 @@ template<class data_t>
 class state_sink
 {
 public:
-	state_sink()
-		: con()
-	{ }
+	state_sink() {}
 	state_sink(const state_sink&) = delete;
 	state_sink(state_sink&&) = default;
 
@@ -41,7 +39,7 @@ public:
 	 *
 	 * \returns current state available at this port.
 	 */
-	data_t get() const { return con(); }
+	data_t get() const { return base.storage.handlers(); }
 
 	/**
 	 * \brief Cconnects state source to sink.
@@ -61,19 +59,12 @@ public:
 		static_assert(std::is_convertible<decltype(std::declval<con_t>()()), data_t>{},
 		              "The type returned by this connection is incompatible with this sink.");
 
-		// optionally register a callback
-		using source_t = typename get_source_t<con_t>::type;
-		auto can_register_function = std::integral_constant<bool, fc::has_register_function<source_t>(0)>{};
-		breaker.add_circuit_breaker(get_source(c), can_register_function);
-
-		con = detail::handler_wrapper(std::forward<con_t>(c));
-		assert(con); //check postcondition
+		base.add_handler(detail::handler_wrapper(std::forward<con_t>(c)), get_source(c));
 	}
 
 	typedef void result_t;
 private:
-	std::function<data_t()> con;
-	detail::connection_breaker<std::function<data_t()>, detail::single_handler_policy> breaker{con};
+	detail::active_port_base<std::function<data_t()>, detail::single_handler_policy> base;
 };
 
 } // namespace pure

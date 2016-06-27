@@ -52,7 +52,7 @@ struct event_source
 		              "tried to call fire with a type, not implicitly convertible to type of port."
 		              "If conversion is required, do the cast before calling fire.");
 
-		for (auto& target : event_handlers)
+		for (auto& target : base.storage.handlers)
 		{
 			assert(target);
 			target(static_cast<event_t>(event)...);
@@ -61,7 +61,7 @@ struct event_source
 
 	size_t nr_connected_handlers() const
 	{
-		return event_handlers.size();
+		return base.storage.handlers.size();
 	}
 
 	/**
@@ -79,13 +79,9 @@ struct event_source
 			"The type returned by this source is not compatible with the connection you "
 			"are trying to establish.");
 
-		// Register a connection breaker callback if sink_t supports it
-		using sink_t = typename get_sink_t<conn_t>::type;
-		auto can_register_function = std::integral_constant<bool, fc::has_register_function<sink_t>(0)>{};
-		breaker.add_circuit_breaker(get_sink(c), can_register_function);
+		base.add_handler(detail::handler_wrapper(std::forward<conn_t>(c)), get_sink(c));
 
-		event_handlers.emplace_back(detail::handler_wrapper(std::forward<conn_t>(c)));
-		assert(!event_handlers.empty());
+		assert(!base.storage.handlers.empty());
 		return port_connection<decltype(this), conn_t, result_t>();
 	}
 
@@ -93,8 +89,7 @@ private:
 
 	// Stores event_handlers in a vector, the node needs to send
 	// to all connected event_handlers when an event is fired.
-	std::vector<handler_t> event_handlers;
-	detail::connection_breaker<handler_t, detail::multiple_handler_policy> breaker{event_handlers};
+	detail::active_port_base<handler_t, detail::multiple_handler_policy> base;
 };
 
 } // namespace pure

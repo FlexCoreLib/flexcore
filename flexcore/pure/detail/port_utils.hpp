@@ -34,14 +34,15 @@ decltype(auto) handler_wrapper(conn_t&& c)
 
 /// Policy for circuit breaker where only one handler is connected at any given time.
 template <class handler_t>
-class single_handler_policy
+struct single_handler_policy
 {
 public:
-	single_handler_policy(handler_t* handler) : handler(handler)
+	single_handler_policy() : handler_hash(0) {}
+	void add_handler(const handler_t& handler_, size_t hash)
 	{
-		assert(handler);
+		handlers = handler_;
+		handler_hash = hash;
 	}
-	void add_handler(size_t hash) { handler_hash = hash; }
 	void remove_handler(size_t hash)
 	{
 		// Consider this test_case:
@@ -55,36 +56,35 @@ public:
 		// connection has already been broken when source2 was connected. That's why this is a check
 		// and not an assert.
 		if (hash == handler_hash)
-			*handler = {};
+			handlers = {};
 	}
 
-private:
-	handler_t* handler;
+	handler_t handlers;
 	size_t handler_hash;
 };
 
 /// Policy class for circuit breaker when multiple handlers can be connected at once.
 template <class handler_t>
-class multiple_handler_policy
+struct multiple_handler_policy
 {
 public:
-	multiple_handler_policy(std::vector<handler_t>* handlers) : handlers(handlers)
+	/// \pre The handler corresponding to hash has been pushed_back to handlers before this
+	/// call.
+	void add_handler(const handler_t& handler, size_t hash)
 	{
-		assert(handlers);
+		handlers.push_back(handler);
+		handler_hashes.push_back(hash);
 	}
-	/// \pre The handler corresponding to hash has been pushed_back to handlers before this call.
-	void add_handler(size_t hash) { handler_hashes.push_back(hash); }
 	void remove_handler(size_t hash)
 	{
 		auto handler_position = find(begin(handler_hashes), end(handler_hashes), hash);
 		assert(handler_position != end(handler_hashes));
 		auto idx = distance(begin(handler_hashes), handler_position);
-		handlers->erase(begin(*handlers) + idx);
+		handlers.erase(begin(handlers) + idx);
 		handler_hashes.erase(begin(handler_hashes) + idx);
 	}
 
-private:
-	std::vector<handler_t>* handlers;
+	std::vector<handler_t> handlers;
 	std::vector<size_t> handler_hashes;
 };
 
@@ -94,18 +94,16 @@ private:
  * \tparam handler_storage_policy policy class that handles the number of
  *         handlers used in active port.
  */
-template <class handler_t, template <class> class handler_storage_policy>
-class connection_breaker : handler_storage_policy<handler_t>
+template <class handler_t, template <class> class storage_policy>
+struct active_port_base
 {
 public:
 	/// \param handlers is used by the active side to store the connection.
 	///        Needs to be compatible with what the policy expects.
-	template <class handler_storage>
-	connection_breaker(handler_storage& handlers)
-	    : handler_storage_policy<handler_t>(&handlers),
+	active_port_base() :
 	      sink_callback(std::make_shared<std::function<void(size_t)>>([this](size_t hash)
 	                                                                  {
-		                                                                  this->remove_handler(
+		                                                                  storage.remove_handler(
 		                                                                      hash);
 	                                                                  }))
 	{
@@ -114,18 +112,20 @@ public:
 	/** \brief Register a callback with sink, that breaks the connection to source.
 	 * \pre sink_t supports registering callbacks.
 	 */
-	template <class sink_t>
-	void add_circuit_breaker(sink_t& sink, std::true_type)
+	template <class sink_t, std::enable_if_t<fc::has_register_function<sink_t>(0), int> = 0>
+	void add_handler(handler_t handler, sink_t& sink)
 	{
-		this->add_handler(std::hash<sink_t*>{}(&sink));
+		storage.add_handler(std::move(handler), std::hash<sink_t*>{}(&sink));
 		sink.register_callback(sink_callback);
 	}
 	/// Do-nothing when sink does not support registering callbacks.
-	template <class sink_t>
-	void add_circuit_breaker(sink_t&, std::false_type) {}
+	template <class sink_t, std::enable_if_t<!fc::has_register_function<sink_t>(0), int> = 0>
+	void add_handler(handler_t handler, sink_t& sink)
+	{
+		storage.add_handler(std::move(handler), std::hash<sink_t*>{}(&sink));
+	}
 
-	void remove_handler(size_t hash) { handler_storage_policy<handler_t>::remove_handler(hash); }
-
+	storage_policy<handler_t> storage;
 private:
 	/// Callback from connected passive port to *this that deletes the connection when invoked.
 	std::shared_ptr<std::function<void(size_t)>> sink_callback;
