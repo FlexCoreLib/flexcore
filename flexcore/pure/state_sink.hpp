@@ -28,9 +28,7 @@ template<class data_t>
 class state_sink
 {
 public:
-	state_sink() {}
-	state_sink(const state_sink&) = delete;
-	state_sink(state_sink&&) = default;
+	state_sink() = default;
 
 	//typedef data_t result_t;
 

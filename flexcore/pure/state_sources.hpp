@@ -37,7 +37,15 @@ public:
 	}
 
 	state_source(const state_source&) = delete;
-	state_source(state_source&&) = default;
+	state_source(state_source&& o)
+	{
+		assert(o.connection_breakers.empty());
+		// Only move the handler so that if the assert doesn't fire (e.g. when
+		// NDEBUG is defined) the moved-from-object will still disconnect
+		// itself.
+		swap(call, o.call);
+	}
+
 	~state_source()
 	{
 		auto self = std::hash<decltype(this)>{}(this);

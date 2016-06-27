@@ -38,8 +38,6 @@ struct event_source
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
 	event_source() = default;
-	event_source(const event_source&) = delete;
-	event_source(event_source&&) = default;
 
 	template<class... T>
 	void fire(T&&... event)

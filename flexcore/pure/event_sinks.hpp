@@ -45,9 +45,16 @@ struct event_sink
 		event_handler();
 	}
 
-	event_sink() = delete;
 	event_sink(const event_sink&) = delete;
-	event_sink(event_sink&&) = default;
+	event_sink(event_sink&& o)
+	{
+		assert(o.connection_breakers.empty());
+		// Only move the handler so that if the assert doesn't fire (e.g.  when
+		// NDEBUG is defined) the moved-from-object can still disconnect
+		// itself.
+		swap(o.event_handler, event_handler);
+	}
+
 	~event_sink()
 	{
 		auto self = std::hash<decltype(this)>{}(this);
