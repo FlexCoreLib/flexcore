@@ -177,7 +177,6 @@ auto make_buffered_connection(std::shared_ptr<
  * \brief A mixin for elements that are aware of the node they belong to.
  * Used as mixin for ports and connections.
  * \tparam base is type node_aware is mixed into.
- * \invariant tree_base_node* node is always valid.
  *
  * example:
  * \code{cpp}

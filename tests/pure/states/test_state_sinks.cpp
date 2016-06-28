@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE( test_disconnecting_state_ports )
 		source >> sink2;
 	}
 
-	BOOST_CHECK_THROW(sink1.get(), std::bad_function_call);
-	BOOST_CHECK_THROW(sink2.get(), std::bad_function_call);
+	BOOST_CHECK_THROW(sink1.get(), fc::not_connected);
+	BOOST_CHECK_THROW(sink2.get(), fc::not_connected);
 }
 
 BOOST_AUTO_TEST_CASE( polymorphic_connectables)
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(move_active_after_connect)
 	src >> s1;
 	pure::state_sink<int> s2 = std::move(s1);
 	BOOST_CHECK_EQUAL(s2.get(), 99);
-	BOOST_CHECK_THROW(s1.get(), std::bad_function_call);
+	BOOST_CHECK_THROW(s1.get(), fc::not_connected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
