@@ -130,6 +130,33 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 	check_mixins<test_mixin_source, test_mixin_sink>();
 }
 
+BOOST_AUTO_TEST_CASE(test_void_event)
+{
+	parallel_region region_1{"r1"};
+	parallel_region region_2{"r2"};
+
+	node_aware<pure::event_source<void>> source{region_1};
+	bool written{false};
+	node_aware<pure::event_sink<void>> sink{region_1, [&written](){written=true;}};
+	node_aware<pure::event_sink<void>> sink2{region_2, [&written](){written=true;}};
+
+	source >> sink;
+	source >> sink2;
+
+
+	BOOST_CHECK(!written);
+	source.fire();
+	BOOST_CHECK(written);
+	written = false;
+
+	region_1.ticks.in_switch_buffers()();
+	BOOST_CHECK(!written);
+	region_2.ticks.in_switch_buffers()();
+	BOOST_CHECK(!written);
+	region_2.ticks.in_work()();
+	BOOST_CHECK(written);
+}
+
 BOOST_AUTO_TEST_CASE(test_traits)
 {
 	using full_state_sink = state_sink<int>;

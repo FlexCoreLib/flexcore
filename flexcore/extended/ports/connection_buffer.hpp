@@ -60,6 +60,31 @@ private:
 	typename pure::out_port<token_t, tag>::type out_event_port;
 };
 
+/// Partial Specialization for events of type void
+template<class tag>
+class event_no_buffer<void, tag> final : public buffer_interface<void, tag>
+{
+public:
+	event_no_buffer()	:
+		//only difference to template is here
+		in_event_port( [this]() { out_event_port.fire();})
+	{
+	}
+
+	typename pure::in_port<void, tag>::type& in() override
+	{
+		return in_event_port;
+	}
+	typename pure::out_port<void, tag>::type& out() override
+	{
+		return out_event_port;
+	}
+
+private:
+	typename pure::in_port<void, tag>::type in_event_port;
+	typename pure::out_port<void, tag>::type out_event_port;
+};
+
 /**
  * \brief buffer for events using double buffering
  *
@@ -121,8 +146,7 @@ protected:
 	}
 
 	/**
-	 * \sends all events stored in outgoing buffer to targets
-	 *
+	 * \brief sends all events stored in outgoing buffer to targets
 	 * \post extern_buffer is empty
 	 */
 	void send_events()
@@ -146,6 +170,83 @@ protected:
 	buffer_t intern_buffer;
 	buffer_t extern_buffer;
 	buffer_t middle_buffer;
+	bool read;
+};
+
+/**
+ * \brief Template Specialization for events of type void
+ *
+ * Instead of real buffers we just count the events.
+ */
+template<>
+class event_buffer<void> : public buffer_interface<void, event_tag>
+{
+public:
+	event_buffer()
+		: switch_active_tick_([this] { switch_active_buffers(); })
+		, switch_passive_tick_([this] { switch_passive_buffers(); })
+		, in_send_tick( [this](){ send_events(); } )
+		, in_event_port( [this]() { intern_buffer++;})
+		, intern_buffer(0)
+		, extern_buffer(0)
+		, read(false)
+		{
+		}
+
+	typedef typename pure::out_port<void, event_tag>::type out_port_t;
+	typedef typename pure::in_port<void, event_tag>::type in_port_t;
+
+	/// event in port of type void, switches active-side buffers
+	auto& switch_active_tick() { return switch_active_tick_; };
+	/// event in port of type void, switches passive-side buffers
+	auto& switch_passive_tick() { return switch_passive_tick_; };
+	/// event in port of type void, fires out port once for each event stored.
+	auto& work_tick() { return in_send_tick; };
+
+	in_port_t& in() override { return in_event_port; }
+	out_port_t& out() override { return out_event_port; }
+
+protected:
+	void switch_active_buffers()
+	{
+		if (read)
+			middle_buffer = intern_buffer;
+		else
+			middle_buffer += intern_buffer;
+		read = false;
+		intern_buffer = 0;
+	}
+
+	void switch_passive_buffers()
+	{
+		// Switching the outgoing buffers means the previous value in extern_buffer has already been
+		// processed. So a new value is unconditionally needed. Swap should do.
+		std::swap(middle_buffer, extern_buffer);
+		read = true;
+		middle_buffer = 0;
+	}
+
+	/**
+	 * \brief sends all events stored in outgoing buffer to targets
+	 * \post extern_buffer == 0
+	 */
+	void send_events()
+	{
+		for (size_t i = 0; i < extern_buffer; ++i)
+			out_event_port.fire();
+
+		extern_buffer = 0;
+	}
+
+	pure::event_sink<void> switch_active_tick_;
+	pure::event_sink<void> switch_passive_tick_;
+	pure::event_sink<void> in_send_tick;
+	in_port_t in_event_port;
+	out_port_t out_event_port;
+
+	size_t intern_buffer;
+	size_t extern_buffer;
+	size_t middle_buffer;
 	bool read;
 };
 

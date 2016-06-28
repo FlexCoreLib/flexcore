@@ -75,10 +75,11 @@ struct buffered_event_connection: base_connection
 		assert(buffer);
 	}
 
-	void operator()(const result_t& event)
+	template<class... T>
+	void operator()(T&&... in)
 	{
 		assert(buffer);
-		buffer->in()(event);
+		buffer->in()(std::forward<T>(in)...);
 	}
 
 private:
