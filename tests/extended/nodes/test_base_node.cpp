@@ -105,6 +105,16 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/name");
 }
 
+BOOST_AUTO_TEST_CASE( test_manual_ownership )
+{
+	tests::owning_node root("root");
+	node_class<int> child1{5, root.new_node("test_node")};
+	node_class<int> child2{5, root.new_node(root.region(), "name")};
+
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()), child1), "root/test_node");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/name");
+}
+
 BOOST_AUTO_TEST_CASE( test_deletion )
 {
 	tests::owning_node root_;

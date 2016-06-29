@@ -69,7 +69,7 @@ forest_t::iterator owning_base_node::self() const
 	return self_;
 }
 
-fc::tree_node& owning_base_node::add_child(std::unique_ptr<tree_node> child)
+forest_t::iterator owning_base_node::add_child(std::unique_ptr<tree_node> child)
 {
 	assert(fg_);
 	assert(child);
@@ -77,7 +77,7 @@ fc::tree_node& owning_base_node::add_child(std::unique_ptr<tree_node> child)
 	auto child_it = adobe::trailing_of(forest.insert(self(), std::move(child)));
 	assert(adobe::find_parent(child_it) == self());
 	assert(adobe::find_parent(child_it) != forest.end());
-	return *(child_it->get());
+	return child_it;
 }
 
 std::shared_ptr<parallel_region> owner_holder::region()

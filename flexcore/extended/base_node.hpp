@@ -181,6 +181,33 @@ public:
 	}
 
 	/**
+	 * \brief creates a new element in the forest which serves as a proxy for a node
+	 *
+	 * Use this if you want to manually control ownership of a node.
+	 * \param name name of the node.
+	 * \return node_args corresponding to the proxy node.
+	 */
+	detail::node_args new_node(std::string name)
+	{
+		return new_node(region(), std::move(name));
+	}
+	/**
+	 * \brief creates a new element in the forest which serves as a proxy for a node
+	 *
+	 * Use this if you want to manually control ownership of a node.
+	 * \param name name of the node.
+	 * \param region to be used by new node.
+	 * \return node_args corresponding to the proxy node.
+	 */
+	detail::node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
+	{
+		auto proxy_iter = add_child(std::make_unique<tree_base_node>(
+				detail::node_args{fg_, r, name}));
+
+		return detail::node_args{fg_, r, name, proxy_iter};
+	}
+
+	/**
 	 * \brief creates child node of type node_t with constructor arguments args.
 	 *
 	 * Inserts new child into tree.
@@ -283,33 +310,33 @@ private:
 	node_t& make_child_named_impl(detail::leaf_tag,
 			std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
 	{
-		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
+		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, std::move(r), std::move(name)})));
+				detail::node_args{fg_, std::move(r), std::move(name)}))->get());
 	}
 
 	template<class node_t, class ... args_t>
 	node_t& make_child_named_impl(detail::leaf_tag, std::string name, args_t&&... args)
 	{
-		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
+		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, region(), name})));
+				detail::node_args{fg_, region(), name}))->get());
 	}
 
 	template<class node_t, class ... args_t>
 	node_t& make_child_impl(detail::leaf_tag, std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
-		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
+		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, r, node_t::default_name})));
+				detail::node_args{fg_, r, node_t::default_name}))->get());
 	}
 
 	template<class node_t, class ... args_t>
 	node_t& make_child_impl(detail::leaf_tag, args_t&&... args)
 	{
-		return static_cast<node_t&>(add_child(std::make_unique<node_t>(
+		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, region(), node_t::default_name})));
+				detail::node_args{fg_, region(), node_t::default_name}))->get());
 	}
 
 	forest_t::iterator self_;
@@ -318,7 +345,7 @@ private:
 	 * \return pointer to child node
 	 * \pre child != nullptr
 	 */
-	tree_node& add_child(std::unique_ptr<tree_node> child);
+	forest_t::iterator add_child(std::unique_ptr<tree_node> child);
 };
 
 /**

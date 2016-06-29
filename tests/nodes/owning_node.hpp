@@ -40,6 +40,16 @@ public:
 	{
 	}
 
+	detail::node_args new_node(std::string name)
+	{
+		return owner->new_node(name);
+	}
+
+	detail::node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
+	{
+		return owner->new_node(r, name);
+	}
+
 	template <class node_t, class ... args_t>
 	node_t& make_child(args_t&& ... args)
 	{
