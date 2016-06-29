@@ -377,5 +377,23 @@ BOOST_AUTO_TEST_CASE(test_delete_with_lambda_in_connection)
 	BOOST_CHECK_EQUAL(*(test_sink.storage), 12);
 }
 
+BOOST_AUTO_TEST_CASE(lambda_as_sink)
+{
+	pure::event_source<int> src;
+	int called = 0;
+	auto lambda = [&](auto v) {
+		BOOST_CHECK_EQUAL(v, 99); called++;
+	};
+	auto mid = [&](auto v) {
+		BOOST_CHECK_EQUAL(v, 99);
+		called++;
+		return v;
+	};
+	src >> mid >> mid >> std::move(lambda);
+	src.fire(99);
+	BOOST_CHECK_EQUAL(called, 3);
+	bool is_passive_sink_for = fc::is_passive_sink_for<decltype(lambda), int>{};
+	BOOST_CHECK(is_passive_sink_for);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
