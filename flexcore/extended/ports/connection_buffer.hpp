@@ -189,6 +189,7 @@ public:
 		, in_event_port( [this]() { intern_buffer++;})
 		, intern_buffer(0)
 		, extern_buffer(0)
+		, middle_buffer(0)
 		, read(false)
 		{
 		}
