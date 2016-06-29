@@ -43,7 +43,7 @@ std::string full_name(forest_t& forest,
 tree_base_node::tree_base_node(const detail::node_args& args)
 	: fg_(args.fg)
 	, region_(args.r)
-	, graph_info_(args.name, region_.get())
+	, graph_info_(args.graph_info)
 {
 	assert(fg_);
 	assert(region_);

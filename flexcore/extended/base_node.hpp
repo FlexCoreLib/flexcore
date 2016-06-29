@@ -71,10 +71,15 @@ namespace detail
 {
 struct node_args
 {
+	node_args(forest_graph* fg, const std::shared_ptr<parallel_region>& r, const std::string& name,
+	          forest_t::iterator self = forest_t::iterator{})
+	    : fg(fg), r(r), graph_info(name, r.get()), self(self)
+	{
+	}
 	forest_graph* fg;
 	std::shared_ptr<parallel_region> r;
-	std::string name;
-	forest_t::iterator self = forest_t::iterator();
+	graph::graph_node_properties graph_info;
+	forest_t::iterator self;
 };
 
 struct owning_tag {};
@@ -201,10 +206,10 @@ public:
 	 */
 	detail::node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
-		auto proxy_iter = add_child(std::make_unique<tree_base_node>(
-				detail::node_args{fg_, r, name}));
-
-		return detail::node_args{fg_, r, name, proxy_iter};
+		auto args = detail::node_args{fg_, r, name};
+		auto proxy_iter = add_child(std::make_unique<tree_base_node>(args));
+		args.self = proxy_iter;
+		return args;
 	}
 
 	/**
