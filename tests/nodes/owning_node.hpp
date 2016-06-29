@@ -8,7 +8,13 @@ namespace fc
 
 namespace tests
 {
-
+class test_helper_node : public owning_base_node
+{
+public:
+	test_helper_node(const node_args& node) : owning_base_node(node) {}
+	forest_t* get_forest() { return &this->fg_->forest; }
+	forest_t::iterator self() { return owning_base_node::self(); }
+};
 
 /**
  * \brief Provides a simple node to attach ports to for testing.
@@ -19,19 +25,17 @@ namespace tests
 class owning_node
 {
 public:
-	explicit owning_node(const std::shared_ptr<parallel_region>&  r
-			= std::make_shared<parallel_region>("test_root_region"),
-			std::string name = "owner")
-		: fg_(std::make_unique<forest_graph>(graph))
-		, owner(nullptr)
+	explicit owning_node(const std::shared_ptr<parallel_region>& r
+	                         = std::make_shared<parallel_region>("test_root_region"),
+	                     std::string name = "owner")
+	    : owner_(graph, name, r)
+	    , forest_(nullptr)
+	    , owner(&owner_.nodes())
 	{
+		auto& n = owner->make_child_named<test_helper_node>("");
+		forest_ = n.get_forest();
+		forest_->erase(n.self());
 		assert(r);
-		assert(fg_);
-		auto holder_node = std::make_unique<owner_holder>();
-		auto iter = adobe::trailing_of(forest()->insert(forest()->begin(), std::move(holder_node)));
-		auto owning_node = std::make_unique<owning_base_node>(iter, node_args{fg_.get(), r, name});
-		auto& holder = static_cast<owner_holder&>(*iter->get());
-		owner = &holder.set_owner(std::move(owning_node));
 		assert(owner);
 	}
 
@@ -70,15 +74,16 @@ public:
 		return owner->make_child_named<node_t>(name, std::forward<args_t>(args)...);
 	}
 
-	forest_t* forest() { return &fg_->forest; }
-	const forest_t* forest() const { return &fg_->forest; }
+	forest_t* forest() { return forest_; }
+	const forest_t* forest() const { return forest_; }
 
 	auto region() const { return owner->region(); }
 	auto& node() { return *owner; };
 
 private:
 	graph::connection_graph graph;
-	std::unique_ptr<forest_graph> fg_;
+	forest_owner owner_;
+	forest_t* forest_;
 	owning_base_node* owner;
 
 };

@@ -72,7 +72,8 @@ public:
 
 	size_t nr_of_children()
 	{
-		return fg_->forest.size() -2; //-1 for this. -1 for root node
+		size_t n = std::distance(++adobe::leading_of(self()), adobe::trailing_of(self()));
+		return n / 2; // all nodes get visited twice
 	}
 
 	using owning_base_node::self;

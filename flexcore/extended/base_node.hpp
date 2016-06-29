@@ -67,7 +67,11 @@ struct forest_graph
 	graph::connection_graph& graph;
 };
 
-struct node_args
+class tree_base_node;
+class owning_base_node;
+class forest_owner;
+
+class node_args
 {
 	node_args(forest_graph* fg, const std::shared_ptr<parallel_region>& r, const std::string& name,
 	          forest_t::iterator self = forest_t::iterator{})
@@ -78,6 +82,10 @@ struct node_args
 	std::shared_ptr<parallel_region> r;
 	graph::graph_node_properties graph_info;
 	forest_t::iterator self;
+
+	friend class fc::tree_base_node;
+	friend class fc::owning_base_node;
+	friend class fc::forest_owner;
 };
 
 namespace detail
