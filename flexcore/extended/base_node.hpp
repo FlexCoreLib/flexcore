@@ -67,8 +67,6 @@ struct forest_graph
 	graph::connection_graph& graph;
 };
 
-namespace detail
-{
 struct node_args
 {
 	node_args(forest_graph* fg, const std::shared_ptr<parallel_region>& r, const std::string& name,
@@ -81,6 +79,10 @@ struct node_args
 	graph::graph_node_properties graph_info;
 	forest_t::iterator self;
 };
+
+namespace detail
+{
+using node_args [[deprecated("Please use fc::node_args directly")]] = fc::node_args;
 
 struct owning_tag {};
 struct leaf_tag {};
@@ -103,7 +105,7 @@ public:
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 	template<class port_t> using mixin = ::fc::default_mixin<port_t>;
 
-	tree_base_node(const detail::node_args& args);
+	tree_base_node(const node_args& args);
 	std::shared_ptr<parallel_region> region() override { return region_; }
 	std::string name() const override;
 
@@ -175,12 +177,12 @@ private:
 class owning_base_node : public tree_base_node
 {
 public:
-	owning_base_node(forest_t::iterator self, const detail::node_args& node)
+	owning_base_node(forest_t::iterator self, const node_args& node)
 		: tree_base_node(node), self_(self)
 	{
 	}
 
-	explicit owning_base_node(const detail::node_args& node)
+	explicit owning_base_node(const node_args& node)
 		: tree_base_node(node), self_(node.self)
 	{
 	}
@@ -192,7 +194,7 @@ public:
 	 * \param name name of the node.
 	 * \return node_args corresponding to the proxy node.
 	 */
-	detail::node_args new_node(std::string name)
+	node_args new_node(std::string name)
 	{
 		return new_node(region(), std::move(name));
 	}
@@ -204,9 +206,9 @@ public:
 	 * \param region to be used by new node.
 	 * \return node_args corresponding to the proxy node.
 	 */
-	detail::node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
+	node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
-		auto args = detail::node_args{fg_, r, name};
+		auto args = node_args{fg_, r, name};
 		auto proxy_iter = add_child(std::make_unique<tree_base_node>(args));
 		args.self = proxy_iter;
 		return args;
@@ -278,7 +280,7 @@ private:
 		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
 		auto& holder = static_cast<owner_holder&>(*iter->get());
 		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., detail::node_args{fg_, r, node_t::default_name, iter})));
+			std::forward<Args>(args)..., node_args{fg_, r, node_t::default_name, iter})));
 	}
 
 	template <class node_t, class... Args>
@@ -287,7 +289,7 @@ private:
 		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
 		auto& holder = static_cast<owner_holder&>(*iter->get());
 		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., detail::node_args{fg_, region(), node_t::default_name, iter})));
+			std::forward<Args>(args)..., node_args{fg_, region(), node_t::default_name, iter})));
 	}
 
 	template <class node_t, class... Args>
@@ -297,7 +299,7 @@ private:
 		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
 		auto& holder = static_cast<owner_holder&>(*iter->get());
 		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., detail::node_args{fg_, region(), name, iter})));
+			std::forward<Args>(args)..., node_args{fg_, region(), name, iter})));
 	}
 
 	template <class node_t, class... Args>
@@ -307,7 +309,7 @@ private:
 		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
 		auto& holder = static_cast<owner_holder&>(*iter->get());
 		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., detail::node_args{fg_, r, name, iter})));
+			std::forward<Args>(args)..., node_args{fg_, r, name, iter})));
 	}
 
 
@@ -317,7 +319,7 @@ private:
 	{
 		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, std::move(r), std::move(name)}))->get());
+				node_args{fg_, std::move(r), std::move(name)}))->get());
 	}
 
 	template<class node_t, class ... args_t>
@@ -325,7 +327,7 @@ private:
 	{
 		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, region(), name}))->get());
+				node_args{fg_, region(), name}))->get());
 	}
 
 	template<class node_t, class ... args_t>
@@ -333,7 +335,7 @@ private:
 	{
 		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, r, node_t::default_name}))->get());
+				node_args{fg_, r, node_t::default_name}))->get());
 	}
 
 	template<class node_t, class ... args_t>
@@ -341,7 +343,7 @@ private:
 	{
 		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
 				std::forward<args_t>(args)...,
-				detail::node_args{fg_, region(), node_t::default_name}))->get());
+				node_args{fg_, region(), node_t::default_name}))->get());
 	}
 
 	forest_t::iterator self_;

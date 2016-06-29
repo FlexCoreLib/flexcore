@@ -14,7 +14,7 @@ template<class data_t>
 struct node_class : tree_base_node
 {
 	static constexpr auto default_name = "test_node";
-	node_class(data_t a, const detail::node_args& node)
+	node_class(data_t a, const node_args& node)
 		: tree_base_node(node)
 		, value(a)
 	{}
@@ -31,7 +31,7 @@ struct node_class : tree_base_node
 
 struct null : tree_base_node
 {
-	explicit null(const detail::node_args& node) : tree_base_node(node) {}
+	explicit null(const node_args& node) : tree_base_node(node) {}
 };
 } // unnamed namespace
 
@@ -61,7 +61,7 @@ public:
 	{
 	}
 	*/
-	explicit test_owning_node(const detail::node_args& node)
+	explicit test_owning_node(const node_args& node)
 	    : owning_base_node(node)
 	{
 	}

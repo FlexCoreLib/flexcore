@@ -19,7 +19,7 @@ class region_worker_node : public tree_base_node
 {
 public:
 	template <class action_t>
-	region_worker_node(action_t&& action, const detail::node_args& node)
+	region_worker_node(action_t&& action, const node_args& node)
 	    : tree_base_node(node)
 	{
 		region()->work_tick() >> std::forward<action_t>(action);

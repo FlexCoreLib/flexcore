@@ -29,7 +29,7 @@ public:
 		assert(fg_);
 		auto holder_node = std::make_unique<owner_holder>();
 		auto iter = adobe::trailing_of(forest()->insert(forest()->begin(), std::move(holder_node)));
-		auto owning_node = std::make_unique<owning_base_node>(iter, detail::node_args{fg_.get(), r, name});
+		auto owning_node = std::make_unique<owning_base_node>(iter, node_args{fg_.get(), r, name});
 		auto& holder = static_cast<owner_holder&>(*iter->get());
 		owner = &holder.set_owner(std::move(owning_node));
 		assert(owner);
@@ -40,12 +40,12 @@ public:
 	{
 	}
 
-	detail::node_args new_node(std::string name)
+	node_args new_node(std::string name)
 	{
 		return owner->new_node(name);
 	}
 
-	detail::node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
+	node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
 		return owner->new_node(r, name);
 	}
