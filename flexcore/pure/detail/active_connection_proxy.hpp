@@ -106,11 +106,8 @@ struct active_connection_proxy
 	template<class new_passive_t, class enable = void>
 	auto connect(new_passive_t&& new_passive,
 	             std::enable_if_t<(is_passive_source<std::decay_t<new_passive_t>>{} or
-	                               is_passive_sink<std::decay_t<new_passive_t>>{})>* = nullptr) &&
+	                               is_passive_sink_for<std::decay_t<new_passive_t>, result_t>{})>* = nullptr) &&
 	{
-		static_assert(is_passive<std::decay_t<new_passive_t>>{},
-				"new_passive_t in proxy needs to be passive connectable");
-
 		auto tmp = connect_policy()(std::forward<passive_t>(stored_passive),
 		                            std::forward<new_passive_t>(new_passive));
 		return std::forward<active_t>(active).connect(std::move(tmp));
@@ -128,7 +125,7 @@ struct active_connection_proxy
 	 */
 	template <class new_connectable_t,
 	          class = std::enable_if_t<not(is_passive_source<std::decay_t<new_connectable_t>>{} or
-	                                       is_passive_sink<std::decay_t<new_connectable_t>>{})>>
+	                                       is_passive_sink_for<std::decay_t<new_connectable_t>, result_t>{})>>
 	auto connect(new_connectable_t&& new_connectable) &&
 	{
 		auto connection = connect_policy()(std::forward<passive_t>(stored_passive),
@@ -183,7 +180,8 @@ struct active_passive_connect_impl
 		std::enable_if_t
 			<	!is_instantiation_of< active_connection_proxy,std::decay_t<active_t>>{}
 				&&	(	(	is_active_source<std::decay_t<active_t>>{}
-						&& !fc::is_passive_sink<std::decay_t<passive_t>>{}
+						&& !fc::is_passive_sink_for<std::decay_t<passive_t>,
+						                            typename std::decay_t<active_t>::result_t>{}
 						)
 					||	(	fc::is_active_sink<std::decay_t<active_t>>{}
 						&& !fc::is_passive_source<std::decay_t<passive_t>>{}
@@ -213,7 +211,8 @@ struct active_passive_connect_impl
 		std::enable_if_t
 			<	!is_instantiation_of< active_connection_proxy, std::decay_t<active_t>>{}
 				&&	(	(	is_active_source<std::decay_t<active_t>>{}
-						&&	fc::is_passive_sink<std::decay_t<passive_t>>{}
+						&& fc::is_passive_sink_for<std::decay_t<passive_t>,
+						                            typename std::decay_t<active_t>::result_t>{}
 					)
 					||	(	fc::is_active_sink<std::decay_t<active_t>>{}
 						&&	fc::is_passive_source<std::decay_t<passive_t>>{}
