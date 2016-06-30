@@ -208,3 +208,6 @@ can use them to model your scenario. Start by drawing up the flow of
 information and processing steps. The processing steps will most likely be
 nodes, ports will be at the end of lines connecting nodes. Group things using
 regions as necessary to enable safe parallelism.
+
+A List of implemented nodes is available under <a href="group__nodes.html">modules/nodes</a>.
+Some useful connectables can be found under <a href="group__connectables.html">modules/connectables</a>.

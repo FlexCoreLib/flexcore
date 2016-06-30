@@ -14,6 +14,8 @@
 
 namespace fc
 {
+
+/// Classes and Functions related to the multithreading model of flexcore.
 namespace thread
 {
 
@@ -24,7 +26,8 @@ struct condition_pair
 };
 
 /**
- * \brief class representing a periodic task.
+ * \brief class representing a task
+ * which is executed with a fixed rate by the scheduler.
  */
 struct periodic_task final
 {
