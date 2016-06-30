@@ -253,7 +253,7 @@ private:
 	forest_t::iterator self_;
 	/**
 	 * Takes ownership of child node and inserts into tree.
-	 * \return pointer to child node
+	 * \return iterator to child node
 	 * \pre child != nullptr
 	 */
 	tree_node& add_child(std::unique_ptr<tree_node> child);
@@ -284,7 +284,7 @@ private:
  * \param forest, forest to delete node from.
  * \position iterator of forest pointing to node.
  * \pre position must be in forest.
- * \returns todo
+ * \returns trailing iterator pointing to parent of position.
  *
  * invalidates iterators pointing to deleted node.
  */
