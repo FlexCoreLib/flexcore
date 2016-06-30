@@ -25,6 +25,10 @@ the standard library.
 #include <functional>
 #include <type_traits>
 
+/** \addtogroup traits
+ *  @{
+ */
+
 namespace utils {
 
 /**
@@ -309,5 +313,7 @@ typename std::add_rvalue_reference<T>::type rt_val() noexcept
 }
 
 }
+
+/** @}*/ //doxygen group traits for flexcore
 
 #endif

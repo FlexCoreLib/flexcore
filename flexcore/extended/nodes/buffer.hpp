@@ -10,6 +10,14 @@
 namespace fc
 {
 
+/**
+	\defgroup nodes
+	\brief Generic Nodes already implemented and supplied by flexcore.
+
+	This group contains all nodes
+	which are generic enough to be included in flexcore itself.
+*/
+
 namespace detail
 {
 template<class data_t, template<class...> class container_t, class base_t>
@@ -46,6 +54,7 @@ struct swap_on_pull {};
  *
  * Sends the buffer as state when pulled.
  * inputs are made available on tick received at port swap_buffers.
+ * \ingroup nodes
  */
 template<class data_t, class base_t>
 class list_collector<data_t, swap_on_tick, base_t>
@@ -160,6 +169,7 @@ struct collector
  * param container_t container used to store the incoming data.
  *
  * Extend this class to easily implement your own nodes.
+ * \ingroup nodes
  */
 template<class data_t, template<class...> class container_t, class base_t>
 class base_event_to_state : public base_t
@@ -205,6 +215,7 @@ protected:
  * \brief buffer which receives events and stores the last event received as state.
  *
  * \tparam data_t is type of token received as event and then stored.
+ * \ingroup nodes
  */
 template<class data_t, class base_t>
 class hold_last : public base_t
@@ -243,6 +254,7 @@ private:
  *
  * \tparam data_t type of data stored in buffer
  * \invariant capacity of buffer is > 0.
+ * \ingroup nodes
  */
 template<class data_t, class base_t>
 class hold_n : public base_t

@@ -21,7 +21,8 @@ namespace fc
  *
  * \tparam T type of data transmitted through terminal node.
  * \tparam base_node base_node to either include or exclude this node from forest.
- * Instantiate terminal with either pure_node or tree_base_node-
+ * Instantiate terminal with either pure_node or tree_base_node.
+ * \ingroup nodes
  */
 template <class T, class base_node = tree_base_node>
 class state_terminal : public base_node
@@ -58,7 +59,8 @@ private:
  *
  * \tparam T type of data transmitted through terminal node.
  * \tparam base_node base_node to either include or exclude this node from forest.
- * Instantiate terminal with either pure_node or tree_base_node-
+ * Instantiate terminal with either pure_node or tree_base_node.
+ * \ingroup nodes
  */
 template <class T, class base_node = tree_base_node>
 class event_terminal : public base_node

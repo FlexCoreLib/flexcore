@@ -25,7 +25,8 @@ namespace fc
  * \tparam tag, either event_tag or state_tag to set switch to event handling
  * or forwarding of state
  *
- * \key_t key for lookup of inputs in switch. needs to have operator < and ==
+ * \tparam key_t key for lookup of inputs in switch. needs to have operator < and ==
+ * \ingroup nodes
  */
 template<class data_t,
 		class tag,
@@ -74,6 +75,7 @@ private:
 	state_source_t out_port;
 };
 
+/// partial specialization of n_ary_switch for events
 template<class data_t, class key_t, class base_node>
 class n_ary_switch<data_t, event_tag, key_t, base_node> : public base_node
 {
@@ -144,6 +146,7 @@ private:
  * \tparam predicate predicate which is tested on the observed state
  * predicate needs to be a callable which takes objects convertible from data_t
  * and returns a bool.
+ * \ingroup nodes
  */
 template<class data_t, class predicate, class base_node>
 class watch_node : public base_node
@@ -182,7 +185,12 @@ private:
 	typename base_node::template event_source<data_t> out_port;
 };
 
-/// Creates a watch node with a predicate.
+/**
+ * \brief Creates a watch node with a predicate.
+ * \param pred predicate which is tested on the observed state
+ * \return watch_node with the given predicate
+ * \ingroup nodes
+ */
 template<class data_t, class predicate>
 auto watch(predicate&& pred, data_t)
 {
@@ -193,6 +201,7 @@ auto watch(predicate&& pred, data_t)
  * \brief Creates a watch_node, which fires an event, if the state changes.
  *
  *  Does not fire the first time the state is querried.
+ *  \ingroup nodes
  */
 template<class data_t>
 auto on_changed(data_t initial_value = data_t())

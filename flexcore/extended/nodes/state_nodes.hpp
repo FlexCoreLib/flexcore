@@ -17,6 +17,10 @@
 namespace fc
 {
 
+/** \addtogroup nodes
+ *  @{
+ */
+
 /**
  * \brief merges all input states to one output state by given operation
  *
@@ -255,6 +259,8 @@ private:
 	typename base_t::template state_source<data_t> out_port;
 	typename base_t::template event_sink<void> update_port;
 };
+
+/** @} doxygen group nodes */
 
 } // namespace fc
 

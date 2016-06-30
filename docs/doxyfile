@@ -298,7 +298,7 @@ AUTOLINK_SUPPORT = YES
 # diagrams that involve STL classes more complete and accurate.
 # The default value is: NO.
 
-BUILTIN_STL_SUPPORT = NO
+BUILTIN_STL_SUPPORT = YES
 
 # If you use Microsoft's C++/CLI language, you should set this option to YES to
 # enable parsing support.
@@ -794,7 +794,9 @@ EXCLUDE_SYMLINKS = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS = */build/* */build-*/*
+EXCLUDE_PATTERNS = \
+*/build/* */build-*/* \
+*/3rdparty/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -805,7 +807,7 @@ EXCLUDE_PATTERNS = */build/* */build-*/*
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories use the pattern */test/*
 
-EXCLUDE_SYMBOLS = 
+EXCLUDE_SYMBOLS = detail detail::*
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -892,7 +894,7 @@ USE_MDFILE_AS_MAINPAGE =
 # also VERBATIM_HEADERS is set to NO.
 # The default value is: NO.
 
-SOURCE_BROWSER = NO
+SOURCE_BROWSER = YES
 
 # Setting the INLINE_SOURCES tag to YES will include the body of functions,
 # classes and enums directly into the documentation.
@@ -1992,7 +1994,7 @@ ALLEXTERNALS = NO
 # listed.
 # The default value is: YES.
 
-EXTERNAL_GROUPS = YES
+EXTERNAL_GROUPS = NO
 
 # If the EXTERNAL_PAGES tag is set to YES all external pages will be listed in
 # the related pages index. If set to NO, only the current project's pages will
@@ -2115,7 +2117,7 @@ GROUP_GRAPHS = YES
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-UML_LOOK = NO
+UML_LOOK = YES
 
 # If the UML_LOOK tag is enabled, the fields and methods are shown inside the
 # class node. If there are many fields or methods and many nodes the graph may

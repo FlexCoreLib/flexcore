@@ -17,6 +17,13 @@
 namespace fc
 {
 
+/**
+	\defgroup traits
+	\brief metaprogramming traits used in flexcore
+
+	This group contains all traits and metafunctions which provided by
+	and used in flexcore.
+*/
 namespace detail
 {
 
@@ -35,6 +42,9 @@ struct expr_is_callable_impl<F(Args...), always_void<std::result_of<F(Args...)>>
 {
 };
 
+/** \addtogroup traits
+ *  @{
+ */
 
 /**
  * \brief has_call_op trait, based on member_detector idiom
@@ -427,6 +437,8 @@ struct is_active: std::integral_constant<bool,
 is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
+
+/** @}*/ //doxygen group traits
 
 } // namespace fc
 

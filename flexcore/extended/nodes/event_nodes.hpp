@@ -12,9 +12,10 @@ namespace fc
 /**
  * \brief Generic unary node which only handles events.
  *
- * Use this as baseclass to simply build nodes which handle events.
+ * Use this as base-class to simply build nodes which handle events.
  *
  * \tparam event_t type of event handled by the node
+ * \ingroup nodes
  */
 template<class event_t, class base>
 class generic_event_node : public base
@@ -52,8 +53,9 @@ protected:
  * \brief forwards events if and only if a predicate returns true.
  *
  * \tparam event_t type of event expected and forwarded
- * \pparam predicate type of predicate evaluated on event
+ * \tparam predicate type of predicate evaluated on event
  * needs to be callable with type convertible from event_t and return bool.
+ * \ingroup nodes
  */
 template<class event_t, class predicate, class base_t = pure::pure_node>
 class gate_with_predicate: public generic_event_node<event_t, base_t>
@@ -80,6 +82,7 @@ private:
  * State sink in_control must be connected when events are received!
  *
  * \tparam event_t type of event expected and forwarded
+ * \ingroup nodes
  */
 template<class event_t, class base_t = pure::pure_node>
 class gate_with_control: public generic_event_node<event_t, base_t>

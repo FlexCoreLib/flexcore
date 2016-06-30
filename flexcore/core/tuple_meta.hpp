@@ -10,6 +10,11 @@
 
 namespace fc
 {
+
+/**
+ * \brief Selection of metafunctions using std::tuple.
+ * Basically a very minimal subset of boost::fusion
+ */
 namespace tuple
 {
 
@@ -43,11 +48,6 @@ decltype(auto) unary_invoke_helper(lhs_tuple&& lsh,
 	return std::make_tuple(op(std::get<index>(std::forward<lhs_tuple>(lsh)))...);
 }
 } //namespace detail
-
-/**
- * Selection of metafunctions using std::tuple.
- * Basically a very minimal subset of boost::fusion
- */
 
 ///applies function to every element in tuple
 template<class tuple, class operation>
