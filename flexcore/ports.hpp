@@ -10,13 +10,24 @@
 namespace fc
 {
 
-// === default mixins ===
-
+/**
+ * \brief mixin for ports, which makes them aware of parent node and available in graph.
+ *
+ * Use these ports together with tree_base_node and owning_base_node.
+ * \ingroup ports
+ */
 template<class port_t>
 struct node_aware_mixin : graph::graph_connectable<node_aware<port_t>>
 {
 	using base = graph::graph_connectable<node_aware<port_t>>;
 
+	/**
+	 * \brief Constructs port with node_aware mixin.
+	 * \param node_ptr pointer to node which owns this port
+	 * \pre node_ptr != nullptr
+	 * \param base_constructor_args constructor arguments to underlying port.
+	 * These are forwarded to base
+	 */
 	template <class ... args>
 	node_aware_mixin(node* node_ptr, args&&... base_constructor_args)
 		: base(node_ptr->get_graph(), node_ptr->graph_info(),
@@ -33,8 +44,10 @@ template<class T> struct is_active_source<node_aware_mixin<T>> : is_active_sourc
 template<class port_t>
 using default_mixin = node_aware_mixin<port_t>;
 
-// -- event sinks --
-
+/**
+ * \brief Default event_sink port
+ * \ingroup ports
+ */
 template<class data_t>
 using event_sink = default_mixin<pure::event_sink<data_t>>;
 
@@ -44,18 +57,24 @@ using event_sink_tmpl = default_mixin<pure::event_sink_tmpl<lambda_t>>;
 template<class lambda_t>
 auto make_event_sink_tmpl(lambda_t h) { return event_sink_tmpl<lambda_t>{h}; }
 
-// -- event sources --
-
+/**
+ * \brief Default event_source port
+ * \ingroup ports
+ */
 template<class data_t>
 using event_source = default_mixin<pure::event_source<data_t>>;
 
-// -- state sinks --
-
+/**
+ * \brief Default state_sink port
+ * \ingroup ports
+ */
 template<class data_t>
 using state_sink = default_mixin<pure::state_sink<data_t>>;
 
-// -- state sources --
-
+/**
+ * \brief Default state_source port
+ * \ingroup ports
+ */
 template<class data_t>
 using state_source = default_mixin<pure::state_source<data_t>>;
 

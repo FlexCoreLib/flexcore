@@ -82,7 +82,8 @@ struct node_args
  * These should only be constructed through an owning_base_node's
  * make_child()/make_child_named()/new_node() methods.
  *
- * \invariant fg_ != nullptr
+ * \invariant pointer to owning forest fg_ != nullptr.
+ * \ingroup nodes
  */
 class tree_base_node : public tree_node, private boost::noncopyable
 {
@@ -151,6 +152,8 @@ private:
  * the ownership tree.
  * Use new_node to create a tree_base_node that carries metadata (about its
  * position in tree) but which can be passed onto a node for use with ports.
+ *
+ * \ingroup nodes
  *
  * Node creation examples:
  * \code{cpp}

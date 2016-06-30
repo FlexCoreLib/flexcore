@@ -15,17 +15,18 @@ namespace pure
 {
 
 /**
- * State source port that queries a node for the value
- * See test_stream_query_node.cpp for sample use inside a node
+ * \brief State source port that queries a node for the value
  *
- * Caller is responsible that the node passed to the constructor is not destroyed before the port
+ * state_source fulfills passive_source.
+ * \tparam data_t type of token provided by this port.
+ * \ingroup ports
  */
 template<class data_t>
 class state_source
 {
 public:
 	/**
-	 * \brief constructs state_source_function with function to call.
+	 * \brief constructs state_source with function to call.
 	 *
 	 * \param f function which is called, when data is pulled from this source
 	 * \pre f needs to be non empty function.
@@ -39,13 +40,15 @@ public:
 	state_source(const state_source&) = delete;
 	state_source(state_source&& o)
 	{
-		assert(o.connection_breakers.empty());
+		assert(o.connection_breakers.empty() &&
+				"It is illegal to move a state_source which is connected");
 		// Only move the handler so that if the assert doesn't fire (e.g. when
 		// NDEBUG is defined) the moved-from-object will still disconnect
 		// itself.
 		swap(call, o.call);
 	}
 
+	/// Destructor disconnects existing connection and then deletes object.
 	~state_source()
 	{
 		auto self = std::hash<decltype(this)>{}(this);
@@ -57,8 +60,10 @@ public:
 		}
 	}
 
+	/// Provides token
 	data_t operator()() { return call(); }
 
+	/// Registers callback to disconnect port
 	void register_callback(std::shared_ptr<std::function<void(size_t)>>& visit_fun)
 	{
 		assert(visit_fun);

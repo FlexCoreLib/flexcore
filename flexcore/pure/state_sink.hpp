@@ -20,17 +20,17 @@ namespace pure
  * \brief Simple implementation for input port of states
  *
  * Will pull data when get is called.
- * Is not a Connectable.
+ * state_sink Fulfills active_sink.
  *
- * \tparam data_t data type flowing through this port. Needs to fulfill copy_constructable
+ * \tparam data_t data type flowing through this port.
+ * Needs to fulfill copy_constructable
+ * \ingroup ports
  */
 template<class data_t>
 class state_sink
 {
 public:
 	state_sink() = default;
-
-	//typedef data_t result_t;
 
 	/**
 	 * \brief pulls state from connection
@@ -40,9 +40,10 @@ public:
 	data_t get() const { return base.storage.handlers(); }
 
 	/**
-	 * \brief Cconnects state source to sink.
-	 * Sink takes ownership of the connection
+	 * \brief Connects state source to state_sink.
 	 *
+	 * This state_sink takes ownership of the connection.
+	 * \param c connectable which is to be connected to this port.
 	 * \pre c needs to be connectable and passive_source
 	 * \post connection is not empty
 	 */

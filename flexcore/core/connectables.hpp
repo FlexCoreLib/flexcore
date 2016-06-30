@@ -8,8 +8,15 @@ namespace fc
 {
 
 /**
- * A collection of different useful connectables.
+ * \defgroup connectables
+ * \brief A collection of different useful connectables.
+ *
  * A lot of them are names for simple lambdas to make code less verbose.
+ */
+
+/**
+ * \addtogroup connectables
+ * @{
  */
 
 /// Increments input using prefix operator ++.
@@ -115,6 +122,8 @@ auto print = [](auto& stream)
 		stream << in << "\n";
 	};
 };
+
+/** @} doxygen group connectables */
 
 }  // namespace fc
 

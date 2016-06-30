@@ -21,15 +21,17 @@ namespace pure
 {
 
 /**
- * \brief minimal output port for events.
+ * \brief Output port for events.
  *
- * fulfills active_source
+ * event_source fulfills active_source.
  * can be connected to multiples sinks and stores these in a std::list.
  *
  * \remark This class is not thread safe with respect to connections
  * i.e. all connections to sinks must be made serially
  *
- * \tparam event_t type of event stored, needs to fulfill copy_constructable.
+ * \tparam event_t type of event stored,
+ * needs to fulfill copy_constructable or move_constructable.
+ * \ingroup ports
  */
 template<class event_t>
 struct event_source
@@ -39,6 +41,10 @@ struct event_source
 
 	event_source() = default;
 
+	/**
+	 * \brief Sends parameter as event to all connected conntables and event_sinks.
+	 * \param event token to be sent through this port.
+	 */
 	template<class... T>
 	void fire(T&&... event)
 	{
@@ -57,6 +63,7 @@ struct event_source
 		}
 	}
 
+	/// Gives the number of connections from this port.
 	size_t nr_connected_handlers() const
 	{
 		return base.storage.handlers.size();
@@ -64,6 +71,7 @@ struct event_source
 
 	/**
 	 * \brief connects new connectable target to port.
+	 *
 	 * Optionally adds a callback to deregister the connection
 	 * if supported by the sink at the end of the chain of connectables
 	 * \param new_handler the new target to be connected.
@@ -84,7 +92,6 @@ struct event_source
 	}
 
 private:
-
 	// Stores event_handlers in a vector, the node needs to send
 	// to all connected event_handlers when an event is fired.
 	detail::active_port_base<handler_t, detail::multiple_handler_policy> base;

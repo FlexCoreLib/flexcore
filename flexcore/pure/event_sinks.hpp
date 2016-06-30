@@ -11,13 +11,16 @@
 
 namespace fc
 {
+
+/// Ports and nodes which are independent of parallel regions, graph visualization etc.
 namespace pure
 {
 /**
- * \brief minimal input port for events
+ * \brief Input port for events, executes given actions on incoming events.
  *
- * fulfills passive_sink
- * \tparam event_t type of event expected, must be copy_constructable
+ * event_sink fulfills passive_sink.
+ * \tparam event_t type of event expected, must be copy_constructable or move_constructable
+ * \ingroup ports
  */
 template<class event_t>
 struct event_sink
@@ -25,8 +28,13 @@ struct event_sink
 	typedef typename detail::handle_type<event_t>::type handler_t;
 	typedef void result_t;
 
-	explicit event_sink(const handler_t& handler) :
-			event_handler(handler)
+	/**
+	 * \brief Construct event_sink with action to execute in events
+	 * \param action Action to execute with incoming events
+	 * \pre action must be function with signature void(event_t).
+	 */
+	explicit event_sink(const handler_t& action) :
+			event_handler(action)
 	{
 		assert(event_handler);
 	}
