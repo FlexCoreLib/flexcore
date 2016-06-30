@@ -89,33 +89,52 @@ namespace
 template<class source_t, class sink_t>
 void check_mixins()
 {
-	auto region_1 = std::make_shared<parallel_region>("r1");
-	auto region_2 = std::make_shared<parallel_region>("r2");
+	auto default_tick = thread::cycle_control::slow_tick;
+	auto different_tick = thread::cycle_control::fast_tick;
+
+	auto region_1 = std::make_shared<parallel_region>("r1", default_tick);
+	auto region_2 = std::make_shared<parallel_region>("r2", default_tick);
+	auto region_3 = std::make_shared<parallel_region>("r3", different_tick);
 	tests::owning_node root_1(region_1);
 	tests::owning_node root_2(region_2);
+	tests::owning_node root_3(region_3);
 
-	int test_value = 0;
-	auto write_param = [&test_value](int i) {test_value = i;};
-	sink_t test_in(*(root_2.region()), write_param);
+	int test_value_1 = 0;
+	int test_value_2 = 0;
+	auto write_param_1 = [&test_value_1](int i) {test_value_1 = i;};
+	auto write_param_2 = [&test_value_2](int i) {test_value_2 = i;};
+	sink_t test_in_1(*(root_2.region()), write_param_1);
+	sink_t test_in_2(*(root_3.region()), write_param_2);
 	source_t test_out(*(root_1.region()));
 
-	test_out >> test_in;
+	test_out >> test_in_1;
+	test_out >> test_in_2;
 	static_assert(is_active<source_t>{}, "not active source.");
 	static_assert(is_connectable<sink_t&>{}, "no connectable sink.");
 	static_assert(is_passive<sink_t>{}, "no passive sink.");
 
+	BOOST_CHECK_EQUAL(test_value_1, 0);
 
-	BOOST_CHECK_EQUAL(test_value, 0);
+	// after firing, both test values should be zero (passive regions did not receive)
 	test_out.fire(1);
-	//since we have a region transition, we need a switch tick
-	BOOST_CHECK_EQUAL(test_value, 0);
+	BOOST_CHECK_EQUAL(test_value_1, 0);
+	BOOST_CHECK_EQUAL(test_value_2, 0);
 
+	// after the active regions's switch tick, both should still be zero
 	region_1->ticks.switch_buffers();
-	BOOST_CHECK_EQUAL(test_value, 0);
-	region_2->ticks.switch_buffers();
-	BOOST_CHECK_EQUAL(test_value, 0);
+	BOOST_CHECK_EQUAL(test_value_1, 0);
+	BOOST_CHECK_EQUAL(test_value_2, 0);
+
+	// after the passive regions's work tick,
+	// the region with the same tick length should have received something
 	region_2->ticks.in_work()();
-	BOOST_CHECK_EQUAL(test_value, 1);
+	BOOST_CHECK_EQUAL(test_value_1, 1);
+
+	// after switching and working, the other region should also receive something
+	region_3->ticks.switch_buffers();
+	BOOST_CHECK_EQUAL(test_value_2, 0);
+	region_3->ticks.in_work()();
+	BOOST_CHECK_EQUAL(test_value_2, 1);
 }
 }
 
@@ -285,15 +304,20 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 
 BOOST_AUTO_TEST_CASE(test_state_transition)
 {
+	auto default_tick = thread::cycle_control::slow_tick;
+	auto different_tick = thread::cycle_control::fast_tick;
 	typedef node_aware<pure::state_sink<int>> test_in_port;
 	typedef node_aware<pure::state_source<int>> test_out_port;
-	auto region_1 = std::make_shared<parallel_region>("r1");
-	auto region_2 = std::make_shared<parallel_region>("r2");
+	auto region_1 = std::make_shared<parallel_region>("r1", default_tick);
+	auto region_2 = std::make_shared<parallel_region>("r2", default_tick);
+	auto region_3 = std::make_shared<parallel_region>("r3", different_tick);
 	tests::owning_node root_1(region_1);
 	tests::owning_node root_2(region_2);
+	tests::owning_node root_3(region_3);
 
 	test_out_port source(*(root_1.region()), [](){ return 1; });
-	test_in_port sink(*(root_2.region()));
+	test_in_port sink_1(*(root_2.region()));
+	test_in_port sink_2(*(root_3.region()));
 
 	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
 	static_assert(is_instantiation_of<node_aware, test_out_port>{}, "");
@@ -309,17 +333,25 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 	static_assert(std::is_same<int,
 			result_of_t<test_out_port>>{},
 			"return value of source is defined to be int");
-	source >> [](auto in){ return in;} >> sink;
 
+	source >> [](auto in){ return in;} >> sink_1;
+	source >> [](auto in){ return in;} >> sink_2;
 
-	BOOST_CHECK_EQUAL(sink.get(), 0);
+	BOOST_CHECK_EQUAL(sink_1.get(), 0);
 
 	region_1->ticks.in_work()();
-	BOOST_CHECK_EQUAL(sink.get(), 0);
-	region_1->ticks.switch_buffers();
-	BOOST_CHECK_EQUAL(sink.get(), 0);
+	BOOST_CHECK_EQUAL(sink_1.get(), 0);
+	BOOST_CHECK_EQUAL(sink_2.get(), 0);
+
+	// Switching active side buffers, sufficient for regions with same tick rate
 	region_2->ticks.switch_buffers();
-	BOOST_CHECK_EQUAL(sink.get(), 1);
+	BOOST_CHECK_EQUAL(sink_1.get(), 1);
+
+	// For differing tick rates, both must be switched
+	region_1->ticks.switch_buffers();
+	BOOST_CHECK_EQUAL(sink_2.get(), 0);
+	region_3->ticks.switch_buffers();
+	BOOST_CHECK_EQUAL(sink_2.get(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_state_same_region)

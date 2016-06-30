@@ -9,8 +9,9 @@ namespace detail {
 class scheduled_region : public fc::parallel_region
 {
 public:
-	scheduled_region(std::string name, std::weak_ptr<region_factory> region_maker)
-	    : parallel_region(std::move(name)), region_maker(region_maker)
+	scheduled_region(std::string name, virtual_clock::steady::duration tick_rate,
+			std::weak_ptr<region_factory> region_maker)
+	    : parallel_region(std::move(name), tick_rate), region_maker(region_maker)
 	{
 	}
 	std::shared_ptr<parallel_region>
@@ -50,7 +51,7 @@ std::shared_ptr<parallel_region>
 region_factory::new_region(const std::string& name,
                            const virtual_clock::steady::duration& tick_rate)
 {
-	auto region = std::make_shared<scheduled_region>(name, shared_from_this());
+	auto region = std::make_shared<scheduled_region>(name, tick_rate, shared_from_this());
 	auto tick_cycle = fc::thread::periodic_task(region);
 	scheduler.add_task(std::move(tick_cycle),tick_rate);
 	return region;

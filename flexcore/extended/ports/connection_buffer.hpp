@@ -37,8 +37,8 @@ struct buffer_interface
 };
 
 /// Implementation of buffer_interface, which directly forwards events.
-template<class token_t, class tag = event_tag>
-class event_no_buffer final : public buffer_interface<token_t, tag>
+template<class token_t>
+class event_no_buffer final : public buffer_interface<token_t, event_tag>
 {
 public:
 	event_no_buffer()
@@ -49,18 +49,18 @@ public:
 	{
 	}
 
-	typename pure::in_port<token_t, tag>::type& in() override
+	pure::event_sink<token_t>& in() override
 	{
 		return in_event_port;
 	}
-	typename pure::out_port<token_t, tag>::type& out() override
+	pure::event_source<token_t>& out() override
 	{
 		return out_event_port;
 	}
 
 private:
-	typename pure::in_port<token_t, tag>::type in_event_port;
-	typename pure::out_port<token_t, tag>::type out_event_port;
+	pure::event_sink<token_t> in_event_port;
+	pure::event_source<token_t> out_event_port;
 };
 
 /**
@@ -79,6 +79,7 @@ public:
 	event_buffer()
 		: switch_active_tick_([this] { switch_active_buffers(); })
 		, switch_passive_tick_([this] { switch_passive_buffers(); })
+		, switch_active_passive_tick_([this] { switch_active_passive_buffers(); })
 		, in_send_tick( [this](){ send_events(); } )
 		, in_event_port( [this](event_t in_event) { intern_buffer.push_back(in_event);})
 		, intern_buffer()
@@ -94,6 +95,8 @@ public:
 	auto& switch_active_tick() { return switch_active_tick_; };
 	/// event in port of type void, switches passive-side buffers
 	auto& switch_passive_tick() { return switch_passive_tick_; };
+	/// event in port of type void, directly switches active- and passive-side buffers
+	auto& switch_active_passive_tick() { return switch_active_passive_tick_; }
 	/// event in port of type void, fires outgoing buffer
 	auto& work_tick() { return in_send_tick; };
 
@@ -123,6 +126,19 @@ protected:
 		middle_buffer.clear();
 	}
 
+	void switch_active_passive_buffers()
+	{
+		if(extern_buffer.empty())
+		{
+			swap(intern_buffer, extern_buffer);
+		}
+		else
+		{
+			extern_buffer.insert(end(extern_buffer), begin(intern_buffer), end(intern_buffer));
+			intern_buffer.clear();
+		}
+	}
+
 	/**
 	 * \brief sends all events stored in outgoing buffer to targets
 	 * \post extern_buffer is empty
@@ -140,6 +156,7 @@ protected:
 
 	pure::event_sink<void> switch_active_tick_;
 	pure::event_sink<void> switch_passive_tick_;
+	pure::event_sink<void> switch_active_passive_tick_;
 	pure::event_sink<void> in_send_tick;
 	in_port_t in_event_port;
 	out_port_t out_event_port;
@@ -163,6 +180,7 @@ public:
 	event_buffer()
 		: switch_active_tick_([this] { switch_active_buffers(); })
 		, switch_passive_tick_([this] { switch_passive_buffers(); })
+		, switch_active_passive_tick_([this] { switch_active_passive_buffers(); })
 		, in_send_tick( [this](){ send_events(); } )
 		, in_event_port( [this]() { intern_buffer++;})
 		, intern_buffer(0)
@@ -179,6 +197,8 @@ public:
 	auto& switch_active_tick() { return switch_active_tick_; };
 	/// event in port of type void, switches passive-side buffers
 	auto& switch_passive_tick() { return switch_passive_tick_; };
+	/// event in port of type void, directly switches active- and passive-side buffers
+	auto& switch_active_passive_tick() { return switch_active_passive_tick_; }
 	/// event in port of type void, fires out port once for each event stored.
 	auto& work_tick() { return in_send_tick; };
 
@@ -205,6 +225,13 @@ protected:
 		middle_buffer = 0;
 	}
 
+	void switch_active_passive_buffers()
+	{
+		extern_buffer += intern_buffer;
+		intern_buffer = 0;
+	}
+
+
 	/**
 	 * \brief sends all events stored in outgoing buffer to targets
 	 * \post extern_buffer == 0
@@ -219,6 +246,7 @@ protected:
 
 	pure::event_sink<void> switch_active_tick_;
 	pure::event_sink<void> switch_passive_tick_;
+	pure::event_sink<void> switch_active_passive_tick_;
 	pure::event_sink<void> in_send_tick;
 	in_port_t in_event_port;
 	out_port_t out_event_port;
@@ -267,6 +295,8 @@ public:
 	auto& switch_active_tick() { return switch_active_tick_; };
 	// event in port of type void, switches outgoing buffers
 	auto& switch_passive_tick() { return switch_passive_tick_; };
+	/// event in port of type void, directly switches active- and passive-side buffers
+	auto& switch_active_passive_tick() { return switch_active_passive_tick_; }
 	// event in port of type void, pulls data at in_port
 	auto& work_tick() { return in_work_tick; };
 
@@ -291,8 +321,14 @@ protected:
 		extern_buffer = middle_buffer;
 	}
 
+	void switch_active_passive_buffers()
+	{
+		extern_buffer = intern_buffer;
+	}
+
 	pure::event_sink<void> switch_active_tick_;
 	pure::event_sink<void> switch_passive_tick_;
+	pure::event_sink<void> switch_active_passive_tick_;
 	pure::event_sink<void> in_work_tick;
 	pure::state_sink<data_t> in_port;
 	pure::state_source<data_t> out_port;
@@ -341,6 +377,7 @@ template<class T>
 inline fc::state_buffer<T>::state_buffer() :
 		switch_active_tick_([this] { switch_active_buffers(); }),
 		switch_passive_tick_([this] { switch_passive_buffers(); }),
+		switch_active_passive_tick_([this] { switch_active_passive_buffers(); }),
 		in_work_tick([this]() { intern_buffer = in_port.get(); }),
 		in_port(),
 		out_port([this](){ return extern_buffer; }),

@@ -66,12 +66,16 @@ public:
 class parallel_region
 {
 public:
-	explicit parallel_region(std::string id = "default");
+	explicit parallel_region(std::string id = "default",
+			virtual_clock::steady::duration duration =
+					std::chrono::duration_cast<virtual_clock::steady::duration>
+						(std::chrono::seconds(1)));
 
 	parallel_region(const parallel_region&) = delete;
 	parallel_region(parallel_region&&) = default;
 
 	region_id get_id() const;
+	virtual_clock::steady::duration get_duration() const;
 	pure::event_source<void>& switch_tick();
 	pure::event_source<void>& work_tick();
 	/// Create new region from existing one.
@@ -80,6 +84,7 @@ public:
 
 	tick_controller ticks;
 	region_id id;
+	const virtual_clock::steady::duration tick_duration;
 };
 
 } /* namespace fc */
