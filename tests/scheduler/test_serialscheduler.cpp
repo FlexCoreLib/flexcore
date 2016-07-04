@@ -28,22 +28,25 @@ BOOST_AUTO_TEST_CASE(test_cant_add_tasks_after_stopped)
 BOOST_AUTO_TEST_CASE(test_nr_of_waiting_tasks)
 {
 	auto scheduler = make_blocking_scheduler();
-	std::promise<void> task_is_running;
-	std::promise<void> terminate_task;
-	auto terminate = terminate_task.get_future();
-	auto running = task_is_running.get_future();
-	auto check_running_task = std::async(std::launch::async, [&]
-	                                     {
-		                                     running.get();
-		                                     BOOST_CHECK_EQUAL(scheduler->nr_of_waiting_tasks(), 1);
-		                                     terminate_task.set_value();
-	                                     });
+	std::atomic_bool ran{false};
+	std::atomic_bool finish{false};
+	bool nr_was_one = false;
+	auto check = std::thread([&]
+	                        {
+		                        while (!ran.load())
+			                        std::this_thread::yield();
+		                        nr_was_one = scheduler->nr_of_waiting_tasks() == 1;
+		                        finish.store(true);
+	                        });
 	BOOST_CHECK_EQUAL(scheduler->nr_of_waiting_tasks(), 0);
 	scheduler->add_task([&]
 	                    {
-		                    task_is_running.set_value();
-		                    terminate.get();
+		                    ran.store(true);
+		                    while (!finish.load())
+			                    std::this_thread::yield();
 	                    });
+	check.join();
+	BOOST_CHECK(nr_was_one);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
