@@ -14,6 +14,7 @@
 #include <chrono>
 #include <iomanip>
 #include <ctime>
+#include <future>
 #include <unistd.h>
 
 using namespace fc;
@@ -71,11 +72,19 @@ BOOST_AUTO_TEST_CASE(test_fast_main_loop)
 	auto count_fast = 0ull;
 	auto count_medium = 0ull;
 	auto count_slow = 0ull;
+	auto promise = std::promise<void>{};
+	auto block = promise.get_future();
 	controller.add_task({[&] { ++count_fast; }}, cycle::fast_tick);
 	controller.add_task({[&] { ++count_medium; }}, cycle::medium_tick);
-	controller.add_task({[&] { ++count_slow; }}, cycle::slow_tick);
+	controller.add_task({[&, b = false]() mutable {
+		++count_slow;
+		if (!b) {
+			promise.set_value();
+			b = true;
+		}
+	}}, cycle::slow_tick);
 	controller.start(true);
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	block.get();
 	controller.stop();
 	auto ratio_fast_medium = static_cast<double>(count_fast) / count_medium;
 	auto ratio_medium_slow = static_cast<double>(count_medium) / count_slow;
