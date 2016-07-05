@@ -184,6 +184,7 @@ private:
  */
 class owning_base_node : public tree_base_node
 {
+	template <class node> using tag_ = typename node::tag;
 public:
 	owning_base_node(forest_t::iterator self, const node_args& node)
 		: tree_base_node(node), self_(self)
@@ -236,8 +237,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child(args_t&&... args)
 	{
-		return make_child_impl<node_t>(typename node_t::tag{},
-				std::forward<args_t>(args)...);
+		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, region(), node_t::default_name},
+		                               std::forward<args_t>(args)...);
 	}
 
 	/**
@@ -250,8 +251,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
-		return make_child_impl<node_t>(typename node_t::tag{},
-				r, std::forward<args_t>(args)...);
+		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, r, node_t::default_name},
+		                               std::forward<args_t>(args)...);
 	}
 
 	/**
@@ -265,15 +266,15 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child_named(std::string name, args_t&&... args)
 	{
-		return make_child_named_impl<node_t>(typename node_t::tag{},
-					name, std::forward<args_t>(args)...);
+		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, region(), name},
+		                               std::forward<args_t>(args)...);
 	}
 
 	template<class node_t, class ... args_t>
 	node_t& make_child_named(std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
 	{
-		return make_child_named_impl<node_t>(typename node_t::tag{},
-				r, name, std::forward<args_t>(args)...);
+		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, r, name},
+		                               std::forward<args_t>(args)...);
 	}
 
 
@@ -282,76 +283,20 @@ protected:
 	forest_t::iterator self() const;
 private:
 	template <class node_t, class... Args>
-	node_t& make_child_impl(detail::owning_tag,
-			std::shared_ptr<parallel_region> r, Args&&... args)
+	node_t& make_child_impl(detail::owning_tag, node_args nargs, Args&&... args)
 	{
 		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
 		auto& holder = static_cast<owner_holder&>(*iter->get());
-		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., node_args{fg_, r, node_t::default_name, iter})));
-	}
-
-	template <class node_t, class... Args>
-	node_t& make_child_impl(detail::owning_tag, Args&&... args)
-	{
-		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
-		auto& holder = static_cast<owner_holder&>(*iter->get());
-		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., node_args{fg_, region(), node_t::default_name, iter})));
-	}
-
-	template <class node_t, class... Args>
-	node_t& make_child_named_impl(detail::owning_tag,
-			std::string name, Args&&... args)
-	{
-		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
-		auto& holder = static_cast<owner_holder&>(*iter->get());
-		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., node_args{fg_, region(), name, iter})));
-	}
-
-	template <class node_t, class... Args>
-	node_t& make_child_named_impl(detail::owning_tag,
-			std::shared_ptr<parallel_region> r, std::string name, Args&&... args)
-	{
-		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
-		auto& holder = static_cast<owner_holder&>(*iter->get());
-		return static_cast<node_t&>(holder.set_owner(std::make_unique<node_t>(
-			std::forward<Args>(args)..., node_args{fg_, r, name, iter})));
-	}
-
-
-	template<class node_t, class ... args_t>
-	node_t& make_child_named_impl(detail::leaf_tag,
-			std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
-	{
-		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				node_args{fg_, std::move(r), std::move(name)}))->get());
+		nargs.self = iter;
+		return static_cast<node_t&>(
+		    holder.set_owner(std::make_unique<node_t>(std::forward<Args>(args)..., nargs)));
 	}
 
 	template<class node_t, class ... args_t>
-	node_t& make_child_named_impl(detail::leaf_tag, std::string name, args_t&&... args)
+	node_t& make_child_impl(detail::leaf_tag, const node_args& nargs, args_t&&... args)
 	{
-		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				node_args{fg_, region(), name}))->get());
-	}
-
-	template<class node_t, class ... args_t>
-	node_t& make_child_impl(detail::leaf_tag, std::shared_ptr<parallel_region> r, args_t&&... args)
-	{
-		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				node_args{fg_, r, node_t::default_name}))->get());
-	}
-
-	template<class node_t, class ... args_t>
-	node_t& make_child_impl(detail::leaf_tag, args_t&&... args)
-	{
-		return static_cast<node_t&>(*add_child(std::make_unique<node_t>(
-				std::forward<args_t>(args)...,
-				node_args{fg_, region(), node_t::default_name}))->get());
+		return static_cast<node_t&>(
+		    **add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., nargs)));
 	}
 
 	forest_t::iterator self_;
