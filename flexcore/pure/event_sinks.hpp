@@ -33,9 +33,13 @@ struct event_sink
 	 * \param action Action to execute with incoming events
 	 * \pre action must be function with signature void(event_t).
 	 */
-	explicit event_sink(const handler_t& action) :
-			event_handler(action)
+	template<class action_t>
+	explicit event_sink(action_t&& action) :
+			event_handler(std::forward<action_t>(action))
 	{
+		static_assert(std::is_constructible<handler_t, action_t>(),
+				"action given to event_sink needs to have signature void(event_t)."
+				" Where event_t is type of token expected by event_sink.");
 		assert(event_handler);
 	}
 

@@ -28,12 +28,17 @@ public:
 	/**
 	 * \brief constructs state_source with function to call.
 	 *
+	 * \tparam provide_action callable type with signature data_t(void)
 	 * \param f function which is called, when data is pulled from this source
 	 * \pre f needs to be non empty function.
 	 */
-	explicit state_source(std::function<data_t()> f)
-		: call(f)
+	template<class provide_action>
+	explicit state_source(provide_action&& f)
+		: call(std::forward<provide_action>(f))
 	{
+		static_assert(std::is_constructible<std::function<data_t()>, provide_action>(),
+				"action given to state_source needs to have signature data_t()."
+				" Where data_t is type of token provided by state_source.");
 		assert(call);
 	}
 
