@@ -24,7 +24,6 @@ ADD_EXECUTABLE( test_executable
 	extended/ports/test_state_buffer.cpp
 	pure/events/test_events.cpp
 	pure/states/test_state_sinks.cpp
-	pure/states/test_node_with_lambda.cpp
 	pure/states/test_state_source_call_function.cpp
 	pure/states/test_state_source_with_setter.cpp
 	range/test_range.cpp
