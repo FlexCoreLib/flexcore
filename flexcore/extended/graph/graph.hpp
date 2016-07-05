@@ -44,25 +44,6 @@ private:
 };
 
 /**
- * \brief Contains the information carried by ports
- * which are connected in the dataflow graph.
- */
-class graph_port_information
-{
-public:
-	graph_port_information()
-		: id(boost::uuids::random_generator()())
-	{
-	}
-
-	typedef boost::uuids::uuid unique_id;
-
-	unique_id get_id() const { return id; }
-private:
-	unique_id id;
-};
-
-/**
  * \brief The abstract connection graph of a flexcore application.
  *
  * Contains all nodes which where declared with the additional information
