@@ -1,7 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <flexcore/core/connection.hpp>
-#include <pure/events/event_sink_with_queue.hpp>
 #include <vector>
 #include <algorithm>
 
@@ -29,20 +28,20 @@ BOOST_AUTO_TEST_CASE( move_token_ )
 
 BOOST_AUTO_TEST_CASE( moving_events )
 {
-	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t); };
+	auto set_bar = [](auto&& t) { t.value() = "bar"; return std::move(t);};
 
 	pure::event_source<move_token&&> source;
 
-	pure::event_sink_queue<move_token> sink;
+	move_token result{};
 
-	std::function<void(move_token&&)> bla = sink;
-	source >> set_bar >> bla;
+	pure::event_sink<move_token> sink{[&result](move_token&& in){ result = std::move(in);}};
+
+	source >> set_bar >> sink;
 	move_token m{"foo"};
 	// source.fire(m); // should not compile
 	source.fire(std::move(m));
 
-	move_token tmp = sink.get();
-	BOOST_CHECK_EQUAL(tmp.value(), "bar");
+	BOOST_CHECK_EQUAL(result.value(), "bar");
 }
 
 BOOST_AUTO_TEST_CASE( moving_state )

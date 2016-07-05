@@ -3,7 +3,6 @@
 #include <flexcore/pure/event_sinks.hpp>
 #include <flexcore/pure/event_sources.hpp>
 #include <flexcore/core/connection.hpp>
-#include "event_sink_with_queue.hpp"
 
 using namespace fc;
 
