@@ -1,15 +1,16 @@
 #ifndef SRC_LOGGING_LOGGER_HPP_
 #define SRC_LOGGING_LOGGER_HPP_
 
+#include "flexcore/extended/node_fwd.hpp"
 #include <functional>
 #include <memory>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <syslog.h>
 
 namespace fc
 {
-class parallel_region;
 
 /**
  * \brief Enumeration of severity levels corresponding to the posix syslog api.
@@ -98,7 +99,7 @@ public:
 	/// Construct a log_client with the region name "null"
 	log_client();
 	/// Construct a log_client which logs from the passed region.
-	log_client(const parallel_region* region);
+	log_client(const node* node_);
 
 	log_client(const log_client&);
 	log_client& operator=(log_client);
@@ -108,6 +109,74 @@ private:
 	class log_client_impl;
 	std::unique_ptr<log_client_impl> log_client_pimpl;
 };
+
+class stream_log_client
+
+{
+public:
+	stream_log_client(log_client log, level severity = level::info);
+
+	struct stream_log_proxy
+	{
+		log_client* log;
+		const level severity;
+		std::ostringstream ss;
+
+		stream_log_proxy(const std::string& msg, log_client& log, const level severity);
+		stream_log_proxy(stream_log_proxy&& other);
+		~stream_log_proxy();
+
+		stream_log_proxy& operator<<(const std::string& msg);
+
+	};
+
+	stream_log_proxy operator<<(const std::string& msg);
+
+	static_assert(std::is_move_constructible<stream_log_proxy>::value,
+	              "stream_log_proxy should be move constructible");
+
+private:
+	log_client log;
+	const level severity;
+};
+
+inline stream_log_client::stream_log_client(log_client log, level severity)
+    : log(std::move(log)), severity(severity)
+{
+}
+
+inline auto stream_log_client::operator<<(const std::string& msg) -> stream_log_proxy
+{
+	stream_log_proxy proxy(msg, log, severity);
+	return proxy;
+}
+
+inline stream_log_client::stream_log_proxy::stream_log_proxy(const std::string& msg,
+                                                             log_client& log, const level severity)
+    : log(&log), severity(severity)
+{
+	ss << msg;
+}
+
+inline stream_log_client::stream_log_proxy::stream_log_proxy(stream_log_proxy&& other)
+    : log(other.log), severity(other.severity), ss(std::move(other.ss))
+{
+	other.log = nullptr;
+}
+
+inline stream_log_client::stream_log_proxy::~stream_log_proxy()
+{
+	if (log)
+		log->write(ss.str(), severity);
+}
+
+inline auto stream_log_client::stream_log_proxy::operator<<(const std::string& msg)
+    -> stream_log_proxy&
+{
+	ss << msg;
+	return *this;
+}
+
 
 } // namespace fc
 #endif // SRC_LOGGING_LOGGER_HPP_

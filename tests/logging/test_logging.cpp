@@ -3,7 +3,7 @@
 #define BOOST_ALL_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <flexcore/utils/logging/logger.hpp>
-#include <flexcore/scheduler/parallelregion.hpp>
+#include <flexcore/extended/base_node.hpp>
 #include <sstream>
 
 using fc::logger;
@@ -33,14 +33,27 @@ BOOST_FIXTURE_TEST_CASE( stream_logging, log_test )
 	client.write(expected_in_output);
 }
 
-BOOST_FIXTURE_TEST_CASE( region_logging, log_test )
+BOOST_FIXTURE_TEST_CASE( node_logging, log_test )
 {
-	auto region_name = "test region";
-	auto region = std::make_shared<fc::parallel_region>(region_name);
-	BOOST_CHECK_EQUAL(region->get_id().key, region_name);
-	fc::log_client client{region.get()};
-	expected_in_output = region_name;
+	fc::graph::connection_graph dummy_graph;
+	auto node_name = std::string("test node");
+	fc::graph_node node(dummy_graph, node_name);
+	BOOST_CHECK_EQUAL(node.graph_info().name(), node_name);
+	fc::log_client client{&node};
+	expected_in_output = node_name;
 	client.write("another log message.");
+}
+
+BOOST_AUTO_TEST_CASE( stream_log_msg )
+{
+	log_test t1, t2, t3;
+	fc::stream_log_client stream({}, fc::level::debug);
+	auto msg1 = std::string("log message");
+	auto msg2 = std::string("and another");
+	stream << msg1 << msg2;
+	t1.expected_in_output = msg1;
+	t2.expected_in_output = msg2;
+	t3.expected_in_output = "<" + std::to_string(static_cast<int>(fc::level::debug)) + ">";
 }
 
 namespace

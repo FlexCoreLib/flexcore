@@ -2,7 +2,6 @@
 #define BOOST_ALL_DYN_LINK
 #define BOOST_LOG_USE_NATIVE_SYSLOG
 #include <flexcore/utils/logging/logger.hpp>
-#include <flexcore/scheduler/parallelregion.hpp>
 #include <boost/utility/empty_deleter.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/expressions.hpp>
@@ -149,8 +148,8 @@ logger::logger()
 class log_client::log_client_impl
 {
 public:
-	log_client_impl(const parallel_region* region)
-	    : lg(keywords::channel = (region ? region->get_id().key : "(null)"))
+	log_client_impl(const node* node_)
+	    : lg(keywords::channel = (node_ ? node_->graph_info().name() : "(null)"))
 	{
 	}
 	void write(const std::string& msg, level severity)
@@ -170,8 +169,8 @@ log_client::log_client() : log_client_pimpl(std::make_unique<log_client::log_cli
 {
 }
 
-log_client::log_client(const parallel_region* region)
-    : log_client_pimpl(std::make_unique<log_client::log_client_impl>(region))
+log_client::log_client(const node* node_)
+    : log_client_pimpl(std::make_unique<log_client::log_client_impl>(node_))
 {
 }
 
