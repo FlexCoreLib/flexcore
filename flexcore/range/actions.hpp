@@ -106,8 +106,48 @@ auto zip(binop op, param_range param)
 	return zip_action<binop, param_range>{op, param};
 }
 
-
 }  // namespace actions
+
+/**
+ * \brief Higher order function reduce aka fold as a connectable.
+ *
+ * \tparam binop binary operation to repeatedly apply to the whole range.
+ *
+ * \see https://en.wikipedia.org/wiki/Fold_%28higher-order_function%29
+ */
+template<class binop, class T>
+struct reduce_view
+{
+	explicit reduce_view(const binop& op = binop(), const T&  init_value = T())
+		: op(op), init_value(init_value)
+	{
+	}
+
+	template<class in_range>
+	auto operator()(in_range&& input)
+	{
+		using std::begin;
+		using std::end;
+		return std::accumulate(begin(input), end(input), init_value, op);
+	}
+	binop op;
+	T init_value;
+};
+
+/// Create connectable which performs higher order function reduce.
+template<class binop, class T>
+auto reduce(binop op, T initial_value)
+{
+	return reduce_view<binop, T> { op, initial_value };
+}
+
+///alias of reduce for common case of using reduce to sum all elements
+template<class T>
+auto sum(T initial_value = T())
+{
+	return reduce(std::plus<>(), initial_value);
+}
+
 }  // namespace fc
 
 #endif /* SRC_RANGE_ACTIONS_HPP_ */

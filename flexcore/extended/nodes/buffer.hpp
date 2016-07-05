@@ -3,7 +3,6 @@
 
 #include <flexcore/core/traits.hpp>
 
-#include <boost/range.hpp>
 #include <boost/circular_buffer.hpp>
 #include <vector>
 
@@ -61,14 +60,13 @@ class list_collector<data_t, swap_on_tick, base_t>
 		: public detail::base_event_to_state<data_t, std::vector, base_t>
 {
 public:
-	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator> out_range_t;
 	template<class... args_t>
 	explicit list_collector(args_t&&... args)
 		: detail::base_event_to_state<data_t, std::vector, base_t>{
 				[this]()
 				{
 					data_read = true;
-					return boost::make_iterator_range(
+					return std::vector<data_t>(
 							this->buffer_state.begin(),
 							this->buffer_state.end());
 				},
@@ -109,10 +107,6 @@ class list_collector<data_t, swap_on_pull, base_t>
 		: public detail::base_event_to_state<data_t, std::vector, base_t>
 {
 public:
-	/// Type of range provided as output is an immutable range of data_t.
-	typedef boost::iterator_range<typename std::vector<data_t>::const_iterator>
-			out_range_t;
-
 	template<class... args_t>
 	explicit list_collector(args_t&&... args)
 		: detail::base_event_to_state<data_t, std::vector, base_t>{[&]()
@@ -123,11 +117,11 @@ public:
 	{}
 
 private:
-	out_range_t get_state()
+	std::vector<data_t> get_state()
 	{
 		this->buffer_state.clear();
 		this->buffer_state.swap(*this->buffer_collect);
-		return boost::make_iterator_range(
+		return std::vector<data_t>(
 				this->buffer_state.begin(),
 				this->buffer_state.end());
 	}
@@ -175,8 +169,7 @@ template<class data_t, template<class...> class container_t, class base_t>
 class base_event_to_state : public base_t
 {
 public:
-	typedef boost::iterator_range<typename container_t<data_t>::const_iterator>
-			out_range_t;
+	typedef container_t<data_t> out_range_t;
 
 	/// Input Port accepting both ranges and single events of type data_t
 	auto in() noexcept
@@ -262,8 +255,6 @@ class hold_n : public base_t
 public:
 	static constexpr auto default_name = "hold_n";
 	typedef boost::circular_buffer<data_t> buffer_t;
-	typedef boost::iterator_range<
-			typename buffer_t::const_iterator> out_range_t;
 
 	static_assert(!std::is_void<data_t>(),
 			"data stored in hold_last cannot be void");
@@ -280,7 +271,7 @@ public:
 		, out_port(this,
 				[this]()
 				{
-					return boost::make_iterator_range(
+					return std::vector<data_t>(
 							storage->begin(),
 							storage->end());
 				} )
@@ -300,7 +291,7 @@ public:
 	auto& out() noexcept { return out_port; }
 private:
 	std::unique_ptr<buffer_t> storage;
-	typename base_t::template state_source<out_range_t> out_port;
+	typename base_t::template state_source<std::vector<data_t>> out_port;
 };
 
 }  // namespace fc

@@ -43,25 +43,24 @@ BOOST_AUTO_TEST_CASE(event_range_to_state)
 	tests::owning_node root;
 
 	auto& buffer = root.make_child_named<collector_t>("collector");
-	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
-	event_source<int_range> source{&root.node()};
+	event_source<std::vector<int>> source{&root.node()};
 	std::vector<int> vec {1,2,3,4};
 
 	source >> buffer.in();
 
 	BOOST_CHECK(buffer.out()().empty());
 
-	source.fire(int_range(vec.begin(), vec.end()));
+	source.fire(std::vector<int>(vec.begin(), vec.end()));
 	BOOST_CHECK(buffer.out()().empty());
 
 	buffer.swap_buffers()();
 	BOOST_CHECK(!buffer.out()().empty());
-	BOOST_CHECK(buffer.out()().size() == static_cast<int>(vec.size()));
+	BOOST_CHECK(buffer.out()().size() == vec.size());
 
-	source.fire(int_range(vec.begin(), vec.end()));
-	source.fire(int_range(vec.begin(), vec.end()));
+	source.fire(std::vector<int>(vec.begin(), vec.end()));
+	source.fire(std::vector<int>(vec.begin(), vec.end()));
 	buffer.swap_buffers()();
-	BOOST_CHECK(buffer.out()().size() == static_cast<int>(vec.size())*2);
+	BOOST_CHECK(buffer.out()().size() == vec.size()*2);
 
 }
 
@@ -89,7 +88,7 @@ BOOST_AUTO_TEST_CASE(test_hold_n)
 	auto& buffer = root.make_child<hold_n<int, tree_base_node>>(3);
 
 	event_source<int> source{&root.node()};
-	state_sink<hold_n<int, tree_base_node>::out_range_t> sink{&root.node()};
+	state_sink<std::vector<int>> sink{&root.node()};
 
 	source >> buffer.in();
 	buffer.out() >> sink;
@@ -123,24 +122,23 @@ BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
 
 	auto& buffer = root.make_child<hold_n<int, tree_base_node>>(5);
 
-	state_sink<hold_n<int, tree_base_node>::out_range_t> sink{&root.node()};
-	typedef boost::iterator_range<std::vector<int>::iterator> int_range;
-	event_source<int_range> source{&root.node()};
+	state_sink<std::vector<int>> sink{&root.node()};
+	event_source<std::vector<int>> source{&root.node()};
 	std::vector<int> vec {1,2,3,4};
 
 	source >> buffer.in();
 	buffer.out() >> sink;
 	BOOST_CHECK(sink.get().empty());
 
-	source.fire(int_range(vec.begin(), vec.end()));
+	source.fire(std::vector<int>(vec.begin(), vec.end()));
 	//size is smaller then capacity
 	BOOST_CHECK_EQUAL(sink.get().size(), vec.size());
 	BOOST_CHECK(sink.get() == vec);
 
-	source.fire(int_range(vec.begin(), vec.end()));
+	source.fire(std::vector<int>(vec.begin(), vec.end()));
 
 	BOOST_CHECK_EQUAL(sink.get().size(), 5); // capacity reached
-	source.fire(int_range(vec.begin(), vec.end()));
+	source.fire(std::vector<int>(vec.begin(), vec.end()));
 	BOOST_CHECK_EQUAL(sink.get().size(), 5); // capacity reached
 	// last element remaining from previous range is the back of the vector
 	BOOST_CHECK_EQUAL(sink.get().front(), vec.back());
