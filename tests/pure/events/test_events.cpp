@@ -29,72 +29,7 @@ struct event_sink_vector
 } // namespace pure
 } // namespace fc
 
-namespace
-{
-
-/**
- * \brief Node for calculating the number of elements in a range
- */
-struct range_size
-{
-public:
-	range_size()
-		: out()
-	{}
-	pure::event_source<int> out;
-
-	auto in()
-	{
-		return ::fc::pure::make_event_sink_tmpl( [this](auto event)
-		{
-			size_t elems = std::distance(std::begin(event), std::end(event));
-			this->out.fire(static_cast<int>(elems));
-		} );
-	}
-};
-
-/**
- * Helper class for testing event_in_port_tmpl
- */
-class generic_input_node
-{
-public:
-	generic_input_node() : value() {}
-
-	/*
-	 * Define a getter for the port named "in" and
-	 * Declare a member function to be called from the port.
-	 * The token type is available as "event_t" and the token as "event".
-	 */
-	auto in()
-	{
-		return ::fc::pure::make_event_sink_tmpl( [this](auto event)
-		{
-			value = event;
-		} );
-	}
-
-	int value;
-};
-
-} // unnamed namespace
-
 BOOST_AUTO_TEST_SUITE(test_events)
-
-BOOST_AUTO_TEST_CASE( test_event_in_port_tmpl )
-{
-	pure::event_source<int> src_int;
-	pure::event_source<double> src_double;
-	generic_input_node to;
-
-	src_int >> to.in();
-	src_double >> to.in();
-
-	src_int.fire(2);
-	BOOST_CHECK_EQUAL(to.value, 2);
-	src_int.fire(4.1);
-	BOOST_CHECK_EQUAL(to.value, 4);
-}
 
 BOOST_AUTO_TEST_CASE( connections )
 {
@@ -189,19 +124,6 @@ BOOST_AUTO_TEST_CASE( in_port )
 	void_out >> void_in;
 	void_out.fire();
 	BOOST_CHECK_EQUAL(test_value, 999);
-}
-
-BOOST_AUTO_TEST_CASE( test_event_out_port )
-{
-	range_size get_size;
-	int storage = 0;
-	get_size.out >> [&](int i) { storage = i; };
-
-	get_size.in()(std::list<float>{1., 2., .3});
-	BOOST_CHECK_EQUAL(storage, 3);
-
-	get_size.in()(std::vector<int>{0, 1});
-	BOOST_CHECK_EQUAL(storage, 2);
 }
 
 BOOST_AUTO_TEST_CASE( lambda )

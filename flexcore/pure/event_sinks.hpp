@@ -86,44 +86,6 @@ private:
 	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
 };
 
-/**
- * \brief Templated event sink port
- *
- * Calls a (generic) lambda when an event is received. This allows to defer
- * the actual type of the token until the port is called and also allows it
- * to be called for diffent types.
- *
- * See tests/pure/test_events.cpp for example
- *
- * \tparam lambda_t Lambda to call when event arrived.
- */
-template<class lambda_t>
-struct event_sink_tmpl
-{
-public:
-	explicit event_sink_tmpl(lambda_t h)
-		: lambda(h)
-	{}
-
-	template <class Event_t>
-	void operator()(Event_t&& in_event)
-	{
-		lambda(std::forward<Event_t>(in_event));
-	}
-
-	event_sink_tmpl() = delete;
-
-	typedef void result_t;
-
-	lambda_t lambda;
-};
-
-/*
- * Helper needed for type inference
- */
-template<class lambda_t>
-auto make_event_sink_tmpl(lambda_t h) { return event_sink_tmpl<lambda_t>{h}; }
-
 } // namespace pure
 } // namespace fc
 

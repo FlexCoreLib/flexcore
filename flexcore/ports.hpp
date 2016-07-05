@@ -51,12 +51,6 @@ using default_mixin = node_aware_mixin<port_t>;
 template<class data_t>
 using event_sink = default_mixin<pure::event_sink<data_t>>;
 
-template<class lambda_t>
-using event_sink_tmpl = default_mixin<pure::event_sink_tmpl<lambda_t>>;
-
-template<class lambda_t>
-auto make_event_sink_tmpl(lambda_t h) { return event_sink_tmpl<lambda_t>{h}; }
-
 /**
  * \brief Default event_source port
  * \ingroup ports
