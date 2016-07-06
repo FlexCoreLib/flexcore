@@ -106,6 +106,8 @@ public:
 	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
 
 	explicit cycle_control(std::unique_ptr<scheduler> scheduler);
+	template <class ErrorFun>
+	cycle_control(std::unique_ptr<scheduler> scheduler, ErrorFun err);
 	~cycle_control();
 
 	/// starts the main loop
@@ -157,6 +159,13 @@ private:
 	std::function<bool(periodic_task&)> error_callback;
 	bool store_exception(periodic_task& task);
 };
+
+template <class ErrorFun>
+inline cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler, ErrorFun err)
+    : scheduler_(std::move(scheduler)), error_callback(std::move(err))
+{
+	assert(scheduler_);
+}
 
 } /* namespace thread */
 

@@ -15,13 +15,11 @@ constexpr virtual_clock::steady::duration cycle_control::medium_tick;
 constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 
 cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler)
-    : scheduler_(std::move(scheduler))
-    , error_callback([this](auto& task)
-                     {
-	                     return store_exception(task);
-                     })
+    : cycle_control(std::move(scheduler), [this](auto& task)
+                    {
+	                    return store_exception(task);
+                    })
 {
-	assert(scheduler_);
 }
 
 void cycle_control::start(bool fast)
