@@ -3,6 +3,7 @@
 
 #include <flexcore/scheduler/clock.hpp>
 #include <flexcore/scheduler/scheduler.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
 #include <flexcore/pure/event_sources.hpp>
 
 #include <condition_variable>
@@ -35,10 +36,13 @@ struct periodic_task final
 	 * \brief Constructor taking a job and the cycle rate.
 	 * \param job task which is to be executed every cycle
 	 */
-	periodic_task(std::function<void(void)> job) :
+	periodic_task(std::function<void(void)> job) : periodic_task(nullptr, std::move(job)) {}
+	/// Construct a periodic task executes work within a region
+	periodic_task(std::shared_ptr<parallel_region> r, std::function<void(void)> job) :
 				work_to_do(false),
 				sync(std::make_unique<condition_pair>()),
-				work(job)
+				work(job),
+				region(r)
 	{
 	}
 
@@ -86,6 +90,7 @@ private:
 	/// work to be done every cycle
 	std::function<void(void)> work;
 
+	std::shared_ptr<parallel_region> region;
 	//Todo refactor this intrusion of ports into otherwise independent code
 	pure::event_source<void> switch_tick;
 };
