@@ -14,7 +14,7 @@ template<class data_t>
 struct node_class : tree_base_node
 {
 	static constexpr auto default_name = "test_node";
-	node_class(data_t a, const detail::node_args& node)
+	node_class(data_t a, const node_args& node)
 		: tree_base_node(node)
 		, value(a)
 	{}
@@ -31,7 +31,7 @@ struct node_class : tree_base_node
 
 struct null : tree_base_node
 {
-	explicit null(const detail::node_args& node) : tree_base_node(node) {}
+	explicit null(const node_args& node) : tree_base_node(node) {}
 };
 } // unnamed namespace
 
@@ -61,18 +61,19 @@ public:
 	{
 	}
 	*/
-	explicit test_owning_node(forest_t::iterator self, const detail::node_args& node)
-	    : owning_base_node(self, node)
+	explicit test_owning_node(const node_args& node)
+	    : owning_base_node(node)
 	{
 	}
 	test_owning_node&  add_child()
 	{
-		return make_owner<test_owning_node>(region(), default_name);
+		return make_child_named<test_owning_node>(region(), default_name);
 	}
 
 	size_t nr_of_children()
 	{
-		return fg_->forest.size() -2; //-1 for this. -1 for root node
+		size_t n = std::distance(++adobe::leading_of(self()), adobe::trailing_of(self()));
+		return n / 2; // all nodes get visited twice
 	}
 
 	using owning_base_node::self;
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 {
 	tests::owning_node root("root");
 	auto& child1 =
-	    root.node().make_owner<test_owning_node>(root.node().region(), "test_owning_node");
+	    root.node().make_child_named<test_owning_node>(root.node().region(), "test_owning_node");
 	auto& child2 = root.make_child_named<null>("2");
 	auto& child1a = child1.make_child_named<null>("a");
 
@@ -105,13 +106,23 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/name");
 }
 
+BOOST_AUTO_TEST_CASE( test_manual_ownership )
+{
+	tests::owning_node root("root");
+	node_class<int> child1{5, root.new_node("test_node")};
+	node_class<int> child2{5, root.new_node(root.region(), "name")};
+
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()), child1), "root/test_node");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/name");
+}
+
 BOOST_AUTO_TEST_CASE( test_deletion )
 {
 	tests::owning_node root_;
 	auto& root = root_.node();
 
 	auto& test_node =
-	    root.make_owner<test_owning_node>(root.region(), test_owning_node::default_name);
+	    root.make_child<test_owning_node>(root.region());
 
 	BOOST_CHECK_EQUAL(test_node.nr_of_children(), 0);
 

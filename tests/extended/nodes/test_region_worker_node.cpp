@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(test_region_worker)
 struct triggered_counter : public region_worker_node
 {
 public:
-	triggered_counter(const detail::node_args& node)
+	triggered_counter(const node_args& node)
 		: region_worker_node([this](){out_event_source.fire(++work_counter);},
 		                     node)
 		, out_event_source(this)
