@@ -110,9 +110,9 @@ void check_mixins()
 	//since we have a region transition, we need a switch tick
 	BOOST_CHECK_EQUAL(test_value, 0);
 
-	region_1->ticks.in_switch_buffers()();
+	region_1->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	region_2->ticks.in_switch_buffers()();
+	region_2->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 1);
@@ -149,9 +149,9 @@ BOOST_AUTO_TEST_CASE(test_void_event)
 	BOOST_CHECK(written);
 	written = false;
 
-	region_1.ticks.in_switch_buffers()();
+	region_1.ticks.switch_buffers();
 	BOOST_CHECK(!written);
-	region_2.ticks.in_switch_buffers()();
+	region_2.ticks.switch_buffers();
 	BOOST_CHECK(!written);
 	region_2.ticks.in_work()();
 	BOOST_CHECK(written);
@@ -206,9 +206,9 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	//since we have a region transition, we need a switch tick
 	BOOST_CHECK_EQUAL(test_value, 0);
 
-	region_1->ticks.in_switch_buffers()();
+	region_1->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	region_2->ticks.in_switch_buffers()();
+	region_2->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 2);
@@ -224,11 +224,11 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 			>> test_in_2;
 
 	test_out.fire(1);
-	region_1->ticks.in_switch_buffers()();
+	region_1->ticks.switch_buffers();
 	region_2->ticks.in_work()();
 	// wrong region ticked, expect no change
 	BOOST_CHECK_EQUAL(test_value, 2);
-	region_3->ticks.in_switch_buffers()();
+	region_3->ticks.switch_buffers();
 
 	region_3->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
@@ -257,9 +257,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	//since we have a region transition, we need a switch tick
 	BOOST_CHECK_EQUAL(test_value, 0);
 
-	region_1->ticks.in_switch_buffers()();
+	region_1->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(test_value, 0);
-	region_2->ticks.in_switch_buffers()();
+	region_2->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(test_value, 0);
 	region_2->ticks.in_work()();
 	BOOST_CHECK_EQUAL(test_value, 4);
@@ -277,9 +277,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	BOOST_CHECK_EQUAL(state_in.get(), 0);
 	region_1->ticks.in_work()();
 	BOOST_CHECK_EQUAL(state_in.get(), 0);
-	region_1->ticks.in_switch_buffers()(); // moved to middle buffer
+	region_1->ticks.switch_buffers(); // moved to middle buffer
 	BOOST_CHECK_EQUAL(state_in.get(), 0);
-	region_2->ticks.in_switch_buffers()(); // moved to outgoing buffer
+	region_2->ticks.switch_buffers(); // moved to outgoing buffer
 	BOOST_CHECK_EQUAL(state_in.get(), 4);
 }
 
@@ -316,9 +316,9 @@ BOOST_AUTO_TEST_CASE(test_state_transition)
 
 	region_1->ticks.in_work()();
 	BOOST_CHECK_EQUAL(sink.get(), 0);
-	region_1->ticks.in_switch_buffers()();
+	region_1->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(sink.get(), 0);
-	region_2->ticks.in_switch_buffers()();
+	region_2->ticks.switch_buffers();
 	BOOST_CHECK_EQUAL(sink.get(), 1);
 }
 

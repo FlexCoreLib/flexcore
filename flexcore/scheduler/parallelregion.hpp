@@ -34,7 +34,7 @@ public:
 	tick_controller() = default;
 
 	/// sends void event on the switch tick of the surrounding region
-	pure::event_source<void>& switch_tick() { return switch_buffers; }
+	pure::event_source<void>& switch_tick() { return switch_buffers_; }
 	/**
 	 * \brief  sends void event on the work tick of the surrounding region
 	 * connect nodes, that want to be triggered every cycle to this.
@@ -42,11 +42,10 @@ public:
 	pure::event_source<void>& work_tick() { return work; }
 
 	/**
-	 * \brief Buffers in region will be switched when event is received.
-	 * connect to scheduler.
+	 * \brief Buffers in region will be switched when method is called.
 	 * expects event with no payload (void).
 	 */
-	auto in_switch_buffers() { return [this](){return switch_buffers.fire();};}
+	void switch_buffers() { return switch_buffers_.fire(); }
 	/**
 	 * \brief work ticks in region will be fired when event is received.
 	 * connect to scheduler.
@@ -54,7 +53,7 @@ public:
 	 */
 	auto in_work() { return [this](){ return work.fire(); };}
 
-	pure::event_source<void> switch_buffers;
+	pure::event_source<void> switch_buffers_;
 	pure::event_source<void> work;
 };
 

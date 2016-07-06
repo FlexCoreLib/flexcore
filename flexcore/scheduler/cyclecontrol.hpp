@@ -84,7 +84,7 @@ struct periodic_task final
 	void send_switch_tick()
 	{
 		if (region)
-			region->ticks.in_switch_buffers()();
+			region->ticks.switch_buffers();
 	}
 
 	void operator()()

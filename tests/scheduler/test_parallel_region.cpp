@@ -12,7 +12,7 @@ class parallel_tester
 public:
 	static void switch_tick(std::shared_ptr<parallel_region> region)
 	{
-		region->ticks.in_switch_buffers()();
+		region->ticks.switch_buffers();
 	}
 	static void work_tick(std::shared_ptr<parallel_region> region)
 	{
