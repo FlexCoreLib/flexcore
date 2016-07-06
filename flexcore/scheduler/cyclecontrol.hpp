@@ -81,8 +81,11 @@ struct periodic_task final
 		                         });
 	}
 
-	void send_switch_tick() { switch_tick.fire(); }
-	auto& out_switch_tick() { return switch_tick; }
+	void send_switch_tick()
+	{
+		if (region)
+			region->ticks.in_switch_buffers()();
+	}
 
 	void operator()()
 	{
@@ -97,8 +100,6 @@ private:
 	std::function<void(void)> work;
 
 	std::shared_ptr<parallel_region> region;
-	//Todo refactor this intrusion of ports into otherwise independent code
-	pure::event_source<void> switch_tick;
 };
 
 /**

@@ -52,10 +52,7 @@ region_factory::new_region(const std::string& name,
 {
 	auto region = std::make_shared<scheduled_region>(name, shared_from_this());
 	auto tick_cycle = fc::thread::periodic_task(region);
-
-	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
 	scheduler.add_task(std::move(tick_cycle),tick_rate);
-
 	return region;
 }
 } // namespace detail
