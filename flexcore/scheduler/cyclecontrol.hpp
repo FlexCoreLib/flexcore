@@ -150,7 +150,12 @@ private:
 	//Thread exception handling
 	std::mutex task_exception_mutex;
 	std::deque<std::exception_ptr> task_exceptions;
-	void store_exception();
+	/** Callback that is called when a task takes too long.
+	 * Expected to return true if the scheduler is to continue and false if
+	 * scheduler should shut itself down.
+	 */
+	std::function<bool(periodic_task&)> error_callback;
+	bool store_exception(periodic_task& task);
 };
 
 } /* namespace thread */

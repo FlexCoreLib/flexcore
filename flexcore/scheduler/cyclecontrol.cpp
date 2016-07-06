@@ -14,7 +14,12 @@ constexpr virtual_clock::steady::duration cycle_control::fast_tick;
 constexpr virtual_clock::steady::duration cycle_control::medium_tick;
 constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 
-cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler) : scheduler_(std::move(scheduler))
+cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler)
+    : scheduler_(std::move(scheduler))
+    , error_callback([this](auto& task)
+                     {
+	                     return store_exception(task);
+                     })
 {
 	assert(scheduler_);
 }
@@ -39,12 +44,12 @@ void cycle_control::stop()
 	running = false;
 }
 
-void cycle_control::store_exception()
+bool cycle_control::store_exception(periodic_task&)
 {
 	auto ep = std::make_exception_ptr(out_of_time_exception());
 	std::lock_guard<std::mutex> lock(task_exception_mutex);
 	task_exceptions.push_back(ep);
-	keep_working.store(false);
+	return false;
 }
 
 void cycle_control::work()
@@ -73,8 +78,11 @@ void cycle_control::wait_for_current_tasks()
 			for (auto& task : task_vector)
 				if (!task.wait_until_done(tick_rate))
 				{
-					store_exception();
-					return false;
+					if (!error_callback(task))
+					{
+						keep_working.store(false);
+						return false;
+					}
 				}
 		}
 		return true;
@@ -111,11 +119,13 @@ cycle_control::~cycle_control()
 bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 {
 	//todo specify error model
-	if (any_of(begin(tasks), end(tasks), [](auto& task) { return !task.done(); }))
-	{
-		store_exception();
-		return false;
-	}
+	for (auto& task : tasks)
+		if (!task.done())
+			if (!error_callback(task))
+			{
+				keep_working.store(false);
+				return false;
+			}
 
 	for (auto& task : tasks)
 	{
