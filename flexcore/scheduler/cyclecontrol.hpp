@@ -33,17 +33,23 @@ struct condition_pair
 struct periodic_task final
 {
 	/**
-	 * \brief Constructor taking a job and the cycle rate.
+	 * \brief Constructor taking a job
 	 * \param job task which is to be executed every cycle
 	 */
-	periodic_task(std::function<void(void)> job) : periodic_task(nullptr, std::move(job)) {}
+	periodic_task(std::function<void(void)> job)
+	    : work_to_do(false)
+	    , sync(std::make_unique<condition_pair>())
+	    , work(std::move(job))
+	    , region(nullptr)
+	{
+	}
 	/// Construct a periodic task executes work within a region
-	periodic_task(std::shared_ptr<parallel_region> r, std::function<void(void)> job) :
+	periodic_task(std::shared_ptr<parallel_region> r) :
 				work_to_do(false),
 				sync(std::make_unique<condition_pair>()),
-				work(job),
 				region(r)
 	{
+		work = region->ticks.in_work();
 	}
 
 	bool done()

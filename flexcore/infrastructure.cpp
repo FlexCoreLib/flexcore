@@ -51,12 +51,7 @@ region_factory::new_region(const std::string& name,
                            const virtual_clock::steady::duration& tick_rate)
 {
 	auto region = std::make_shared<scheduled_region>(name, shared_from_this());
-
-	auto work_tick = region->ticks.in_work();
-	// tick_cycle captures region to prevent dangling reference after return
-	// (if no one stores the region in a variable).
-	// TODO: evaluate storing the region in a vector inside infrastructure.
-	auto tick_cycle = fc::thread::periodic_task(region, [work_tick](){ work_tick(); });
+	auto tick_cycle = fc::thread::periodic_task(region);
 
 	tick_cycle.out_switch_tick() >> region->ticks.in_switch_buffers();
 	scheduler.add_task(std::move(tick_cycle),tick_rate);
