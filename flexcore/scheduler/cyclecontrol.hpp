@@ -92,6 +92,8 @@ struct periodic_task final
 		work();
 		set_work_to_do(false);
 	}
+
+	const parallel_region* get_region() const { return region.get(); }
 private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
