@@ -82,8 +82,14 @@ struct always_false : std::false_type
 template<class active_t, class passive_t, class connect_policy>
 struct active_connection_proxy
 {
+	using source_t = std::decay_t<typename connect_policy::template source<active_t, passive_t>::type>;
+	using sink_t = std::decay_t<typename connect_policy::template sink<active_t, passive_t>::type>;
+
 	static_assert(is_active<std::decay_t<active_t>>{},
-			"active_t in proxy needs to be active connectable");
+	              "active_t in proxy needs to be active connectable");
+	static_assert(!std::is_same<connect_policy, active_source_first>::value ||
+	                  has_result_of_type<sink_t, result_of_t<source_t>>(),
+	              "Return type of source and parameter type of sink need to be compatible");
 
 	typedef typename
 			connect_policy::template sink<active_t, passive_t>::result_t result_t;
