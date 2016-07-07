@@ -47,7 +47,7 @@ struct active_source_first
 	struct sink
 	{
 		typedef sink_t type;
-		typedef result_of_t<source_t> result_t;
+		using result_t = typename detail::result_of_fwd<sink_t, result_of_t<source_t>>::type::type;
 	};
 	template<class source_t, class sink_t>
 	auto operator()(source_t&& source, sink_t&& sink)
