@@ -41,8 +41,11 @@ template<class token_t, class tag = event_tag>
 class event_no_buffer final : public buffer_interface<token_t, tag>
 {
 public:
-	event_no_buffer()	:
-		in_event_port( [this](token_t in_event) { out_event_port.fire(in_event);})
+	event_no_buffer()
+	    : in_event_port([this](auto&&... in_event)
+	                    {
+		                    out_event_port.fire(std::forward<decltype(in_event)>(in_event)...);
+	                    })
 	{
 	}
 
@@ -58,31 +61,6 @@ public:
 private:
 	typename pure::in_port<token_t, tag>::type in_event_port;
 	typename pure::out_port<token_t, tag>::type out_event_port;
-};
-
-/// Partial Specialization for events of type void
-template<class tag>
-class event_no_buffer<void, tag> final : public buffer_interface<void, tag>
-{
-public:
-	event_no_buffer()	:
-		//only difference to template is here
-		in_event_port( [this]() { out_event_port.fire();})
-	{
-	}
-
-	typename pure::in_port<void, tag>::type& in() override
-	{
-		return in_event_port;
-	}
-	typename pure::out_port<void, tag>::type& out() override
-	{
-		return out_event_port;
-	}
-
-private:
-	typename pure::in_port<void, tag>::type in_event_port;
-	typename pure::out_port<void, tag>::type out_event_port;
 };
 
 /**

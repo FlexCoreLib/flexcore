@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(test_region_cloning)
 	region_2->work_tick() >> region_2_sink;
 	infra.scheduler.work();
 	while (infra.scheduler.nr_of_tasks() != 0);
+	infra.stop_scheduler();
 	BOOST_CHECK(region_1_worked);
 	BOOST_CHECK(region_2_worked);
 }

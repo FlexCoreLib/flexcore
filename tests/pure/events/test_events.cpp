@@ -436,4 +436,59 @@ BOOST_AUTO_TEST_CASE(lambda_as_sink)
 	BOOST_CHECK(is_passive_sink_for);
 }
 
+namespace
+{
+struct strongly_typed
+{
+	explicit strongly_typed(double) {}
+};
+}
+
+BOOST_AUTO_TEST_CASE( type_changing_lambdas )
+{
+	pure::event_source<double> src;
+	bool called_1 = false;
+	bool called_2 = false;
+	src >> [&](double d) {
+		called_1 = true;
+		return strongly_typed{d};
+	} >> [&](strongly_typed) {
+		called_2 = true;
+	};
+	src.fire(1.0);
+	BOOST_CHECK(called_1);
+	BOOST_CHECK(called_2);
+}
+
+BOOST_AUTO_TEST_CASE( type_changing_lambda_with_void )
+{
+	pure::event_source<void> src;
+	bool called_1 = false;
+	bool called_2 = false;
+	src >> [&]() {
+		called_1 = true;
+		return strongly_typed{1.0};
+	} >> [&](strongly_typed) {
+		called_2 = true;
+	};
+	src.fire();
+	BOOST_CHECK(called_1);
+	BOOST_CHECK(called_2);
+}
+
+BOOST_AUTO_TEST_CASE( type_changing_lambda_without_void )
+{
+	pure::event_source<double> src;
+	bool called_1 = false;
+	bool called_2 = false;
+	src >> [&](double d) {
+		called_1 = true;
+		return strongly_typed{d};
+	} >> [&](strongly_typed) {
+		called_2 = true;
+	};
+	src.fire(1.0);
+	BOOST_CHECK(called_1);
+	BOOST_CHECK(called_2);
+}
 BOOST_AUTO_TEST_SUITE_END()
