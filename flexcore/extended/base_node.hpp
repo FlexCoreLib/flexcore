@@ -240,6 +240,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child(args_t&&... args)
 	{
+		static_assert(std::is_base_of<tree_base_node, node_t>(),
+				"make_child can only be used with classes inheriting from fc::tree_base_node");
 		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, region(), node_t::default_name},
 		                               std::forward<args_t>(args)...);
 	}
@@ -254,6 +256,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child(std::shared_ptr<parallel_region> r, args_t&&... args)
 	{
+		static_assert(std::is_base_of<tree_base_node, node_t>(),
+				"make_child can only be used with classes inheriting from fc::tree_base_node");
 		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, r, node_t::default_name},
 		                               std::forward<args_t>(args)...);
 	}
@@ -269,6 +273,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child_named(std::string name, args_t&&... args)
 	{
+		static_assert(std::is_base_of<tree_base_node, node_t>(),
+				"make_child can only be used with classes inheriting from fc::tree_base_node");
 		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, region(), name},
 		                               std::forward<args_t>(args)...);
 	}
@@ -276,6 +282,8 @@ public:
 	template<class node_t, class ... args_t>
 	node_t& make_child_named(std::shared_ptr<parallel_region> r, std::string name, args_t&&... args)
 	{
+		static_assert(std::is_base_of<tree_base_node, node_t>(),
+				"make_child can only be used with classes inheriting from fc::tree_base_node");
 		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, r, name},
 		                               std::forward<args_t>(args)...);
 	}
