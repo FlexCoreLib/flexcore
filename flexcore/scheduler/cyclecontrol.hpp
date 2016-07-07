@@ -106,6 +106,8 @@ public:
 	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
 
 	explicit cycle_control(std::unique_ptr<scheduler> scheduler);
+	template <class ErrorFun>
+	cycle_control(std::unique_ptr<scheduler> scheduler, ErrorFun err);
 	~cycle_control();
 
 	/// starts the main loop
@@ -150,8 +152,20 @@ private:
 	//Thread exception handling
 	std::mutex task_exception_mutex;
 	std::deque<std::exception_ptr> task_exceptions;
-	void store_exception();
+	/** Callback that is called when a task takes too long.
+	 * Expected to return true if the scheduler is to continue and false if
+	 * scheduler should shut itself down.
+	 */
+	std::function<bool(periodic_task&)> error_callback;
+	bool store_exception(periodic_task& task);
 };
+
+template <class ErrorFun>
+inline cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler, ErrorFun err)
+    : scheduler_(std::move(scheduler)), error_callback(std::move(err))
+{
+	assert(scheduler_);
+}
 
 } /* namespace thread */
 
