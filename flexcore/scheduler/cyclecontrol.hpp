@@ -3,6 +3,7 @@
 
 #include <flexcore/scheduler/clock.hpp>
 #include <flexcore/scheduler/scheduler.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
 #include <flexcore/pure/event_sources.hpp>
 
 #include <condition_variable>
@@ -32,14 +33,23 @@ struct condition_pair
 struct periodic_task final
 {
 	/**
-	 * \brief Constructor taking a job and the cycle rate.
+	 * \brief Constructor taking a job
 	 * \param job task which is to be executed every cycle
 	 */
-	periodic_task(std::function<void(void)> job) :
+	periodic_task(std::function<void(void)> job)
+	    : work_to_do(false)
+	    , sync(std::make_unique<condition_pair>())
+	    , work(std::move(job))
+	    , region(nullptr)
+	{
+	}
+	/// Construct a periodic task executes work within a region
+	periodic_task(std::shared_ptr<parallel_region> r) :
 				work_to_do(false),
 				sync(std::make_unique<condition_pair>()),
-				work(job)
+				region(r)
 	{
+		work = region->ticks.in_work();
 	}
 
 	bool done()
@@ -71,14 +81,19 @@ struct periodic_task final
 		                         });
 	}
 
-	void send_switch_tick() { switch_tick.fire(); }
-	auto& out_switch_tick() { return switch_tick; }
+	void send_switch_tick()
+	{
+		if (region)
+			region->ticks.switch_buffers();
+	}
 
 	void operator()()
 	{
 		work();
 		set_work_to_do(false);
 	}
+
+	const parallel_region* get_region() const { return region.get(); }
 private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
@@ -86,8 +101,7 @@ private:
 	/// work to be done every cycle
 	std::function<void(void)> work;
 
-	//Todo refactor this intrusion of ports into otherwise independent code
-	pure::event_source<void> switch_tick;
+	std::shared_ptr<parallel_region> region;
 };
 
 /**
