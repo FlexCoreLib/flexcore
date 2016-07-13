@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8.12 )
 
+CMAKE_POLICY( SET CMP0028 NEW ) # Alias/Namespace targets
+
 # creates the executable
 ADD_LIBRARY( flexcore
 	infrastructure.cpp
@@ -20,13 +22,14 @@ TARGET_INCLUDE_DIRECTORIES( flexcore PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/cereal/include>
 	$<INSTALL_INTERFACE:include/>
 	$<INSTALL_INTERFACE:include/flexcore/3rdparty>
-	${Boost_INCLUDE_DIRS}
 	)
 
 # TODO only use coverage flags in debug mode
 TARGET_LINK_LIBRARIES( flexcore $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-lgcov>
-	${CMAKE_THREAD_LIBS_INIT}
-	${Boost_LIBRARIES})
+	Boost::boost
+	Boost::log
+	Threads::Threads
+	)
 
 # install instructions
 IF( "${CMAKE_SIZEOF_VOID_P}" EQUAL "8" )
@@ -47,7 +50,7 @@ INSTALL( TARGETS flexcore
 	LIBRARY DESTINATION ${INSTALL_LIB_DIR}
 	ARCHIVE DESTINATION ${INSTALL_LIB_DIR} )
 INSTALL( EXPORT flexcore-targets DESTINATION ${INSTALL_CMAKE_DIR} )
-INSTALL( FILES flexcore-config.cmake DESTINATION ${INSTALL_CMAKE_DIR} )
+INSTALL( FILES flexcore-config.cmake ../cmake/FindBoost.cmake DESTINATION ${INSTALL_CMAKE_DIR} )
 INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${INSTALL_INCLUDE_DIR}
 	FILES_MATCHING
