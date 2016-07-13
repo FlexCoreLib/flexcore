@@ -8,6 +8,8 @@ ELSE()
 	SET( STANDALONE FALSE )
 ENDIF()
 
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 OPTION( ENABLE_COVERAGE_ANALYSIS "activate gcov based coverage anlysis" OFF )
 OPTION( ENABLE_TESTS "build unit tests" ${STANDALONE} )
 
