@@ -24,8 +24,10 @@ TARGET_INCLUDE_DIRECTORIES( flexcore PUBLIC
 	$<INSTALL_INTERFACE:include/flexcore/3rdparty>
 	)
 
-# TODO only use coverage flags in debug mode
-TARGET_LINK_LIBRARIES( flexcore $<$<BOOL:${ENABLE_COVERAGE_ANALYSIS}>:-lgcov>
+IF( FLEXCORE_ENABLE_COVERAGE_ANALYSIS )
+	TARGET_LINK_LIBRARIES( flexcore gcov )
+ENDIF()
+TARGET_LINK_LIBRARIES( flexcore
 	Boost::boost
 	Boost::log
 	Threads::Threads
@@ -40,8 +42,8 @@ ELSE()
 	SET( _LIB_SUFFIX "" )
 ENDIF()
 
-SET( LIB_SUFFIX ${_LIB_SUFFIX} CACHE STRING "suffix of library install dir" )
-SET( INSTALL_LIB_DIR lib${LIB_SUFFIX} )
+SET( FLEXCORE_LIBDIR_SUFFIX ${_LIB_SUFFIX} CACHE STRING "suffix of library install dir" )
+SET( INSTALL_LIB_DIR lib${FLEXCORE_LIBDIR_SUFFIX} )
 SET( INSTALL_INCLUDE_DIR include/flexcore )
 SET( INSTALL_CMAKE_DIR ${INSTALL_LIB_DIR}/cmake/flexcore )
 
