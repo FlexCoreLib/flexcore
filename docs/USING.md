@@ -45,12 +45,8 @@ Once flexcore has been installed, your projects may use flexcore by including
 the following in their CMakeLists.txt:
 
     find_package(flexcore)
-    include_directories(${FLEXCORE_INCLUDE_DIRS})
     add_executable(main main.cpp)
-    target_compile_options(main ${FLEXCORE_COMPILE_OPTIONS})
-    # if you need the library components of flexcore, then this is sufficient
-    # without specifying include_directories and target_compile_options)
-    target_link_libraries(main ${FLEXCORE_LIBRARIES})
+    target_link_libraries(main flexcore)
 
 If you installed flexcore in a custom location then your cmake invocation will
 probably need to include a value for flexcore_DIR (the path to the installed
