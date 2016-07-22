@@ -8,6 +8,9 @@
 #ifndef SRC_CORE_TUPLE_META_HPP_
 #define SRC_CORE_TUPLE_META_HPP_
 
+#include <tuple>
+#include <utility>
+
 namespace fc
 {
 
