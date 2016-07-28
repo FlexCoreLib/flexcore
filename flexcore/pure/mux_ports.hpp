@@ -306,8 +306,7 @@ struct loaded_merge_port
 		{
 			return op(std::forward<decltype(src)>(src)()...);
 		};
-		return tuple::invoke_function(call_and_apply, ports,
-		                              std::make_index_sequence<sizeof...(port_ts)>{});
+		return tuple::invoke_function(call_and_apply, ports);
 	}
 };
 

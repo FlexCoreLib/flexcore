@@ -75,8 +75,7 @@ struct merge_node<operation, result (args...), base_t> : public base_t
 		{
 			return op(std::forward<decltype(sink)>(sink).get()...);
 		};
-		return tuple::invoke_function(get_and_apply, in_ports,
-		                              std::make_index_sequence<nr_of_arguments>{});
+		return tuple::invoke_function(get_and_apply, in_ports);
 	}
 
 	/// State Sink corresponding to i-th argument of merge operation.
