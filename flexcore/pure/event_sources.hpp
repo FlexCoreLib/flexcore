@@ -74,9 +74,9 @@ struct event_source
 	 *
 	 * Optionally adds a callback to deregister the connection
 	 * if supported by the sink at the end of the chain of connectables
-	 * \param new_handler the new target to be connected.
-	 * \pre new_handler is not empty function
-	 * \post event_handlers.empty() == false
+	 * \param c the new target to be connected.
+	 * \pre c is not empty function
+	 * \post base.storage.event_handlers.empty() == false
 	 */
 	template <class conn_t>
 	auto connect(conn_t&& c) &
