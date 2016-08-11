@@ -22,6 +22,13 @@ BOOST_AUTO_TEST_CASE(test_actions)
 			>> sum(0);
 
 	BOOST_CHECK_EQUAL(con(vec), -20);
+
+
+	auto type_change = actions::map(
+			[](int i){ return static_cast<float>(i);}, std::vector<float>{});
+
+	std::vector<float> result = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+	BOOST_CHECK(type_change(vec) == result);
 }
 
 BOOST_AUTO_TEST_CASE(test_zip)

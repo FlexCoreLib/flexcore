@@ -16,11 +16,26 @@ namespace actions
  *
  * \see https://en.wikipedia.org/wiki/Map_%28higher-order_function%29
  */
-template<class operation>
+template<class operation, class target_range>
 struct map_action
 {
 	template<class in_range>
-	auto operator()(in_range input)
+	decltype(auto) operator()(in_range&& input)
+	{
+		target.resize(input.size());
+		std::transform(begin(input), end(input), begin(target), op);
+		return target;
+	}
+	operation op;
+	target_range target;
+};
+
+/// Specialization for map_action where type of output range is the same as input range.
+template<class operation>
+struct map_action<operation, void>
+{
+	template<class in_range>
+	decltype(auto) operator()(in_range input)
 	{
 		std::transform(begin(input), end(input), begin(input), op);
 		return input;
@@ -28,11 +43,25 @@ struct map_action
 	operation op;
 };
 
-/// Create connectable which performs higher order function map.
-template<class operation>
+/**
+ * \brief Create connectable which performs higher order function map
+ * \param op operation to execute on each element in range
+ */template<class operation>
 auto map(operation op)
 {
-	return map_action<operation> { op };
+	return map_action<operation, void> { op };
+}
+
+/**
+ * \brief Create connectable which performs higher order function map
+ * where the output type is different than input type.
+ * \param op operation to execute on each element in range
+ * \param t target range, needs to be a range which can take the result of op.
+ */
+template<class operation, class target_range>
+auto map(operation op, target_range t = target_range{} )
+{
+	return map_action<operation, target_range> { op, t };
 }
 
 /**
