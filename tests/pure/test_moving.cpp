@@ -5,12 +5,35 @@
 #include <algorithm>
 
 #include <flexcore/pure/pure_ports.hpp>
-#include "move_token.hpp"
 
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_tokens_testing)
 
+namespace
+{
+/**
+ * token for testing that cannot be copied only moved.
+ */
+class move_token
+{
+public:
+	move_token(std::string v) noexcept : value_(v) {}
+	move_token() = default;
+	move_token(move_token&) = delete;
+	move_token(move_token&&) = default;
+	move_token& operator= (move_token&) = delete;
+	move_token& operator= (move_token&&) = default;
+
+	std::string& value() { return value_; }
+	const std::string& value() const { return value_; }
+
+	bool operator< (const move_token& other) const { return value_ < other.value_; }
+
+private:
+	std::string value_;
+};
+}
 BOOST_AUTO_TEST_CASE( move_token_ )
 {
 	// no default constructor

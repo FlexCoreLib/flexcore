@@ -19,13 +19,12 @@ ADD_EXECUTABLE( test_executable
 	extended/nodes/test_region_worker_node.cpp
 	extended/nodes/test_terminal_node.cpp
 	extended/ports/test_event_buffer.cpp
-	extended/ports/test_mux_ports.cpp
 	extended/ports/test_node_aware.cpp
 	extended/ports/test_state_buffer.cpp
-	pure/events/test_events.cpp
-	pure/states/test_state_sinks.cpp
-	pure/states/test_state_source_call_function.cpp
-	pure/states/test_state_source_with_setter.cpp
+	pure/test_events.cpp
+	pure/test_moving.cpp
+	pure/test_mux_ports.cpp
+	pure/test_state_sinks.cpp
 	range/test_range.cpp
 	runner.cpp 
 	serialisation/test_deserializer.cpp
@@ -35,7 +34,6 @@ ADD_EXECUTABLE( test_executable
 	scheduler/test_parallel_region.cpp
 	scheduler/test_parallelscheduler.cpp
 	scheduler/test_serialscheduler.cpp
-	tokens/test_moving.cpp
 	util/test_generic_container.cpp)
 
 TARGET_INCLUDE_DIRECTORIES( test_executable 
