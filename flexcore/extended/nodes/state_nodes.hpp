@@ -75,8 +75,7 @@ struct merge_node<operation, result (args...), base_t> : public base_t
 		{
 			return op(std::forward<decltype(sink)>(sink).get()...);
 		};
-		return tuple::invoke_function(get_and_apply, in_ports,
-		                              std::make_index_sequence<nr_of_arguments>{});
+		return tuple::invoke_function(get_and_apply, in_ports);
 	}
 
 	/// State Sink corresponding to i-th argument of merge operation.
@@ -185,11 +184,11 @@ class current_state : public region_worker_node
 public:
 	static constexpr auto default_name = "cache";
 
-	explicit current_state(const detail::node_args& node)
+	explicit current_state(const node_args& node)
 		: current_state(data_t{}, node)
 	{
 	}
-	explicit current_state(const data_t& initial_value, const detail::node_args& node)
+	explicit current_state(const data_t& initial_value, const node_args& node)
 		: region_worker_node(
 			[this]()
 			{

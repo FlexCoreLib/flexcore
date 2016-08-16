@@ -8,6 +8,9 @@
 #ifndef SRC_CORE_TUPLE_META_HPP_
 #define SRC_CORE_TUPLE_META_HPP_
 
+#include <tuple>
+#include <utility>
+
 namespace fc
 {
 
@@ -47,6 +50,13 @@ decltype(auto) unary_invoke_helper(lhs_tuple&& lsh,
 {
 	return std::make_tuple(op(std::get<index>(std::forward<lhs_tuple>(lsh)))...);
 }
+
+template<class operation, class tuple, std::size_t... index>
+decltype(auto) invoke_function_helper(
+		operation&& op, tuple&& tup, std::index_sequence<index...>)
+{
+	return op(std::get<index>(std::forward<tuple>(tup))...);
+}
 } //namespace detail
 
 ///applies function to every element in tuple
@@ -77,11 +87,15 @@ decltype(auto) transform(first_tuple&& first, second_tuple&& second, const opera
 }
 
 ///Helper function to call variadic functions with tuple
-template<class operation, class tuple, std::size_t... index>
-decltype(auto) invoke_function(operation&& op, tuple&& tup, std::index_sequence<index...>)
+template<class operation, class tuple>
+decltype(auto) invoke_function(operation&& op, tuple&& tup)
 {
-	return op(std::get<index>(std::forward<tuple>(tup))...);
+	return detail::invoke_function_helper(
+			std::forward<operation>(op),
+			std::forward<tuple>(tup),
+			detail::make_index_sequence<tuple>());
 }
+
 }  // namespace tuple
 }  // namespace fc
 

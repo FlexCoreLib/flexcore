@@ -1,3 +1,3 @@
 [submodule "flexcore/3rdparty/cereal"]
 	path = flexcore/3rdparty/cereal
-	url = https://github.com/USCiLab/cereal.git
+	url = ../cereal.git

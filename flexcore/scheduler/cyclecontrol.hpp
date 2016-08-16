@@ -3,6 +3,7 @@
 
 #include <flexcore/scheduler/clock.hpp>
 #include <flexcore/scheduler/scheduler.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
 #include <flexcore/pure/event_sources.hpp>
 
 #include <condition_variable>
@@ -32,14 +33,23 @@ struct condition_pair
 struct periodic_task final
 {
 	/**
-	 * \brief Constructor taking a job and the cycle rate.
+	 * \brief Constructor taking a job
 	 * \param job task which is to be executed every cycle
 	 */
-	periodic_task(std::function<void(void)> job) :
+	periodic_task(std::function<void(void)> job)
+	    : work_to_do(false)
+	    , sync(std::make_unique<condition_pair>())
+	    , work(std::move(job))
+	    , region(nullptr)
+	{
+	}
+	/// Construct a periodic task executes work within a region
+	periodic_task(std::shared_ptr<parallel_region> r) :
 				work_to_do(false),
 				sync(std::make_unique<condition_pair>()),
-				work(job)
+				region(r)
 	{
+		work = region->ticks.in_work();
 	}
 
 	bool done()
@@ -71,14 +81,19 @@ struct periodic_task final
 		                         });
 	}
 
-	void send_switch_tick() { switch_tick.fire(); }
-	auto& out_switch_tick() { return switch_tick; }
+	void send_switch_tick()
+	{
+		if (region)
+			region->ticks.switch_buffers();
+	}
 
 	void operator()()
 	{
 		work();
 		set_work_to_do(false);
 	}
+
+	const parallel_region* get_region() const { return region.get(); }
 private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
@@ -86,8 +101,7 @@ private:
 	/// work to be done every cycle
 	std::function<void(void)> work;
 
-	//Todo refactor this intrusion of ports into otherwise independent code
-	pure::event_source<void> switch_tick;
+	std::shared_ptr<parallel_region> region;
 };
 
 /**
@@ -106,6 +120,8 @@ public:
 	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
 
 	explicit cycle_control(std::unique_ptr<scheduler> scheduler);
+	template <class ErrorFun>
+	cycle_control(std::unique_ptr<scheduler> scheduler, ErrorFun err);
 	~cycle_control();
 
 	/// starts the main loop
@@ -150,8 +166,20 @@ private:
 	//Thread exception handling
 	std::mutex task_exception_mutex;
 	std::deque<std::exception_ptr> task_exceptions;
-	void store_exception();
+	/** Callback that is called when a task takes too long.
+	 * Expected to return true if the scheduler is to continue and false if
+	 * scheduler should shut itself down.
+	 */
+	std::function<bool(periodic_task&)> error_callback;
+	bool store_exception(periodic_task& task);
 };
+
+template <class ErrorFun>
+inline cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler, ErrorFun err)
+    : scheduler_(std::move(scheduler)), error_callback(std::move(err))
+{
+	assert(scheduler_);
+}
 
 } /* namespace thread */
 

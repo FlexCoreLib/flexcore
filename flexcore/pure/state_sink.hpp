@@ -8,8 +8,9 @@
 // flexcore
 #include <flexcore/pure/detail/port_traits.hpp>
 #include <flexcore/pure/detail/port_utils.hpp>
-#include <flexcore/core/connection_util.hpp>
 #include <flexcore/pure/detail/active_connection_proxy.hpp>
+#include <flexcore/core/connection_util.hpp>
+#include <flexcore/core/exceptions.hpp>
 
 namespace fc
 {
@@ -36,8 +37,16 @@ public:
 	 * \brief pulls state from connection
 	 *
 	 * \returns current state available at this port.
+	 * \throws no_connected exception if called with an unconnected state sink.
 	 */
-	data_t get() const { return base.storage.handlers(); }
+	data_t get() const
+	{
+		if (!base.storage.handlers) //handlers is std::function with operator bool
+			throw not_connected(
+					"tried to pull data through a state_sink"
+					" which is not connected");
+		return base.storage.handlers();
+	}
 
 	/**
 	 * \brief Connects state source to state_sink.

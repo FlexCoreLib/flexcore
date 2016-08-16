@@ -14,7 +14,7 @@ counter = 0
 
 class CompoundNode:
     def __init__(self, name=''):
-        self.nodes = []
+        self.nodes = set()
         self.name = name
 
     def print(self,indent):
@@ -25,12 +25,21 @@ class CompoundNode:
        out += '  ' * indent + 'subgraph cluster_%d {\n' % my_cnt
        out += '  ' * (indent+1) + 'label="%s";\n' % self.name
        for node in self.nodes:
-           out += node.print(indent+1)
+           out += nodes[node].print(indent+1)
+       if not self.nodes:
+            out += '%d[label="%s"]\n' % (counter + len(lines), self.name)
        out += '  ' * indent + '}\n'
        return out
 
     def add(self, node):
-        self.nodes.append(node)
+        self.nodes.add(node)
+
+    @staticmethod
+    def from_node(node):
+        compound_node = CompoundNode()
+        compound_node.add(node)
+        return compound_node
+
 
 class Node:
 
@@ -71,16 +80,23 @@ for line in graph_lines[1:]:
 
 
 with open(args.forest) as file_:
-    forest = json.load(file_)
+    forest = json.load(file_, object_pairs_hook=collections.OrderedDict)
 
-for node,parents in sorted(forest.items()):
+for node,parents in forest.items():
     # first entry in parents array is name of node
     name, *parents = parents
     if len(parents) == 0:
         root_nodes[node] = nodes[node]
     else:
         first_parent = parents[0]
-        nodes[first_parent].add(nodes[node])
+        try:
+            nodes[first_parent].add(node)
+        except AttributeError:
+            # HACK - subgraphs can't have connections so add the _old_ node as
+            # a subnode to the new compound node
+            nodes[first_parent + 'x'] = nodes[first_parent]
+            nodes[first_parent] = CompoundNode.from_node(first_parent + 'x')
+            nodes[first_parent].add(node)
     nodes[node].name = name
 
 print(graph_lines[0],end='')
