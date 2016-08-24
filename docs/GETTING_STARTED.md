@@ -95,8 +95,8 @@ void print_temperature(int T)
 
 struct my_node : fc::tree_base_node
 {
-       my_node(std::shared_ptr<fc::parallel_region> reg, std::string name)
-           : tree_base_node(reg, name)
+       my_node(const fc::node_args& args)
+           : tree_base_node(args)
                , trigger(this, [this] { this->work(); })
                , curr_temp(this)
                , temp_out(this, get_temperature)
@@ -148,12 +148,12 @@ at given intervals.
 
 struct my_region_node : fc::tree_base_node
 {
-	 my_region_node(std::string name, std::shared_ptr<fc::parallel_region> reg)
-		: tree_base_node(reg, name)
+	 my_region_node(const fc::node_args& args)
+		: tree_base_node(args)
 		, i(0)
 		, src(this, [this] { return i++; })
 		, sink(this)
-		, do_work(this, [this,name] { work(name); })
+		, do_work(this, [this,name = this->name()] { work(name); })
 	{}
 
 	void work(const std::string& name)
