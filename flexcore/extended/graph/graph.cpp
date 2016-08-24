@@ -83,6 +83,7 @@ void connection_graph::impl::add_connection(const graph_node_properties& source_
 	auto region_to_hash = [] (parallel_region* reg) {
 		if (!reg)
 			return ~std::size_t(0);
+
 		return std::hash<std::string>{}(reg->get_id().key);
 	};
 
@@ -98,7 +99,7 @@ void connection_graph::impl::add_connection(const graph_node_properties& source_
 		vertex_map.emplace(
 		    sink_node.get_id(),
 		    boost::add_vertex(vertex{sink_node.name(), hash_value(sink_node.get_id()),
-		                             region_to_hash(source_node.region())},
+		                             region_to_hash(sink_node.region())},
 		                      dataflow_graph));
 
 	boost::add_edge(vertex_map[source_node.get_id()],
