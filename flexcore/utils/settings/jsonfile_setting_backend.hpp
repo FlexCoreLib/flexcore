@@ -3,6 +3,7 @@
 
 #include <flexcore/utils/settings/settings.hpp>
 #include <cereal/archives/json.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace fc
 {
@@ -33,23 +34,33 @@ public:
 	/**
 	 * \brief Registers Setting and immediately tries to read value from archive.
 	 * @param id Key of Setting in json format.
-	 * @param initial_v intial value of setting, here for completeness of interface,
-	 * as value is read immediatly from archive
+	 * @param initial_v initial value of setting, here for completeness of interface,
+	 * as value is read immediately from archive
 	 * @param setter callback to write value from archive to setting.
 	 * @tparam data_t type of data stored in setting.
 	 * @throw ::cereal::Exception if json value under @p id cannot be converted to data_t.
+	 * @pre initial value needs to fulfill constraint
 	 */
-	template<class data_t, class setter_t>
+	template<class data_t, class setter_t, class constraint_t>
 	void register_setting(
 			setting_id id,
 			data_t initial_v,
-			setter_t setter) //todo add constraint
+			setter_t setter,
+			constraint_t constraint)
 	{
+		assert(constraint(initial_v));
 		auto value = initial_v;
 		try
 		{
+			using std::to_string;
 			archive(cereal::make_nvp(id.key, value));
-			setter(value);
+			if (constraint(value))
+				setter(value);
+			else throw(std::runtime_error(
+					"Value of Setting "
+					+ id.key
+					+ ": " + boost::lexical_cast<std::string>(value)
+					+ " violated constraint"));
 		}
 		catch (const ::cereal::Exception& ex)
 		{
@@ -66,14 +77,15 @@ public:
 	 * Region can be ignored in this case,
 	 * as parameters from json file don't change after loading.
 	 */
-	template<class data_t, class setter_t, class region_t>
+	template<class data_t, class setter_t, class region_t, class constraint_t>
 	void register_setting(
 			setting_id id,
 			data_t initial_v,
 			setter_t setter,
-			region_t& /*region*/) //todo add constraint
+			region_t& /*region*/,
+			constraint_t constraint)
 	{
-		register_setting(id, initial_v, setter);
+		register_setting(id, initial_v, setter, constraint);
 	}
 
 	json_archive archive;
