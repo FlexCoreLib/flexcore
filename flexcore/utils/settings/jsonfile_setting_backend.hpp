@@ -34,11 +34,12 @@ public:
 	/**
 	 * \brief Registers Setting and immediately tries to read value from archive.
 	 * @param id Key of Setting in json format.
-	 * @param initial_v intial value of setting, here for completeness of interface,
-	 * as value is read immediatly from archive
+	 * @param initial_v initial value of setting, here for completeness of interface,
+	 * as value is read immediately from archive
 	 * @param setter callback to write value from archive to setting.
 	 * @tparam data_t type of data stored in setting.
 	 * @throw ::cereal::Exception if json value under @p id cannot be converted to data_t.
+	 * @pre initial value needs to fulfill constraint
 	 */
 	template<class data_t, class setter_t, class constraint_t>
 	void register_setting(
@@ -47,6 +48,7 @@ public:
 			setter_t setter,
 			constraint_t constraint)
 	{
+		assert(constraint(initial_v));
 		auto value = initial_v;
 		try
 		{
