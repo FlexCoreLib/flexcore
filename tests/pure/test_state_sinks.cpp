@@ -52,6 +52,19 @@ BOOST_AUTO_TEST_CASE(connect_after_move)
 	BOOST_CHECK_EQUAL(s2.get(), 99);
 }
 
+BOOST_AUTO_TEST_CASE(moving_state_source)
+{
+	pure::state_sink<int> sink;
+	pure::state_source<int> src([] { return 99; });
+	pure::state_source<int> src_2([] { return 1; });
+	src >> sink;
+	BOOST_CHECK_EQUAL(sink.get(), 99);
+
+	src = std::move(src_2);
+	BOOST_CHECK_EQUAL(sink.get(), 1);
+}
+
+
 BOOST_AUTO_TEST_CASE(move_active_after_connect)
 {
 	pure::state_sink<int> s1;
