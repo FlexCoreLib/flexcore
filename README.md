@@ -18,7 +18,7 @@ After cloning run:
 To compile and install:
 
     $ mkdir build && cd build
-    $ cmake -DENABLE_TESTS=NO ..
+    $ cmake -DFLEXCORE_ENABLE_TESTS=NO ..
     $ make install
 
 The installation location can be customized in the usual cmake way:
@@ -49,3 +49,23 @@ External libraries that are included as git submodules, are located under
 - adobe stlab forest library - A generic C++ library for graph representation
 - cereal - A C++11 library for serialization
 
+License
+------------
+Copyright 2016 Caspar Kielwein
+
+Licensed under the Apache License, Version 2.0 (the "License");  
+you may not use this file except in compliance with the License.  
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software  
+distributed under the License is distributed on an "AS IS" BASIS,  
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  
+See the License for the specific language governing permissions and
+limitations under the License.  
+See LICENSE.txt or http://www.apache.org/licenses/LICENSE-2.0
+
+All files under flexcore/3rdparty are licensed by their respective copyright owners.  
+adobe stlab forest is distributed under the Boost Software License, Version 1.0.  
+cereal is licensed under the BSD license.
