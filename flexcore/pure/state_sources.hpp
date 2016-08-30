@@ -53,6 +53,14 @@ public:
 		swap(call, o.call);
 	}
 
+	state_source& operator=(state_source&& o)
+	{
+		assert(o.connection_breakers.empty() &&
+				"It is illegal to move a state_source which is connected");
+		swap(call, o.call);
+		return *this;
+	}
+
 	/// Destructor disconnects existing connection and then deletes object.
 	~state_source()
 	{

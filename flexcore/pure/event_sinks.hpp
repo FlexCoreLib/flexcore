@@ -67,6 +67,13 @@ struct event_sink
 		swap(o.event_handler, event_handler);
 	}
 
+	event_sink& operator=(event_sink&& o)
+	{
+		assert(o.connection_breakers.empty());
+		swap(o.event_handler, event_handler);
+		return *this;
+	}
+
 	~event_sink()
 	{
 		auto self = std::hash<decltype(this)>{}(this);

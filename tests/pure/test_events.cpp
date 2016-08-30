@@ -314,11 +314,11 @@ BOOST_AUTO_TEST_CASE(test_connect_after_move_of_passive)
 	pure::event_source<int> src;
 	int sink_val = 0;
 	int ctr = 0;
-	std::unique_ptr<pure::event_sink<int>> sink1;
+	pure::event_sink<int> sink1{[](int){}};
 	{
 		pure::event_sink<int> sink2{[&](int v) { ++ctr; sink_val = v; }};
-		sink1 = std::make_unique<decltype(sink2)>(std::move(sink2));
-		src >> *sink1;
+		sink1 = std::move(sink2);
+		src >> sink1;
 		src >> sink2;
 		// after the block ends sink2 should be disconnected
 	}

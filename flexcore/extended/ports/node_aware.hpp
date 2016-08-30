@@ -6,6 +6,7 @@
 #include <flexcore/core/connection.hpp>
 #include <flexcore/extended/ports/connection_buffer.hpp>
 #include <flexcore/scheduler/parallelregion.hpp>
+#include <functional>
 
 namespace fc
 {
@@ -19,7 +20,7 @@ template<class source_t, class sink_t>
 bool same_region(const node_aware<source_t>& source,
         const node_aware<sink_t>& sink)
 {
-	return source.region.get_id() == sink.region.get_id();
+	return source.region().get_id() == sink.region().get_id();
 }
 
 /**
@@ -41,9 +42,9 @@ struct buffer_factory
 			auto result_buffer =
 					std::make_shared<typename buffer<result_t, tag>::type>();
 
-			active.region.switch_tick() >> result_buffer->switch_active_tick();
-			passive.region.switch_tick() >> result_buffer->switch_passive_tick();
-			passive.region.work_tick() >> result_buffer->work_tick();
+			active.region().switch_tick() >> result_buffer->switch_active_tick();
+			passive.region().switch_tick() >> result_buffer->switch_passive_tick();
+			passive.region().work_tick() >> result_buffer->work_tick();
 
 			return result_buffer;
 		}
@@ -193,7 +194,7 @@ struct node_aware: base
 
 	template <class ... args>
 	node_aware(parallel_region& r, args&&... base_constructor_args)
-		: base(std::forward<args>(base_constructor_args)...), region(r)
+		: base(std::forward<args>(base_constructor_args)...), region_(r)
 	{
 	}
 
@@ -206,7 +207,7 @@ struct node_aware: base
 		        std::integral_constant<bool, has_node_aware<conn_t>()> { });
 	}
 
-	parallel_region& region;
+	parallel_region& region() const { return region_; }
 
 private:
 	// helper aliases to make method prototypes easier to read.
@@ -214,6 +215,8 @@ private:
 	using connection_doesnt_have_node_aware = std::false_type;
 	using base_is_source = std::true_type;
 	using base_is_sink = std::false_type;
+
+	std::reference_wrapper<parallel_region> region_;
 
 	template <class conn_t>
 	auto connect_impl(conn_t&& conn, connection_has_node_aware)

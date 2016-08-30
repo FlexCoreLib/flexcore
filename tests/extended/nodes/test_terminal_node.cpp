@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(test_event_terminal)
 {
 	const float test_val = 1.234;
 
-	{
+	{ //test pure terminal
 	float test_out = 0.0;
 
 	event_terminal<float, pure::pure_node> pure_terminal;
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(test_event_terminal)
 	BOOST_CHECK_EQUAL(test_val, test_out);
 	}
 
-	{
+	{ // test extended terminal
 	float test_out = 0.0;
 	tests::owning_node root;
 	auto& tree_terminal = root.make_child_named<event_terminal<float>>("terminal");
@@ -44,6 +44,22 @@ BOOST_AUTO_TEST_CASE(test_event_terminal)
 
 	tree_source.fire(test_val);
 	BOOST_CHECK_EQUAL(test_val, test_out);
+	}
+
+	{ //test terminal with void token
+		int test_out = 0;
+		tests::owning_node root;
+		auto& tree_terminal = root.make_child_named<event_terminal<void>>("terminal");
+
+		event_source<void> tree_source{&root.node()};
+		event_sink<void> tree_sink{&root.node(), [&test_out](void)
+			{test_out++;}};
+
+		tree_source >> tree_terminal.in();
+		tree_terminal.out() >> tree_sink;
+
+		tree_source.fire();
+		BOOST_CHECK_EQUAL(1, test_out);
 	}
 }
 
