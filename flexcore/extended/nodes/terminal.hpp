@@ -74,7 +74,9 @@ public:
 	template<class... base_args>
 	explicit event_terminal(base_args&&... args)
 		: base_node(std::forward<base_args>(args)...)
-		, in_event(this, [this](T in){ out_event.fire(std::move(in));})
+		, in_event(this,
+				//variadic lambda to also handle void events
+				[this](auto&&... in){ out_event.fire(std::forward<decltype(in)>(in)...);})
 		, out_event(this)
 	{
 	}

@@ -90,14 +90,13 @@ class gate_with_control: public generic_event_node<event_t, base_t>
 public:
 	gate_with_control() :
 		generic_event_node<event_t, base_t>(
-				[this](const event_t& in)
+				[this](auto&&... in)
 				{
 					if (control.get())
-						this->out_port.fire(in);
+						this->out_port.fire(std::forward<decltype(in)>(in)...);
 				}), control(this)
 	{
 	}
-
 	/// State sink expecting bool. Events are forwarded if this state is true.
 	auto& in_control() noexcept { return control; }
 
