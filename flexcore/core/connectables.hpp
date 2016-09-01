@@ -88,23 +88,36 @@ auto constant = [](auto x)
 	};
 };
 
+namespace detail
+{
+	template<class T>
+	struct tee_op
+	{
+		template<class data_t>
+		auto operator()(data_t&& in) -> data_t
+		{
+			// call callback with const_ref to make sure it cannot change token
+			// But token can still be move_only
+			const auto& temp_ref = in;
+			callback(temp_ref);
+
+			return std::forward<data_t>(in);
+		}
+
+		T callback;
+	};
+}
+
 /**
  * \brief Calls a given callback and then returns value every time it is called.
  *
  * \pre @param callback needs to fulfill copy_constructible.
  */
-auto tee = [](auto callback)
+template<class T>
+auto tee(T&& op)
 {
-	return [callback](auto&& in)
-	{
-		// call callback with const_ref to make sure it cannot change token
-		// But token can still be move_only
-		const auto& temp_ref = in;
-		callback(temp_ref);
-
-		return std::forward<decltype(in)>(in);
-	};
-};
+	return detail::tee_op<T>{std::forward<T>(op)};
+}
 
 /**
  * \brief Event_sink, which prints all incoming tokens to given stream.
