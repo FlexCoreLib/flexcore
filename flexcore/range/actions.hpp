@@ -22,6 +22,8 @@ struct map_action
 	template<class in_range>
 	decltype(auto) operator()(in_range&& input)
 	{
+		using std::begin;
+		using std::end;
 		target.resize(input.size());
 		std::transform(begin(input), end(input), begin(target), op);
 		return target;
@@ -37,6 +39,8 @@ struct map_action<operation, void>
 	template<class in_range>
 	decltype(auto) operator()(in_range input)
 	{
+		using std::begin;
+		using std::end;
 		std::transform(begin(input), end(input), begin(input), op);
 		return input;
 	}
@@ -46,7 +50,8 @@ struct map_action<operation, void>
 /**
  * \brief Create connectable which performs higher order function map
  * \param op operation to execute on each element in range
- */template<class operation>
+ */
+template<class operation>
 auto map(operation op)
 {
 	return map_action<operation, void> { op };
@@ -81,6 +86,8 @@ struct filter_action
 	template<class in_range>
 	auto operator()(in_range input)
 	{
+		using std::begin;
+		using std::end;
 		in_range output;
 		std::copy_if(begin(input), end(input), std::back_inserter(output), pred);
 		return output;
@@ -114,6 +121,8 @@ struct zip_action
 		assert(static_cast<size_t>(input.size()) ==
 				static_cast<size_t>(zip_with.size()));
 
+		using std::begin;
+		using std::end;
 		std::transform(
 				begin(input), end(input), begin(zip_with), begin(input), op);
 		return input;
