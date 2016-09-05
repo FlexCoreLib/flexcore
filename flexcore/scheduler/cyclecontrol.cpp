@@ -69,10 +69,10 @@ void cycle_control::work()
 				return false;
 		return true;
 	};
+	clock::advance();
 	if (!run_if_due(slow_tick, tasks_slow)) return;
 	if (!run_if_due(medium_tick, tasks_medium)) return;
 	if (!run_if_due(fast_tick, tasks_fast)) return;
-	clock::advance();
 }
 
 void cycle_control::wait_for_current_tasks()
