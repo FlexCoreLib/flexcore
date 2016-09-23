@@ -70,6 +70,14 @@ public:
 		base.add_handler(detail::handler_wrapper(std::forward<con_t>(c)), get_source(c));
 	}
 
+	///Illegal overload for rvalue port to give better error message.
+	template<class con_t>
+	void connect(con_t&&) &&
+	{
+		static_assert(detail::always_false<con_t>(),
+				"Illegally tried to connect a temporary state_sink object.");
+	}
+
 	typedef void result_t;
 private:
 	detail::active_port_base<std::function<data_t()>, detail::single_handler_policy> base;
