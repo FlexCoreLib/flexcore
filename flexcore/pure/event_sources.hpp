@@ -91,6 +91,14 @@ struct event_source
 		return port_connection<decltype(this), conn_t, result_t>();
 	}
 
+	///Illegal overload for rvalue port to give better error message.
+	template<class con_t>
+	void connect(con_t&&) &&
+	{
+		static_assert(detail::always_false<con_t>(),
+				"Illegally tried to connect a temporary event_source object.");
+	}
+
 private:
 	// Stores event_handlers in a vector, the node needs to send
 	// to all connected event_handlers when an event is fired.
