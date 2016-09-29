@@ -96,8 +96,14 @@ struct active_connection_proxy
 
 	active_connection_proxy(active_t active_, passive_t passive) :
 			active(std::forward<active_t>(active_)),
-			stored_passive(std::forward<passive_t>(passive))
+			stored_passive(std::forward<passive_t>(passive)),
+			connected{false}
 	{}
+
+	~active_connection_proxy()
+	{
+		assert(connected && "active_connection_proxy was destroyed but not connected.");
+	}
 
 	/**
 	 * \brief connects a passive connectable to the active_connection_proxy.
@@ -116,6 +122,7 @@ struct active_connection_proxy
 	{
 		auto tmp = connect_policy()(std::forward<passive_t>(stored_passive),
 		                            std::forward<new_passive_t>(new_passive));
+		connected = true;
 		return std::forward<active_t>(active).connect(std::move(tmp));
 	}
 
@@ -136,6 +143,7 @@ struct active_connection_proxy
 	{
 		auto connection = connect_policy()(std::forward<passive_t>(stored_passive),
 		                                   std::forward<new_connectable_t>(new_connectable));
+		connected = true;
 		return active_connection_proxy<
 				active_t,
 				decltype(connection),
@@ -153,6 +161,7 @@ struct active_connection_proxy
 
 	active_t active;
 	passive_t stored_passive;
+	bool connected;
 };
 
 template<class active_t, class passive_t, class argument_order, class Enable = void>
