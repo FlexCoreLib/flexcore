@@ -31,7 +31,7 @@ public:
 	/**
 	 * \brief Constructor which forwards arguments to base_node
 	 * \param args Arguments for Base node. In the default case this is:
-	 * \code {const node_args&}
+	 * \code {const node_args&} \endcode
 	 */
 	template<class... base_args>
 	explicit state_terminal(base_args&&... args)
@@ -69,7 +69,7 @@ public:
 	/**
 	 * \brief Constructor which forwards arguments to base_node
 	 * \param args Arguments for Base node. In the default case this is:
-	 * \code {const node_args&}
+	 * \code {const node_args&} \endcode
 	 */
 	template<class... base_args>
 	explicit event_terminal(base_args&&... args)

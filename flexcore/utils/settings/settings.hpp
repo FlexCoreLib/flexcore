@@ -72,7 +72,7 @@ public:
 	 * \param id identifier of the setting
 	 * \param backend Reference to the backend used by this setting
 	 * \param initial_value
-	 * \param constraint any function object with signature \code{ bool(data_t) }
+	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
 	 * \pre initial value needs to fulfill constraint
 	 */
 	template <class constraint_t = always_valid>
@@ -96,7 +96,7 @@ public:
 	 * as it constructs a backend for itself.
 	 * \param id identifier of the setting
 	 * \param initial_value
-	 * \param constraint any function object with signature \code{ bool(data_t) }
+	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
 	 * \pre initial value needs to fulfill constraint
 	 */
 	template <class constraint_t = always_valid>

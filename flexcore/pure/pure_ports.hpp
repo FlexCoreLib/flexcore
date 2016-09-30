@@ -7,7 +7,7 @@
 #include <flexcore/pure/state_sources.hpp>
 
 /**
-* \defgroup ports
+* \defgroup ports ports
 * \brief Ports which are used as access points between connections and nodes.
 */
 

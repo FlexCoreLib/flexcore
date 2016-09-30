@@ -37,6 +37,7 @@ public:
 	 * @param initial_v initial value of setting, here for completeness of interface,
 	 * as value is read immediately from archive
 	 * @param setter callback to write value from archive to setting.
+	 * @param constraint any function object with signature \code{ bool(data_t) } \endcode
 	 * @tparam data_t type of data stored in setting.
 	 * @throw ::cereal::Exception if json value under @p id cannot be converted to data_t.
 	 * @pre initial value needs to fulfill constraint

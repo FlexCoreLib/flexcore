@@ -266,7 +266,7 @@ auto operator>>(T&& src, mux_port<ports...> mux)
 
 /** \brief Create a mux port from lvalue references to the supplied ports.
  *
- * \params ports should be non-const connectables.
+ * \param ports should be non-const connectables.
  */
 template <class... port_ts>
 auto mux(port_ts&&... ports)

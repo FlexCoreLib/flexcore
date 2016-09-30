@@ -215,7 +215,7 @@ public:
 	 *
 	 * Use this if you want to manually control ownership of a node.
 	 * \param name name of the node.
-	 * \param region to be used by new node.
+	 * \param r region to be used by new node.
 	 * \return node_args corresponding to the proxy node.
 	 */
 	node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
@@ -342,7 +342,7 @@ private:
  * \brief Erases node and recursively erases all children.
  *
  * \param forest, forest to delete node from.
- * \position iterator of forest pointing to node.
+ * \param position iterator of forest pointing to node.
  * \pre position must be in forest.
  * \returns trailing iterator pointing to parent of position.
  *

@@ -18,7 +18,7 @@ namespace fc
 {
 
 /**
-	\defgroup traits
+	\defgroup traits traits
 	\brief metaprogramming traits used in flexcore
 
 	This group contains all traits and metafunctions which provided by
