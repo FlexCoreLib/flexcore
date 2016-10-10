@@ -6,6 +6,7 @@
  */
 
 #include <flexcore/scheduler/parallelregion.hpp>
+#include <flexcore/scheduler/cyclecontrol.hpp>
 
 namespace fc
 {
@@ -20,17 +21,24 @@ region_id parallel_region::get_id() const
 	return id;
 }
 
-parallel_region::parallel_region(std::string id_) :
-		ticks(),
-		id({std::move(id_)})
+virtual_clock::steady::duration parallel_region::get_duration() const
 {
+	return tick_duration;
+}
+
+parallel_region::parallel_region(std::string id_, virtual_clock::steady::duration tick_rate) :
+		ticks(),
+		id({std::move(id_)}),
+		tick_duration(tick_rate)
+{
+	static_assert(thread::cycle_control::slow_tick == std::chrono::seconds(1),
+			"Slow tick is not 1s, the default constructor parameter of parallel_region needs adaption");
 }
 
 std::shared_ptr<parallel_region>
-parallel_region::new_region(std::string name, virtual_clock::steady::duration /* tick_rate */) const
+parallel_region::new_region(std::string name, virtual_clock::steady::duration tick_rate) const
 {
-	// TODO: check if there is any good way to use tick_rate here.
-	return std::make_shared<parallel_region>(std::move(name));
+	return std::make_shared<parallel_region>(std::move(name), tick_rate);
 }
 
 pure::event_source<void>& parallel_region::switch_tick()

@@ -24,6 +24,18 @@ bool same_region(const node_aware<source_t>& source,
 }
 
 /**
+ * checks if two node_aware's regions have the same tick rate
+ *
+ * \pre same_region(source, sink) == true;
+ */
+template<class source_t, class sink_t>
+bool same_tick_rate(const node_aware<source_t>& source,
+        const node_aware<sink_t>& sink)
+{
+	return source.region().get_duration() == sink.region().get_duration();
+}
+
+/**
  * \brief factory method to construct a buffer
  *
  * \returns either buffer or no_buffer.
@@ -42,8 +54,15 @@ struct buffer_factory
 			auto result_buffer =
 					std::make_shared<typename buffer<result_t, tag>::type>();
 
-			active.region().switch_tick() >> result_buffer->switch_active_tick();
-			passive.region().switch_tick() >> result_buffer->switch_passive_tick();
+			if(same_tick_rate(active, passive))
+			{
+				active.region().switch_tick() >> result_buffer->switch_active_passive_tick();
+			}
+			else
+			{
+				active.region().switch_tick() >> result_buffer->switch_active_tick();
+				passive.region().switch_tick() >> result_buffer->switch_passive_tick();
+			}
 			passive.region().work_tick() >> result_buffer->work_tick();
 
 			return result_buffer;

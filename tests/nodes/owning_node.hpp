@@ -2,6 +2,7 @@
 #define TESTS_NODES_OWNING_NODE_HPP_
 
 #include <flexcore/extended/base_node.hpp>
+#include <flexcore/scheduler/cyclecontrol.hpp>
 
 namespace fc
 {
@@ -26,7 +27,7 @@ class owning_node
 {
 public:
 	explicit owning_node(const std::shared_ptr<parallel_region>& r
-	                         = std::make_shared<parallel_region>("test_root_region"),
+			= std::make_shared<parallel_region>("test_root_region", thread::cycle_control::slow_tick),
 	                     std::string name = "owner")
 	    : owner_(graph, name, r)
 	    , forest_(nullptr)
@@ -39,8 +40,8 @@ public:
 		assert(owner);
 	}
 
-	explicit owning_node(std::string name)
-		: owning_node(std::make_shared<parallel_region>(name), name)
+	explicit owning_node(std::string name, virtual_clock::steady::duration tick_rate = thread::cycle_control::slow_tick)
+		: owning_node(std::make_shared<parallel_region>(name, tick_rate), name)
 	{
 	}
 
