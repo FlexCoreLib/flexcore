@@ -24,6 +24,7 @@ cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler)
 
 void cycle_control::start(bool fast)
 {
+	assert(!running);
 	keep_working.store(true);
 	running = true;
 	// give the main thread some actual work to do (execute infinite main loop)
@@ -85,7 +86,7 @@ void cycle_control::wait_for_current_tasks()
 			for (auto& task : task_vector)
 				if (!task.wait_until_done(tick_rate))
 				{
-					if (!error_callback(task))
+					if (!timeout_callback(task))
 					{
 						keep_working.store(false);
 						return false;
@@ -128,7 +129,7 @@ bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 	//todo specify error model
 	for (auto& task : tasks)
 		if (!task.done())
-			if (!error_callback(task))
+			if (!timeout_callback(task))
 			{
 				keep_working.store(false);
 				return false;
@@ -136,6 +137,7 @@ bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 
 	for (auto& task : tasks)
 	{
+		assert(task.done());
 		task.set_work_to_do(true);
 		task.send_switch_tick();
 	}
