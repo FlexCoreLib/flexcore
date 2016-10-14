@@ -52,7 +52,8 @@ BOOST_AUTO_TEST_CASE(events_example)
 	source_2.out() >> sink.in();
 	source.in()(42);
 	BOOST_CHECK_EQUAL(sink.out()(), (42+1)*10);
-
+	source_2.in()(42);
+	BOOST_CHECK_EQUAL(sink.out()(), 42);
 
 	fc::hold_last<int, fc::pure::pure_node> sink_2{0};
 	// an event source can be connected to more than one sink
