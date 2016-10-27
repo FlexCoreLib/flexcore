@@ -3,6 +3,7 @@
 
 #include <numeric>
 #include <algorithm>
+#include <cassert>
 
 namespace fc
 {
