@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE(test_fast_main_loop)
 {
 	namespace sched = fc::thread;
 	using cycle = sched::cycle_control;
-	sched::cycle_control controller{std::make_unique<sched::parallel_scheduler>()};
+	sched::cycle_control controller{std::make_unique<sched::parallel_scheduler>(),
+		std::make_shared<sched::afap_main_loop>()};
 	auto count_fast = 0ull;
 	auto count_medium = 0ull;
 	auto count_slow = 0ull;
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(test_fast_main_loop)
 			b = true;
 		}
 	}}, cycle::slow_tick);
-	controller.start(true);
+	controller.start();
 	while (!slow_done.load())
 		std::this_thread::yield();
 	controller.stop();

@@ -104,6 +104,51 @@ private:
 	std::shared_ptr<parallel_region> region;
 };
 
+///Abstract Base class for all main lopp classes.
+class main_loop
+{
+public:
+	virtual void loop_body(std::function<void(void)> work) = 0;
+	virtual ~main_loop() = default;
+
+	std::function<void(void)> wait_for_current_tasks{};
+};
+
+/**
+ * \brief Main Loop which runs as fast as possible
+ */
+class afap_main_loop : public main_loop
+{
+public:
+	void loop_body(std::function<void(void)> work) override;
+
+};
+
+/**
+ * \brief Main Loop which runs in realtime.
+ */
+class realtime_main_loop : public main_loop
+{
+public:
+	void loop_body(std::function<void(void)> work) override;
+};
+
+/**
+ * \brief Main Loop which runs variable speed.
+ */
+class timewarp_main_loop : public main_loop
+{
+public:
+	void loop_body(std::function<void(void)> work) override;
+
+	void set_warp_factor(double factor);
+
+private:
+	std::mutex warp_mutex{};
+	std::condition_variable warp_signal{};
+	double warp_factor{1};
+};
+
 /**
  * \brief Controls timing and the execution of cyclic tasks in the scheduler.
  * Todo: allow to set virtual clock as control clock for replay as template parameter
@@ -119,13 +164,18 @@ public:
 	static constexpr virtual_clock::steady::duration medium_tick = min_tick_length * 10;
 	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
 
-	explicit cycle_control(std::unique_ptr<scheduler> scheduler);
+	explicit cycle_control(std::unique_ptr<scheduler> scheduler,
+			const std::shared_ptr<main_loop>& loop = std::make_shared<realtime_main_loop>());
+
 	template <class TimeOutFun>
-	cycle_control(std::unique_ptr<scheduler> scheduler, TimeOutFun err);
+	cycle_control(std::unique_ptr<scheduler> scheduler,
+			TimeOutFun err,
+			const std::shared_ptr<main_loop>& loop);
+
 	~cycle_control();
 
 	/// starts the main loop
-	void start(bool fast=false);
+	void start();
 	/// stops the main loop in all threads
 	void stop();
 
@@ -147,20 +197,24 @@ public:
 	std::exception_ptr last_exception();
 
 private:
-	/// normal main loop, which run tasks and sticks to tick lengths
-	void normal_main_loop();
-	/// accelerated main loop, which maintains ratios of execution counts of tasks
-	void fast_main_loop();
+	struct tick_task_pair
+	{
+		virtual_clock::steady::duration tick;
+		std::vector<periodic_task> tasks{};
+	};
+
 	/// runs the tasks in this vector; returns false if any task is not done, true otherwise
 	bool run_periodic_tasks(std::vector<periodic_task>& tasks);
 	void wait_for_current_tasks();
-	std::vector<periodic_task> tasks_slow;
-	std::vector<periodic_task> tasks_medium;
-	std::vector<periodic_task> tasks_fast;
+
+	tick_task_pair tasks_slow{slow_tick};
+	tick_task_pair tasks_medium{medium_tick};
+	tick_task_pair tasks_fast{fast_tick};
 	std::unique_ptr<scheduler> scheduler_;
 	std::atomic<bool> keep_working{false};
 	bool running = false;
-	//Todo refactor main loop and task queue to locked class together
+
+	std::shared_ptr<main_loop> main_loop_;
 	std::thread main_loop_thread;
 
 	//Thread exception handling
@@ -176,10 +230,13 @@ private:
 
 template <class TimeOutFun>
 inline cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler,
-		TimeOutFun callback)
-    : scheduler_(std::move(scheduler)), timeout_callback(std::move(callback))
+		TimeOutFun callback, const std::shared_ptr<main_loop>& loop)
+	: scheduler_(std::move(scheduler))
+	, main_loop_(loop)
+	, timeout_callback(std::move(callback))
 {
 	assert(scheduler_);
+	main_loop_->wait_for_current_tasks = [this](){ wait_for_current_tasks(); };
 }
 
 } /* namespace thread */
@@ -191,6 +248,7 @@ struct out_of_time_exception: std::runtime_error
 	{
 	}
 };
+
 } /* namespace fc */
 
 #endif /* SRC_SCHEDULER_CYCLECONTROL_HPP_ */

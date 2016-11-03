@@ -14,24 +14,30 @@ constexpr virtual_clock::steady::duration cycle_control::fast_tick;
 constexpr virtual_clock::steady::duration cycle_control::medium_tick;
 constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 
-cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler)
-    : cycle_control(std::move(scheduler), [this](auto& task)
-                    {
-	                    return store_exception(task);
-                    })
+cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler,
+		 const std::shared_ptr<main_loop>& loop)
+	: cycle_control(std::move(scheduler), [this](auto& task)
+					{
+						return store_exception(task);
+					},
+					loop
+	)
 {
 }
 
-void cycle_control::start(bool fast)
+void cycle_control::start()
 {
 	assert(!running);
 	keep_working.store(true);
 	running = true;
 	// give the main thread some actual work to do (execute infinite main loop)
-	if (fast)
-		main_loop_thread = std::thread{[this] { fast_main_loop(); }};
-	else
-		main_loop_thread = std::thread{[this] { normal_main_loop(); }};
+	auto worker = [this](){ work(); };
+	main_loop_thread = std::thread{
+		[&, worker](){
+			while(keep_working.load())
+				main_loop_->loop_body([worker](){worker();});
+		}
+	};
 }
 
 void cycle_control::stop()
@@ -42,7 +48,7 @@ void cycle_control::stop()
 	// wait for scheduled tasks to finish
 	auto wait_or_throw = [](auto& task_vector)
 	{
-		for (auto& t : task_vector)
+		for (auto& t : task_vector.tasks)
 			if (!t.wait_until_done(slow_tick))
 				throw out_of_time_exception{};
 	};
@@ -63,28 +69,28 @@ bool cycle_control::store_exception(periodic_task&)
 void cycle_control::work()
 {
 	auto now = virtual_clock::steady::now().time_since_epoch();
-	auto run_if_due = [this, now](auto tick_rate, auto& task_vector)
+	auto run_if_due = [this, now](auto& task_vector)
 	{
-		if (now % tick_rate == virtual_clock::duration::zero())
-			if (!run_periodic_tasks(task_vector))
+		if (now % task_vector.tick == virtual_clock::duration::zero())
+			if (!run_periodic_tasks(task_vector.tasks))
 				return false;
 		return true;
 	};
 	clock::advance();
-	if (!run_if_due(fast_tick, tasks_fast)) return;
-	if (!run_if_due(medium_tick, tasks_medium)) return;
-	if (!run_if_due(slow_tick, tasks_slow)) return;
+	if (!run_if_due(tasks_fast)) return;
+	if (!run_if_due(tasks_medium)) return;
+	if (!run_if_due(tasks_slow)) return;
 }
 
 void cycle_control::wait_for_current_tasks()
 {
 	auto now = virtual_clock::steady::now().time_since_epoch();
-	auto wait_for_tasks = [this, now](auto tick_rate, auto& task_vector)
+	auto wait_for_tasks = [this, now](auto& task_vector)
 	{
-		if (now % tick_rate == virtual_clock::duration::zero())
+		if (now % task_vector.tick == virtual_clock::duration::zero())
 		{
-			for (auto& task : task_vector)
-				if (!task.wait_until_done(tick_rate))
+			for (auto& task : task_vector.tasks)
+				if (!task.wait_until_done(task_vector.tick))
 				{
 					if (!timeout_callback(task))
 					{
@@ -95,28 +101,9 @@ void cycle_control::wait_for_current_tasks()
 		}
 		return true;
 	};
-	if (!wait_for_tasks(slow_tick, tasks_slow)) return;
-	if (!wait_for_tasks(medium_tick, tasks_medium)) return;
-	if (!wait_for_tasks(fast_tick, tasks_fast)) return;
-}
-
-void cycle_control::fast_main_loop()
-{
-	while (keep_working.load())
-	{
-		wait_for_current_tasks();
-		work();
-	}
-}
-
-void cycle_control::normal_main_loop()
-{
-	while (keep_working.load())
-	{
-		const auto now = wall_clock::steady::now();
-		work();
-		std::this_thread::sleep_until(now + min_tick_length);
-	}
+	if (!wait_for_tasks(tasks_slow)) return;
+	if (!wait_for_tasks(tasks_medium)) return;
+	if (!wait_for_tasks(tasks_fast)) return;
 }
 
 cycle_control::~cycle_control()
@@ -126,7 +113,6 @@ cycle_control::~cycle_control()
 
 bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 {
-	//todo specify error model
 	for (auto& task : tasks)
 		if (!task.done())
 			if (!timeout_callback(task))
@@ -154,11 +140,11 @@ void cycle_control::add_task(periodic_task task, virtual_clock::duration tick_ra
 		throw std::runtime_error{"Worker threads are already running"};
 
 	if (tick_rate == slow_tick)
-		tasks_slow.emplace_back(std::move(task));
+		tasks_slow.tasks.emplace_back(std::move(task));
 	else if (tick_rate == medium_tick)
-		tasks_medium.emplace_back(std::move(task));
+		tasks_medium.tasks.emplace_back(std::move(task));
 	else if (tick_rate == fast_tick)
-		tasks_fast.emplace_back(std::move(task));
+		tasks_fast.tasks.emplace_back(std::move(task));
 	else
 		throw std::invalid_argument{"Unsupported tick_rate"};
 }
@@ -171,6 +157,36 @@ std::exception_ptr cycle_control::last_exception()
 	std::exception_ptr except = task_exceptions.back();
 	task_exceptions.pop_back();
 	return except;
+}
+
+void realtime_main_loop::loop_body(std::function<void(void)> work)
+{
+	const auto now = wall_clock::steady::now();
+	work();
+	std::this_thread::sleep_until(now + cycle_control::min_tick_length);
+}
+
+void timewarp_main_loop::loop_body(std::function<void(void)> work)
+{
+	const auto now = wall_clock::steady::now();
+	wait_for_current_tasks();
+	work();
+
+	std::unique_lock<std::mutex> lock(warp_mutex);
+	warp_signal.wait_until(lock,
+			now + cycle_control::min_tick_length * warp_factor);
+}
+
+void timewarp_main_loop::set_warp_factor(double factor)
+{
+	warp_factor = factor;
+	warp_signal.notify_all();
+}
+
+void afap_main_loop::loop_body(std::function<void(void)> work)
+{
+	wait_for_current_tasks();
+	work();
 }
 
 } /* namespace thread */

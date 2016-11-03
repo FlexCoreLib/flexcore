@@ -27,7 +27,7 @@ public:
 		forest_root.print_forest(forest_out);
 	}
 	void infinite_main_loop();
-	void start_scheduler(bool fast = false) { scheduler.start(fast); }
+	void start_scheduler() { scheduler.start(); }
 	void stop_scheduler() { scheduler.stop(); }
 	void iterate_main_loop();
 
