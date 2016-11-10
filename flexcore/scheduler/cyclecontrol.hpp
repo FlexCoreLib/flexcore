@@ -37,16 +37,18 @@ struct periodic_task final
 	 * \param job task which is to be executed every cycle
 	 */
 	periodic_task(std::function<void(void)> job)
-	    : work_to_do(false)
-	    , sync(std::make_unique<condition_pair>())
-	    , work(std::move(job))
-	    , region(nullptr)
+		: work_to_do(false)
+		, sync(std::make_unique<condition_pair>())
+		, work(std::move(job))
+		, work_start(wall_clock::steady::now())
+		, region(nullptr)
 	{
 	}
 	/// Construct a periodic task executes work within a region
 	periodic_task(std::shared_ptr<parallel_region> r) :
 				work_to_do(false),
 				sync(std::make_unique<condition_pair>()),
+				work_start(wall_clock::steady::now()),
 				region(r)
 	{
 		work = region->ticks.in_work();
@@ -75,7 +77,7 @@ struct periodic_task final
 	bool wait_until_done(virtual_clock::steady::duration timeout)
 	{
 		std::unique_lock<std::mutex> lock(sync->mtx);
-		return sync->cv.wait_for(lock, timeout, [&]
+		return sync->cv.wait_until(lock, work_start + timeout, [&]
 		                         {
 			                         return !work_to_do;
 		                         });
@@ -89,6 +91,7 @@ struct periodic_task final
 
 	void operator()()
 	{
+		work_start = wall_clock::steady::now();
 		work();
 		set_work_to_do(false);
 	}
@@ -100,6 +103,8 @@ private:
 	std::unique_ptr<condition_pair> sync;
 	/// work to be done every cycle
 	std::function<void(void)> work;
+	/// start time of most recent work cycle
+	wall_clock::steady::time_point work_start;
 
 	std::shared_ptr<parallel_region> region;
 };

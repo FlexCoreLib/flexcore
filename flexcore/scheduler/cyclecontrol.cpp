@@ -113,22 +113,32 @@ cycle_control::~cycle_control()
 
 bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 {
+	std::vector<std::reference_wrapper<periodic_task>> done_tasks;
+	done_tasks.reserve(tasks.size());
 	for (auto& task : tasks)
 		if (!task.done())
+		{
 			if (!timeout_callback(task))
 			{
 				keep_working.store(false);
 				return false;
 			}
+		}
+		else
+		{
+			done_tasks.emplace_back(task);
+		}
 
-	for (auto& task : tasks)
+	for (auto& task_ref : done_tasks)
 	{
+		periodic_task& task = task_ref.get();
 		assert(task.done());
 		task.set_work_to_do(true);
 		task.send_switch_tick();
 	}
-	for (auto& task : tasks)
+	for (auto& task_ref : done_tasks)
 	{
+		periodic_task& task = task_ref.get();
 		scheduler_->add_task([&task] { task(); });
 	}
 	return true;
