@@ -184,11 +184,16 @@ void timewarp_main_loop::loop_body(std::function<void(void)> work)
 
 	std::unique_lock<std::mutex> lock(warp_mutex);
 	warp_signal.wait_until(lock,
-			now + cycle_control::min_tick_length * warp_factor);
+			now + cycle_control::min_tick_length * warp_factor,
+			[this, &now]()
+			{
+				return wall_clock::steady::now() >= now + cycle_control::min_tick_length * warp_factor;
+			});
 }
 
 void timewarp_main_loop::set_warp_factor(double factor)
 {
+	std::lock_guard<std::mutex> lock(warp_mutex);
 	warp_factor = factor;
 	warp_signal.notify_all();
 }
