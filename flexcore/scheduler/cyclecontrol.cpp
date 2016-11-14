@@ -46,11 +46,11 @@ void cycle_control::stop()
 	if (main_loop_thread.joinable())
 		main_loop_thread.join();
 	// wait for scheduled tasks to finish
-	auto wait_or_throw = [](auto& task_vector)
+	auto wait_or_throw = [this](auto& task_vector)
 	{
 		for (auto& t : task_vector.tasks)
 			if (!t.wait_until_done(slow_tick))
-				throw out_of_time_exception{};
+				timeout_callback(t);
 	};
 	wait_or_throw(tasks_fast);
 	wait_or_throw(tasks_medium);

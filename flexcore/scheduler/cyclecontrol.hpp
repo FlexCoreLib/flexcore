@@ -181,7 +181,7 @@ public:
 
 	/// starts the main loop
 	void start();
-	/// stops the main loop in all threads
+	// halts the main loop without joining worker threads
 	void stop();
 
 	/// advances the clock by a single tick and executes all tasks for the cycle.
