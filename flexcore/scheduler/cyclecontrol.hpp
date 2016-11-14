@@ -201,6 +201,8 @@ public:
 
 	std::exception_ptr last_exception();
 
+	void set_main_loop(const std::shared_ptr<main_loop>& loop);
+
 private:
 	struct tick_task_pair
 	{

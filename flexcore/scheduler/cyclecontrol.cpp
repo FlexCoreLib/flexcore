@@ -169,6 +169,13 @@ std::exception_ptr cycle_control::last_exception()
 	return except;
 }
 
+void cycle_control::set_main_loop(const std::shared_ptr<main_loop>& loop)
+{
+	assert(!running);
+	main_loop_ = loop;
+	main_loop_->wait_for_current_tasks = [this](){ wait_for_current_tasks(); };
+}
+
 void realtime_main_loop::loop_body(std::function<void(void)> work)
 {
 	const auto now = wall_clock::steady::now();
