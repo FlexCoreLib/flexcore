@@ -31,11 +31,10 @@ void cycle_control::start()
 	keep_working.store(true);
 	running = true;
 	// give the main thread some actual work to do (execute infinite main loop)
-	auto worker = [this](){ work(); };
 	main_loop_thread = std::thread{
-		[&, worker](){
+		[&, this](){
 			while(keep_working.load())
-				main_loop_->loop_body([worker](){worker();});
+				main_loop_->loop_body([this](){ work(); });
 		}
 	};
 }
@@ -72,7 +71,7 @@ void cycle_control::work()
 	auto run_if_due = [this, now](auto& task_vector)
 	{
 		if (now % task_vector.tick == virtual_clock::duration::zero())
-			if (!run_periodic_tasks(task_vector.tasks))
+			if (!run_periodic_tasks(task_vector))
 				return false;
 		return true;
 	};
@@ -111,11 +110,11 @@ cycle_control::~cycle_control()
 	stop();
 }
 
-bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
+bool cycle_control::run_periodic_tasks(tick_task_pair& tasks)
 {
-	std::vector<std::reference_wrapper<periodic_task>> done_tasks;
-	done_tasks.reserve(tasks.size());
-	for (auto& task : tasks)
+	assert(tasks.done_tasks.empty());
+	for (auto& task : tasks.tasks)
+	{
 		if (!task.done())
 		{
 			if (!timeout_callback(task))
@@ -123,24 +122,25 @@ bool cycle_control::run_periodic_tasks(std::vector<periodic_task>& tasks)
 				keep_working.store(false);
 				return false;
 			}
+			if (!task.done())
+				continue;
 		}
-		else
-		{
-			done_tasks.emplace_back(task);
-		}
+		tasks.done_tasks.emplace_back(task);
+	}
 
-	for (auto& task_ref : done_tasks)
+	for (auto& task_ref : tasks.done_tasks)
 	{
 		periodic_task& task = task_ref.get();
 		assert(task.done());
 		task.set_work_to_do(true);
 		task.send_switch_tick();
 	}
-	for (auto& task_ref : done_tasks)
+	for (auto& task_ref : tasks.done_tasks)
 	{
 		periodic_task& task = task_ref.get();
 		scheduler_->add_task([&task] { task(); });
 	}
+	tasks.done_tasks.clear();
 	return true;
 }
 
@@ -176,14 +176,14 @@ void cycle_control::set_main_loop(const std::shared_ptr<main_loop>& loop)
 	main_loop_->wait_for_current_tasks = [this](){ wait_for_current_tasks(); };
 }
 
-void realtime_main_loop::loop_body(std::function<void(void)> work)
+void realtime_main_loop::loop_body(const std::function<void(void)>& work)
 {
 	const auto now = wall_clock::steady::now();
 	work();
 	std::this_thread::sleep_until(now + cycle_control::min_tick_length);
 }
 
-void timewarp_main_loop::loop_body(std::function<void(void)> work)
+void timewarp_main_loop::loop_body(const std::function<void(void)>& work)
 {
 	const auto now = wall_clock::steady::now();
 	wait_for_current_tasks();
@@ -205,7 +205,7 @@ void timewarp_main_loop::set_warp_factor(double factor)
 	warp_signal.notify_all();
 }
 
-void afap_main_loop::loop_body(std::function<void(void)> work)
+void afap_main_loop::loop_body(const std::function<void(void)>& work)
 {
 	wait_for_current_tasks();
 	work();

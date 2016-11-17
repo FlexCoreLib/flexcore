@@ -45,13 +45,13 @@ struct periodic_task final
 	{
 	}
 	/// Construct a periodic task executes work within a region
-	periodic_task(std::shared_ptr<parallel_region> r) :
+	explicit periodic_task(const std::shared_ptr<parallel_region>& r) :
 				work_to_do(false),
 				sync(std::make_unique<condition_pair>()),
+				work(r->ticks.in_work()),
 				work_start(wall_clock::steady::now()),
 				region(r)
 	{
-		work = region->ticks.in_work();
 	}
 
 	bool done()
@@ -113,7 +113,7 @@ private:
 class main_loop
 {
 public:
-	virtual void loop_body(std::function<void(void)> work) = 0;
+	virtual void loop_body(const std::function<void(void)>& work) = 0;
 	virtual ~main_loop() = default;
 
 	std::function<void(void)> wait_for_current_tasks{};
@@ -125,7 +125,7 @@ public:
 class afap_main_loop : public main_loop
 {
 public:
-	void loop_body(std::function<void(void)> work) override;
+	void loop_body(const std::function<void(void)>& work) override;
 
 };
 
@@ -135,7 +135,7 @@ public:
 class realtime_main_loop : public main_loop
 {
 public:
-	void loop_body(std::function<void(void)> work) override;
+	void loop_body(const std::function<void(void)>& work) override;
 };
 
 /**
@@ -144,7 +144,7 @@ public:
 class timewarp_main_loop : public main_loop
 {
 public:
-	void loop_body(std::function<void(void)> work) override;
+	void loop_body(const std::function<void(void)>& work) override;
 
 	void set_warp_factor(double factor);
 
@@ -208,10 +208,11 @@ private:
 	{
 		virtual_clock::steady::duration tick;
 		std::vector<periodic_task> tasks{};
+		std::vector<std::reference_wrapper<periodic_task>> done_tasks{};
 	};
 
 	/// runs the tasks in this vector; returns false if any task is not done, true otherwise
-	bool run_periodic_tasks(std::vector<periodic_task>& tasks);
+	bool run_periodic_tasks(tick_task_pair& tasks);
 	void wait_for_current_tasks();
 
 	tick_task_pair tasks_slow{slow_tick};
