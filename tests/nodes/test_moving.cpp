@@ -7,7 +7,7 @@ using namespace fc;
 struct move_node : tree_base_node
 {
 	static constexpr const char* default_name = "move_node";
-	move_node(const node_args& args)
+	explicit move_node(const node_args& args)
 	    : tree_base_node(args)
 	    , x(this, [] { return 3; })
 		, y(this, [this](int i){ test_val = i;})
