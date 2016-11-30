@@ -33,6 +33,7 @@ public:
 			constraint_t constraint)
 	{
 		assert(constraint(initial_v));
+		(void)(constraint); //prevent unused variable warning with NDEBUG.
 		// since this setting never changes,
 		// we just call the setter with the initial value and be done.
 		// id can be ignored
