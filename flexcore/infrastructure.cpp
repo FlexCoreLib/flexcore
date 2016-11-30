@@ -28,7 +28,7 @@ private:
 class region_factory : public std::enable_shared_from_this<region_factory>
 {
 public:
-	region_factory(thread::cycle_control& scheduler) : scheduler(scheduler) {}
+	explicit region_factory(thread::cycle_control& scheduler) : scheduler(scheduler) {}
 
 	/// Creates a new region and connects it to the scheduler with a periodic task.
 	std::shared_ptr<parallel_region> new_region(const std::string& name,
