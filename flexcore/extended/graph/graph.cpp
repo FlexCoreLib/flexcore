@@ -2,6 +2,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 #include <mutex>
 
@@ -62,6 +63,18 @@ struct vertex_printer
 
 connection_graph::connection_graph()
 	: pimpl(std::make_unique<impl>())
+{
+}
+
+graph_node_properties::graph_node_properties(const std::string& name,
+		parallel_region* region,
+		unique_id id)
+    : human_readable_name(name), id(id), region_(region)
+{
+}
+
+graph_node_properties::graph_node_properties(const std::string& name, parallel_region* region)
+	: graph_node_properties(name, region, boost::uuids::random_generator()())
 {
 }
 
