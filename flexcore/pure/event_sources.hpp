@@ -13,8 +13,6 @@
 #include <flexcore/pure/port_connection.hpp>
 #include <flexcore/pure/detail/active_connection_proxy.hpp>
 
-#include <iostream>
-
 namespace fc
 {
 namespace pure
