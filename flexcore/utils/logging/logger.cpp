@@ -148,7 +148,7 @@ logger::logger()
 class log_client::log_client_impl
 {
 public:
-	log_client_impl(const node* node_)
+	explicit log_client_impl(const node* node_)
 	    : lg(keywords::channel = (node_ ? node_->graph_info().name() : "(null)"))
 	{
 	}

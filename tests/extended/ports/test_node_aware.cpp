@@ -9,7 +9,7 @@ template<class base>
 struct useless_mixin : public base
 {
 	template <class ... args>
-	useless_mixin(args&&... base_constructor_args)
+	explicit useless_mixin(args&&... base_constructor_args)
 		: base(std::forward<args>(base_constructor_args)...)
 	{
 	}

@@ -36,7 +36,7 @@ enum class level : char
 class stream_handle
 {
 public:
-	stream_handle(std::function<void()> deleter);
+	explicit stream_handle(std::function<void()> deleter);
 
 	// moveable, but not copyable
 	stream_handle(const stream_handle&) = delete;

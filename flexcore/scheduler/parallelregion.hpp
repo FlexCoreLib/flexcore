@@ -73,6 +73,7 @@ public:
 
 	parallel_region(const parallel_region&) = delete;
 	parallel_region(parallel_region&&) = default;
+	virtual ~parallel_region() = default;
 
 	region_id get_id() const;
 	virtual_clock::steady::duration get_duration() const;

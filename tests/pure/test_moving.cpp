@@ -18,7 +18,7 @@ namespace
 class move_token
 {
 public:
-	move_token(std::string v) noexcept : value_(v) {}
+	explicit move_token(std::string v) noexcept : value_(v) {}
 	move_token() = default;
 	move_token(move_token&) = delete;
 	move_token(move_token&&) = default;

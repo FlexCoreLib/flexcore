@@ -17,7 +17,7 @@ struct constructor_count
  */
 struct movable_connectable
 {
-	movable_connectable(constructor_count* ptr) : count_{1, 0, 0}, ptr(ptr) {}
+	explicit movable_connectable(constructor_count* ptr) : count_{1, 0, 0}, ptr(ptr) {}
 	movable_connectable(const movable_connectable& other) : count_(other.count_), ptr(other.ptr)
 	{
 		++count_.times_copied;
