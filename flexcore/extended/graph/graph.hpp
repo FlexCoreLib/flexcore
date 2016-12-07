@@ -2,7 +2,6 @@
 #define SRC_GRAPH_GRAPH_HPP_
 
 #include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
 #include <flexcore/scheduler/parallelregion.hpp>
 
 #include <map>
@@ -24,11 +23,12 @@ class graph_node_properties
 public:
 	typedef boost::uuids::uuid unique_id;
 
-	explicit graph_node_properties(const std::string& name, parallel_region* region,
-	                               unique_id id = boost::uuids::random_generator()())
-	    : human_readable_name(name), id(id), region_(region)
-	{
-	}
+	explicit graph_node_properties(const std::string& name,
+			parallel_region* region,
+			unique_id id);
+
+	explicit graph_node_properties(const std::string& name, parallel_region* region);
+
 	explicit graph_node_properties(const std::string& name) : graph_node_properties(name, nullptr)
 	{
 	}
