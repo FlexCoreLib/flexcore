@@ -1,4 +1,5 @@
 #include <flexcore/extended/base_node.hpp>
+#include <flexcore/extended/visualization/visualization.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
 
@@ -104,7 +105,8 @@ std::string owner_holder::name() const
 
 forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
                            std::shared_ptr<parallel_region> r)
-    : fg_(std::make_unique<forest_graph>(graph)), tree_root(nullptr)
+	: fg_(std::make_unique<forest_graph>(graph)), tree_root(nullptr),
+	  viz_(std::make_unique<visualization>())
 {
 	assert(fg_);
 	auto& forest = fg_->forest;
@@ -114,29 +116,11 @@ forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
 	assert(tree_root);
 }
 
-void forest_owner::print_forest(std::ostream& out) const
+forest_owner::~forest_owner() {}
+
+void forest_owner::visualize(std::ostream& out) const
 {
-	auto id = [](auto& node)
-	{
-		return hash_value(node->graph_info().get_id());
-	};
-	out << "{\n";
-	auto range = adobe::preorder_range(fg_->forest);
-	std::vector<std::string> lines;
-	for (auto node = range.first, last = range.second; node != last; ++node)
-	{
-		std::vector<std::string> parents;
-		// first entry in the parents array is the name of the node
-		parents.emplace_back(str(boost::format("\"%s\"") % (*node)->name()));
-		for (auto parent = adobe::find_parent(node.base()); parent != fg_->forest.end();
-		     parent = adobe::find_parent(parent))
-		{
-			parents.emplace_back((boost::format("\"0x%x\"") % id(*parent)).str());
-		}
-		auto parents_str = boost::algorithm::join(parents, ",");
-		lines.emplace_back((boost::format("\t\"0x%x\": [%s]") % id(*node) % parents_str).str());
-	}
-	out << boost::algorithm::join(lines, ",\n");
-	out << "\n}\n";
+	viz_->Visualize(out, fg_->graph, fg_->forest);
 }
+
 }

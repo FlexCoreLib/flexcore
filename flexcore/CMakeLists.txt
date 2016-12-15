@@ -6,6 +6,7 @@ ADD_LIBRARY( flexcore
 	extended/graph/graph.cpp
 	utils/logging/logger.cpp
 	extended/base_node.cpp
+    extended/visualization/visualization.cpp
 	scheduler/clock.cpp
 	scheduler/cyclecontrol.cpp
 	scheduler/parallelregion.cpp

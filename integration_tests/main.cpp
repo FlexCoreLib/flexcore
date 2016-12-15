@@ -75,9 +75,8 @@ int main()
 	string_source_2 >> string_sink;
 
 	{
-		std::ofstream graph_out{"./graph.dot"};
-		std::ofstream forest_out{"./forest.json"};
-		infrastructure.print(graph_out, forest_out);
+		std::ofstream out{"./out.dot"};
+		infrastructure.visualize(out);
 	}
 
 	infrastructure.start_scheduler();
