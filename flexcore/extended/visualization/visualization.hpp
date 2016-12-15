@@ -4,6 +4,7 @@
 #include <ostream>
 
 #include "flexcore/extended/base_node.hpp"
+#include <map>
 
 namespace fc
 {
@@ -19,6 +20,11 @@ public:
 private:
 	void printSubgraph(typename forest_t::const_iterator node, std::ostream& stream,
 					   const graph::connection_graph& graph) const;
+
+	const std::string& getColor(const parallel_region& region) const;
+
+	mutable std::map<std::string, unsigned int> colorMap_;
+	mutable unsigned int currentColorIndex_ = 0;
 };
 
 
