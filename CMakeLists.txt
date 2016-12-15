@@ -39,5 +39,6 @@ ADD_SUBDIRECTORY( flexcore )
 IF( FLEXCORE_ENABLE_TESTS )
 	ADD_SUBDIRECTORY( tests )
 	ADD_SUBDIRECTORY( integration_tests )
+    ADD_SUBDIRECTORY( visualization_test )
 ENDIF()
 

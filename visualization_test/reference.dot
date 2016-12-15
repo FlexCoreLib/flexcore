@@ -1,0 +1,46 @@
+digraph G {
+
+pure_a [label="uint8_t", style="bold, dashed"];
+pure_b [label="uint16_t", style="bold, dashed"];
+
+  
+subgraph cluster_root {
+    label="root";
+    fillcolor="#08B2E3";
+    style="filled, bold, rounded";
+    
+    node_root_ports [shape = "record", label="<1> string|<2>uint16_t"];
+    
+    subgraph cluster_node_a {
+      label="Node A";
+      fillcolor="#AFB689";
+      style="filled, bold, rounded";
+  
+      node_a_ports [shape = "record", label="<1> uint8_t"];
+    }
+
+    subgraph cluster_node_g {
+      label = "Node G";
+      fillcolor="#FFF689";
+      style="filled, bold, rounded";
+      
+      node_g_port_1 [shape = "record", label="int"];
+      node_g_port_2 [shape = "record", label="string"];
+    
+	subgraph cluster_node_u {
+	  label="Node U";
+	  fillcolor="#AFF689";
+	  style="filled, bold, rounded";
+      
+	  node_u_ports [shape = "plaintext", label="", width=0, height=0];
+	}
+  }
+}
+
+pure_a->node_a_ports:1 [arrowhead="dot"]
+pure_b->node_root_ports:2 
+node_root_ports:1->node_g_port_2
+
+
+
+}
