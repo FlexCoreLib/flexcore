@@ -20,6 +20,17 @@ void visualization::Visualize(std::ostream& stream)
 	ports_ = graph_.ports();
 	stream << "digraph G {\n";
 	printSubgraph(forest_.begin(), stream);
+
+	for (auto& edge : graph_.edges())
+	{
+		auto source_node = hash_value(edge.source.node_properties.get_id());
+		auto sink_node = hash_value(edge.sink.node_properties.get_id());
+		auto source_port = hash_value(edge.source.port_properties.id());
+		auto sink_port = hash_value(edge.sink.port_properties.id());
+		stream << source_node << ":" << source_port << "->" << sink_node << ":" << sink_port;
+		stream << "\n";
+	}
+
 	stream << "}\n";
 }
 
@@ -42,7 +53,7 @@ void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& s
 		for (auto & port : ports)
 		{
 			if (first) first = false; else stream << "|";
-			stream << "<" << hash_value(port.id()) << ">" << port.description();
+			stream << "<" << hash_value(port.port_properties.id()) << ">" << port.port_properties.description();
 		}
 		stream << "\"]\n";
 	}
@@ -67,13 +78,13 @@ const std::string& visualization::getColor(const parallel_region& region)
 	return colors[iter->second];
 }
 
-std::vector<graph::graph_port_properties> visualization::extractNodePorts(
+std::vector<graph::graph_properties> visualization::extractNodePorts(
 		graph::graph_port_properties::unique_id nodeID)
 {
-	std::vector<graph::graph_port_properties> result;
+	std::vector<graph::graph_properties> result;
 	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result), [&nodeID](auto& port)
 	{
-		return port.owning_node() == nodeID;
+		return port.port_properties.owning_node() == nodeID;
 	});
 	std::for_each(std::begin(result), std::end(result), [this](auto& port)
 	{

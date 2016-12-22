@@ -20,12 +20,12 @@ public:
 private:
 	void printSubgraph(typename forest_t::const_iterator node, std::ostream& stream);
 	const std::string& getColor(const parallel_region& region);
-	std::vector<graph::graph_port_properties> extractNodePorts(
+	std::vector<graph::graph_properties> extractNodePorts(
 			graph::graph_port_properties::unique_id nodeID);
 
 	std::map<std::string, unsigned int> colorMap_;
 	unsigned int currentColorIndex_ = 0U;
-	std::set<graph::graph_port_properties> ports_;
+	std::set<graph::graph_properties> ports_;
 	const graph::connection_graph& graph_;
 	const forest_t& forest_;
 };

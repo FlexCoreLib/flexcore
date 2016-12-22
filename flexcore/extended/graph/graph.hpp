@@ -3,9 +3,11 @@
 
 #include <boost/uuid/uuid.hpp>
 #include <flexcore/scheduler/parallelregion.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <map>
 #include <set>
+#include <unordered_set>
 
 namespace fc
 {
@@ -55,6 +57,7 @@ public:
 	explicit graph_port_properties(std::string description, unique_id owning_node);
 
 	bool operator<(const graph_port_properties&) const;
+	bool operator==(const graph_port_properties& o) const { return id_ == o.id_; }
 
 	const std::string& description() const { return description_; }
 	unique_id owning_node() const { return owning_node_; }
@@ -64,6 +67,26 @@ private:
 	std::string description_;
 	unique_id owning_node_;
 	unique_id id_;
+};
+
+struct graph_properties
+{
+	typedef boost::uuids::uuid unique_id;
+	graph_properties(graph_node_properties node, graph_port_properties port)
+		: node_properties(std::move(node)), port_properties(std::move(port)) {}
+	graph_node_properties node_properties;
+	graph_port_properties port_properties;
+	bool operator<(const graph_properties& o) const { return port_properties < o.port_properties; }
+	bool operator==(const graph_properties& o) const { return port_properties == o.port_properties; }
+};
+
+struct graph_edge
+{
+	graph_edge(graph_properties source, graph_properties sink)
+		: source(source), sink(sink) {}
+	graph_properties source;
+	graph_properties sink;
+	bool operator==(const graph_edge& o) const { return source == o.source && sink == o.sink; }
 };
 
 /**
@@ -81,12 +104,13 @@ public:
 	connection_graph(const connection_graph&) = delete;
 
 	/// Adds a new Connection without ports to the graph.
-	void add_connection(const graph_node_properties& source_node,
-	                    const graph_node_properties& sink_node);
+	void add_connection(const graph_properties& source_node,
+						const graph_properties& sink_node);
 
-	void add_port(graph_port_properties port_info);
+	void add_port(const graph_properties& port_info);
 
-	const std::set<graph_port_properties>& ports() const;
+	const std::set<graph_properties>& ports() const;
+	const std::unordered_set<graph_edge>& edges() const;
 
 	/// Prints current state of the abstract graph in graphviz format to stream.
 	void print(std::ostream& stream);
@@ -103,5 +127,23 @@ private:
 
 }  // namespace graph
 }  // namespace fc
+
+namespace std
+{
+template<>
+struct hash<fc::graph::graph_edge>
+{
+	size_t operator()(const fc::graph::graph_edge& e) const
+	{
+		size_t seed = 0;
+		boost::hash_combine(seed, e.source.port_properties.id());
+		boost::hash_combine(seed, e.sink.port_properties.id());
+		return seed;
+	}
+};
+
+
+}
+
 
 #endif /* SRC_GRAPH_GRAPH_HPP_ */

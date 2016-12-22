@@ -27,23 +27,26 @@ struct edge
 
 typedef boost::adjacency_list<boost::vecS,          // Store out-edges of each vertex in a std::list
 							  boost::vecS,          // Store vertex set in a std::list
-							  boost::directedS, // The dataflow graph is directed
-							  vertex,                // vertex properties
-							  edge                   // edge properties
+							  boost::directedS,		// The dataflow graph is directed
+							  vertex,               // vertex properties
+							  edge                  // edge properties
 							  > dataflow_graph_t;
 
 struct connection_graph::impl
 {
 	/// Adds a new Connection without ports to the graph.
-	void add_connection(const graph_node_properties& source_node,
-			const graph_node_properties& sink_node);
+	void add_connection(const graph_properties& source_node,
+						const graph_properties& sink_node);
 
-	void add_port(graph_port_properties port_info);
+	void add_port(const graph_properties& port_info);
+
+	const std::set<graph_properties> &ports() const;
+	const std::unordered_set<graph_edge>& edges() const;
 
 	dataflow_graph_t dataflow_graph;
-	std::map<graph_node_properties::unique_id,
-			dataflow_graph_t::vertex_descriptor> vertex_map;
-	std::set<graph_port_properties> port_set;
+	std::map<graph_node_properties::unique_id, dataflow_graph_t::vertex_descriptor> vertex_map;
+	std::unordered_set<graph_edge> edge_set;
+	std::set<graph_properties> port_set;
 
 	mutable std::mutex graph_mutex;
 };
@@ -103,8 +106,8 @@ void connection_graph::print(std::ostream& stream)
 		boost::make_label_writer(boost::get(&edge::name, graph)));
 }
 
-void connection_graph::impl::add_connection(const graph_node_properties& source_node,
-		const graph_node_properties& sink_node)
+void connection_graph::impl::add_connection(const graph_properties& source_node,
+											const graph_properties& sink_node)
 {
 	std::lock_guard<std::mutex> lock(graph_mutex);
 	auto region_to_hash = [] (parallel_region* reg) {
@@ -114,44 +117,64 @@ void connection_graph::impl::add_connection(const graph_node_properties& source_
 		return std::hash<std::string>{}(reg->get_id().key);
 	};
 
+	edge_set.emplace(source_node, sink_node);
+
 	//check if vertex is already included, as add_vertex would add it again.
-	if (vertex_map.find(source_node.get_id()) == vertex_map.end())
+	if (vertex_map.find(source_node.node_properties.get_id()) == vertex_map.end())
 		vertex_map.emplace(
-		    source_node.get_id(),
-		    boost::add_vertex(vertex{source_node.name(), hash_value(source_node.get_id()),
-		                             region_to_hash(source_node.region())},
+			source_node.node_properties.get_id(),
+			boost::add_vertex(vertex{source_node.node_properties.name(), hash_value(source_node.node_properties.get_id()),
+									 region_to_hash(source_node.node_properties.region())},
 		                      dataflow_graph));
 
-	if (vertex_map.find(sink_node.get_id()) == vertex_map.end())
+	if (vertex_map.find(sink_node.node_properties.get_id()) == vertex_map.end())
 		vertex_map.emplace(
-		    sink_node.get_id(),
-		    boost::add_vertex(vertex{sink_node.name(), hash_value(sink_node.get_id()),
-		                             region_to_hash(sink_node.region())},
+			sink_node.node_properties.get_id(),
+			boost::add_vertex(vertex{sink_node.node_properties.name(), hash_value(sink_node.node_properties.get_id()),
+									 region_to_hash(sink_node.node_properties.region())},
 		                      dataflow_graph));
 
-	boost::add_edge(vertex_map[source_node.get_id()],
-			vertex_map[sink_node.get_id()], edge { "" }, dataflow_graph);
+	boost::add_edge(vertex_map[source_node.node_properties.get_id()],
+			vertex_map[sink_node.node_properties.get_id()], edge { "" }, dataflow_graph);
 }
 
-void connection_graph::impl::add_port(graph_port_properties port_info)
+void connection_graph::impl::add_port(const graph_properties& port_info)
 {
-	port_set.emplace(std::move(port_info));
+	std::lock_guard<std::mutex> lock(graph_mutex);
+	port_set.emplace(port_info);
 }
 
-void connection_graph::add_connection(const graph_node_properties& source_node,
-		const graph_node_properties& sink_node)
+const std::set<graph_properties> &connection_graph::impl::ports() const
+{
+	std::lock_guard<std::mutex> lock(graph_mutex);
+	return port_set;
+}
+
+const std::unordered_set<graph_edge> &connection_graph::impl::edges() const
+{
+	std::lock_guard<std::mutex> lock(graph_mutex);
+	return edge_set;
+}
+
+void connection_graph::add_connection(const graph_properties& source_node,
+									  const graph_properties& sink_node)
 {
 	pimpl->add_connection(source_node, sink_node);
 }
 
-void connection_graph::add_port(graph_port_properties port_info)
+void connection_graph::add_port(const graph_properties& port_info)
 {
-	pimpl->add_port(std::move(port_info));
+	pimpl->add_port(port_info);
 }
 
-const std::set<graph_port_properties> &connection_graph::ports() const
+const std::set<graph_properties>& connection_graph::ports() const
 {
-	return pimpl->port_set;
+	return pimpl->ports();
+}
+
+const std::unordered_set<graph_edge>& connection_graph::edges() const
+{
+	return pimpl->edges();
 }
 
 void connection_graph::clear_graph()
