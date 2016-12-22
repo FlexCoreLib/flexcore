@@ -316,6 +316,17 @@ constexpr auto has_sink(int) -> decltype(
 	return true;
 }
 
+template <class T>
+constexpr auto has_token_type(int) -> decltype(std::declval<typename T::token_t>(), bool())
+{
+	return true;
+}
+template <class T>
+constexpr bool has_token_type(...)
+{
+	return false;
+}
+
 ///Checks if type T has an overloaded call operator
 template<class T>
 constexpr auto overloaded(int) -> decltype(&T::operator(), bool())
