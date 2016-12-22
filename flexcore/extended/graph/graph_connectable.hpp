@@ -5,9 +5,8 @@
 #include <flexcore/extended/graph/traits.hpp>
 #include <flexcore/core/connection.hpp>
 #include <flexcore/core/connection_util.hpp>
-
 #include <flexcore/core/detail/connection_utils.hpp>
-#include <flexcore/core/connection_util.hpp>
+#include <flexcore/utils/demangle.hpp>
 
 namespace fc
 {
@@ -42,7 +41,7 @@ struct graph_adder
 template <class T>
 auto port_description() -> std::enable_if_t<has_token_type<T>(0), std::string>
 {
-	return typeid(T).name();
+	return demangle(typeid(typename T::token_t).name());
 }
 
 template <class T>
