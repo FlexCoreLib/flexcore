@@ -5,6 +5,7 @@
 #include <flexcore/scheduler/parallelregion.hpp>
 
 #include <map>
+#include <set>
 
 namespace fc
 {
@@ -53,6 +54,12 @@ public:
 
 	explicit graph_port_properties(std::string description, unique_id owning_node);
 
+	bool operator<(const graph_port_properties&) const;
+
+	const std::string& description() const { return description_; }
+	unique_id owning_node() const { return owning_node_; }
+	unique_id id() const { return id_; }
+
 private:
 	std::string description_;
 	unique_id owning_node_;
@@ -76,6 +83,10 @@ public:
 	/// Adds a new Connection without ports to the graph.
 	void add_connection(const graph_node_properties& source_node,
 	                    const graph_node_properties& sink_node);
+
+	void add_port(graph_port_properties port_info);
+
+	const std::set<graph_port_properties>& ports() const;
 
 	/// Prints current state of the abstract graph in graphviz format to stream.
 	void print(std::ostream& stream);

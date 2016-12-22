@@ -106,7 +106,7 @@ std::string owner_holder::name() const
 forest_owner::forest_owner(graph::connection_graph& graph, std::string n,
                            std::shared_ptr<parallel_region> r)
 	: fg_(std::make_unique<forest_graph>(graph)), tree_root(nullptr),
-	  viz_(std::make_unique<visualization>())
+	  viz_(std::make_unique<visualization>(fg_->graph, fg_->forest))
 {
 	assert(fg_);
 	auto& forest = fg_->forest;
@@ -120,7 +120,7 @@ forest_owner::~forest_owner() {}
 
 void forest_owner::visualize(std::ostream& out) const
 {
-	viz_->Visualize(out, fg_->graph, fg_->forest);
+	viz_->Visualize(out);
 }
 
 }

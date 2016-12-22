@@ -21,7 +21,7 @@ namespace detail
 /// functor to use in connection applyer which adds graph_unfo to list
 struct graph_adder
 {
-	std::vector<graph_node_properties>& node_list;
+	std::vector<std::pair<graph_node_properties, graph_port_properties>>& node_list;
 
 	template<class T>
 	void operator()(T& /*node*/,
@@ -35,7 +35,7 @@ struct graph_adder
 	void operator()(T& node,
 			typename std::enable_if<has_graph_info<T>(0)>::type* = nullptr)
 	{
-		node_list.push_back(node.graph_info);
+		node_list.emplace_back(node.graph_info, node.graph_port_info);
 	}
 };
 
@@ -70,6 +70,7 @@ struct graph_connectable : base_t
 		  graph_port_info(detail::port_description<base_t>(),
 						  graph_info.get_id()), graph(&graph)
 	{
+		graph.add_port(graph_port_info);
 	}
 
 	template <class... base_args>
@@ -110,29 +111,35 @@ private:
 	template<class connection_t>
 	void add_state_connection(connection_t& conn)
 	{
-		std::vector<graph_node_properties> node_list;
+		std::vector<std::pair<graph_node_properties, graph_port_properties>> node_list;
 
 		::fc::detail::apply(detail::graph_adder{node_list}, conn);
 		//state_sink is last, thus added after connection
-		node_list.push_back(graph_info);
+		node_list.emplace_back(graph_info, graph_port_info);
 
 		if (node_list.size() >= 2)
 			for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
-				graph->add_connection(*(it-1), *it);
+				graph->add_connection((it-1)->first, it->first);
+
+		for (auto& node : node_list)
+			graph->add_port(node.second);
 	}
 
 	template<class connection_t>
 	void add_event_connection(connection_t& conn)
 	{
-		std::vector<graph_node_properties> node_list;
+		std::vector<std::pair<graph_node_properties, graph_port_properties>> node_list;
 
 		//event source is first, thus added before connection
-		node_list.push_back(graph_info);
+		node_list.emplace_back(graph_info, graph_port_info);
 		::fc::detail::apply(detail::graph_adder{node_list}, conn);
 
 		if (node_list.size() >= 2)
 			for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
-				graph->add_connection(*(it-1), *it);
+				graph->add_connection((it-1)->first, it->first);
+
+		for (auto& node : node_list)
+			graph->add_port(node.second);
 	}
 };
 

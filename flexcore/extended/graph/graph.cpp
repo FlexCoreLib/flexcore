@@ -38,9 +38,12 @@ struct connection_graph::impl
 	void add_connection(const graph_node_properties& source_node,
 			const graph_node_properties& sink_node);
 
+	void add_port(graph_port_properties port_info);
+
 	dataflow_graph_t dataflow_graph;
 	std::map<graph_node_properties::unique_id,
 			dataflow_graph_t::vertex_descriptor> vertex_map;
+	std::set<graph_port_properties> port_set;
 
 	mutable std::mutex graph_mutex;
 };
@@ -84,6 +87,11 @@ graph_port_properties::graph_port_properties(std::string description, unique_id 
 {
 }
 
+bool graph_port_properties::operator<(const graph_port_properties& o) const
+{
+	return id_ < o.id_;
+}
+
 connection_graph::~connection_graph() = default;
 
 void connection_graph::print(std::ostream& stream)
@@ -125,10 +133,25 @@ void connection_graph::impl::add_connection(const graph_node_properties& source_
 			vertex_map[sink_node.get_id()], edge { "" }, dataflow_graph);
 }
 
+void connection_graph::impl::add_port(graph_port_properties port_info)
+{
+	port_set.emplace(std::move(port_info));
+}
+
 void connection_graph::add_connection(const graph_node_properties& source_node,
 		const graph_node_properties& sink_node)
 {
 	pimpl->add_connection(source_node, sink_node);
+}
+
+void connection_graph::add_port(graph_port_properties port_info)
+{
+	pimpl->add_port(std::move(port_info));
+}
+
+const std::set<graph_port_properties> &connection_graph::ports() const
+{
+	return pimpl->port_set;
 }
 
 void connection_graph::clear_graph()
