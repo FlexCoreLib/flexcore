@@ -38,6 +38,19 @@ struct graph_adder
 		node_list.push_back(node.graph_info);
 	}
 };
+
+template <class T>
+auto port_description() -> std::enable_if_t<has_token_type<T>(0), std::string>
+{
+	return typeid(T).name();
+}
+
+template <class T>
+auto port_description() -> std::enable_if_t<not has_token_type<T>(0), std::string>
+{
+	return "AdHoc";
+}
+
 } // namespace detail
 
 /**
@@ -53,13 +66,18 @@ struct graph_connectable : base_t
 	template <class... base_t_args>
 	graph_connectable(graph::connection_graph& graph, const graph_node_properties& graph_info,
 	                  base_t_args&&... args)
-	: base_t(std::forward<base_t_args>(args)...), graph_info(graph_info), graph(&graph)
+		: base_t(std::forward<base_t_args>(args)...), graph_info(graph_info),
+		  graph_port_info(detail::port_description<base_t>(),
+						  graph_info.get_id()), graph(&graph)
 	{
 	}
+
 	template <class... base_args>
 	graph_connectable(const graph_node_properties& graph_info,
 	                  base_args&&... args)
-	: base_t(std::forward<base_args>(args)...), graph_info(graph_info), graph(nullptr)
+		: base_t(std::forward<base_args>(args)...), graph_info(graph_info),
+		  graph_port_info(detail::port_description<base_t>(),
+						  graph_info.get_id()), graph(nullptr)
 	{
 	}
 
@@ -85,6 +103,7 @@ struct graph_connectable : base_t
 	}
 
 	graph_node_properties graph_info;
+	graph_port_properties graph_port_info;
 	graph::connection_graph* graph;
 
 private:

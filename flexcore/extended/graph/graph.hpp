@@ -44,6 +44,22 @@ private:
 };
 
 /**
+ * \brief Contains the information carried by a port of the dataflow graph
+ */
+class graph_port_properties
+{
+public:
+	typedef boost::uuids::uuid unique_id;
+
+	explicit graph_port_properties(std::string description, unique_id owning_node);
+
+private:
+	std::string description_;
+	unique_id owning_node_;
+	unique_id id_;
+};
+
+/**
  * \brief The abstract connection graph of a flexcore application.
  *
  * Contains all nodes which where declared with the additional information

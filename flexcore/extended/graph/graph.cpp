@@ -78,6 +78,12 @@ graph_node_properties::graph_node_properties(const std::string& name, parallel_r
 {
 }
 
+graph_port_properties::graph_port_properties(std::string description, unique_id owning_node)
+	: description_(std::move(description)), owning_node_(std::move(owning_node)),
+	  id_(boost::uuids::random_generator()())
+{
+}
+
 connection_graph::~connection_graph() = default;
 
 void connection_graph::print(std::ostream& stream)
