@@ -27,6 +27,7 @@ struct event_sink
 {
 	typedef typename detail::handle_type<event_t>::type handler_t;
 	typedef void result_t;
+	typedef event_t token_t;
 
 	/**
 	 * \brief Construct event_sink with action to execute in events
