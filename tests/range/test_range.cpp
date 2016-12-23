@@ -1,13 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <flexcore/core/connection.hpp>
-#include <flexcore/pure/state_sources.hpp>
-#include <flexcore/pure/state_sink.hpp>
-
 #include <flexcore/range/actions.hpp>
-
-#include <boost/range/any_range.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 
 using namespace fc;
 
@@ -34,16 +28,15 @@ BOOST_AUTO_TEST_CASE(test_actions)
 BOOST_AUTO_TEST_CASE(test_zip)
 {
 	std::vector<int> vec {0, 1, 2, 3, 4};
-	std::vector<int> correct_result {0,1,4,9,16};
+	std::vector<int> squared_vec {0,1,4,9,16};
 
-	auto source = [&vec](){ return boost::make_iterator_range(std::begin(vec), std::end(vec)); };
+	auto source = [vec](){ return vec; };
 
 	auto connection = source
 			>> actions::zip([](auto a, auto b){return a*b;}, vec);
 
-	std::vector<int> result;
-	boost::push_back(result, connection());
-	BOOST_CHECK(result == correct_result);
+	std::vector<int> result = connection();
+	BOOST_CHECK(result == squared_vec);
 }
 
 

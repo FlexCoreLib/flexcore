@@ -119,7 +119,6 @@ auto filter(predicate pred)
 template<class binop, class param_range>
 struct zip_action
 {
-	///
 	template<class in_range>
 	auto operator()(in_range input)
 	{
