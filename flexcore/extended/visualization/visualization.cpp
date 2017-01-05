@@ -22,6 +22,11 @@ void visualization::Visualize(std::ostream& stream)
 	stream << "digraph G {\n";
 	printSubgraph(forest_.begin(), stream);
 
+	// these are the ports wich are not part of the forest (ad hoc created) with graph::named
+	std::vector<graph::graph_properties> named_ports;
+	std::copy(std::begin(ports_), std::end(ports_), std::back_inserter(named_ports));
+	printPorts(named_ports, 0U, stream);
+
 	for (auto& edge : graph_.edges())
 	{
 		auto source_node = hash_value(edge.source.node_properties.get_id());
@@ -49,14 +54,7 @@ void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& s
 	if (ports.empty()) {
 		stream << uuid << "[shape=\"plaintext\", label=\"\", width=0, height=0];\n";
 	} else {
-		stream << uuid << "[shape =\"record\", label=\"";
-		bool first = true;
-		for (auto & port : ports)
-		{
-			if (first) first = false; else stream << "|";
-			stream << "<" << hash_value(port.port_properties.id()) << ">" << port.port_properties.description();
-		}
-		stream << "\"]\n";
+		printPorts(ports, uuid, stream);
 	}
 
 	for (auto iter =  adobe::child_begin(node); iter != adobe::child_end(node); ++iter)
@@ -97,6 +95,40 @@ std::vector<graph::graph_properties> visualization::extractNodePorts(
 		ports_.erase(port);
 	});
 	return result;
+}
+
+void visualization::printPorts(const std::vector<graph::graph_properties>& ports,
+							   unsigned long owner_hash, std::ostream& stream)
+{
+	if (ports.empty()) {
+		return;
+	}
+
+	// multiple ports per node: "default case"
+	if (owner_hash != 0U)
+	{
+		stream << owner_hash << "[shape=\"record\", label=\"";
+		bool first = true;
+		for (auto & port : ports)
+		{
+			if (first) first = false; else stream << "|";
+			stream << "<" << hash_value(port.port_properties.id()) << ">"
+				   << port.port_properties.description();
+		}
+		stream << "\"]\n";
+	} else
+	{
+		// named ports with pseudo node
+		bool first = true;
+		for (auto & port : ports)
+		{
+			stream << hash_value(port.node_properties.get_id()) << "[shape=\"record\", style=\"dashed\", label=\"";
+			if (first) first = false; else stream << "|";
+			stream << "<" << hash_value(port.port_properties.id()) << ">"
+				   << port.port_properties.description();
+			stream << "\"]\n";
+		}
+	}
 }
 
 }

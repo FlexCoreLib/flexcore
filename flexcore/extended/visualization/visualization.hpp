@@ -18,10 +18,13 @@ public:
 	void Visualize(std::ostream& stream);
 
 private:
-	void printSubgraph(typename forest_t::const_iterator node, std::ostream& stream);
 	const std::string& getColor(const parallel_region* region);
+	void printSubgraph(typename forest_t::const_iterator node, std::ostream& stream);
 	std::vector<graph::graph_properties> extractNodePorts(
-			graph::graph_port_properties::unique_id nodeID);
+			graph::graph_port_properties::unique_id nodeID
+	);
+	void printPorts(const std::vector<graph::graph_properties>& ports,  unsigned long owner_hash,
+					std::ostream& stream);
 
 	std::map<std::string, unsigned int> colorMap_;
 	unsigned int currentColorIndex_ = 0U;

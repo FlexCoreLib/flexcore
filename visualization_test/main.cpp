@@ -34,6 +34,9 @@ int main()
 	event_source<std::string> root_port_1(&root_node);
 	event_sink<uint16_t> root_port_2(&root_node, [](auto&&) {});
 
+	auto ad_hoc_sink = graph::named([](auto&&) {}, "My AdHoc Sink");
+	root_port_1 >> ad_hoc_sink;
+
 	event_sink<std::string> nodeG_port1(&node_g, [](auto&&) {});
 	event_sink<int> nodeG_port2(&node_g, [](auto&&) {});
 
