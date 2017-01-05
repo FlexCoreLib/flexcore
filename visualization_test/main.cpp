@@ -35,14 +35,17 @@ int main()
 	event_sink<uint16_t> root_port_2(&root_node, [](auto&&) {});
 
 	event_sink<std::string> nodeG_port1(&node_g, [](auto&&) {});
-	event_sink<int> nodeG_port2(&node_g, [](auto&&) {});
+	event_source<int> nodeG_port2(&node_g);
 
-	auto pure_source_1 = graph::named(pure::state_source<uint8_t>{[]{ return 42; }}, "My Pure Port 1");
-	auto pure_source_2 = graph::named(pure::event_source<uint16_t>{}, "My Pure Port 2");
+	auto pure_named_source_1 = graph::named(pure::state_source<uint8_t>{[]{ return 42; }},
+											"My Pure Port 1");
+	auto pure_named_source_2 = graph::named(pure::event_source<uint16_t>{},
+											"My Pure Port 2");
 
+	nodeG_port2 >> [](auto&&){};
 	root_port_1 >> nodeG_port1;
-	pure_source_1 >> nodeA_port;
-	pure_source_2 >> root_port_2;
+	pure_named_source_1 >> nodeA_port;
+	pure_named_source_2 >> root_port_2;
 
 	{
 		std::ofstream out{"./out.dot"};

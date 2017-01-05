@@ -29,7 +29,12 @@ struct graph_adder
 	void operator()(T& /*node*/,
 			typename std::enable_if<!has_graph_info<T>(0)>::type* = nullptr)
 	{
-		//do nothing for connectables which is not graph_connectable
+		// for each pure_port without connectable wrapping we generate a pseudo node
+		// it will be invisible so the name does not matter
+		graph_node_properties node_info{"pure"};
+		graph_port_properties port_info{"pure", node_info.get_id(),
+										graph_port_properties::port_type::UNDEFINED, true};
+		node_list.emplace_back(std::move(node_info), std::move(port_info));
 	}
 
 	 //non_const ref, because applyer might forward non_const

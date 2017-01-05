@@ -50,13 +50,21 @@ void visualization::Visualize(std::ostream& stream)
 		auto sink_node = hash_value(edge.sink.node_properties.get_id());
 		auto source_port = hash_value(edge.source.port_properties.id());
 		auto sink_port = hash_value(edge.sink.port_properties.id());
+		using port_type = graph::graph_port_properties::port_type;
 
-		stream << source_node << ":" << source_port << "->" << sink_node << ":" << sink_port;
+		stream << source_node;
+
+		if (!edge.source.port_properties.pure())
+			stream << ":" << source_port;
+
+		stream << "->" << sink_node;
+
+		if (!edge.sink.port_properties.pure())
+			stream << ":" << sink_port;
 
 		// draw arrow differently based on whether it is an event or state
-		auto type = merge_types(edge.source, edge.sink);
-		using port_type = graph::graph_port_properties::port_type;
-		if (type == port_type::STATE)
+		auto merged_type = merge_types(edge.source, edge.sink);
+		if (merged_type == port_type::STATE)
 		{
 			stream << "[arrowhead=\"dot\"]";
 		}
@@ -149,11 +157,17 @@ void visualization::printPorts(const std::vector<graph::graph_properties>& ports
 		// named ports with pseudo node
 		for (auto & port : ports)
 		{
-			stream << hash_value(port.node_properties.get_id())
-				   << "[shape=\"record\", style=\"dashed\", label=\"";
-			stream << "<" << hash_value(port.port_properties.id()) << ">"
-				   << port.port_properties.description();
-			stream << "\"]\n";
+			stream << hash_value(port.node_properties.get_id());
+
+			if (port.port_properties.pure()) {
+				stream << "[shape=\"plaintext\", label=\"\", width=0, height=0, fixedsize=true];\n";
+				continue;
+			}
+
+			stream << "[shape=\"record\", style=\"dashed\", label=\"";
+			stream << "<" << hash_value(port.port_properties.id()) << ">";
+			stream << port.port_properties.description();
+			stream << "\"];\n";
 		}
 	}
 }

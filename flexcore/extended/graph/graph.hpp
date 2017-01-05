@@ -59,7 +59,8 @@ public:
 		STATE
 	};
 
-	explicit graph_port_properties(std::string description, unique_id owning_node, port_type type);
+	explicit graph_port_properties(std::string description, unique_id owning_node, port_type type,
+								   bool isPure = false);
 
 	template<class T>
 	static port_type to_port_type()
@@ -79,12 +80,14 @@ public:
 	unique_id owning_node() const { return owning_node_; }
 	unique_id id() const { return id_; }
 	port_type type() const { return type_; };
+	bool pure() const { return pure_; };
 
 private:
 	std::string description_;
 	unique_id owning_node_;
 	unique_id id_;
 	port_type type_;
+	bool pure_;
 };
 
 struct graph_properties
