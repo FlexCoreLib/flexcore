@@ -5,6 +5,7 @@
 namespace fc
 {
 
+static const std::string no_region_color = "#ffffff";
 static const std::array<std::string, 15> colors
 {{"#d7aee6", "#eee4a5", "#a4b9e8", "#efb98d", "#71cdeb", "#f6a39f", "#8adbd3", "#eda4c1", "#97d1aa",
 "#ddc1e8", "#b6c68f", "#e8b0ac", "#d0f0c0", "#c9af8b", "#e6cda6"}};
@@ -42,7 +43,7 @@ void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& s
 	stream << "subgraph cluster_" << uuid << " {\n";
 	stream << "label=\"" << name << "\";\n";
 	stream << "style=\"filled, bold, rounded\";\n";
-	stream << "fillcolor=\"" << getColor(*graph_info.region()) <<  "\";\n";
+	stream << "fillcolor=\"" << getColor(graph_info.region()) <<  "\";\n";
 
 	auto ports = extractNodePorts(graph_info.get_id());
 	if (ports.empty()) {
@@ -65,9 +66,14 @@ void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& s
 	stream << "}\n";
 }
 
-const std::string& visualization::getColor(const parallel_region& region)
+const std::string& visualization::getColor(const parallel_region* region)
 {
-	auto key = region.get_id().key;
+	if (region == nullptr)
+	{
+		return no_region_color;
+	}
+
+	auto key = region->get_id().key;
 	auto iter = colorMap_.find(key);
 	if (iter == std::end(colorMap_))
 	{
