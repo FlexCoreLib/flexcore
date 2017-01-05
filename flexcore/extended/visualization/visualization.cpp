@@ -56,9 +56,9 @@ void visualization::Visualize(std::ostream& stream)
 		// draw arrow differently based on whether it is an event or state
 		auto type = merge_types(edge.source, edge.sink);
 		using port_type = graph::graph_port_properties::port_type;
-		if (type == port_type::EVENT)
+		if (type == port_type::STATE)
 		{
-			stream << "[dir=\"back\", arrowtail=\"crow\"]";
+			stream << "[arrowhead=\"dot\"]";
 		}
 
 		stream << ";\n";
@@ -147,12 +147,10 @@ void visualization::printPorts(const std::vector<graph::graph_properties>& ports
 	} else
 	{
 		// named ports with pseudo node
-		bool first = true;
 		for (auto & port : ports)
 		{
 			stream << hash_value(port.node_properties.get_id())
 				   << "[shape=\"record\", style=\"dashed\", label=\"";
-			if (first) first = false; else stream << "|";
 			stream << "<" << hash_value(port.port_properties.id()) << ">"
 				   << port.port_properties.description();
 			stream << "\"]\n";

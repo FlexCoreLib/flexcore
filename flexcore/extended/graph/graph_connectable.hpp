@@ -12,6 +12,9 @@ namespace fc
 {
 namespace graph
 {
+
+class connection_graph;
+
 template<class base_t>
 struct graph_connectable;
 
@@ -49,6 +52,18 @@ auto port_description(const std::string& fallback)
 		-> std::enable_if_t<not has_token_type<T>(0), std::string>
 {
 	return "'" + fallback + "'";
+}
+
+template <class T>
+auto graph_object(const T& connectable) -> std::enable_if_t<has_graph_info<T>(0), connection_graph*>
+{
+	return connectable.graph;
+}
+
+template <class T>
+auto graph_object(const T&) -> std::enable_if_t<not has_graph_info<T>(0), connection_graph*>
+{
+	return nullptr;
 }
 
 } // namespace detail
@@ -89,17 +104,22 @@ struct graph_connectable : base_t
 			class = std::enable_if_t<is_active<base_check>::value>>
 	decltype(auto) connect(arg_t&& conn)
 	{
-		if (!graph)
+		auto current_graph = graph;
+
+		if (!current_graph)
+			current_graph = detail::graph_object(conn);
+
+		if (!current_graph)
 			return base_t::connect(std::forward<arg_t>(conn));
 
 		//traverse connection and build up graph
 		if (is_active_sink<base_t>{}) //condition set at compile_time
 		{
-			add_state_connection(conn);
+			add_state_connection(conn, current_graph);
 		}
 		else if (is_active_source<base_t>{}) //condition set at compile_time
 		{
-			add_event_connection(conn);
+			add_event_connection(conn, current_graph);
 		}
 
 		return base_t::connect(std::forward<arg_t>(conn));
@@ -111,7 +131,7 @@ struct graph_connectable : base_t
 
 private:
 	template<class connection_t>
-	void add_state_connection(connection_t& conn)
+	void add_state_connection(connection_t& conn, graph::connection_graph* current_graph) const
 	{
 		std::vector<graph_properties> node_list;
 
@@ -121,14 +141,14 @@ private:
 
 		if (node_list.size() >= 2)
 			for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
-				graph->add_connection(*(it-1), *it);
+				current_graph->add_connection(*(it-1), *it);
 
 		for (auto& node : node_list)
-			graph->add_port(node);
+			current_graph->add_port(node);
 	}
 
 	template<class connection_t>
-	void add_event_connection(connection_t& conn)
+	void add_event_connection(connection_t& conn, graph::connection_graph* current_graph) const
 	{
 		std::vector<graph_properties> node_list;
 
@@ -138,13 +158,12 @@ private:
 
 		if (node_list.size() >= 2)
 			for(auto it = node_list.begin()+1; it != node_list.end(); ++it)
-				graph->add_connection(*(it-1), *it);
+				current_graph->add_connection(*(it-1), *it);
 
 		for (auto& node : node_list)
-			graph->add_port(node);
+			current_graph->add_port(node);
 	}
 };
-
 
 template<class base_t>
 auto make_graph_connectable(const base_t& base,
