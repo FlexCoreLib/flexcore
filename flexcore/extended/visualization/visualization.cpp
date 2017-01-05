@@ -81,7 +81,7 @@ const std::string& visualization::getColor(const parallel_region* region)
 		assert(currentColorIndex_ < colors.size());
 		++currentColorIndex_;
 	}
-	return colors[iter->second];
+	return colors.at(iter->second);
 }
 
 std::vector<graph::graph_properties> visualization::extractNodePorts(
