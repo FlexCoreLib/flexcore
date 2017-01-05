@@ -123,14 +123,16 @@ void connection_graph::impl::add_connection(const graph_properties& source_node,
 	if (vertex_map.find(source_node.node_properties.get_id()) == vertex_map.end())
 		vertex_map.emplace(
 			source_node.node_properties.get_id(),
-			boost::add_vertex(vertex{source_node.node_properties.name(), hash_value(source_node.node_properties.get_id()),
+			boost::add_vertex(vertex{source_node.node_properties.name(),
+									 hash_value(source_node.node_properties.get_id()),
 									 region_to_hash(source_node.node_properties.region())},
 		                      dataflow_graph));
 
 	if (vertex_map.find(sink_node.node_properties.get_id()) == vertex_map.end())
 		vertex_map.emplace(
 			sink_node.node_properties.get_id(),
-			boost::add_vertex(vertex{sink_node.node_properties.name(), hash_value(sink_node.node_properties.get_id()),
+			boost::add_vertex(vertex{sink_node.node_properties.name(),
+									 hash_value(sink_node.node_properties.get_id()),
 									 region_to_hash(sink_node.node_properties.region())},
 		                      dataflow_graph));
 

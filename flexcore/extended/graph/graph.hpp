@@ -77,7 +77,8 @@ struct graph_properties
 	graph_node_properties node_properties;
 	graph_port_properties port_properties;
 	bool operator<(const graph_properties& o) const { return port_properties < o.port_properties; }
-	bool operator==(const graph_properties& o) const { return port_properties == o.port_properties; }
+	bool operator==(const graph_properties& o) const
+			{ return port_properties == o.port_properties; }
 };
 
 struct graph_edge

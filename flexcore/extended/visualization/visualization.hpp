@@ -1,10 +1,10 @@
 #ifndef SRC_VISUALIZATION_HPP_
 #define SRC_VISUALIZATION_HPP_
 
-#include <ostream>
-
 #include <flexcore/extended/base_node.hpp>
 #include <flexcore/extended/graph/graph.hpp>
+
+#include <ostream>
 #include <map>
 
 namespace fc
@@ -32,7 +32,6 @@ private:
 	const graph::connection_graph& graph_;
 	const forest_t& forest_;
 };
-
 
 }
 

@@ -19,6 +19,8 @@ void visualization::Visualize(std::ostream& stream)
 {
 	currentColorIndex_ = 0U;
 	ports_ = graph_.ports();
+
+	// nodes with their ports that are part of the forest
 	stream << "digraph G {\n";
 	printSubgraph(forest_.begin(), stream);
 
@@ -86,7 +88,8 @@ std::vector<graph::graph_properties> visualization::extractNodePorts(
 		graph::graph_port_properties::unique_id nodeID)
 {
 	std::vector<graph::graph_properties> result;
-	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result), [&nodeID](auto& port)
+	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result),
+	[&nodeID](auto& port)
 	{
 		return port.port_properties.owning_node() == nodeID;
 	});
@@ -122,7 +125,8 @@ void visualization::printPorts(const std::vector<graph::graph_properties>& ports
 		bool first = true;
 		for (auto & port : ports)
 		{
-			stream << hash_value(port.node_properties.get_id()) << "[shape=\"record\", style=\"dashed\", label=\"";
+			stream << hash_value(port.node_properties.get_id())
+				   << "[shape=\"record\", style=\"dashed\", label=\"";
 			if (first) first = false; else stream << "|";
 			stream << "<" << hash_value(port.port_properties.id()) << ">"
 				   << port.port_properties.description();
