@@ -39,15 +39,16 @@ struct graph_adder
 };
 
 template <class T>
-auto port_description() -> std::enable_if_t<has_token_type<T>(0), std::string>
+auto port_description(const std::string&) -> std::enable_if_t<has_token_type<T>(0), std::string>
 {
 	return demangle(typeid(typename T::token_t).name());
 }
 
 template <class T>
-auto port_description() -> std::enable_if_t<not has_token_type<T>(0), std::string>
+auto port_description(const std::string& fallback)
+		-> std::enable_if_t<not has_token_type<T>(0), std::string>
 {
-	return "AdHoc";
+	return "'" + fallback + "'";
 }
 
 } // namespace detail
@@ -66,7 +67,7 @@ struct graph_connectable : base_t
 	graph_connectable(graph::connection_graph& graph, const graph_node_properties& graph_info,
 	                  base_t_args&&... args)
 		: base_t(std::forward<base_t_args>(args)...), graph_info(graph_info),
-		  graph_port_info(detail::port_description<base_t>(),
+		  graph_port_info(detail::port_description<base_t>(graph_info.name()),
 						  graph_info.get_id()), graph(&graph)
 	{
 		graph.add_port({graph_info, graph_port_info});
@@ -76,7 +77,7 @@ struct graph_connectable : base_t
 	graph_connectable(const graph_node_properties& graph_info,
 	                  base_args&&... args)
 		: base_t(std::forward<base_args>(args)...), graph_info(graph_info),
-		  graph_port_info(detail::port_description<base_t>(),
+		  graph_port_info(detail::port_description<base_t>(graph_info.name()),
 						  graph_info.get_id()), graph(nullptr)
 	{
 	}
