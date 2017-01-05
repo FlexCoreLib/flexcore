@@ -68,7 +68,8 @@ struct graph_connectable : base_t
 	                  base_t_args&&... args)
 		: base_t(std::forward<base_t_args>(args)...), graph_info(graph_info),
 		  graph_port_info(detail::port_description<base_t>(graph_info.name()),
-						  graph_info.get_id()), graph(&graph)
+						  graph_info.get_id(), graph_port_properties::to_port_type<base_t>()),
+		  graph(&graph)
 	{
 		graph.add_port({graph_info, graph_port_info});
 	}
@@ -78,7 +79,8 @@ struct graph_connectable : base_t
 	                  base_args&&... args)
 		: base_t(std::forward<base_args>(args)...), graph_info(graph_info),
 		  graph_port_info(detail::port_description<base_t>(graph_info.name()),
-						  graph_info.get_id()), graph(nullptr)
+						  graph_info.get_id(), graph_port_properties::to_port_type<base_t>()),
+		  graph(nullptr)
 	{
 	}
 
@@ -153,9 +155,9 @@ auto make_graph_connectable(const base_t& base,
 
 ///Creates a graph_connectable with a human readable name.
 template<class base_t>
-auto named(const base_t& con, const std::string& name)
+auto named(base_t&& con, const std::string& name)
 {
-	return graph_connectable<base_t>{graph_node_properties{name}, con};
+	return graph_connectable<base_t>{graph_node_properties{name}, std::forward<base_t>(con)};
 }
 
 }  // namespace graph

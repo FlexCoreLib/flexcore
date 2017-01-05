@@ -449,6 +449,17 @@ is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
 
+template<class T>
+struct is_event_port: std::integral_constant<bool,
+is_active_source<T>{} || is_passive_sink<T>{}>
+{
+};
+
+template<class T>
+struct is_state_port: std::integral_constant<bool,
+is_active_sink<T>{} || is_passive_source<T>{}>
+{
+};
 /** @}*/ //doxygen group traits
 
 } // namespace fc

@@ -53,8 +53,24 @@ class graph_port_properties
 {
 public:
 	typedef boost::uuids::uuid unique_id;
+	enum class port_type {
+		UNDEFINED,
+		EVENT,
+		STATE
+	};
 
-	explicit graph_port_properties(std::string description, unique_id owning_node);
+	explicit graph_port_properties(std::string description, unique_id owning_node, port_type type);
+
+	template<class T>
+	static port_type to_port_type()
+	{
+		if (is_event_port<T>{})
+			return port_type::EVENT;
+		else if (is_state_port<T>{})
+			return port_type::STATE;
+		else
+			return port_type::UNDEFINED;
+	}
 
 	bool operator<(const graph_port_properties&) const;
 	bool operator==(const graph_port_properties& o) const { return id_ == o.id_; }
@@ -62,11 +78,13 @@ public:
 	const std::string& description() const { return description_; }
 	unique_id owning_node() const { return owning_node_; }
 	unique_id id() const { return id_; }
+	port_type type() const { return type_; };
 
 private:
 	std::string description_;
 	unique_id owning_node_;
 	unique_id id_;
+	port_type type_;
 };
 
 struct graph_properties

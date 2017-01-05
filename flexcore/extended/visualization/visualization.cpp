@@ -5,6 +5,21 @@
 namespace fc
 {
 
+static graph::graph_port_properties::port_type merge_types(
+		const graph::graph_properties& source_node,
+		const graph::graph_properties& sink_node)
+{
+	using port_type = graph::graph_port_properties::port_type;
+	port_type result = source_node.port_properties.type();
+	if (result == port_type::UNDEFINED)
+	{
+		auto sink_type = sink_node.port_properties.type();
+		assert(sink_type != port_type::UNDEFINED);
+		result = sink_type;
+	}
+	return result;
+}
+
 static const std::string no_region_color = "#ffffff";
 static const std::array<std::string, 15> colors
 {{"#d7aee6", "#eee4a5", "#a4b9e8", "#efb98d", "#71cdeb", "#f6a39f", "#8adbd3", "#eda4c1", "#97d1aa",
@@ -35,8 +50,18 @@ void visualization::Visualize(std::ostream& stream)
 		auto sink_node = hash_value(edge.sink.node_properties.get_id());
 		auto source_port = hash_value(edge.source.port_properties.id());
 		auto sink_port = hash_value(edge.sink.port_properties.id());
+
 		stream << source_node << ":" << source_port << "->" << sink_node << ":" << sink_port;
-		stream << "\n";
+
+		// draw arrow differently based on whether it is an event or state
+		auto type = merge_types(edge.source, edge.sink);
+		using port_type = graph::graph_port_properties::port_type;
+		if (type == port_type::EVENT)
+		{
+			stream << "[dir=\"back\", arrowtail=\"crow\"]";
+		}
+
+		stream << ";\n";
 	}
 
 	stream << "}\n";
