@@ -16,6 +16,7 @@ if(DOXYGEN_FOUND)
 		VERBATIM
 	)
 	
+	#add cereal doc target (which is only called doc up to 1.2.1)
 	add_dependencies(flexcore_doc doc)
 	
 endif(DOXYGEN_FOUND)
