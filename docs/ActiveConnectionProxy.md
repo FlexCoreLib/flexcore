@@ -1,3 +1,5 @@
+#ActiveConnectionProxy
+
 Active connection proxies are temporary objects used in the creation of connections between ports.
 They only appear when an __ActiveConnectable__ is connected.
 
@@ -13,7 +15,7 @@ When the proxy reaches a passive_connectable, the connection stored within the p
 
 Creation and use of active connection proxies is completely symmetric for events and states. The only difference is that for events the source is active, and thus the proxy is built from left to right while for states the sink is active and the proxy thus built from right to left. 
 
-![2015-11-02_ActiveConnectionProxy](/uploads/4ef88fabc1ccab427a25f173dba23b57/2015-11-02_ActiveConnectionProxy.png)
+![2015-11-02_ActiveConnectionProxy](2015-11-02_ActiveConnectionProxy.png)
 
 Due to operator precedence rules in the typical chain of connections
 
@@ -22,9 +24,9 @@ Due to operator precedence rules in the typical chain of connections
 an `active_connection_proxy` will _NOT_ be created, as simple `connection` objects are sufficient.
 
 Active connection proxy objects may be stored in a variable, but cannot be used to connect more than once. Therefore it is necessary to `std::move` the variable storing the proxy when connecting the next connectable to it.
-```cpp
+~~~{.cpp}
 auto proxy = active >> connectable;
 // proxy >> passive; // BAD! does not compile
 std::move(proxy) >> passive; // GOOD, proxy may not be used again
-```
+~~~
 

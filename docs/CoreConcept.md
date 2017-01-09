@@ -23,21 +23,22 @@ which takes two connectables as parameters.
 
 This returns an object of type **connection**, which contains both arguments of
 connect. A connection object is itself connectable.
-```cpp
+~~~{.cpp}
 template <class L, class R> //L and R need to fulfil connectable
 connection<L, R> connect(L lhs, R rhs);
-```
+connectable_a >> connectable_b;
+~~~
 
 Users should not call `connect` directly but instead use the overloaded
 `operator>>` which performs type validation and then calls `connect`.
-```cpp
+~~~{.cpp}
 using fc::operator>>;
 connectable_a >> connectable_b;
-```
+~~~
 
 The following UML class diagram shows the interaction between these concepts:
 
-![CoreClassDiagram_v3][uml-diagram]
+![CoreClassDiagram_v3](CoreClassDiagram_v3.png)
 
 By calling connect on connectables and connections repeatedly we can
 build **chains** of connections.
@@ -57,8 +58,8 @@ Both active and passive connectable types can appear on the left and right hand
 side of a connection. Since they form the end points of a chain of connections,
 active_connectable and passive_connectable restrict how connect can be called on
 them:
-```cpp
 
+~~~{.cpp}
 // for push-logic, i.e. sending events (source is active (pusher), sink is passive)
 connect(active_connectable, connectable);         // returns an active_connectable.
 connect(connectable, passive_connectable);        // returns a passive_connectable.
@@ -73,15 +74,8 @@ connect(connectable, connectable);                // returns a connectable as de
 
 connect(active_connectable, active_connectable);                   // illegal.
 connect(passive_connectable, passive_connectable);                 // illegal.
-```
+~~~
 
-![CoreClassDiagram_v4][uml-diagram-2]
+![CoreClassDiagram_v4](CoreClassDiagram_v4.png)
 
-Below presentation gives a deeper insight on how connections are represented in
-the current FlexCore implementation.
-
-	~/shares/data/fue/software/flexcore/12_design_documentation/2015-10_connections_V01hbg.odp
-
-[uml-diagram]: /uploads/081b381e2eae30b044c1980b4c03fdbd/CoreClassDiagram_v3.png
-[uml-diagram-2]: /uploads/60332d0bba05c0f146a1860ecb5b98dd/CoreClassDiagram_v4.png
 [lvalue]: http://en.cppreference.com/w/cpp/language/value_category

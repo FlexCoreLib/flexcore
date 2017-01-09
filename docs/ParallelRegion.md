@@ -13,10 +13,10 @@ Buffers are created automatically and inserted into the connection, if the conne
 
 Client code specifies which region a port belongs to as a constructor parameter to the port.
 
-![2015-11-02_ParallelRegion](/uploads/181d3535896a9a8d0a03057132b0a44a/2015-11-02_ParallelRegion.png)
+![2015-11-02_ParallelRegion](2015-11-02_ParallelRegion.png)
 
 Each Region has two ticks, which trigger all operations:
 1. The switch tick triggers switching of all buffers of the region.
 2. The work tick triggers the actual calculations inside the nodes.
 
-These ticks are controlled by the [Parallelscheduler](Parallelscheduler).
+These ticks are controlled by the [Parallelscheduler](md_docs_ParallelScheduler.html).

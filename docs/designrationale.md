@@ -1,4 +1,4 @@
-**Rationale**
+#Rationale
 
 The main goal of FlexCore is to provide a library, which allows programmers to easily design and code dataflow programs, which are as fast and robust as expected by any good C++ program.
 

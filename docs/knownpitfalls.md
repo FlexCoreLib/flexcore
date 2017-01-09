@@ -14,6 +14,6 @@ auto sink = [](int i) {};
 auto copy = [](auto c) { return c; };
 copy(source) >> copy(sink);
 ```
-3. If a node instantiates an event_sink or state_source with a lambda capturing `this` or a reference to a member of the node, the node must not be moved.
+3. If a node instantiates an fc::event_sink or fc::state_source with a lambda capturing `this` or a reference to a member of the node, the node must not be moved.
 Moving the node would invalidate the reference or pointer.
 As a general rule (not flexcore specific): if you capture `this` in a lambda, delete move and copy constructor.

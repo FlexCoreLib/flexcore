@@ -1,4 +1,4 @@
-How to use Flexcore in your project
+How to include Flexcore in your project
 ===================================
 
 There are two supported ways to include flexcore in your own project. Both of
