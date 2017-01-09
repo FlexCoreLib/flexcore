@@ -10,7 +10,7 @@ namespace fc
 {
 
 /**
-	\defgroup nodes
+	\defgroup nodes nodes
 	\brief Generic Nodes already implemented and supplied by flexcore.
 
 	This group contains all nodes

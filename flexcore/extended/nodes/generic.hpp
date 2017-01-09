@@ -22,7 +22,7 @@ namespace fc
  * is specialized for state and events, as the implementations differ.
  *
  * \tparam data_t type of data flowing through the switch
- * \tparam tag, either event_tag or state_tag to set switch to event handling
+ * \tparam tag either event_tag or state_tag to set switch to event handling
  * or forwarding of state
  *
  * \tparam key_t key for lookup of inputs in switch. needs to have operator < and ==
@@ -54,7 +54,7 @@ public:
 	 * \brief input port for state of type data_t corresponding to key port.
 	 *
 	 * \returns input port corresponding to key
-	 * \param port, key by which port is identified.
+	 * \param port key by which port is identified.
 	 * \post !in_ports.empty()
 	 */
 	auto& in(key_t port) noexcept
@@ -97,7 +97,7 @@ public:
 	 * \brief Get port by key. Creates port if none was found for key.
 	 *
 	 * \returns input port corresponding to key
-	 * \param port, key by which port is identified.
+	 * \param port key by which port is identified.
 	 * \post !in_ports.empty()
 	 */
 	auto& in(key_t port)

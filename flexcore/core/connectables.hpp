@@ -9,7 +9,7 @@ namespace fc
 {
 
 /**
- * \defgroup connectables
+ * \defgroup connectables connectables
  * \brief A collection of different useful connectables.
  *
  * A lot of them are names for simple lambdas to make code less verbose.
@@ -110,8 +110,8 @@ namespace detail
 
 /**
  * \brief Calls a given callback and then returns value every time it is called.
- *
- * \pre @param callback needs to fulfill copy_constructible.
+ * \param op callback which is called before forwarding tokens
+ * \pre op needs to fulfill copy_constructible.
  */
 template<class T>
 auto tee(T&& op)

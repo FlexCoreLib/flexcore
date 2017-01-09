@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
+///\example examples.cpp
 //This header includes the default definitions of ports
 #include <flexcore/ports.hpp>
 
