@@ -5,6 +5,7 @@ if(DOXYGEN_FOUND)
 	#Build cereal documentation
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../flexcore/3rdparty/cereal
 		${CMAKE_CURRENT_BINARY_DIR}/cereal
+		EXCLUDE_FROM_ALL
 	)
 
 	#the working dir is a bit of a hack as it is force set to the flexcore directory via relative path to docs
