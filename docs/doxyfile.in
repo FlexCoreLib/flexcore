@@ -3,6 +3,6 @@
 #we are overriding the existing tags with these and doxygen will use the new ones.
 OUTPUT_DIRECTORY = @CMAKE_CURRENT_BINARY_DIR@/
 INPUT = @CMAKE_CURRENT_SOURCE_DIR@/../flexcore @CMAKE_CURRENT_SOURCE_DIR@/.. @CMAKE_CURRENT_SOURCE_DIR@
-TAGFILES = @CMAKE_CURRENT_BINARY_DIR@/cereal/cerealdoc.doxytag=@CMAKE_CURRENT_BINARY_DIR@/cereal/doc/html/
+TAGFILES = @CMAKE_CURRENT_BINARY_DIR@/cereal/cereal.doxytags=@CMAKE_CURRENT_BINARY_DIR@/cereal/doc/html/
 GENERATE_TAGFILE = @CMAKE_CURRENT_BINARY_DIR@/flexcore.doxytags
 IMAGE_PATH = @CMAKE_CURRENT_SOURCE_DIR@/images
