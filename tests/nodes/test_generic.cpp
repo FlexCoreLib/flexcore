@@ -84,11 +84,11 @@ BOOST_AUTO_TEST_CASE(watch_node)
 	watcher.check_tick()();
 
 	BOOST_CHECK_EQUAL(test_value, 0);
+	BOOST_CHECK(test_value != test_state);
 	test_state = -1;
 
 	watcher.check_tick()();
-	BOOST_CHECK_EQUAL(test_value, -1);
-
+	BOOST_CHECK_EQUAL(test_value, test_state);
 
 }
 
@@ -111,11 +111,11 @@ BOOST_AUTO_TEST_CASE(test_on_changed)
 
 	test_state = 0;
 	changed.check_tick()();
-	BOOST_CHECK_EQUAL(test_value, 0);
+	BOOST_CHECK_EQUAL(test_value, test_state);
 
 	test_state = 1;
 	changed.check_tick()();
-	BOOST_CHECK_EQUAL(test_value, 1);
+	BOOST_CHECK_EQUAL(test_value, test_state);
 
 }
 BOOST_AUTO_TEST_SUITE_END()

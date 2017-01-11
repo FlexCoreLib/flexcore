@@ -86,10 +86,10 @@ BOOST_AUTO_TEST_CASE( stream_query_node_simple_case )
 
 	source >> sink;
 
-	BOOST_CHECK_EQUAL(sink.get(), 0);
+	BOOST_CHECK_EQUAL(sink.get(), test_value);
 	test_value = 5;
-	BOOST_CHECK_EQUAL(sink.get(), 5);
-	BOOST_CHECK_EQUAL(sink.get(), 5);
+	BOOST_CHECK_EQUAL(sink.get(), test_value);
+	BOOST_CHECK_EQUAL(sink.get(), test_value);
 }
 
 BOOST_AUTO_TEST_CASE( stream_query_multiple_sinks )
@@ -103,11 +103,11 @@ BOOST_AUTO_TEST_CASE( stream_query_multiple_sinks )
 	source >> increment >> sink1;
 	source >> increment >> sink2;
 
-	BOOST_CHECK_EQUAL(sink1.get(), 1);
-	BOOST_CHECK_EQUAL(sink2.get(), 1);
+	BOOST_CHECK_EQUAL(sink1.get(), test_value+1);
+	BOOST_CHECK_EQUAL(sink2.get(), test_value+1);
 	test_value = 5;
-	BOOST_CHECK_EQUAL(sink1.get(), 6);
-	BOOST_CHECK_EQUAL(sink2.get(), 6);
+	BOOST_CHECK_EQUAL(sink1.get(), test_value+1);
+	BOOST_CHECK_EQUAL(sink2.get(), test_value+1);
 }
 
 
@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE( state_fetcher_direct_connection )
 	pure::state_source<int> source {[&state](){ return state;}};
 	pure::state_sink<int> sink;
 	source >> sink;
-	BOOST_CHECK(sink.get() == 1);
+	BOOST_CHECK(sink.get() == state);
 	state = 2;
-	BOOST_CHECK(sink.get() == 2);
+	BOOST_CHECK(sink.get() == state);
 }
 
 BOOST_AUTO_TEST_CASE( state_multiple_fetchers_and_assignment )
@@ -131,11 +131,11 @@ BOOST_AUTO_TEST_CASE( state_multiple_fetchers_and_assignment )
 	pure::state_sink<int> sink2;
 	source >> increment >> sink1;
 	source >> increment >> increment >> sink2;
-	BOOST_CHECK(sink1.get() == 2);
-	BOOST_CHECK(sink2.get() == 3);
+	BOOST_CHECK(sink1.get() == state+1);
+	BOOST_CHECK(sink2.get() == state+2);
 	state = 5;
-	BOOST_CHECK(sink1.get() == 6);
-	BOOST_CHECK(sink2.get() == 7);
+	BOOST_CHECK(sink1.get() == state+1);
+	BOOST_CHECK(sink2.get() == state+2);
 }
 
 BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE( state_fetcher_stored_sink_connection )
 
 	BOOST_CHECK(sink.get() == 2);
 	state = 2;
-	BOOST_CHECK(sink.get() == 3);
+	BOOST_CHECK(sink.get() == state+1);
 
 	pure::state_source<int> source_2 {[&state](){ return 1;}};
 	auto connection_add2 = (increment >> increment);
