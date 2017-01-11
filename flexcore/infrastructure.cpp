@@ -11,7 +11,7 @@ class scheduled_region : public fc::parallel_region
 public:
 	scheduled_region(std::string name, virtual_clock::steady::duration tick_rate,
 			std::weak_ptr<region_factory> region_maker)
-	    : parallel_region(std::move(name), tick_rate), region_maker(region_maker)
+		: parallel_region(std::move(name), tick_rate), region_maker(std::move(region_maker))
 	{
 	}
 	std::shared_ptr<parallel_region>
