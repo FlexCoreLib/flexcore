@@ -29,7 +29,7 @@ public:
 	explicit owning_node(const std::shared_ptr<parallel_region>& r
 			= std::make_shared<parallel_region>("test_root_region", thread::cycle_control::slow_tick),
 	                     std::string name = "owner")
-	    : owner_(graph, name, r)
+	    : owner_(graph, std::move(name), r)
 	    , forest_(nullptr)
 	    , owner(&owner_.nodes())
 	{
@@ -40,7 +40,7 @@ public:
 		assert(owner);
 	}
 
-	explicit owning_node(std::string name, virtual_clock::steady::duration tick_rate = thread::cycle_control::slow_tick)
+	explicit owning_node(const std::string& name, virtual_clock::steady::duration tick_rate = thread::cycle_control::slow_tick)
 		: owning_node(std::make_shared<parallel_region>(name, tick_rate), name)
 	{
 	}
