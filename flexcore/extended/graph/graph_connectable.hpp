@@ -45,19 +45,23 @@ struct graph_adder
 };
 
 template <class T>
-auto port_description(const std::string& fallback, bool named)
+auto port_description(const std::string& node_name)
 		-> std::enable_if_t<has_token_type<T>(0), std::string>
 {
-	if (named)
-		return "'" + fallback + "'";
-	return demangle(typeid(typename T::token_t).name());
+	if (!node_name.empty())
+		return "'" + node_name + "'";
+	else
+		return demangle(typeid(typename T::token_t).name());
 }
 
 template <class T>
-auto port_description(const std::string& fallback, bool)
+auto port_description(const std::string& node_name)
 		-> std::enable_if_t<not has_token_type<T>(0), std::string>
 {
-	return "'" + fallback + "'";
+	if (!node_name.empty())
+		return "'" + node_name + "'";
+	else
+		return "'AdHoc'";
 }
 
 template <class T>
@@ -89,19 +93,19 @@ struct graph_connectable : base_t
 			base_t_args&&... args)
 		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
-		, graph_port_info(detail::port_description<base_t>(graph_info.name(), false),
-				  graph_info.get_id(), graph_port_properties::to_port_type<base_t>())
+		, graph_port_info(detail::port_description<base_t>(std::string{}), graph_info.get_id(),
+				  graph_port_properties::to_port_type<base_t>())
 		, graph(&graph)
 	{
 		graph.add_port({graph_info, graph_port_info});
 	}
 
 	template <class... base_t_args>
-	graph_connectable(const graph_node_properties& graph_info, bool named, base_t_args&&... args)
+	graph_connectable(const graph_node_properties& graph_info, base_t_args&&... args)
 		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
-		, graph_port_info(detail::port_description<base_t>(graph_info.name(), named),
-				  graph_info.get_id(), graph_port_properties::to_port_type<base_t>())
+		, graph_port_info(detail::port_description<base_t>(graph_info.name()), graph_info.get_id(),
+				  graph_port_properties::to_port_type<base_t>())
 		, graph(nullptr)
 	{
 	}
@@ -182,7 +186,7 @@ auto make_graph_connectable(const base_t& base, const graph_node_properties& gra
 template <class base_t>
 auto named(base_t&& con, const std::string& name)
 {
-	return graph_connectable<base_t>{graph_node_properties{name}, true, std::forward<base_t>(con)};
+	return graph_connectable<base_t>{graph_node_properties{name}, std::forward<base_t>(con)};
 }
 
 } // namespace graph
