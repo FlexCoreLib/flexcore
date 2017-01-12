@@ -6,8 +6,7 @@ namespace fc
 {
 
 static graph::graph_port_properties::port_type merge_types(
-		const graph::graph_properties& source_node,
-		const graph::graph_properties& sink_node)
+		const graph::graph_properties& source_node, const graph::graph_properties& sink_node)
 {
 	using port_type = graph::graph_port_properties::port_type;
 	port_type result = source_node.port_properties.type();
@@ -21,9 +20,9 @@ static graph::graph_port_properties::port_type merge_types(
 }
 
 static const std::string no_region_color = "#ffffff";
-static const std::array<std::string, 15> colors
-{{"#d7aee6", "#eee4a5", "#a4b9e8", "#efb98d", "#71cdeb", "#f6a39f", "#8adbd3", "#eda4c1", "#97d1aa",
-"#ddc1e8", "#b6c68f", "#e8b0ac", "#d0f0c0", "#c9af8b", "#e6cda6"}};
+static const std::array<std::string, 15> colors{
+		{"#d7aee6", "#eee4a5", "#a4b9e8", "#efb98d", "#71cdeb", "#f6a39f", "#8adbd3", "#eda4c1",
+				"#97d1aa", "#ddc1e8", "#b6c68f", "#e8b0ac", "#d0f0c0", "#c9af8b", "#e6cda6"}};
 
 visualization::visualization(const graph::connection_graph& graph, const forest_t& forest)
 	: graph_(graph), forest_(forest)
@@ -83,16 +82,19 @@ void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& s
 	stream << "subgraph cluster_" << uuid << " {\n";
 	stream << "label=\"" << name << "\";\n";
 	stream << "style=\"filled, bold, rounded\";\n";
-	stream << "fillcolor=\"" << getColor(graph_info.region()) <<  "\";\n";
+	stream << "fillcolor=\"" << getColor(graph_info.region()) << "\";\n";
 
 	auto ports = extractNodePorts(graph_info.get_id());
-	if (ports.empty()) {
+	if (ports.empty())
+	{
 		stream << uuid << "[shape=\"plaintext\", label=\"\", width=0, height=0];\n";
-	} else {
+	}
+	else
+	{
 		printPorts(ports, uuid, stream);
 	}
 
-	for (auto iter =  adobe::child_begin(node); iter != adobe::child_end(node); ++iter)
+	for (auto iter = adobe::child_begin(node); iter != adobe::child_end(node); ++iter)
 	{
 		printSubgraph(iter.base(), stream);
 	}
@@ -122,21 +124,16 @@ std::vector<graph::graph_properties> visualization::extractNodePorts(
 {
 	std::vector<graph::graph_properties> result;
 	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result),
-	[&nodeID](auto& port)
-	{
-		return port.port_properties.owning_node() == nodeID;
-	});
-	std::for_each(std::begin(result), std::end(result), [this](auto& port)
-	{
-		ports_.erase(port);
-	});
+			[&nodeID](auto& port) { return port.port_properties.owning_node() == nodeID; });
+	std::for_each(std::begin(result), std::end(result), [this](auto& port) { ports_.erase(port); });
 	return result;
 }
 
 void visualization::printPorts(const std::vector<graph::graph_properties>& ports,
-							   unsigned long owner_hash, std::ostream& stream)
+		unsigned long owner_hash, std::ostream& stream)
 {
-	if (ports.empty()) {
+	if (ports.empty())
+	{
 		return;
 	}
 
@@ -145,21 +142,26 @@ void visualization::printPorts(const std::vector<graph::graph_properties>& ports
 	{
 		stream << owner_hash << "[shape=\"record\", label=\"";
 		bool first = true;
-		for (auto & port : ports)
+		for (auto& port : ports)
 		{
-			if (first) first = false; else stream << "|";
+			if (first)
+				first = false;
+			else
+				stream << "|";
 			stream << "<" << hash_value(port.port_properties.id()) << ">"
 				   << port.port_properties.description();
 		}
 		stream << "\"]\n";
-	} else
+	}
+	else
 	{
 		// named ports with pseudo node
-		for (auto & port : ports)
+		for (auto& port : ports)
 		{
 			stream << hash_value(port.node_properties.get_id());
 
-			if (port.port_properties.pure()) {
+			if (port.port_properties.pure())
+			{
 				stream << "[shape=\"plaintext\", label=\"\", width=0, height=0, fixedsize=true];\n";
 				continue;
 			}
@@ -171,5 +173,4 @@ void visualization::printPorts(const std::vector<graph::graph_properties>& ports
 		}
 	}
 }
-
 }

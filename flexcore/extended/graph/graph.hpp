@@ -1,9 +1,9 @@
 #ifndef SRC_GRAPH_GRAPH_HPP_
 #define SRC_GRAPH_GRAPH_HPP_
 
+#include <boost/functional/hash.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <flexcore/scheduler/parallelregion.hpp>
-#include <boost/functional/hash.hpp>
 
 #include <map>
 #include <set>
@@ -26,9 +26,7 @@ class graph_node_properties
 public:
 	typedef boost::uuids::uuid unique_id;
 
-	explicit graph_node_properties(const std::string& name,
-			parallel_region* region,
-			unique_id id);
+	explicit graph_node_properties(const std::string& name, parallel_region* region, unique_id id);
 
 	explicit graph_node_properties(const std::string& name, parallel_region* region);
 
@@ -53,16 +51,17 @@ class graph_port_properties
 {
 public:
 	typedef boost::uuids::uuid unique_id;
-	enum class port_type {
+	enum class port_type
+	{
 		UNDEFINED,
 		EVENT,
 		STATE
 	};
 
-	explicit graph_port_properties(std::string description, unique_id owning_node, port_type type,
-								   bool isPure = false);
+	explicit graph_port_properties(
+			std::string description, unique_id owning_node, port_type type, bool isPure = false);
 
-	template<class T>
+	template <class T>
 	static port_type to_port_type()
 	{
 		if (is_event_port<T>{})
@@ -94,18 +93,21 @@ struct graph_properties
 {
 	typedef boost::uuids::uuid unique_id;
 	graph_properties(graph_node_properties node, graph_port_properties port)
-		: node_properties(std::move(node)), port_properties(std::move(port)) {}
+		: node_properties(std::move(node)), port_properties(std::move(port))
+	{
+	}
 	graph_node_properties node_properties;
 	graph_port_properties port_properties;
 	bool operator<(const graph_properties& o) const { return port_properties < o.port_properties; }
 	bool operator==(const graph_properties& o) const
-			{ return port_properties == o.port_properties; }
+	{
+		return port_properties == o.port_properties;
+	}
 };
 
 struct graph_edge
 {
-	graph_edge(graph_properties source, graph_properties sink)
-		: source(source), sink(sink) {}
+	graph_edge(graph_properties source, graph_properties sink) : source(source), sink(sink) {}
 	graph_properties source;
 	graph_properties sink;
 	bool operator==(const graph_edge& o) const { return source == o.source && sink == o.sink; }
@@ -126,8 +128,7 @@ public:
 	connection_graph(const connection_graph&) = delete;
 
 	/// Adds a new Connection without ports to the graph.
-	void add_connection(const graph_properties& source_node,
-						const graph_properties& sink_node);
+	void add_connection(const graph_properties& source_node, const graph_properties& sink_node);
 
 	void add_port(const graph_properties& port_info);
 
@@ -147,12 +148,12 @@ private:
 	std::unique_ptr<impl> pimpl;
 };
 
-}  // namespace graph
-}  // namespace fc
+} // namespace graph
+} // namespace fc
 
 namespace std
 {
-template<>
+template <>
 struct hash<fc::graph::graph_edge>
 {
 	size_t operator()(const fc::graph::graph_edge& e) const
@@ -163,9 +164,6 @@ struct hash<fc::graph::graph_edge>
 		return seed;
 	}
 };
-
-
 }
-
 
 #endif /* SRC_GRAPH_GRAPH_HPP_ */
