@@ -139,16 +139,17 @@ void visualization::printPorts(const std::vector<graph::graph_properties>& ports
 	// multiple ports per node: "default case"
 	if (owner_hash != 0U)
 	{
-		stream << owner_hash << "[shape=\"record\", label=\"";
-		bool first = true;
-		for (auto& port : ports)
-		{
-			if (first)
-				first = false;
-			else
-				stream << "|";
+		const auto printer = [&stream](auto&& port) {
 			stream << "<" << hash_value(port.port_properties.id()) << ">"
 				   << port.port_properties.description();
+		};
+
+		stream << owner_hash << "[shape=\"record\", label=\"";
+		printer(ports.front());
+		for (auto iter = ++std::begin(ports); iter != std::end(ports); ++iter)
+		{
+			stream << "|";
+			printer(*iter);
 		}
 		stream << "\"]\n";
 	}
