@@ -125,12 +125,12 @@ const std::string& visualization::get_color(const parallel_region* region)
 {
 	static const std::string no_region_color = "#ffffff";
 	static const std::string out_of_color = "#000000";
-	static const std::array<std::string, 40> colors{{"#809cda", "#e0eb5a", "#b875e7", "#50bb3e",
-			"#e267cb", "#ed5690", "#64e487", "#ef5954", "#5ae5ac", "#ce76b5", "#48ab52", "#d8a4e7",
-			"#76a73b", "#df8cb0", "#ceec77", "#58b1e1", "#e28f26", "#50d9e1", "#e27130", "#77e3c6",
-			"#e2815e", "#42a68f", "#e7ba3b", "#de7c7f", "#a6e495", "#bc844e", "#5daa6e", "#c49739",
-			"#dfeca1", "#999d31", "#e8b17c", "#9dbc70", "#dcd069", "#959551", "#d5c681", "#98ec6b",
-			"#4a8bf0", "#98c234", "#9485dd", "#c2bf34"}};
+	static const std::array<std::string, 40> colors{{"#809cda", "#e0eb5a", "#50bb3e", "#ed5690",
+			"#64e487", "#ef5954", "#5ae5ac", "#ce76b5", "#48ab52", "#d8a4e7", "#76a73b", "#df8cb0",
+			"#ceec77", "#58b1e1", "#e28f26", "#50d9e1", "#e27130", "#77e3c6", "#e2815e", "#42a68f",
+			"#e7ba3b", "#de7c7f", "#a6e495", "#bc844e", "#5daa6e", "#c49739", "#dfeca1", "#999d31",
+			"#e8b17c", "#9dbc70", "#dcd069", "#959551", "#d5c681", "#98ec6b", "#4a8bf0", "#98c234",
+			"#9485dd", "#c2bf34", "#b875e7", "#e267cb"}};
 
 	if (region == nullptr)
 	{
