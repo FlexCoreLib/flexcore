@@ -29,18 +29,18 @@ visualization::visualization(const graph::connection_graph& graph, const forest_
 {
 }
 
-void visualization::Visualize(std::ostream& stream)
+void visualization::visualize(std::ostream& stream)
 {
-	currentColorIndex_ = 0U;
+	current_color_index_ = 0U;
 	ports_ = graph_.ports();
 
 	// nodes with their ports that are part of the forest
 	stream << "digraph G {\n";
-	printSubgraph(forest_.begin(), stream);
+	print_subgraph(forest_.begin(), stream);
 
 	// these are the ports wich are not part of the forest (ad hoc created) with graph::named
 	std::vector<graph::graph_properties> named_ports{std::begin(ports_), std::end(ports_)};
-	printPorts(named_ports, 0U, stream);
+	print_ports(named_ports, 0U, stream);
 
 	for (auto& edge : graph_.edges())
 	{
@@ -73,7 +73,7 @@ void visualization::Visualize(std::ostream& stream)
 	stream << "}\n";
 }
 
-void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& stream)
+void visualization::print_subgraph(forest_t::const_iterator node, std::ostream& stream)
 {
 	const auto graph_info = (*node)->graph_info();
 	const auto uuid = hash_value(graph_info.get_id());
@@ -81,26 +81,26 @@ void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& s
 	stream << "subgraph cluster_" << uuid << " {\n";
 	stream << "label=\"" << name << "\";\n";
 	stream << "style=\"filled, bold, rounded\";\n";
-	stream << "fillcolor=\"" << getColor(graph_info.region()) << "\";\n";
+	stream << "fillcolor=\"" << get_color(graph_info.region()) << "\";\n";
 
-	const auto ports = extractNodePorts(graph_info.get_id());
+	const auto ports = extract_node_ports(graph_info.get_id());
 	if (ports.empty())
 	{
 		stream << uuid << "[shape=\"plaintext\", label=\"\", width=0, height=0];\n";
 	}
 	else
 	{
-		printPorts(ports, uuid, stream);
+		print_ports(ports, uuid, stream);
 	}
 
 	for (auto iter = adobe::child_begin(node); iter != adobe::child_end(node); ++iter)
 	{
-		printSubgraph(iter.base(), stream);
+		print_subgraph(iter.base(), stream);
 	}
 	stream << "}\n";
 }
 
-const std::string& visualization::getColor(const parallel_region* region)
+const std::string& visualization::get_color(const parallel_region* region)
 {
 	if (region == nullptr)
 	{
@@ -108,17 +108,17 @@ const std::string& visualization::getColor(const parallel_region* region)
 	}
 
 	const auto key = region->get_id().key;
-	auto iter = colorMap_.find(key);
-	if (iter == std::end(colorMap_))
+	auto iter = color_map_.find(key);
+	if (iter == std::end(color_map_))
 	{
-		iter = colorMap_.emplace(key, currentColorIndex_).first;
-		assert(currentColorIndex_ < colors.size());
-		++currentColorIndex_;
+		iter = color_map_.emplace(key, current_color_index_).first;
+		assert(current_color_index_ < colors.size());
+		++current_color_index_;
 	}
 	return colors.at(iter->second);
 }
 
-std::vector<graph::graph_properties> visualization::extractNodePorts(
+std::vector<graph::graph_properties> visualization::extract_node_ports(
 		graph::graph_port_properties::unique_id nodeID)
 {
 	std::vector<graph::graph_properties> result;
@@ -128,7 +128,7 @@ std::vector<graph::graph_properties> visualization::extractNodePorts(
 	return result;
 }
 
-void visualization::printPorts(const std::vector<graph::graph_properties>& ports,
+void visualization::print_ports(const std::vector<graph::graph_properties>& ports,
 		unsigned long owner_hash, std::ostream& stream)
 {
 	if (ports.empty())
