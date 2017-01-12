@@ -67,7 +67,7 @@ auto graph_object(const T& connectable) -> std::enable_if_t<has_graph_info<T>(0)
 }
 
 template <class T>
-auto graph_object(const T&) -> std::enable_if_t<not has_graph_info<T>(0), connection_graph*>
+auto graph_object(const T&) -> std::enable_if_t<!has_graph_info<T>(0), connection_graph*>
 {
 	return nullptr;
 }
