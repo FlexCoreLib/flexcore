@@ -39,8 +39,7 @@ void visualization::Visualize(std::ostream& stream)
 	printSubgraph(forest_.begin(), stream);
 
 	// these are the ports wich are not part of the forest (ad hoc created) with graph::named
-	std::vector<graph::graph_properties> named_ports;
-	std::copy(std::begin(ports_), std::end(ports_), std::back_inserter(named_ports));
+	std::vector<graph::graph_properties> named_ports{std::begin(ports_), std::end(ports_)};
 	printPorts(named_ports, 0U, stream);
 
 	for (auto& edge : graph_.edges())
