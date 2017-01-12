@@ -23,19 +23,27 @@ graph::graph_port_properties::port_type visualization::merge_property_types(
 	return result;
 }
 
-typename forest_t::const_iterator visualization::find_node(
-		graph::graph_port_properties::unique_id node_id) const
-{
-	return std::find_if(std::begin(forest_), std::end(forest_),
-			[&node_id](auto&& node) { return node->graph_info().get_id() == node_id; });
-}
-
 std::vector<graph::graph_properties> visualization::find_node_ports(
 		graph::graph_port_properties::unique_id node_id) const
 {
 	std::vector<graph::graph_properties> result;
 	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result),
 			[&node_id](auto& port) { return port.port_properties.owning_node() == node_id; });
+	return result;
+}
+
+std::vector<graph::graph_properties> visualization::find_connectables(
+		graph::graph_port_properties::unique_id node_id) const
+{
+	std::vector<graph::graph_properties> result;
+	for (auto& edge : graph_.edges())
+	{
+		auto& source_props = edge.source.port_properties;
+		if (source_props.id() == node_id && edge.sink.node_properties.is_pure())
+		{
+			result.push_back(edge.sink);
+		}
+	}
 	return result;
 }
 
@@ -50,11 +58,11 @@ void visualization::visualize(std::ostream& stream)
 	// these are the ports wich are not part of the forest (ad hoc created)
 	std::vector<graph::graph_properties> named_ports;
 	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(named_ports),
-			[this](auto&& graph_properties) {
-				return this->find_node(graph_properties.node_properties.get_id()) ==
-					   std::end(forest_);
-			});
-	print_ports(named_ports, 0U, stream);
+			[this](auto&& graph_properties) { return graph_properties.node_properties.is_pure(); });
+	for (auto& port : named_ports)
+	{
+		print_ports({port}, hash_value(port.node_properties.get_id()), stream);
+	}
 
 	for (auto& edge : graph_.edges())
 	{
@@ -64,15 +72,7 @@ void visualization::visualize(std::ostream& stream)
 		const auto sink_port = hash_value(edge.sink.port_properties.id());
 		using port_type = graph::graph_port_properties::port_type;
 
-		stream << source_node;
-
-		if (edge.source.port_properties.has_graph_mixin())
-			stream << ":" << source_port;
-
-		stream << "->" << sink_node;
-
-		if (edge.sink.port_properties.has_graph_mixin())
-			stream << ":" << sink_port;
+		stream << source_node << ":" << source_port << "->" << sink_node << ":" << sink_port;
 
 		// draw arrow differently based on whether it is an event or state
 		const auto merged_type = merge_property_types(edge.source, edge.sink);
@@ -80,7 +80,6 @@ void visualization::visualize(std::ostream& stream)
 		{
 			stream << "[arrowhead=\"dot\"]";
 		}
-
 		stream << ";\n";
 	}
 
@@ -112,6 +111,14 @@ void visualization::print_subgraph(forest_t::const_iterator node, std::ostream& 
 		print_subgraph(iter.base(), stream);
 	}
 	stream << "}\n";
+
+	for (auto& port : ports)
+	{
+		for (auto& connectable : find_connectables(port.port_properties.id()))
+		{
+			print_ports({connectable}, hash_value(connectable.node_properties.get_id()), stream);
+		}
+	}
 }
 
 const std::string& visualization::get_color(const parallel_region* region)
@@ -151,8 +158,20 @@ void visualization::print_ports(const std::vector<graph::graph_properties>& port
 		return;
 	}
 
-	// multiple ports per node: "default case"
-	if (owner_hash != 0U)
+	// named ports with pseudo node
+	if (ports.size() == 1 && ports.front().node_properties.is_pure())
+	{
+		for (auto& port : ports)
+		{
+			stream << hash_value(port.node_properties.get_id());
+			stream << "[shape=\"record\", style=\"dashed, filled, bold\", fillcolor=\"white\" "
+					  "label=\"";
+			stream << "<" << hash_value(port.port_properties.id()) << ">";
+			stream << port.port_properties.description();
+			stream << "\"];\n";
+		}
+	}
+	else // extended ports
 	{
 		const auto printer = [&stream](auto&& port) {
 			stream << "<" << hash_value(port.port_properties.id()) << ">"
@@ -167,25 +186,6 @@ void visualization::print_ports(const std::vector<graph::graph_properties>& port
 			printer(*iter);
 		}
 		stream << "\"]\n";
-	}
-	else
-	{
-		// named ports with pseudo node
-		for (auto& port : ports)
-		{
-			stream << hash_value(port.node_properties.get_id());
-
-			if (!port.port_properties.has_graph_mixin())
-			{
-				stream << "[shape=\"plaintext\", label=\"\", width=0, height=0, fixedsize=true];\n";
-				continue;
-			}
-
-			stream << "[shape=\"record\", style=\"dashed\", label=\"";
-			stream << "<" << hash_value(port.port_properties.id()) << ">";
-			stream << port.port_properties.description();
-			stream << "\"];\n";
-		}
 	}
 }
 }

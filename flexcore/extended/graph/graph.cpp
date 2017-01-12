@@ -72,23 +72,23 @@ connection_graph::connection_graph() : pimpl(std::make_unique<impl>())
 }
 
 graph_node_properties::graph_node_properties(
-		const std::string& name, parallel_region* region, unique_id id)
-	: human_readable_name_(name), id_(id), region_(region)
+		const std::string& name, parallel_region* region, unique_id id, bool is_pure)
+	: human_readable_name_(name), id_(id), region_(region), is_pure_(is_pure)
 {
 }
 
-graph_node_properties::graph_node_properties(const std::string& name, parallel_region* region)
-	: graph_node_properties(name, region, boost::uuids::random_generator()())
+graph_node_properties::graph_node_properties(
+		const std::string& name, parallel_region* region, bool is_pure)
+	: graph_node_properties(name, region, boost::uuids::random_generator()(), is_pure)
 {
 }
 
 graph_port_properties::graph_port_properties(
-		std::string description, unique_id owning_node, port_type type, bool has_graph_mixin)
+		std::string description, unique_id owning_node, port_type type)
 	: description_(std::move(description))
 	, owning_node_(std::move(owning_node))
 	, id_(boost::uuids::random_generator()())
 	, type_(std::move(type))
-	, has_graph_mixin_(has_graph_mixin)
 {
 }
 

@@ -28,12 +28,6 @@ struct graph_adder
 	template <class T>
 	void operator()(T& /*node*/, typename std::enable_if<!has_graph_info<T>(0)>::type* = nullptr)
 	{
-		// for each pure_port without connectable wrapping we generate a pseudo node
-		// it will be invisible so the name does not matter
-		graph_node_properties node_info{"pure"};
-		graph_port_properties port_info{
-				"pure", node_info.get_id(), graph_port_properties::port_type::UNDEFINED, false};
-		node_list.emplace_back(std::move(node_info), std::move(port_info));
 	}
 
 	// non_const ref, because applyer might forward non_const
@@ -76,6 +70,17 @@ auto graph_object(const T&) -> std::enable_if_t<!has_graph_info<T>(0), connectio
 	return nullptr;
 }
 
+template <class T, typename std::enable_if_t<has_graph_info<T>(0), int> = 0>
+void set_graph_object(T& connectable, connection_graph* graph)
+{
+	connectable.graph = graph;
+}
+
+template <class T, typename std::enable_if_t<!has_graph_info<T>(0), int> = 0>
+void set_graph_object(T&, connection_graph*)
+{
+}
+
 } // namespace detail
 
 /**
@@ -94,7 +99,7 @@ struct graph_connectable : base_t
 		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
 		, graph_port_info(detail::port_description<base_t>(std::string{}), graph_info.get_id(),
-				  graph_port_properties::to_port_type<base_t>(), true)
+				  graph_port_properties::to_port_type<base_t>())
 		, graph(&graph)
 	{
 		graph.add_port({graph_info, graph_port_info});
@@ -105,7 +110,7 @@ struct graph_connectable : base_t
 		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
 		, graph_port_info(detail::port_description<base_t>(graph_info.name()), graph_info.get_id(),
-				  graph_port_properties::to_port_type<base_t>(), true)
+				  graph_port_properties::to_port_type<base_t>())
 		, graph(nullptr)
 	{
 	}
@@ -122,6 +127,10 @@ struct graph_connectable : base_t
 
 		if (!current_graph)
 			return base_t::connect(std::forward<arg_t>(conn));
+
+		// hijack graph object
+		detail::set_graph_object(conn, current_graph);
+		graph = current_graph;
 
 		// traverse connection and build up graph
 		if (is_active_sink<base_t>{}) // condition set at compile_time
@@ -176,17 +185,12 @@ private:
 	}
 };
 
-template <class base_t>
-auto make_graph_connectable(const base_t& base, const graph_node_properties& graph_info)
-{
-	return graph_connectable<base_t>{graph_info, base};
-}
-
 /// Creates a graph_connectable with a human readable name.
 template <class base_t>
 auto named(base_t&& con, const std::string& name)
 {
-	return graph_connectable<base_t>{graph_node_properties{name}, std::forward<base_t>(con)};
+	return graph_connectable<base_t>{
+			graph_node_properties{name, !has_graph_info<base_t>(0)}, std::forward<base_t>(con)};
 }
 
 } // namespace graph

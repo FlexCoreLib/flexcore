@@ -26,11 +26,14 @@ class graph_node_properties
 public:
 	typedef boost::uuids::uuid unique_id;
 
-	explicit graph_node_properties(const std::string& name, parallel_region* region, unique_id id);
+	explicit graph_node_properties(
+			const std::string& name, parallel_region* region, unique_id id, bool is_pure = false);
 
-	explicit graph_node_properties(const std::string& name, parallel_region* region);
+	explicit graph_node_properties(
+			const std::string& name, parallel_region* region, bool is_pure = false);
 
-	explicit graph_node_properties(const std::string& name) : graph_node_properties(name, nullptr)
+	explicit graph_node_properties(const std::string& name, bool is_pure = false)
+		: graph_node_properties(name, nullptr, is_pure)
 	{
 	}
 
@@ -40,10 +43,12 @@ public:
 	std::string& name() { return human_readable_name_; }
 	unique_id get_id() const { return id_; }
 	parallel_region* region() const { return region_; }
+	bool is_pure() const { return is_pure_; }
 private:
 	std::string human_readable_name_;
 	unique_id id_;
 	parallel_region* region_;
+	bool is_pure_;
 };
 
 /**
@@ -60,8 +65,7 @@ public:
 		STATE
 	};
 
-	explicit graph_port_properties(
-			std::string description, unique_id owning_node, port_type type, bool has_graph_mixin);
+	explicit graph_port_properties(std::string description, unique_id owning_node, port_type type);
 
 	template <class T>
 	static constexpr port_type to_port_type()
@@ -81,14 +85,12 @@ public:
 	unique_id owning_node() const { return owning_node_; }
 	unique_id id() const { return id_; }
 	port_type type() const { return type_; };
-	bool has_graph_mixin() const { return has_graph_mixin_; };
 
 private:
 	std::string description_;
 	unique_id owning_node_;
 	unique_id id_;
 	port_type type_;
-	bool has_graph_mixin_;
 };
 
 struct graph_properties

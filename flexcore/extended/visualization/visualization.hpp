@@ -20,10 +20,9 @@ public:
 private:
 	static graph::graph_port_properties::port_type merge_property_types(
 			const graph::graph_properties& source_node, const graph::graph_properties& sink_node);
-
-	typename forest_t::const_iterator find_node(
-			graph::graph_port_properties::unique_id node_id) const;
 	std::vector<graph::graph_properties> find_node_ports(
+			graph::graph_port_properties::unique_id node_id) const;
+	std::vector<graph::graph_properties> find_connectables(
 			graph::graph_port_properties::unique_id node_id) const;
 	const std::string& get_color(const parallel_region* region);
 	void print_subgraph(typename forest_t::const_iterator node, std::ostream& stream);
