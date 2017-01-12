@@ -34,6 +34,8 @@ public:
 	{
 	}
 
+	bool operator==(const graph_node_properties& o) const { return id == o.id; }
+
 	const std::string& name() const { return human_readable_name; }
 	std::string& name() { return human_readable_name; }
 	unique_id get_id() const { return id; }
@@ -98,10 +100,16 @@ struct graph_properties
 	}
 	graph_node_properties node_properties;
 	graph_port_properties port_properties;
-	bool operator<(const graph_properties& o) const { return port_properties < o.port_properties; }
+	bool operator<(const graph_properties& o) const
+	{
+		assert(!(port_properties == o.port_properties) || node_properties == o.node_properties);
+		return port_properties < o.port_properties;
+	}
 	bool operator==(const graph_properties& o) const
 	{
-		return port_properties == o.port_properties;
+		bool is_equal = port_properties == o.port_properties;
+		assert(!is_equal || node_properties == o.node_properties);
+		return is_equal;
 	}
 };
 
