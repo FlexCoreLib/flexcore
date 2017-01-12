@@ -121,7 +121,7 @@ struct graph_connectable : base_t
 			class = std::enable_if_t<is_active<base_check>::value>>
 	decltype(auto) connect(arg_t&& conn)
 	{
-		auto current_graph = graph;
+		auto* current_graph = graph;
 
 		if (!current_graph)
 			current_graph = detail::graph_object(conn);
@@ -132,11 +132,11 @@ struct graph_connectable : base_t
 		// traverse connection and build up graph
 		if (is_active_sink<base_t>{}) // condition set at compile_time
 		{
-			add_state_connection(conn, current_graph);
+			add_state_connection(conn, *current_graph);
 		}
 		else if (is_active_source<base_t>{}) // condition set at compile_time
 		{
-			add_event_connection(conn, current_graph);
+			add_event_connection(conn, *current_graph);
 		}
 
 		return base_t::connect(std::forward<arg_t>(conn));
@@ -148,7 +148,7 @@ struct graph_connectable : base_t
 
 private:
 	template <class connection_t>
-	void add_state_connection(connection_t& conn, graph::connection_graph* current_graph) const
+	void add_state_connection(connection_t& conn, graph::connection_graph& current_graph) const
 	{
 		std::vector<graph_properties> node_list;
 
@@ -158,14 +158,14 @@ private:
 
 		if (node_list.size() >= 2)
 			for (auto it = node_list.begin() + 1; it != node_list.end(); ++it)
-				current_graph->add_connection(*(it - 1), *it);
+				current_graph.add_connection(*(it - 1), *it);
 
 		for (auto& node : node_list)
-			current_graph->add_port(node);
+			current_graph.add_port(node);
 	}
 
 	template <class connection_t>
-	void add_event_connection(connection_t& conn, graph::connection_graph* current_graph) const
+	void add_event_connection(connection_t& conn, graph::connection_graph& current_graph) const
 	{
 		std::vector<graph_properties> node_list;
 
@@ -175,10 +175,10 @@ private:
 
 		if (node_list.size() >= 2)
 			for (auto it = node_list.begin() + 1; it != node_list.end(); ++it)
-				current_graph->add_connection(*(it - 1), *it);
+				current_graph.add_connection(*(it - 1), *it);
 
 		for (auto& node : node_list)
-			current_graph->add_port(node);
+			current_graph.add_port(node);
 	}
 };
 
