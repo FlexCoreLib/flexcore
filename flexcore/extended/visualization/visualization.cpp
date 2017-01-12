@@ -45,10 +45,10 @@ void visualization::Visualize(std::ostream& stream)
 
 	for (auto& edge : graph_.edges())
 	{
-		auto source_node = hash_value(edge.source.node_properties.get_id());
-		auto sink_node = hash_value(edge.sink.node_properties.get_id());
-		auto source_port = hash_value(edge.source.port_properties.id());
-		auto sink_port = hash_value(edge.sink.port_properties.id());
+		const auto source_node = hash_value(edge.source.node_properties.get_id());
+		const auto sink_node = hash_value(edge.sink.node_properties.get_id());
+		const auto source_port = hash_value(edge.source.port_properties.id());
+		const auto sink_port = hash_value(edge.sink.port_properties.id());
 		using port_type = graph::graph_port_properties::port_type;
 
 		stream << source_node;
@@ -62,7 +62,7 @@ void visualization::Visualize(std::ostream& stream)
 			stream << ":" << sink_port;
 
 		// draw arrow differently based on whether it is an event or state
-		auto merged_type = merge_types(edge.source, edge.sink);
+		const auto merged_type = merge_types(edge.source, edge.sink);
 		if (merged_type == port_type::STATE)
 		{
 			stream << "[arrowhead=\"dot\"]";
@@ -76,15 +76,15 @@ void visualization::Visualize(std::ostream& stream)
 
 void visualization::printSubgraph(forest_t::const_iterator node, std::ostream& stream)
 {
-	auto graph_info = (*node)->graph_info();
-	auto uuid = hash_value(graph_info.get_id());
-	auto& name = graph_info.name();
+	const auto graph_info = (*node)->graph_info();
+	const auto uuid = hash_value(graph_info.get_id());
+	const auto& name = graph_info.name();
 	stream << "subgraph cluster_" << uuid << " {\n";
 	stream << "label=\"" << name << "\";\n";
 	stream << "style=\"filled, bold, rounded\";\n";
 	stream << "fillcolor=\"" << getColor(graph_info.region()) << "\";\n";
 
-	auto ports = extractNodePorts(graph_info.get_id());
+	const auto ports = extractNodePorts(graph_info.get_id());
 	if (ports.empty())
 	{
 		stream << uuid << "[shape=\"plaintext\", label=\"\", width=0, height=0];\n";
@@ -108,7 +108,7 @@ const std::string& visualization::getColor(const parallel_region* region)
 		return no_region_color;
 	}
 
-	auto key = region->get_id().key;
+	const auto key = region->get_id().key;
 	auto iter = colorMap_.find(key);
 	if (iter == std::end(colorMap_))
 	{
