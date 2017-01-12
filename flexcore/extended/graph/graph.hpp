@@ -34,15 +34,15 @@ public:
 	{
 	}
 
-	bool operator==(const graph_node_properties& o) const { return id == o.id; }
+	bool operator==(const graph_node_properties& o) const { return id_ == o.id_; }
 
-	const std::string& name() const { return human_readable_name; }
-	std::string& name() { return human_readable_name; }
-	unique_id get_id() const { return id; }
+	const std::string& name() const { return human_readable_name_; }
+	std::string& name() { return human_readable_name_; }
+	unique_id get_id() const { return id_; }
 	parallel_region* region() const { return region_; }
 private:
-	std::string human_readable_name;
-	unique_id id;
+	std::string human_readable_name_;
+	unique_id id_;
 	parallel_region* region_;
 };
 

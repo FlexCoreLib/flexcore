@@ -73,7 +73,7 @@ connection_graph::connection_graph() : pimpl(std::make_unique<impl>())
 
 graph_node_properties::graph_node_properties(
 		const std::string& name, parallel_region* region, unique_id id)
-	: human_readable_name(name), id(id), region_(region)
+	: human_readable_name_(name), id_(id), region_(region)
 {
 }
 
