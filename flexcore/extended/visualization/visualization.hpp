@@ -18,6 +18,9 @@ public:
 	void visualize(std::ostream& stream);
 
 private:
+	static graph::graph_port_properties::port_type merge_property_types(
+			const graph::graph_properties& source_node, const graph::graph_properties& sink_node);
+
 	const std::string& get_color(const parallel_region* region);
 	void print_subgraph(typename forest_t::const_iterator node, std::ostream& stream);
 	std::vector<graph::graph_properties> extract_node_ports(

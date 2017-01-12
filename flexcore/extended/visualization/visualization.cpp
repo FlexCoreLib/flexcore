@@ -5,7 +5,7 @@
 namespace fc
 {
 
-static graph::graph_port_properties::port_type merge_types(
+graph::graph_port_properties::port_type visualization::merge_property_types(
 		const graph::graph_properties& source_node, const graph::graph_properties& sink_node)
 {
 	using port_type = graph::graph_port_properties::port_type;
@@ -18,11 +18,6 @@ static graph::graph_port_properties::port_type merge_types(
 	}
 	return result;
 }
-
-static const std::string no_region_color = "#ffffff";
-static const std::array<std::string, 15> colors{
-		{"#d7aee6", "#eee4a5", "#a4b9e8", "#efb98d", "#71cdeb", "#f6a39f", "#8adbd3", "#eda4c1",
-				"#97d1aa", "#ddc1e8", "#b6c68f", "#e8b0ac", "#d0f0c0", "#c9af8b", "#e6cda6"}};
 
 visualization::visualization(const graph::connection_graph& graph, const forest_t& forest)
 	: graph_(graph), forest_(forest)
@@ -61,7 +56,7 @@ void visualization::visualize(std::ostream& stream)
 			stream << ":" << sink_port;
 
 		// draw arrow differently based on whether it is an event or state
-		const auto merged_type = merge_types(edge.source, edge.sink);
+		const auto merged_type = merge_property_types(edge.source, edge.sink);
 		if (merged_type == port_type::STATE)
 		{
 			stream << "[arrowhead=\"dot\"]";
@@ -102,6 +97,11 @@ void visualization::print_subgraph(forest_t::const_iterator node, std::ostream& 
 
 const std::string& visualization::get_color(const parallel_region* region)
 {
+	static const std::string no_region_color = "#ffffff";
+	static const std::array<std::string, 15> colors{
+			{"#d7aee6", "#eee4a5", "#a4b9e8", "#efb98d", "#71cdeb", "#f6a39f", "#8adbd3", "#eda4c1",
+					"#97d1aa", "#ddc1e8", "#b6c68f", "#e8b0ac", "#d0f0c0", "#c9af8b", "#e6cda6"}};
+
 	if (region == nullptr)
 	{
 		return no_region_color;
