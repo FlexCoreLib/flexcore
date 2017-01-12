@@ -62,7 +62,7 @@ public:
 			std::string description, unique_id owning_node, port_type type, bool isPure = false);
 
 	template <class T>
-	static port_type to_port_type()
+	static constexpr port_type to_port_type()
 	{
 		if (is_event_port<T>{})
 			return port_type::EVENT;
