@@ -83,12 +83,12 @@ graph_node_properties::graph_node_properties(const std::string& name, parallel_r
 }
 
 graph_port_properties::graph_port_properties(
-		std::string description, unique_id owning_node, port_type type, bool isPure)
+		std::string description, unique_id owning_node, port_type type, bool has_graph_mixin)
 	: description_(std::move(description))
 	, owning_node_(std::move(owning_node))
 	, id_(boost::uuids::random_generator()())
 	, type_(std::move(type))
-	, pure_(isPure)
+	, has_graph_mixin_(has_graph_mixin)
 {
 }
 

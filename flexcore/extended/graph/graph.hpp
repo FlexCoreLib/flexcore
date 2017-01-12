@@ -61,7 +61,7 @@ public:
 	};
 
 	explicit graph_port_properties(
-			std::string description, unique_id owning_node, port_type type, bool isPure = false);
+			std::string description, unique_id owning_node, port_type type, bool has_graph_mixin);
 
 	template <class T>
 	static constexpr port_type to_port_type()
@@ -81,14 +81,14 @@ public:
 	unique_id owning_node() const { return owning_node_; }
 	unique_id id() const { return id_; }
 	port_type type() const { return type_; };
-	bool pure() const { return pure_; };
+	bool has_graph_mixin() const { return has_graph_mixin_; };
 
 private:
 	std::string description_;
 	unique_id owning_node_;
 	unique_id id_;
 	port_type type_;
-	bool pure_;
+	bool has_graph_mixin_;
 };
 
 struct graph_properties

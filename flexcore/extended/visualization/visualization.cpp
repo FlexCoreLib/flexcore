@@ -5,6 +5,10 @@
 namespace fc
 {
 
+visualization::visualization(const graph::connection_graph& graph, const forest_t& forest)
+	: graph_(graph), forest_(forest), ports_(graph.ports())
+{
+}
 graph::graph_port_properties::port_type visualization::merge_property_types(
 		const graph::graph_properties& source_node, const graph::graph_properties& sink_node)
 {
@@ -19,22 +23,37 @@ graph::graph_port_properties::port_type visualization::merge_property_types(
 	return result;
 }
 
-visualization::visualization(const graph::connection_graph& graph, const forest_t& forest)
-	: graph_(graph), forest_(forest)
+typename forest_t::const_iterator visualization::find_node(
+		graph::graph_port_properties::unique_id node_id) const
 {
+	return std::find_if(std::begin(forest_), std::end(forest_),
+			[&node_id](auto&& node) { return node->graph_info().get_id() == node_id; });
+}
+
+std::vector<graph::graph_properties> visualization::find_node_ports(
+		graph::graph_port_properties::unique_id node_id) const
+{
+	std::vector<graph::graph_properties> result;
+	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result),
+			[&node_id](auto& port) { return port.port_properties.owning_node() == node_id; });
+	return result;
 }
 
 void visualization::visualize(std::ostream& stream)
 {
 	current_color_index_ = 0U;
-	ports_ = graph_.ports();
 
 	// nodes with their ports that are part of the forest
 	stream << "digraph G {\n";
 	print_subgraph(forest_.begin(), stream);
 
-	// these are the ports wich are not part of the forest (ad hoc created) with graph::named
-	std::vector<graph::graph_properties> named_ports{std::begin(ports_), std::end(ports_)};
+	// these are the ports wich are not part of the forest (ad hoc created)
+	std::vector<graph::graph_properties> named_ports;
+	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(named_ports),
+			[this](auto&& graph_properties) {
+				return this->find_node(graph_properties.node_properties.get_id()) ==
+					   std::end(forest_);
+			});
 	print_ports(named_ports, 0U, stream);
 
 	for (auto& edge : graph_.edges())
@@ -47,12 +66,12 @@ void visualization::visualize(std::ostream& stream)
 
 		stream << source_node;
 
-		if (!edge.source.port_properties.pure())
+		if (edge.source.port_properties.has_graph_mixin())
 			stream << ":" << source_port;
 
 		stream << "->" << sink_node;
 
-		if (!edge.sink.port_properties.pure())
+		if (edge.sink.port_properties.has_graph_mixin())
 			stream << ":" << sink_port;
 
 		// draw arrow differently based on whether it is an event or state
@@ -78,7 +97,7 @@ void visualization::print_subgraph(forest_t::const_iterator node, std::ostream& 
 	stream << "style=\"filled, bold, rounded\";\n";
 	stream << "fillcolor=\"" << get_color(graph_info.region()) << "\";\n";
 
-	const auto ports = extract_node_ports(graph_info.get_id());
+	const auto ports = find_node_ports(graph_info.get_id());
 	if (ports.empty())
 	{
 		stream << uuid << "[shape=\"plaintext\", label=\"\", width=0, height=0];\n";
@@ -124,16 +143,6 @@ const std::string& visualization::get_color(const parallel_region* region)
 	return colors.at(iter->second);
 }
 
-std::vector<graph::graph_properties> visualization::extract_node_ports(
-		graph::graph_port_properties::unique_id nodeID)
-{
-	std::vector<graph::graph_properties> result;
-	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result),
-			[&nodeID](auto& port) { return port.port_properties.owning_node() == nodeID; });
-	std::for_each(std::begin(result), std::end(result), [this](auto& port) { ports_.erase(port); });
-	return result;
-}
-
 void visualization::print_ports(const std::vector<graph::graph_properties>& ports,
 		unsigned long owner_hash, std::ostream& stream)
 {
@@ -166,7 +175,7 @@ void visualization::print_ports(const std::vector<graph::graph_properties>& port
 		{
 			stream << hash_value(port.node_properties.get_id());
 
-			if (port.port_properties.pure())
+			if (!port.port_properties.has_graph_mixin())
 			{
 				stream << "[shape=\"plaintext\", label=\"\", width=0, height=0, fixedsize=true];\n";
 				continue;

@@ -32,7 +32,7 @@ struct graph_adder
 		// it will be invisible so the name does not matter
 		graph_node_properties node_info{"pure"};
 		graph_port_properties port_info{
-				"pure", node_info.get_id(), graph_port_properties::port_type::UNDEFINED, true};
+				"pure", node_info.get_id(), graph_port_properties::port_type::UNDEFINED, false};
 		node_list.emplace_back(std::move(node_info), std::move(port_info));
 	}
 
@@ -94,7 +94,7 @@ struct graph_connectable : base_t
 		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
 		, graph_port_info(detail::port_description<base_t>(std::string{}), graph_info.get_id(),
-				  graph_port_properties::to_port_type<base_t>())
+				  graph_port_properties::to_port_type<base_t>(), true)
 		, graph(&graph)
 	{
 		graph.add_port({graph_info, graph_port_info});
@@ -105,7 +105,7 @@ struct graph_connectable : base_t
 		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
 		, graph_port_info(detail::port_description<base_t>(graph_info.name()), graph_info.get_id(),
-				  graph_port_properties::to_port_type<base_t>())
+				  graph_port_properties::to_port_type<base_t>(), true)
 		, graph(nullptr)
 	{
 	}
