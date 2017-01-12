@@ -50,7 +50,7 @@ auto port_description(const std::string& node_name)
 
 template <class T>
 auto port_description(const std::string& node_name)
-		-> std::enable_if_t<not has_token_type<T>(0), std::string>
+		-> std::enable_if_t<!has_token_type<T>(0), std::string>
 {
 	if (!node_name.empty())
 		return "'" + node_name + "'";
