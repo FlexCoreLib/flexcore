@@ -160,23 +160,23 @@ BOOST_AUTO_TEST_CASE( associativity )
 
 	source = 10;
 	(a >> b >> c >> d)();
-	BOOST_CHECK_EQUAL(tee_ref, 11);
-	BOOST_CHECK_EQUAL(sink_ref, 11);
+	BOOST_CHECK_EQUAL(tee_ref, source+1);
+	BOOST_CHECK_EQUAL(sink_ref, source+1);
 
 	source = 20;
 	((a >> b) >> (c >> d))();
-	BOOST_CHECK_EQUAL(tee_ref, 21);
-	BOOST_CHECK_EQUAL(sink_ref, 21);
+	BOOST_CHECK_EQUAL(tee_ref, source+1);
+	BOOST_CHECK_EQUAL(sink_ref, source+1);
 
 	source = 50;
 	((a >> (b >> c)) >> d)();
-	BOOST_CHECK_EQUAL(tee_ref, 51);
-	BOOST_CHECK_EQUAL(sink_ref, 51);
+	BOOST_CHECK_EQUAL(tee_ref, source+1);
+	BOOST_CHECK_EQUAL(sink_ref, source+1);
 
 	source = 60;
 	(a >> ((b >> c) >> d))();
-	BOOST_CHECK_EQUAL(tee_ref, 61);
-	BOOST_CHECK_EQUAL(sink_ref, 61);
+	BOOST_CHECK_EQUAL(tee_ref, source+1);
+	BOOST_CHECK_EQUAL(sink_ref, source+1);
 }
 
 BOOST_AUTO_TEST_CASE( result_of_connection)
