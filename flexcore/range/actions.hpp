@@ -77,21 +77,26 @@ auto map(operation op, target_range t = target_range{} )
  * needs to be function taking object convertible from elements of range
  * and return boolean.
  *
- * \note the current implementation is not overly efficient as it allocates memory on every call.
- *
  * \see https://en.wikipedia.org/wiki/Filter_%28higher-order_function%29
  */
 template<class predicate>
 struct filter_action
 {
 	template<class in_range>
-	auto operator()(in_range input)
+	auto operator()(in_range data)
 	{
+		auto negatef = [](auto f)
+		{
+			return [f](auto in){ return !f(in); };
+		};
+            
 		using std::begin;
 		using std::end;
-		in_range output;
-		std::copy_if(begin(input), end(input), std::back_inserter(output), pred);
-		return output;
+		//if in_range::value_t is trivialy destructable,
+		//no destructors are called, and we just swap values.
+    		auto mid = std::remove_if(begin(data), end(data), negatef(pred));
+        	data.erase(mid, end(data));
+		return data;
 	}
 	predicate pred;
 };
@@ -115,7 +120,6 @@ auto filter(predicate pred)
 template<class binop, class param_range>
 struct zip_action
 {
-	///
 	template<class in_range>
 	auto operator()(in_range input)
 	{
