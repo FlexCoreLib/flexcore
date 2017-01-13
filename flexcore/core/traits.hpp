@@ -316,6 +316,17 @@ constexpr auto has_sink(int) -> decltype(
 	return true;
 }
 
+template <class T>
+constexpr auto has_token_type(int) -> decltype(std::declval<typename T::token_t>(), bool())
+{
+	return true;
+}
+template <class T>
+constexpr bool has_token_type(...)
+{
+	return false;
+}
+
 ///Checks if type T has an overloaded call operator
 template<class T>
 constexpr auto overloaded(int) -> decltype(&T::operator(), bool())
@@ -438,6 +449,17 @@ is_active_source<T>{} || is_active_sink<T>{}>
 {
 };
 
+template<class T>
+struct is_event_port: std::integral_constant<bool,
+is_active_source<T>{} || is_passive_sink<T>{}>
+{
+};
+
+template<class T>
+struct is_state_port: std::integral_constant<bool,
+is_active_sink<T>{} || is_passive_source<T>{}>
+{
+};
 /** @}*/ //doxygen group traits
 
 } // namespace fc

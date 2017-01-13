@@ -85,6 +85,7 @@ public:
 	}
 
 	typedef data_t result_t;
+	typedef data_t token_t;
 
 private:
 	std::function<data_t()> call;

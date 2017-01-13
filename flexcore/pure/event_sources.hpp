@@ -35,6 +35,7 @@ template<class event_t>
 struct event_source
 {
 	typedef std::remove_reference_t<event_t> result_t;
+	typedef event_t token_t;
 	typedef typename detail::handle_type<result_t>::type handler_t;
 
 	event_source() = default;

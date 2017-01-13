@@ -319,6 +319,8 @@ private:
 	forest_t::iterator add_child(std::unique_ptr<tree_node> child);
 };
 
+class visualization;
+
 /**
  * \brief Root node for building node trees.
  *
@@ -329,13 +331,15 @@ class forest_owner
 {
 public:
 	forest_owner(graph::connection_graph& graph, std::string n, std::shared_ptr<parallel_region> r);
+	~forest_owner();
 	owning_base_node& nodes() { return *tree_root; }
-	void print_forest(std::ostream& out) const;
+	void visualize(std::ostream& out) const;
 
 private:
 	std::unique_ptr<forest_graph> fg_;
 	/// non_owning access to first node in tree, ownership is in forest.
 	owning_base_node* tree_root;
+	std::unique_ptr<visualization> viz_; // ptr to avoid cyclic reference
 };
 
 /**

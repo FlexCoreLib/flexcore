@@ -79,6 +79,7 @@ public:
 	}
 
 	typedef void result_t;
+	typedef data_t token_t;
 private:
 	detail::active_port_base<std::function<data_t()>, detail::single_handler_policy> base;
 };
