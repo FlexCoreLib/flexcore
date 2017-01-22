@@ -10,7 +10,7 @@
 
 using fc::operator>>;
 
-struct loop {
+struct map_loop {
 	decltype(auto) operator()(std::vector<float> in, float x, float y) {
 		for (size_t i = 0; i != in.size(); ++i) {
 			in[i] = y + x * in[i];
@@ -32,6 +32,27 @@ struct fc_map {
 	}
 };
 
+constexpr auto filter_factor = 0.25;
+constexpr auto filter_value = filter_factor * 10000;
+
+struct filter_loop {
+	decltype(auto) operator()(std::vector<float> in, float x, float y) {
+		for (size_t i = 0; i != in.size(); ++i) {
+			if(in[i] > filter_value)
+				in[i] = y + x * in[i];
+		}
+		return in;
+	}
+};
+
+struct fc_filter_map {
+	decltype(auto) operator()(std::vector<float> in, float x, float y) {
+		return (fc::actions::filter([](auto in){ return in > filter_value;})
+				>> fc::actions::map([x](auto in) {return x * in;})
+				>> fc::actions::map([y](auto in) {return y + in;}))(std::move(in));
+	}
+};
+
 constexpr auto benchmark_size = 2 << 15;
 
 /// Copying a std::vector serves as a simple baseline
@@ -41,7 +62,7 @@ static void VectorCopy(benchmark::State& state) {
 		std::vector<int> copy(vec);
 }
 
-template<class T> void vector_muladd_f(benchmark::State& state) {
+template<class T> void vector_f(benchmark::State& state) {
 	T f;
 
 	std::random_device rd;
@@ -51,7 +72,6 @@ template<class T> void vector_muladd_f(benchmark::State& state) {
 	std::vector<float> a(state.range(0));
 	std::vector<float> b(state.range(0));
 
-	std::generate(a.begin(), a.end(), [&]() {return d(gen);});
 	std::generate(b.begin(), b.end(), [&]() {return d(gen);});
 
 
@@ -67,13 +87,18 @@ template<class T> void vector_muladd_f(benchmark::State& state) {
 	}
 }
 
-BENCHMARK(VectorCopy)
+//BENCHMARK(VectorCopy)
+//		->RangeMultiplier(2)->Range(64, benchmark_size);
+//BENCHMARK_TEMPLATE(vector_f, map_loop)
+//		->RangeMultiplier(2)->Range(64, benchmark_size);
+//BENCHMARK_TEMPLATE(vector_f, fc_map)
+//		->RangeMultiplier(2)->Range(64, benchmark_size);
+//BENCHMARK_TEMPLATE(vector_f, fc_map_inline)
+//		->RangeMultiplier(2)->Range(64, benchmark_size);
+
+BENCHMARK_TEMPLATE(vector_f, filter_loop)
 		->RangeMultiplier(2)->Range(64, benchmark_size);
-BENCHMARK_TEMPLATE(vector_muladd_f, loop)
-		->RangeMultiplier(2)->Range(64, benchmark_size);
-BENCHMARK_TEMPLATE(vector_muladd_f, fc_map)
-		->RangeMultiplier(2)->Range(64, benchmark_size);
-BENCHMARK_TEMPLATE(vector_muladd_f, fc_map_inline)
+BENCHMARK_TEMPLATE(vector_f, fc_filter_map)
 		->RangeMultiplier(2)->Range(64, benchmark_size);
 
 BENCHMARK_MAIN()
