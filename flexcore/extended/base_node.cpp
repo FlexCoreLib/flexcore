@@ -113,10 +113,14 @@ forest_owner::forest_owner(
 {
 	assert(fg_);
 	auto& forest = fg_->forest;
-	auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<owner_holder>()));
-	auto& holder = static_cast<owner_holder&>(*iter->get());
-	tree_root =
-			&holder.set_owner(std::make_unique<owning_base_node>(iter, node_args{fg_.get(), r, n}));
+	auto args = node_args{fg_.get(), r, n};
+	auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<tree_base_node>(args)));
+	args.self = iter;
+	{
+		std::unique_ptr<tree_node> node = std::make_unique<owning_base_node>(args);
+		node.swap(*iter);
+	}
+	tree_root = dynamic_cast<owning_base_node*>(iter->get());
 	assert(tree_root);
 }
 
