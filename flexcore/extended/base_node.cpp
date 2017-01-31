@@ -76,6 +76,13 @@ forest_t::iterator owning_base_node::add_child(std::unique_ptr<tree_node> child)
 	return child_it;
 }
 
+node_args owning_base_node::new_node(node_args args)
+{
+	auto proxy_iter = add_child(std::make_unique<tree_base_node>(args));
+	args.self = proxy_iter;
+	return args;
+}
+
 std::shared_ptr<parallel_region> owner_holder::region()
 {
 	assert(owner_);

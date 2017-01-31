@@ -208,7 +208,7 @@ public:
 	 */
 	node_args new_node(std::string name)
 	{
-		return new_node(region(), std::move(name));
+		return new_node({fg_, region(), std::move(name)});
 	}
 	/**
 	 * \brief creates a new element in the forest which serves as a proxy for a node
@@ -220,10 +220,7 @@ public:
 	 */
 	node_args new_node(std::shared_ptr<parallel_region> r, std::string name)
 	{
-		auto args = node_args{fg_, r, name};
-		auto proxy_iter = add_child(std::make_unique<tree_base_node>(args));
-		args.self = proxy_iter;
-		return args;
+		return new_node({fg_, std::move(r), std::move(name)});
 	}
 
 	/**
@@ -317,6 +314,9 @@ private:
 	 * \pre child != nullptr
 	 */
 	forest_t::iterator add_child(std::unique_ptr<tree_node> child);
+
+	// Helper: create a new tree_base_node in tree from node_args.
+	node_args new_node(node_args args);
 };
 
 class visualization;
