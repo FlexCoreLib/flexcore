@@ -293,18 +293,20 @@ private:
 	template <class node_t, class... Args>
 	node_t& make_child_impl(detail::owning_tag, node_args nargs, Args&&... args)
 	{
-		auto iter = adobe::trailing_of(fg_->forest.insert(self_, std::make_unique<owner_holder>()));
-		auto& holder = static_cast<owner_holder&>(*iter->get());
-		nargs.self = iter;
-		return static_cast<node_t&>(
-		    holder.set_owner(std::make_unique<node_t>(std::forward<Args>(args)..., nargs)));
+		node_args n = new_node(std::move(nargs));
+		std::unique_ptr<tree_node> node = std::make_unique<node_t>(std::forward<Args>(args)..., n);
+		node.swap(*n.self);
+		return dynamic_cast<node_t&>(**n.self);
 	}
 
 	template<class node_t, class ... args_t>
 	node_t& make_child_impl(detail::leaf_tag, const node_args& nargs, args_t&&... args)
 	{
-		return static_cast<node_t&>(
-		    **add_child(std::make_unique<node_t>(std::forward<args_t>(args)..., nargs)));
+		node_args n = new_node(nargs);
+		const node_args& n_c = n;
+		std::unique_ptr<tree_node> node = std::make_unique<node_t>(std::forward<args_t>(args)..., n_c);
+		node.swap(*n.self);
+		return dynamic_cast<node_t&>(**n.self);
 	}
 
 	forest_t::iterator self_;
