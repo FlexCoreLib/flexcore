@@ -83,28 +83,6 @@ node_args owning_base_node::new_node(node_args args)
 	return args;
 }
 
-std::shared_ptr<parallel_region> owner_holder::region()
-{
-	assert(owner_);
-	return owner_->region();
-}
-graph::graph_node_properties owner_holder::graph_info() const
-{
-	assert(owner_);
-	return owner_->graph_info();
-}
-graph::connection_graph& owner_holder::get_graph()
-{
-	assert(owner_);
-	return owner_->get_graph();
-}
-
-std::string owner_holder::name() const
-{
-	assert(owner_);
-	return owner_->name();
-}
-
 forest_owner::forest_owner(
 		graph::connection_graph& graph, std::string n, std::shared_ptr<parallel_region> r)
 	: fg_(std::make_unique<forest_graph>(graph))

@@ -129,35 +129,6 @@ private:
 
 class owning_base_node;
 
-/** \brief Helper to allow for two phase insertion of owning_base_nodes into forest.
- *
- * owning_base_nodes need an iterator to self in the forest, and since we
- * cannot emplace something directly in the forest, we instead:
- *
- *  1. insert an owner_holder into forest
- *  2. construct an owner (derived from owning_base_node) with the owner_holder's iterator
- *  3. assign the owner to the owner_holder
- *
- * \pre Before any calls to tree_node interface methods, set_owner must have
- *      been called with a valid unique_ptr<owning_base_node>.
- */
-class owner_holder final : public tree_node
-{
-public:
-	owning_base_node& set_owner(std::unique_ptr<owning_base_node> node)
-	{
-		owner_ = std::move(node);
-		return *owner_.get();
-	}
-	std::shared_ptr<parallel_region> region() override;
-	graph::graph_node_properties graph_info() const override;
-	graph::connection_graph& get_graph() override;
-	std::string name() const override;
-
-private:
-	std::unique_ptr<owning_base_node> owner_;
-};
-
 /**
  * \brief Base class for nodes which own other nodes, aka compound nodes.
  *
@@ -183,11 +154,6 @@ private:
 class owning_base_node : public tree_base_node
 {
 public:
-	owning_base_node(forest_t::iterator self, const node_args& node)
-		: tree_base_node(node), self_(self)
-	{
-	}
-
 	explicit owning_base_node(const node_args& node)
 		: tree_base_node(node), self_(node.self)
 	{
