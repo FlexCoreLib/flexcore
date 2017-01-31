@@ -144,4 +144,34 @@ BOOST_AUTO_TEST_CASE( test_deletion )
 	BOOST_CHECK_EQUAL(test_node.nr_of_children(), 0);
 }
 
+namespace
+{
+template <class T>
+class full_name_test_node : public T
+{
+public:
+	full_name_test_node(const std::string& wanted_fullname, const fc::node_args& args)
+	:  T(args)
+	{
+		BOOST_CHECK_EQUAL(wanted_fullname, fc::full_name(this->fg_->forest, *this));
+	}
+};
+}
+
+BOOST_AUTO_TEST_CASE( tree_base_node_can_get_full_name_in_constructor )
+{
+	tests::owning_node root_("root");
+	auto& root = root_.node();
+	// runs the test
+	root.make_child_named<full_name_test_node<fc::tree_base_node>>("my_node", "root/my_node");
+}
+
+BOOST_AUTO_TEST_CASE( owning_base_node_can_get_full_name_in_constructor )
+{
+	tests::owning_node root_("root");
+	auto& root = root_.node();
+	// runs the test
+	root.make_child_named<full_name_test_node<fc::owning_base_node>>("my_node", "root/my_node");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
