@@ -91,10 +91,6 @@ class node_args
 namespace detail
 {
 using node_args [[deprecated("Please use fc::node_args directly")]] = fc::node_args;
-
-struct owning_tag {};
-struct leaf_tag {};
-
 } // namespace detail
 
 /** \brief Base class for nodes contained in forest.
@@ -121,7 +117,6 @@ public:
 	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() override;
 
-	using tag = detail::leaf_tag;
 protected:
 	forest_graph* fg_;
 private:
@@ -187,7 +182,6 @@ private:
  */
 class owning_base_node : public tree_base_node
 {
-	template <class node> using tag_ = typename node::tag;
 public:
 	owning_base_node(forest_t::iterator self, const node_args& node)
 		: tree_base_node(node), self_(self)
@@ -239,7 +233,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, region(), node_t::default_name},
+		return make_child_impl<node_t>(node_args{fg_, region(), node_t::default_name},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -255,7 +249,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, r, node_t::default_name},
+		return make_child_impl<node_t>(node_args{fg_, r, node_t::default_name},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -272,7 +266,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, region(), name},
+		return make_child_impl<node_t>(node_args{fg_, region(), name},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -281,30 +275,19 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(tag_<node_t>{}, node_args{fg_, r, name},
+		return make_child_impl<node_t>(node_args{fg_, r, name},
 		                               std::forward<args_t>(args)...);
 	}
 
 
-	using tag = detail::owning_tag;
 protected:
 	forest_t::iterator self() const;
 private:
 	template <class node_t, class... Args>
-	node_t& make_child_impl(detail::owning_tag, node_args nargs, Args&&... args)
+	node_t& make_child_impl(node_args nargs, Args&&... args)
 	{
 		node_args n = new_node(std::move(nargs));
 		std::unique_ptr<tree_node> node = std::make_unique<node_t>(std::forward<Args>(args)..., n);
-		node.swap(*n.self);
-		return dynamic_cast<node_t&>(**n.self);
-	}
-
-	template<class node_t, class ... args_t>
-	node_t& make_child_impl(detail::leaf_tag, const node_args& nargs, args_t&&... args)
-	{
-		node_args n = new_node(nargs);
-		const node_args& n_c = n;
-		std::unique_ptr<tree_node> node = std::make_unique<node_t>(std::forward<args_t>(args)..., n_c);
 		node.swap(*n.self);
 		return dynamic_cast<node_t&>(**n.self);
 	}
