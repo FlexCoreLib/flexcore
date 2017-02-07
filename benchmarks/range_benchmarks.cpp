@@ -87,14 +87,14 @@ template<class T> void vector_f(benchmark::State& state) {
 	}
 }
 
-//BENCHMARK(VectorCopy)
-//		->RangeMultiplier(2)->Range(64, benchmark_size);
-//BENCHMARK_TEMPLATE(vector_f, map_loop)
-//		->RangeMultiplier(2)->Range(64, benchmark_size);
-//BENCHMARK_TEMPLATE(vector_f, fc_map)
-//		->RangeMultiplier(2)->Range(64, benchmark_size);
-//BENCHMARK_TEMPLATE(vector_f, fc_map_inline)
-//		->RangeMultiplier(2)->Range(64, benchmark_size);
+BENCHMARK(VectorCopy)
+		->RangeMultiplier(2)->Range(64, benchmark_size);
+BENCHMARK_TEMPLATE(vector_f, map_loop)
+		->RangeMultiplier(2)->Range(64, benchmark_size);
+BENCHMARK_TEMPLATE(vector_f, fc_map)
+		->RangeMultiplier(2)->Range(64, benchmark_size);
+BENCHMARK_TEMPLATE(vector_f, fc_map_inline)
+		->RangeMultiplier(2)->Range(64, benchmark_size);
 
 BENCHMARK_TEMPLATE(vector_f, filter_loop)
 		->RangeMultiplier(2)->Range(64, benchmark_size);
