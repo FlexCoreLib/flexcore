@@ -227,7 +227,7 @@ private:
 
 	/** \brief Overload for connecting all ports in *this with a connectable.
 	 *
-	 * \param T the connectable - will be copied unless it is an lvalue.
+	 * \param t the connectable - will be copied unless it is an lvalue.
 	 * \returns mux_port<connection...> (or mux_port<port_connection...>)
 	 */
 	template <class T>

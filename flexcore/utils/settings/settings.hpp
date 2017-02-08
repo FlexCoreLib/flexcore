@@ -71,9 +71,11 @@ public:
 	 * \brief Constructs Setting with id, reference to backend, initial value and optionally a constraint.
 	 * \param id identifier of the setting
 	 * \param backend Reference to the backend used by this setting
-	 * \param initial_value
+	 * \param initial_value Value the setting has on construction.
+	 * Depending on the value stored in the backend, this might not be the value the setting has
+	 * on first call to it.
 	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
-	 * \pre initial value needs to fulfill constraint
+	 * \pre initial_value needs to fulfill constraint
 	 */
 	template <class constraint_t = always_valid>
 	setting(setting_id id,
@@ -95,9 +97,11 @@ public:
 	 * This Constructor can only be used if the backend has no state
 	 * as it constructs a backend for itself.
 	 * \param id identifier of the setting
-	 * \param initial_value
+	 * \param initial_value Value the setting has on construction.
+	 * Depending on the value stored in the backend, this might not be the value the setting has
+	 * on first call to it.
 	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
-	 * \pre initial value needs to fulfill constraint
+	 * \pre initial_value needs to fulfill constraint
 	 */
 	template <class constraint_t = always_valid>
 	setting(setting_id id,
@@ -117,6 +121,7 @@ public:
 	{
 		return *cache;
 	}
+
 
 private:
 	//cache is a shared_ptr since references store a callback to set the cache.

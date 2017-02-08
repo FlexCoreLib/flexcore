@@ -102,7 +102,7 @@ public:
 /** \brief Register callbacks with passive port.
  *
  * \tparam handler_t type of handler used by active port.
- * \tparam handler_storage_policy policy class that handles the number of
+ * \tparam storage_policy policy class that handles the number of
  *         handlers used in active port.
  * \invariant callback != nullptr
  * \invariant *callback is always valid function object.
@@ -111,8 +111,6 @@ template <class handler_t, template <class> class storage_policy>
 struct active_port_base
 {
 public:
-	/// \param handlers is used by the active side to store the connection.
-	///        Needs to be compatible with what the policy expects.
 	active_port_base()
 		: callback(std::make_shared<std::function<void(size_t)>>(
 				[this](size_t hash)
@@ -132,6 +130,9 @@ public:
 
 	/** \brief Register a callback with sink, that breaks the connection to source.
 	 * \pre sink_t supports registering callbacks.
+	 *
+	 * \param handler is used by the active side to store the connection.
+	 * Needs to be compatible with what the policy expects.
 	 */
 	template <class sink_t, std::enable_if_t<fc::has_register_function<sink_t>(0), int> = 0>
 	void add_handler(handler_t handler, sink_t& sink)

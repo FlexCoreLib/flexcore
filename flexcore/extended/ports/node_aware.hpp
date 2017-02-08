@@ -37,12 +37,17 @@ bool same_tick_rate(const node_aware<source_t>& source,
 
 /**
  * \brief factory method to construct a buffer
- *
- * \returns either buffer or no_buffer.
  */
 template<class result_t>
 struct buffer_factory
 {
+	/**
+	 * \brief Creates buffer or no_buffer depending on regions of active and passive
+	 * \returns either buffer if the regions differ,
+	 * and no_buffer if they are from the same region.
+	 * \param active active port of the connection
+	 * \param passive passive port of the connection
+	 */
 	template<class active_t, class passive_t, class tag>
 	static auto construct_buffer(const active_t& active,
 	        const passive_t& passive,

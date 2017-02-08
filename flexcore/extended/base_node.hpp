@@ -296,7 +296,7 @@ private:
 /**
  * \brief Erases node and recursively erases all children.
  *
- * \param forest, forest to delete node from.
+ * \param forest forest container to delete node from.
  * \param position iterator of forest pointing to node.
  * \pre position must be in forest.
  * \returns trailing iterator pointing to parent of position.

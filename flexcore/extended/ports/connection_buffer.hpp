@@ -16,7 +16,7 @@ namespace fc
  * Classes implementing this are independent of the way they implement buffering.
  * Classes might even directly forward events.
  *
- * \tparam event_t type of tokens passing through the buffer
+ * \tparam token_t type of tokens passing through the buffer
  */
 template<class token_t, class tag>
 struct buffer_interface
@@ -92,13 +92,13 @@ public:
 	typedef typename pure::in_port<event_t, event_tag>::type in_port_t;
 
 	/// event in port of type void, switches active-side buffers
-	auto& switch_active_tick() { return switch_active_tick_; };
+	auto& switch_active_tick() { return switch_active_tick_; }
 	/// event in port of type void, switches passive-side buffers
-	auto& switch_passive_tick() { return switch_passive_tick_; };
+	auto& switch_passive_tick() { return switch_passive_tick_; }
 	/// event in port of type void, directly switches active- and passive-side buffers
 	auto& switch_active_passive_tick() { return switch_active_passive_tick_; }
 	/// event in port of type void, fires outgoing buffer
-	auto& work_tick() { return in_send_tick; };
+	auto& work_tick() { return in_send_tick; }
 
 	in_port_t& in() override { return in_event_port; }
 	out_port_t& out() override { return out_event_port; }
@@ -291,14 +291,14 @@ class state_buffer : public buffer_interface<data_t, state_tag>
 public:
 	state_buffer();
 
-	// event in port of type void, switches incoming buffers
-	auto& switch_active_tick() { return switch_active_tick_; };
-	// event in port of type void, switches outgoing buffers
-	auto& switch_passive_tick() { return switch_passive_tick_; };
+	/// event in port of type void, switches incoming buffers
+	auto& switch_active_tick() { return switch_active_tick_; }
+	/// event in port of type void, switches outgoing buffers
+	auto& switch_passive_tick() { return switch_passive_tick_; }
 	/// event in port of type void, directly switches active- and passive-side buffers
 	auto& switch_active_passive_tick() { return switch_active_passive_tick_; }
-	// event in port of type void, pulls data at in_port
-	auto& work_tick() { return in_work_tick; };
+	/// event in port of type void, pulls data at in_port
+	auto& work_tick() { return in_work_tick; }
 
 	pure::state_sink<data_t>& in() override
 	{
