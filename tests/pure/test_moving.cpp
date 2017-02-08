@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE( moving_state )
 	pure::state_source<move_token> source([](){ return move_token("foo"); });
 
 	source >> set_bar >> sink;
-	auto v = sink.get();
+	const auto v = sink.get();
 	BOOST_CHECK_EQUAL(v.value(), "bar");
 }
 

@@ -24,7 +24,7 @@ private:
 			graph::graph_port_properties::unique_id node_id) const;
 	std::vector<graph::graph_properties> find_connectables(
 			graph::graph_port_properties::unique_id node_id) const;
-	const std::string& get_color(const parallel_region* region);
+	std::string get_color(const parallel_region* region);
 	void print_subgraph(typename forest_t::const_iterator node, std::ostream& stream);
 	void print_ports(const std::vector<graph::graph_properties>& ports, unsigned long owner_hash,
 			std::ostream& stream);

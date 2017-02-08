@@ -71,13 +71,10 @@ struct always_false : std::false_type
  * Nonetheless, the connection needs to be stored to allow further connections.
  * the active_connection_proxy stores these temporary objects.
  *
- * \tparam active_ is the active connection,
- * \tparam passive_t the passive side of the connection durint buildup
- * \tparam
- * {
- * connect_policy a policy class which makes sure parameters to connect
+ * \tparam active_t is the active connection,
+ * \tparam passive_t the passive side of the connection during buildup
+ * \tparam connect_policy a policy class which makes sure parameters to connect
  * inside the proxy are in the correct order.
- * }
  * */
 template<class active_t, class passive_t, class connect_policy>
 struct active_connection_proxy
@@ -99,6 +96,9 @@ struct active_connection_proxy
 			stored_passive(std::forward<passive_t>(passive)),
 			connected{false}
 	{}
+
+	active_connection_proxy(const active_connection_proxy&) = default;
+	active_connection_proxy(active_connection_proxy&&) = default;
 
 	~active_connection_proxy()
 	{
@@ -185,7 +185,6 @@ struct active_passive_connect_impl
 /**
  * Specialization of active_passive_connect_impl for the case of connecting a standard connectable
  * which is not a is_passive_sink to a is_passive_source.
- * \return a stream_proxy which contains the active && the passive.
  */
 template<class active_t, class passive_t, class argument_order>
 struct active_passive_connect_impl
@@ -204,6 +203,7 @@ struct active_passive_connect_impl
 					)>
 	>
 {
+	/// \return a stream_proxy which contains the active && the passive.
 	auto operator()(active_t&& active, passive_t&& passive)
 	{
 		return active_connection_proxy<active_t, passive_t, argument_order>
@@ -216,7 +216,6 @@ struct active_passive_connect_impl
  * \pre active_t needs to be a active_connectable.
  * \pre passive_t needs to be a passive_connectable.
  * \post active is now connected to passive
- * \return port_connection tag object with the type information of the connection.
  */
 template<class active_t, class passive_t, class argument_order>
 struct active_passive_connect_impl
@@ -235,6 +234,7 @@ struct active_passive_connect_impl
 					)>
 	>
 {
+	/// \return port_connection tag object with the type information of the connection.
 	auto operator()(active_t&& active, passive_t&& passive)
 	{
 

@@ -84,7 +84,7 @@ public:
 	const std::string& description() const { return description_; }
 	unique_id owning_node() const { return owning_node_; }
 	unique_id id() const { return id_; }
-	port_type type() const { return type_; };
+	port_type type() const { return type_; }
 
 private:
 	std::string description_;

@@ -9,7 +9,10 @@ namespace thread
 {
 int parallel_scheduler::num_threads()
 {
-		return std::max(1u ,std::thread::hardware_concurrency());
+	const int nr = static_cast<int>(
+			std::max(1u ,std::thread::hardware_concurrency()));
+	assert( nr >= 1);
+	return nr;
 }
 
 parallel_scheduler::parallel_scheduler() :

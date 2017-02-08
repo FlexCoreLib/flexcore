@@ -88,7 +88,7 @@ void set_graph_object(T&, connection_graph*)
  *
  * Connections of graph_connectables will be added to the global abstract graph.
  *
- * \tparam base any connectable to wrap graph_connectable around.
+ * \tparam base_t any connectable to wrap graph_connectable around.
  */
 template <class base_t>
 struct graph_connectable : base_t

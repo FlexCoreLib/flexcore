@@ -17,13 +17,13 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_scheduler)
 
+namespace
+{
 std::unique_ptr<thread::cycle_control> make_parallel_cycle_control()
 {
 	return std::make_unique<thread::cycle_control>(std::make_unique<thread::parallel_scheduler>());
 }
 
-namespace
-{
 struct store
 {
 	int val = 0;
@@ -31,11 +31,6 @@ struct store
 	void make_1()
 	{
 		val = 1;
-	}
-
-	void make_2()
-	{
-		val = 2;
 	}
 };
 }
