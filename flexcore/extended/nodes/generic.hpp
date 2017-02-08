@@ -114,7 +114,7 @@ public:
 		} //else the port already exists, we can just return it
 
 		return it->second;
-	};
+	}
 
 	/// output port of events of type data_t.
 	auto& out() noexcept { return out_port; }

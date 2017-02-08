@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(test_graph_creation)
 	g_source.fire(1);
 
 	auto dot_string = out_stream.str();
-	unsigned line_count =
+	auto line_count =
 			std::count(dot_string.begin(), dot_string.end(),'\n');
 
 	BOOST_CHECK_EQUAL(test_val, 1);

@@ -79,7 +79,7 @@ public:
 	const forest_t* forest() const { return forest_; }
 
 	auto region() const { return owner->region(); }
-	auto& node() { return *owner; };
+	auto& node() { return *owner; }
 
 private:
 	graph::connection_graph graph;

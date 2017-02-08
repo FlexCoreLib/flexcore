@@ -12,10 +12,10 @@ BOOST_AUTO_TEST_SUITE(test_terminal_node)
 
 BOOST_AUTO_TEST_CASE(test_event_terminal)
 {
-	const float test_val = 1.234;
+	const float test_val = 1.234f;
 
 	{ //test pure terminal
-	float test_out = 0.0;
+	float test_out = 0.0f;
 
 	event_terminal<float, pure::pure_node> pure_terminal;
 
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(test_event_terminal)
 	}
 
 	{ // test extended terminal
-	float test_out = 0.0;
+	float test_out = 0.0f;
 	tests::owning_node root;
 	auto& tree_terminal = root.make_child_named<event_terminal<float>>("terminal");
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(test_event_terminal)
 
 BOOST_AUTO_TEST_CASE(test_state_terminal)
 {
-	const float test_val = 1.234;
+	const float test_val = 1.234f;
 
 	state_terminal<float, pure::pure_node> pure_terminal;
 

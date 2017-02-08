@@ -3,9 +3,12 @@
 #include <flexcore/scheduler/serialschedulers.hpp>
 #include <future>
 
+namespace
+{
 auto make_blocking_scheduler()
 {
 	return std::make_unique<fc::thread::blocking_scheduler>();
+}
 }
 
 BOOST_AUTO_TEST_SUITE(test_blocking_scheduler)

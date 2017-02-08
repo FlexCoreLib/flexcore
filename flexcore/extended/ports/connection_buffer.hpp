@@ -194,13 +194,13 @@ public:
 	typedef typename pure::in_port<void, event_tag>::type in_port_t;
 
 	/// event in port of type void, switches active-side buffers
-	auto& switch_active_tick() { return switch_active_tick_; };
+	auto& switch_active_tick() { return switch_active_tick_; }
 	/// event in port of type void, switches passive-side buffers
-	auto& switch_passive_tick() { return switch_passive_tick_; };
+	auto& switch_passive_tick() { return switch_passive_tick_; }
 	/// event in port of type void, directly switches active- and passive-side buffers
 	auto& switch_active_passive_tick() { return switch_active_passive_tick_; }
 	/// event in port of type void, fires out port once for each event stored.
-	auto& work_tick() { return in_send_tick; };
+	auto& work_tick() { return in_send_tick; }
 
 	in_port_t& in() override { return in_event_port; }
 	out_port_t& out() override { return out_event_port; }

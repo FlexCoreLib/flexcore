@@ -97,6 +97,9 @@ struct active_connection_proxy
 			connected{false}
 	{}
 
+	active_connection_proxy(const active_connection_proxy&) = default;
+	active_connection_proxy(active_connection_proxy&&) = default;
+
 	~active_connection_proxy()
 	{
 		assert(connected && "active_connection_proxy was destroyed but not connected.");

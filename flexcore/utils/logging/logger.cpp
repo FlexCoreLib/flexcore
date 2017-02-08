@@ -59,7 +59,7 @@ logger& logger::get()
 
 /// Print the severity level to the ostream, required for boost.log. For now this just casts the
 /// value to an integer value, but it could also be converted to some string representation.
-std::ostream& operator<<(std::ostream& out, fc::level severity)
+static std::ostream& operator<<(std::ostream& out, fc::level severity)
 {
 	out << static_cast<int>(severity);
 	return out;
