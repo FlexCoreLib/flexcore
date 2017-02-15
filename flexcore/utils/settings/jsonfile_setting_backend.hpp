@@ -53,7 +53,6 @@ public:
 		auto value = initial_v;
 		try
 		{
-			using std::to_string;
 			archive(cereal::make_nvp(id.key, value));
 			if (constraint(value))
 				setter(value);

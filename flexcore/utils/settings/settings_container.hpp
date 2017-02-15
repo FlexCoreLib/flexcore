@@ -30,9 +30,9 @@ public:
 	}
 
 	template <class data_t>
-	fc::setting<data_t, backend_t>& add(const std::string& name, data_t init_value)
+	fc::setting<data_t>& add(const std::string& name, data_t init_value)
 	{
-		return container.add<fc::setting<data_t, backend_t>>(
+		return container.add<fc::setting<data_t>>(
 				setting_id{name},
 				backend_access,
 				init_value);

@@ -57,13 +57,10 @@ public:
  * \tparam data_t type of data provided by setting.
  * Needs to be serializable by chosen serialization framework.
  *
- * \tparam backend_facade type of backend used to store and retrieve values.
- * Usually access to serialization framework.
- *
  * \invariant will always contain valid state of data_t.
  * The Constructor will fail and throw an exception if value cannot be loaded.
  */
-template<class data_t, class backend_facade>
+template<class data_t>
 class setting
 {
 public:
@@ -75,9 +72,11 @@ public:
 	 * Depending on the value stored in the backend, this might not be the value the setting has
 	 * on first call to it.
 	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
+	 * \tparam backend_facade type of backend used to store and retrieve values.
+	 * Usually access to serialization framework.
 	 * \pre initial_value needs to fulfill constraint
 	 */
-	template <class constraint_t = always_valid>
+	template <class backend_facade, class constraint_t = always_valid>
 	setting(setting_id id,
 			backend_facade& backend,
 			data_t initial_value,
@@ -85,31 +84,6 @@ public:
 		: cache(std::make_shared<data_t>(initial_value))
 	{
 		backend.register_setting(
-				id, //unique id of setting in registry
-				initial_value, //initial value, in case it needs to be stored
-				[=](data_t i){ *cache = i; }, //callback to let registry write cache
-				constraint);
-	}
-
-	/**
-	 * \brief Constructs Setting with id, initial value and optionally a constraint.
-	 *
-	 * This Constructor can only be used if the backend has no state
-	 * as it constructs a backend for itself.
-	 * \param id identifier of the setting
-	 * \param initial_value Value the setting has on construction.
-	 * Depending on the value stored in the backend, this might not be the value the setting has
-	 * on first call to it.
-	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
-	 * \pre initial_value needs to fulfill constraint
-	 */
-	template <class constraint_t = always_valid>
-	setting(setting_id id,
-			data_t initial_value,
-			constraint_t constraint = constraint_t{})
-		: cache(std::make_shared<data_t>(initial_value))
-	{
-		backend_facade{}.register_setting(
 				id, //unique id of setting in registry
 				initial_value, //initial value, in case it needs to be stored
 				[=](data_t i){ *cache = i; }, //callback to let registry write cache
