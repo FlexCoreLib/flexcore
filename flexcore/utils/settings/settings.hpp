@@ -12,11 +12,21 @@ struct setting_id
 	std::string key;
 };
 
+inline bool operator<(const setting_id& l, const setting_id& r)
+{
+	return l.key < r.key;
+}
+
+inline bool operator==(const setting_id& l, const setting_id& r)
+{
+	return l.key == r.key;
+}
+
 /// Trivial constraint which is always valid
 struct always_valid
 {
 	template<class T>
-	bool operator()(const T&)
+	bool operator()(const T&) const
 	{
 		return true;
 	}
