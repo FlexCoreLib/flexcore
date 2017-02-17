@@ -100,7 +100,10 @@ public:
 				constraint);
 	}
 
-	/// Returns the setting's current value.
+	/**
+	 * \return Returns the setting's current value
+	 * \post return value fulfills constraint given in constructor
+	 */
 	data_t operator()()
 	{
 		return *cache;
