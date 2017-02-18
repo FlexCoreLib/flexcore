@@ -88,31 +88,6 @@ public:
 	typedef decltype(test<derived>(nullptr)) type;
 };
 
-/// has_member check for method connect, see has_call_op for explanation
-template<class T>
-struct has_member_connect
-{
-private:
-	struct fallback
-	{
-		void connect();
-	};
-
-	struct derived : T, fallback
-	{
-	};
-
-	template<class U, U> struct check;
-
-	template<class to_test>
-	static std::false_type test(check<void (fallback::*)(), &to_test::connect>*);
-
-	template<class>
-	static std::true_type test(...);
-
-public:
-	typedef decltype(test<derived>(nullptr)) type;
-};
 
 template<class,int> struct argtype_of;
 template<class T>
