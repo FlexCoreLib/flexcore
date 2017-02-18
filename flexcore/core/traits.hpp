@@ -133,12 +133,17 @@ constexpr bool has_result_of_type()
 template<class Expr>
 struct is_callable:
 		std::conditional_t<
-			std::is_class<Expr>{},
+			std::is_class<Expr>::value,
 			detail::type_is_callable_impl<Expr>,
 			detail::expr_is_callable_impl<Expr>
 		>
 {
 };
+
+template<class T>
+using is_callable_t = typename is_callable<T>::type;
+template<class T>
+constexpr auto is_callable_v = is_callable<T>::value;
 
 /**
  *  \brief Checks if type T is connectable.
@@ -149,11 +154,16 @@ struct is_callable:
 template <class T>
 struct is_connectable :
 	std::integral_constant<bool,
-	    is_callable<std::remove_reference_t<T>>{} &&
-	    (std::is_lvalue_reference<T>{} || std::is_copy_constructible<T>{})
+	    is_callable_v<std::remove_reference_t<T>> &&
+	    (std::is_lvalue_reference<T>::value || std::is_copy_constructible<T>::value)
 	>
 {
 };
+
+template<class T>
+using is_connectable_t = typename is_connectable<T>::type;
+template<class T>
+constexpr auto is_connectable_v = is_connectable<T>::value;
 
 namespace detail
 {
@@ -206,7 +216,7 @@ template<class Expr>
 struct result_of
 {
 	typedef typename detail::result_of_impl<
-	    Expr, has_result<std::remove_reference_t<Expr>>{}>::type type;
+	    Expr, has_result<std::remove_reference_t<Expr>>::value>::type type;
 };
 template <class Expr>
 using result_of_t = typename result_of<Expr>::type;
@@ -349,17 +359,17 @@ struct is_passive_sink_impl: std::false_type
 };
 
 template<class T>
-struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
+struct is_passive_sink_impl<T, std::enable_if_t<is_callable_v<T>
 			&& !overloaded<T>(0)>>
-		: std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
+		: std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
 {
 };
 
 template<class T>
-struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
+struct is_passive_sink_impl<T, std::enable_if_t<is_callable_v<T>
 			&& overloaded<T>(0)
-			&& has_result<T>{}>>
-		: std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
+			&& has_result<T>::value>>
+		: std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
 {
 };
 } //namespace detail
@@ -404,7 +414,7 @@ constexpr auto is_passive_source_v = is_passive_source<T>::value;
 ///checks if type T is either a passive sink or a passive source.
 template<class T>
 struct is_passive: std::integral_constant<bool,
-		is_passive_source<T>{} || is_passive_sink<T>{}>
+		is_passive_source_v<T> || is_passive_sink_v<T>>
 {
 };
 

@@ -175,11 +175,11 @@ auto connect (source_t&& source, sink_t&& sink)
  * This operator is syntactic sugar for Connect.
  */
 template<class source_t, class sink_t, class enable = std::enable_if_t<
-		(is_connectable<source_t>::value || is_active_source<rm_ref_t<source_t>>{})
-		&& (is_connectable<sink_t>::value || is_active_sink<rm_ref_t<sink_t>>{})>>
+		(is_connectable_v<source_t> || is_active_source_v<rm_ref_t<source_t>>)
+		&& (is_connectable_v<sink_t> || is_active_sink_v<rm_ref_t<sink_t>>)>>
 auto operator >>(source_t&& source, sink_t&& sink)
 {
-	static_assert(!(is_active<rm_ref_t<source_t>>{} && is_active<rm_ref_t<sink_t>>{}),
+	static_assert(!(is_active_v<rm_ref_t<source_t>> && is_active_v<rm_ref_t<sink_t>>),
 	              "event_source can not be connected to state_sink.");
 	return connect(std::forward<source_t>(source), std::forward<sink_t>(sink));
 }
