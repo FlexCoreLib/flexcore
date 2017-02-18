@@ -381,6 +381,11 @@ struct is_passive_sink: detail::is_passive_sink_impl<T>
 {
 };
 
+template<class T>
+using is_passive_sink_t = typename is_passive_sink<T>::type;
+template<class T>
+constexpr auto is_passive_sink_v = is_passive_sink<T>::value;
+
 /**
  * \brief Checks if type T is a passive sink.
  *
@@ -390,6 +395,11 @@ template<class T>
 struct is_passive_source: detail::is_passive_source_impl<T>
 {
 };
+
+template<class T>
+using is_passive_source_t = typename is_passive_source<T>::type;
+template<class T>
+constexpr auto is_passive_source_v = is_passive_source<T>::value;
 
 ///checks if type T is either a passive sink or a passive source.
 template<class T>
@@ -409,6 +419,11 @@ struct is_active_sink: std::false_type
 {
 };
 
+template<class T>
+using is_active_sink_t = typename is_active_sink<T>::type;
+template<class T>
+constexpr auto is_active_sink_v = is_active_sink<T>::value;
+
 /**
  * \brief  Trait to define an active source.
  *
@@ -420,24 +435,44 @@ struct is_active_source: std::false_type
 {
 };
 
+template<class T>
+using is_active_source_t = typename is_active_source<T>::type;
+template<class T>
+constexpr auto is_active_source_v = is_active_source<T>::value;
+
 /// Checks if type T is either active_source or active_sink
 template<class T>
 struct is_active: std::integral_constant<bool,
-is_active_source<T>{} || is_active_sink<T>{}>
+is_active_source_v<T> || is_active_sink_v<T>>
 {
 };
+
+template<class T>
+using is_active_t = typename is_active<T>::type;
+template<class T>
+constexpr auto is_active_v = is_active<T>::value;
 
 template<class T>
 struct is_event_port: std::integral_constant<bool,
-is_active_source<T>{} || is_passive_sink<T>{}>
+is_active_source_v<T> || is_passive_sink_v<T>>
 {
 };
 
 template<class T>
+using is_event_port_t = typename is_event_port<T>::type;
+template<class T>
+constexpr auto is_event_port_v = is_event_port<T>::value;
+
+template<class T>
 struct is_state_port: std::integral_constant<bool,
-is_active_sink<T>{} || is_passive_source<T>{}>
+	is_active_sink_v<T> || is_passive_source_v<T>>
 {
 };
+
+template<class T>
+using is_state_port_t = typename is_state_port<T>::type;
+template<class T>
+constexpr auto is_state_port_v = is_state_port<T>::value;
 /** @}*/ //doxygen group traits
 
 } // namespace fc
