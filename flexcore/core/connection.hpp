@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include <flexcore/core/function_traits.hpp>
+#include <flexcore/core/detail/function_traits.hpp>
 #include <flexcore/core/traits.hpp>
 
 namespace fc

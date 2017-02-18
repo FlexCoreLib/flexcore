@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-#include <flexcore/core/function_traits.hpp>
+#include <flexcore/core/detail/function_traits.hpp>
 
 namespace fc
 {
