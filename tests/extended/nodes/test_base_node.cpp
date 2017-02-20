@@ -153,7 +153,7 @@ public:
 	full_name_test_node(const std::string& wanted_fullname, const fc::node_args& args)
 	:  T(args)
 	{
-		BOOST_CHECK_EQUAL(wanted_fullname, fc::full_name(this->fg_->forest, *this));
+		BOOST_CHECK_EQUAL(wanted_fullname, fc::full_name(this->fg_.forest, *this));
 	}
 };
 }

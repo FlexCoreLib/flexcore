@@ -73,12 +73,12 @@ class forest_owner;
 
 class node_args
 {
-	node_args(forest_graph* fg, const std::shared_ptr<parallel_region>& r, const std::string& name,
+	node_args(forest_graph& fg, const std::shared_ptr<parallel_region>& r, const std::string& name,
 	          forest_t::iterator self = forest_t::iterator{})
 	    : fg(fg), r(r), graph_info(name, r.get()), self(self)
 	{
 	}
-	forest_graph* fg;
+	forest_graph& fg;
 	std::shared_ptr<parallel_region> r;
 	graph::graph_node_properties graph_info;
 	forest_t::iterator self;
@@ -94,7 +94,7 @@ class node_args
  * These should only be constructed through an owning_base_node's
  * make_child()/make_child_named()/new_node() methods.
  *
- * \invariant pointer to owning forest fg_ != nullptr.
+ * \invariant region_ != nullptr
  * \ingroup nodes
  */
 class tree_base_node : public tree_node, private boost::noncopyable
@@ -107,14 +107,14 @@ public:
 	template<class port_t> using mixin = ::fc::default_mixin<port_t>;
 
 	tree_base_node(const node_args& args);
-	std::shared_ptr<parallel_region> region() override { return region_; }
+	std::shared_ptr<parallel_region> region() override { assert(region_); return region_; }
 	std::string name() const override;
 
 	graph::graph_node_properties graph_info() const override;
 	graph::connection_graph& get_graph() override;
 
 protected:
-	forest_graph* fg_;
+	forest_graph& fg_;
 private:
 	/// Information about which region the node belongs to
 	std::shared_ptr<parallel_region> region_;

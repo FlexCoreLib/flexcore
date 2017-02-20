@@ -13,7 +13,7 @@ class test_helper_node : public owning_base_node
 {
 public:
 	explicit test_helper_node(const node_args& node) : owning_base_node(node) {}
-	forest_t* get_forest() { return &this->fg_->forest; }
+	forest_t* get_forest() { return &this->fg_.forest; }
 	forest_t::iterator self() { return owning_base_node::self(); }
 };
 
