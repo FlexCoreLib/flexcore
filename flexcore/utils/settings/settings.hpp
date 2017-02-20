@@ -6,9 +6,15 @@
 namespace fc
 {
 
+/// identifier of setting in context (for example key in ini file)
 struct setting_id
 {
-	/// identifier of setting in context (for example key in ini file)
+	explicit setting_id(std::string id)
+		: key{ std::move(id) }
+	{
+
+	}
+
 	std::string key;
 };
 
@@ -81,7 +87,7 @@ public:
 	 * \param initial_value Value the setting has on construction.
 	 * Depending on the value stored in the backend, this might not be the value the setting has
 	 * on first call to it.
-	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
+	 * \param constraint any function object with signature \code{ bool(data_t) const } \endcode
 	 * \tparam backend_facade type of backend used to store and retrieve values.
 	 * Usually access to serialization framework.
 	 * \pre initial_value needs to fulfill constraint

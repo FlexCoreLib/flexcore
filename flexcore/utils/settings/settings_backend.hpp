@@ -21,6 +21,11 @@
 namespace fc
 {
 
+struct setting_constraint_violation : std::runtime_error
+{
+	using std::runtime_error::runtime_error;
+};
+
 namespace detail
 {
 
@@ -46,11 +51,9 @@ public:
 	{
 	}
 
+	///write deserialized value to setting
 	void write(const std::string& val) override final
 	{
-		//write deserialized value to setting
-		//todo constraint handling
-		//todo handling of deserialization failures
 		setting(Deserializer<data_t>{}(val));
 	}
 private:
@@ -100,16 +103,20 @@ private:
 	}
 };
 
-template<class data_t, class callback_t>
+template<class data_t, class callback_t, class constraint_t>
 struct forward_holder
 {
-	explicit forward_holder(callback_t c)
+	explicit forward_holder(callback_t c, constraint_t constraint)
 		: internal{std::make_unique<setting_forwarder<data_t, callback_t>>(c)}
+		, constraint(constraint)
 	{
 	}
 
 	void operator()(data_t in)
 	{
+		if (!constraint(in))
+			throw setting_constraint_violation{
+					"new setting value violated constraint"};
 		(*internal)(in);
 	}
 
@@ -120,14 +127,10 @@ struct forward_holder
 
 private:
 	std::unique_ptr<setting_forwarder<data_t, callback_t>> internal;
+	constraint_t constraint;
 };
 
 } //namespace detail
-
-struct setting_constraint_violation : std::runtime_error
-{
-	using std::runtime_error::runtime_error;
-};
 
 /**
  * \brief Manages external access to settings
@@ -141,6 +144,7 @@ struct setting_constraint_violation : std::runtime_error
 class settings_backend
 {
 public:
+	//todo allow client code to set the deserializer
 	template<class T>
 	using deserializer = fc::single_object_deserializer<T, cereal::JSONInputArchive>;
 
@@ -179,6 +183,7 @@ public:
 
 private:
 
+	/// helper method to create setting model with deduced types
 	template<class data_t, class T>
 	static auto make_setting_model(T setting)
 	{
@@ -188,12 +193,16 @@ private:
 	}
 
 
+	// a map of settings_id to type erased callbacks which write values to a setting.
 	std::map<setting_id, std::unique_ptr<detail::serialized_setting>>
 			settings{};
 };
 
 /**
  * \brief Default facade which connects any fc::setting to the settings_backend
+ *
+ * todo: would it be useful to have access to the region of the setting here?
+ * todo: would it be useful to introduce scope of settings (in their id) here?
  */
 class settings_facade
 {
@@ -251,12 +260,13 @@ public:
 		// this callback will be executed every time the value of the setting is changed
 		auto set_value = [constraint, setter](const data_t& v)
 		{
-			//todo constraint needs to be checked immediately not delayed, when the setting receives the value
 			if(constraint(v))
 				setter(v);
 		};
 
-		detail::forward_holder<data_t,setter_t> forwarder{set_value};
+		//the forward_holder checks the constraint when a new value is set.
+		detail::forward_holder<data_t,setter_t, constraint_t>
+				forwarder{set_value, constraint};
 
 		using fc::operator>>;
 		region.switch_tick() >> forwarder.internal->in_forward();
