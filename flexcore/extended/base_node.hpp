@@ -248,9 +248,10 @@ private:
 	template <class node_t, class... Args>
 	node_t& make_child_impl(node_args nargs, Args&&... args)
 	{
+		//first create a proxy node to get the node_args with a correct iterator
 		node_args n = new_node(std::move(nargs));
-		std::unique_ptr<tree_node> node = std::make_unique<node_t>(std::forward<Args>(args)..., n);
-		node.swap(*n.self);
+		//then replace proxy with proper node
+		*n.self = std::make_unique<node_t>(std::forward<Args>(args)..., n);
 		return dynamic_cast<node_t&>(**n.self);
 	}
 
@@ -262,7 +263,7 @@ private:
 	 */
 	forest_t::iterator add_child(std::unique_ptr<tree_node> child);
 
-	// Helper: create a new tree_base_node in tree from node_args.
+	/// Helper: create a new tree_base_node in tree from node_args.
 	node_args new_node(node_args args);
 };
 
@@ -273,13 +274,24 @@ class visualization;
  *
  * Has ownership of the forest and thus serves
  * as the root node for all other nodes in the forest.
+ *
+ *\invariant tree_root != nullptr
+ *\invariant viz_ != nullptr
+ *\invariant fg_ != nullptr
  */
 class forest_owner
 {
 public:
+	/**
+	 * \brief constructs root node with access to graph infrastructure
+	 * \param graph access to the abstract connectopn graph
+	 * \param n Human readable name of the root node
+	 * \param r parallel_region the root node belongs to
+	 * \pre r != nullptr
+	 */
 	forest_owner(graph::connection_graph& graph, std::string n, std::shared_ptr<parallel_region> r);
 	~forest_owner();
-	owning_base_node& nodes() { return *tree_root; }
+	owning_base_node& nodes() { assert(tree_root); return *tree_root; }
 	void visualize(std::ostream& out) const;
 
 private:
