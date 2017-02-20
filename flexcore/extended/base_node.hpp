@@ -88,10 +88,6 @@ class node_args
 	friend class fc::forest_owner;
 };
 
-namespace detail
-{
-using node_args [[deprecated("Please use fc::node_args directly")]] = fc::node_args;
-} // namespace detail
 
 /** \brief Base class for nodes contained in forest.
  *
