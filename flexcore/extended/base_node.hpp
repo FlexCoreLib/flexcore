@@ -211,7 +211,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(node_args{fg_, r, node_t::default_name},
+		return make_child_impl<node_t>(node_args{fg_, std::move(r), node_t::default_name},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -228,7 +228,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(node_args{fg_, region(), name},
+		return make_child_impl<node_t>(node_args{fg_, region(), std::move(name)},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -237,7 +237,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(node_args{fg_, r, name},
+		return make_child_impl<node_t>(node_args{fg_,  std::move(r),  std::move(name)},
 		                               std::forward<args_t>(args)...);
 	}
 

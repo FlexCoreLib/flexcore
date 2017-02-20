@@ -91,7 +91,7 @@ forest_owner::forest_owner(
 {
 	assert(fg_);
 	auto& forest = fg_->forest;
-	auto args = node_args{fg_.get(), r, n};
+	auto args = node_args{fg_.get(),  std::move(r),  std::move(n)};
 	auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<tree_base_node>(args)));
 	args.self = iter;
 	{
