@@ -93,4 +93,33 @@ BOOST_AUTO_TEST_CASE(test_deserialisation_failure)
 	BOOST_CHECK_EQUAL(my_setting(), 0);
 }
 
+BOOST_AUTO_TEST_CASE(test_moving_and_copying)
+{
+	fc::settings_backend backend{};
+	fc::settings_facade facade{backend};
+
+	fc::setting<int> original_setting =
+			{fc::setting_id{"setting_id"},
+					facade,
+					0,
+					[](auto in){ return in >= 0;} };
+
+	const std::string valid_string{"{\"test_int\": 1" "}"};
+
+	fc::setting<int> copy_setting = original_setting;
+
+	BOOST_CHECK_EQUAL(original_setting(), 0);
+	BOOST_CHECK_EQUAL(copy_setting(), 0);
+
+	backend.write(fc::setting_id{"setting_id"}, valid_string);
+	BOOST_CHECK_EQUAL(original_setting(), 1);
+	BOOST_CHECK_EQUAL(copy_setting(), 1);
+
+	fc::setting<int> moved_setting = std::move(original_setting);
+
+	backend.write(fc::setting_id{"setting_id"}, std::string{"{\"test_int\": 2" "}"});
+	BOOST_CHECK_EQUAL(moved_setting(), 2);
+	BOOST_CHECK_EQUAL(copy_setting(), 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

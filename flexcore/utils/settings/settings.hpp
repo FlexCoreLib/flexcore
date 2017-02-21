@@ -102,7 +102,7 @@ public:
 		backend.register_setting(
 				id, //unique id of setting in registry
 				initial_value, //initial value, in case it needs to be stored
-				[=](data_t i){ *cache = i; }, //callback to let registry write cache
+				[c = this->cache](data_t i){ *c = i; }, //callback to let registry write cache
 				constraint);
 	}
 
