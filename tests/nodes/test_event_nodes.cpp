@@ -76,5 +76,42 @@ BOOST_AUTO_TEST_CASE(test_gate_with_void_token)
 	BOOST_CHECK_EQUAL(test_val, 0);
 }
 
+BOOST_AUTO_TEST_CASE(test_pair_splitter_joiner)
+{
+	fc::pair_joiner<int, int> joiner;
+	fc::pair_splitter<int, int> splitter;
+
+	constexpr int key1 = 1;
+	constexpr int key2 = 42;
+	constexpr int unused = 666;
+
+	int test_val_1{0};
+	int test_val_2{0};
+
+	auto sink1 = [&test_val_1](int in){ test_val_1 = in; };
+	auto sink2 = [&test_val_2](int in){ test_val_2 = in; };
+
+	joiner.out() >> splitter.in();
+
+	splitter.out(key1) >> sink1;
+	splitter.out(key2) >> sink2;
+
+	joiner.in(key1)(1);
+
+	BOOST_CHECK_EQUAL(test_val_1, 1);
+	BOOST_CHECK_EQUAL(test_val_2, 0);
+
+	joiner.in(key2)(2);
+
+	BOOST_CHECK_EQUAL(test_val_1, 1);
+	BOOST_CHECK_EQUAL(test_val_2, 2);
+
+	joiner.in(unused)(2);
+
+	//expect unchanged, since no port is connected to key "unused"
+	BOOST_CHECK_EQUAL(test_val_1, 1);
+	BOOST_CHECK_EQUAL(test_val_2, 2);
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()

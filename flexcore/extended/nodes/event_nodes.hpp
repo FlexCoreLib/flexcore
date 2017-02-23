@@ -6,6 +6,9 @@
 #include <flexcore/pure/event_sources.hpp>
 #include <flexcore/pure/pure_node.hpp>
 
+#include <map>
+#include <utility>
+
 namespace fc
 {
 
@@ -124,6 +127,99 @@ auto gate()
 	return gate_with_control<event_t>();
 }
 
-}  //fc
+/**
+ * \brief Takes a pair of \p key_t and \p data_t as inputs splits them to separate ports.
+ *
+ * pair_splitter has one output port per key.
+ * On incoming std::pair<key_t, data_t> it sends the second element of the pair
+ * out on the output port corresponding to the first element (the key).
+ * \tparam data_t type of event expected and forwarded
+ * \tparam key_t type of key used in pair, needs to provide operator <
+ * \ingroup nodes
+ * \see pair_joiner
+ */
+template<class key_t, class data_t, class base = pure::pure_node>
+class pair_splitter : public base
+{
+public:
+	using in_port_t = typename base::template event_sink<std::pair<key_t, data_t>>;
+	using out_port_t = typename base::template event_source<data_t>;
+
+	template<class... base_args>
+	explicit pair_splitter(base_args&&... args) :
+		base(std::forward<base_args>(args)...),
+		in_port{this,
+			[this](const std::pair<key_t, data_t>& in)
+			{
+				this->out(in.first).fire(in.second);
+			}},
+		out_ports{}
+	{
+	}
+
+	/// Event sink expecting std::pair<key_t, data_t>
+	auto& in() { return in_port; }
+
+	/// event_source sending data_t
+	out_port_t& out(const key_t& key)
+	{
+		auto it = out_ports.find(key);
+		if (it == out_ports.end())
+			it = out_ports.insert(std::make_pair(key, out_port_t{this})).first;
+		return it->second;
+	}
+private:
+	in_port_t in_port;
+	std::map<key_t, out_port_t> out_ports;
+};
+
+/**
+ * \brief Has a map of input ports and sends pairs of key and value as output.
+ *
+ * On incoming data on port key it sends a std::pair<key_t, data_t> as output.
+ * \tparam data_t type of event expected and forwarded
+ * \tparam key_t type of key used in pair, needs to provide operator <
+ * \ingroup nodes
+ * \see pair_splitter
+ */
+template<class key_t, class data_t, class base = pure::pure_node>
+class pair_joiner : public base
+{
+public:
+	template<class... base_args>
+	explicit pair_joiner(base_args&&... args) :
+		base(std::forward<base_args>(args)...),
+		in_ports{},
+		out_port{this}
+	{
+	}
+
+	///event_sink expecing data_t
+	auto& in(const key_t& id)
+	{
+		auto fire_pair = [this, id](data_t input){
+			out_port.fire(std::make_pair(id, input));
+		};
+
+		auto it = in_ports.find(id);
+		if (it == in_ports.end())
+			it = in_ports.insert(
+					std::make_pair(id, in_port_t{this,fire_pair})
+					).first;
+		return it->second;
+	}
+
+	///event_source sending std::pair<key_t, data_t>
+	auto& out() { return out_port; }
+
+private:
+	using in_port_t = typename base::template event_sink<data_t>;
+	using out_port_t = typename base::template event_source<std::pair<key_t, data_t>>;
+
+	std::map<key_t, in_port_t> in_ports;
+	out_port_t out_port;
+};
+
+} // namespace fc
 
 #endif /* SRC_NODES_EVENT_NODES_HPP_ */
