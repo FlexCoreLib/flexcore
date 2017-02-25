@@ -21,10 +21,8 @@ struct identity_node
 
 	identity_node();
 
-	float foo(float in);
-
 	fc::tests::owning_node owner;
-	fc::event_terminal<float>& internal;
+	fc::state_terminal<float>& internal;
 };
 
 struct base_class
@@ -32,6 +30,8 @@ struct base_class
 	virtual float foo(float in) const = 0;
 	virtual ~base_class() = default;
 };
+
+std::unique_ptr<base_class> make_inherited();
 
 struct inherited : base_class
 {

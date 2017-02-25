@@ -59,9 +59,10 @@ void virtual_function(benchmark::State& state) {
 	float x = gen();
 	float a = 0.0;
 
-	//honestly we are benchmarking the devirtualization of the compiler
+	//try to hide the dynmic class
+	//by constructing it in a different compilation unit.
 	std::unique_ptr<base_class> obj
-			= std::make_unique<inherited>();
+			= make_inherited();
 
 	while (state.KeepRunning()) {
 		benchmark::DoNotOptimize(x);
@@ -81,12 +82,15 @@ void extended_node(benchmark::State& state) {
 	float x = gen();
 	float a = 0.0;
 
-	identity_node node;
+	identity_node node{};
+	//make sure we create the connection outside of the loop
+	//we don't want to measure the overhead of creating the connection.
+	[&x](){ return x;} >> node.internal.in();
 
 	while (state.KeepRunning()) {
 		benchmark::DoNotOptimize(x);
 
-		a = node.foo(x);
+		a = node.internal.out()();
 
 		assert(a == x);
 		benchmark::DoNotOptimize(a);
