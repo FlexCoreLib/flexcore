@@ -4,7 +4,6 @@
 #include <flexcore/extended/node_fwd.hpp>
 #include <flexcore/ports.hpp>
 #include <adobe/forest.hpp>
-#include <boost/noncopyable.hpp>
 
 #include <cassert>
 #include <string>
@@ -97,7 +96,7 @@ class node_args
  * \invariant region_ != nullptr
  * \ingroup nodes
  */
-class tree_base_node : public tree_node, private boost::noncopyable
+class tree_base_node : public tree_node
 {
 public:
 	template<class data_t> using event_source = ::fc::event_source<data_t>;
@@ -106,12 +105,16 @@ public:
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 	template<class port_t> using mixin = ::fc::default_mixin<port_t>;
 
-	tree_base_node(const node_args& args);
+	explicit tree_base_node(const node_args& args);
+
+	tree_base_node(const tree_base_node&) = delete;
+	tree_base_node& operator=(const tree_base_node&) = delete;
+
 	std::shared_ptr<parallel_region> region() override { assert(region_); return region_; }
 	std::string name() const override;
 
 	graph::graph_node_properties graph_info() const override;
-	graph::connection_graph& get_graph() override;
+	graph::connection_graph& get_graph() final override;
 
 protected:
 	forest_graph& fg_;
