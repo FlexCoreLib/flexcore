@@ -18,7 +18,7 @@ namespace fc
 /**
  * \brief node which executes action on work tick of given region
  *
- * region_worker_node is a convinient way to have nodes automatically work on work tick.
+ * region_worker_node is a convenient way to have nodes automatically work on work tick.
  * Extend this class for your own worker nodes.
  * \ingroup nodes
  */

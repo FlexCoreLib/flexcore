@@ -92,7 +92,8 @@ forest_owner::forest_owner(
 	auto& forest = fg_->forest;
 	auto args = node_args{*fg_,  std::move(r),  std::move(n)};
 	//first place a proxy node in the forest to create tree_node
-	const auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<tree_base_node>(args)));
+	const auto iter = adobe::trailing_of(
+			forest.insert(forest.begin(), std::make_unique<tree_base_node>(args)));
 	args.self = iter;
 
 	// replace proxy with actual node

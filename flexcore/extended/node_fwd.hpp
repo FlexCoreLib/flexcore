@@ -4,6 +4,7 @@
 #include <flexcore/extended/graph/graph.hpp>
 #include <flexcore/scheduler/parallelregion.hpp>
 #include <memory>
+#include <string>
 
 namespace fc
 {
@@ -19,6 +20,7 @@ public:
 	virtual graph::graph_node_properties graph_info() const = 0;
 	virtual graph::connection_graph& get_graph() = 0;
 	virtual std::shared_ptr<parallel_region> region() = 0;
+	virtual std::string name() const = 0;
 };
 } // namespace fc
 

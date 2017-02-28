@@ -12,51 +12,10 @@
 
 namespace fc
 {
-/** \brief A node that is part of a graph.
- *
- * The idea is that client code that wants to create nodes outside of the
- * forest can hold a graph_node member and pass it on to all ports that require
- * the node interface.
- *
- * Currently not used anywhere inside flexcore.
- */
-class graph_node final : public node
-{
-public:
-	graph_node(graph::connection_graph& graph, const std::string& name)
-	    : graph_node(graph, {}, name)
-	{
-	}
-	graph_node(graph::connection_graph& graph, std::shared_ptr<parallel_region> r,
-	           const std::string& name)
-	    : region_(std::move(r)), props_(name), graph_(&graph)
-	{
-		assert(graph_);
-	}
-	graph::graph_node_properties graph_info() const override
-	{
-		return props_;
-	}
-	graph::connection_graph& get_graph() override { return *graph_; }
-	std::shared_ptr<parallel_region> region() override { return region_; }
-private:
-	std::shared_ptr<parallel_region> region_;
-	graph::graph_node_properties props_;
-	graph::connection_graph* graph_;
-};
 
-/** \brief Interface for nodes that are part of a hierarchical tree.
- *
- * In principle it could have the same abstract methods as node - the objective
- * was to have type safety (so that graph_nodes are not inserted into forest).
- * The name() method is just a convenience.
- */
-class tree_node : public node
-{
-public:
-	virtual std::string name() const = 0;
-};
-
+/// any class implementing node interface can be stored in forest
+using tree_node = node;
+/// the ownership tree of all nodes
 using forest_t = adobe::forest<std::unique_ptr<tree_node>>;
 
 struct forest_graph
@@ -125,8 +84,6 @@ private:
 	graph::graph_node_properties graph_info_;
 
 };
-
-class owning_base_node;
 
 /**
  * \brief Base class for nodes which own other nodes, aka compound nodes.
