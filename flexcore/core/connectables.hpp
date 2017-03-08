@@ -21,44 +21,71 @@ namespace fc
  */
 
 /// Increments input using prefix operator ++.
-auto increment = [](auto in) { return ++in; };
+struct increment
+{
+	template<class T>
+	auto operator()(T in) const { return ++in; }
+};
 /// Decrements input using prefix operator --.
-auto decrement = [](auto in) { return --in; };
+struct decrement
+{
+	template<class T>
+	auto operator()(T in) const { return --in; }
+};
 /// Returns input unchanged.
-auto identity = [](auto in) { return in; };
-
+struct identity
+{
+	template<class T>
+	T operator()(T in) const { return in; }
+};
 /// Adds a constant addend to inputs.
-auto add = [](const auto summand)
+template<class T>
+auto add(const T summand)
 {
 	return [summand](auto in){ return in + summand; };
-};
+}
 
 /// Subtracts a constant subtrahend from inputs.
-auto subtract = [](const auto subtrahend)
+template<class T>
+auto subtract (const T subtrahend)
 {
 	return [subtrahend](auto in){ return in - subtrahend; };
-};
+}
 
-/// Multiples input by a constant factor.
-auto multiply = [](const auto factor)
+/// Multiples input by a constant factor. (aka gain)
+template<class T>
+auto multiply(const T factor)
 {
 	return [factor](auto in) { return factor * in; };
-};
+}
 
 /// Divides inputs by a constant divisor.
-auto divide = [](const auto divisor)
+template<class T>
+auto divide(const T divisor)
 {
 	return [divisor](auto in) { return in / divisor; };
-};
+}
 
 /// Returns absolute value on input using std::abs.
-auto absolute = [](auto in) { return std::abs(in); };
+struct absolute
+{
+	template<class T>
+	auto operator()(const T& in) const { return std::abs(in); }
+};
 
 /// Negates input using unary -.
-auto negate = [](auto in) { return -in; };
+struct negate
+{
+	template<class T>
+	auto operator()(const T& in) const { return -in; }
+};
 
 /// Returns logical not (operator !) of input.
-auto logical_not = [](auto in) { return !in; };
+struct logical_not
+{
+	template<class T>
+	auto operator()(const T& in) const { return !in; }
+};
 
 /**
  * \brief  Clamps input to closed range [min, max].
@@ -66,27 +93,26 @@ auto logical_not = [](auto in) { return !in; };
  * \pre min <= max
  * \post output >= min && output <= max
  */
-auto clamp = [](auto min, auto max)
+template<class U, class V>
+auto clamp(U min, V max)
 {
 	assert(min <= max);
 	return [min, max](auto in)
 	{
 		return in < min ? min: (max < in ? max : in);
 	};
-};
+}
 
 /**
  * \brief State Source, which returns a given constant every time it is called.
  *
  * \pre constant value needs to fulfill copy_constructible.
  */
-auto constant = [](auto x)
+template<class T>
+auto constant(T x)
 {
-	return [x]()
-	{
-		return x;
-	};
-};
+	return [x](){ return x; };
+}
 
 namespace detail
 {
@@ -94,7 +120,7 @@ namespace detail
 	struct tee_op
 	{
 		template<class data_t>
-		auto operator()(data_t&& in) -> data_t
+		auto operator()(data_t&& in) const -> data_t
 		{
 			// call callback with const_ref to make sure it cannot change token
 			// But token can still be move_only
@@ -129,13 +155,14 @@ auto tee(T&& op)
  * \param stream Results are printed to this using operator <<.
  * print does not take ownership of stream.
  */
-auto print = [](auto& stream)
+template<class T>
+auto print(T& stream)
 {
 	return [&](auto in)
 	{
-		stream << in << "\n";
+		stream << in << '\n';
 	};
-};
+}
 
 /** @} doxygen group connectables */
 

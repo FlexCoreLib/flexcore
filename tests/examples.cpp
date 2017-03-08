@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(events_example)
 	//connections can be chained
 	// with as many lambdas or other connectables in between as we want.
 	source.out()
-			>> fc::increment
+			>> fc::increment{}
 			>> [](int i){ return i * 10; }
 			>> sink.in();
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(state_example)
 
 	// this simple chain increments all data from our source
 	// and makes them available to our sink
-	source.out() >> fc::increment >> sink.in();
+	source.out() >> fc::increment{} >> sink.in();
 
 	//every time we pull data from our sink we get the result from the chain.
 	BOOST_CHECK_EQUAL(sink.out()(), 42 +1);
