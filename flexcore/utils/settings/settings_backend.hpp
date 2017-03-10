@@ -200,9 +200,6 @@ private:
 
 /**
  * \brief Default facade which connects any fc::setting to the settings_backend
- *
- * todo: would it be useful to have access to the region of the setting here?
- * todo: would it be useful to introduce scope of settings (in their id) here?
  */
 class settings_facade
 {
@@ -265,11 +262,11 @@ public:
 		};
 
 		//the forward_holder checks the constraint when a new value is set.
-		detail::forward_holder<data_t,setter_t, constraint_t>
+		detail::forward_holder<data_t,decltype(set_value), constraint_t>
 				forwarder{set_value, constraint};
 
 		using fc::operator>>;
-		region.switch_tick() >> forwarder.internal->in_forward();
+		region.switch_tick() >> forwarder.in_forward();
 
 		backend.register_setting<data_t>(std::move(id), std::move(forwarder));
 	}
@@ -277,7 +274,6 @@ public:
 private:
 	settings_backend& backend;
 };
-
 
 } //namespace fc
 
