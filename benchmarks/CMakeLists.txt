@@ -6,10 +6,13 @@ ADD_EXECUTABLE(flexcore_benchmark
 	port_benchmarks.cpp
 )
 
+FIND_PACKAGE(benchmark)
+
 set_property(TARGET flexcore_benchmark PROPERTY CXX_STANDARD 14)
 
-#TARGET_COMPILE_OPTIONS( flexcore_benchmark
-#	PUBLIC "-march=native")
+#TARGET_COMPILE_OPTIONS( flexcore_benchmark PUBLIC
+#	"-march=native"
+#	)
 
 TARGET_LINK_LIBRARIES( flexcore_benchmark PUBLIC  
 	benchmark
