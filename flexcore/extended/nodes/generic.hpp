@@ -6,6 +6,7 @@
 #include <flexcore/pure/pure_ports.hpp>
 #include <flexcore/pure/pure_node.hpp>
 #include <flexcore/extended/base_node.hpp>
+#include <flexcore/extended/nodes/region_worker_node.hpp>
 
 #include <utility>
 #include <map>
@@ -215,6 +216,46 @@ auto on_changed(data_t initial_value = data_t())
 			},
 			initial_value);
 }
+
+/**
+ * \brief Variant of watch_node which is attached to a region
+ * \tparam data_t type of event forwarded by this node
+ * \tparam predicate a unary predicate which accepts data_t and returns bool
+ * Data is forwarded for every token for which predicate returns true.
+ */
+template<class data_t, class predicate = std::function<bool(data_t)>>
+class unary_watch_node final : public fc::region_worker_node
+{
+public:
+	/// Constructor taking a predicate by value and storing it
+	explicit unary_watch_node(predicate p, const node_args& args)
+		: region_worker_node([this]()
+				{
+					const auto tmp = this->in_port.get();
+					if (this->pred(tmp))
+						this->out_port.fire(tmp);
+				},
+				args)
+		, pred{std::move(p)}
+		, in_port{this}
+		, out_port{this}
+	{
+	}
+
+	/// State input port, expects data_t.
+	auto& in() noexcept { return in_port; }
+	/// Event Output port, fires data_t.
+	auto& out() noexcept { return out_port; }
+
+	unary_watch_node(const unary_watch_node&) = delete;
+	unary_watch_node(unary_watch_node&&) = delete;
+
+private:
+	predicate pred;
+	fc::state_sink<data_t> in_port;
+	fc::event_source<data_t> out_port;
+
+};
 
 }  // namespace fc
 

@@ -14,10 +14,11 @@ namespace fc
  *
  * Use this as base-class to simply build nodes which handle events.
  *
- * \tparam event_t type of event handled by the node
+ * \tparam input_t type of event accepted as inputs by the node
+ * \tparam output_t type of event sent by this node
  * \ingroup nodes
  */
-template<class event_t, class base>
+template<class input_t, class output_t, class base>
 class generic_event_node : public base
 {
 public:
@@ -29,7 +30,7 @@ public:
 	 */
 	template<class action_t, class... base_args>
 	explicit generic_event_node(action_t&& action, base_args&&... args) :
-	base(std::forward<base_args>(args)...),
+		base(std::forward<base_args>(args)...),
 		in_port(this, action), out_port(this)
 	{
 	}
@@ -45,8 +46,8 @@ public:
 		return out_port;
 	}
 protected:
-	typename base::template event_sink<event_t> in_port;
-	typename base::template event_source<event_t> out_port;
+	typename base::template event_sink<input_t> in_port;
+	typename base::template event_source<output_t> out_port;
 };
 
 /**
@@ -58,17 +59,19 @@ protected:
  * \ingroup nodes
  */
 template<class event_t, class predicate, class base_t = pure::pure_node>
-class gate_with_predicate: public generic_event_node<event_t, base_t>
+class gate_with_predicate: public generic_event_node<event_t, event_t, base_t>
 {
 public:
-	explicit gate_with_predicate(const predicate& p) :
-		generic_event_node<event_t, base_t>(
+	template<class... base_args>
+	explicit gate_with_predicate(const predicate& p, base_args&&... args) :
+		generic_event_node<event_t, event_t, base_t>(
 				[this](const event_t& in)
 				{
 					if (pred(in))
 						this->out_port.fire(in);
-				}),
-		pred(p)
+				},
+				std::forward<base_args>(args)...),
+			pred(p)
 	{
 	}
 
@@ -85,16 +88,19 @@ private:
  * \ingroup nodes
  */
 template<class event_t, class base_t = pure::pure_node>
-class gate_with_control: public generic_event_node<event_t, base_t>
+class gate_with_control: public generic_event_node<event_t, event_t, base_t>
 {
 public:
-	gate_with_control() :
-		generic_event_node<event_t, base_t>(
+	template<class... base_args>
+	explicit gate_with_control(base_args&&... args) :
+		generic_event_node<event_t, event_t, base_t>(
 				[this](auto&&... in)
 				{
 					if (control.get())
 						this->out_port.fire(std::forward<decltype(in)>(in)...);
-				}), control(this)
+				},
+				std::forward<base_args>(args)...),
+			control(this)
 	{
 	}
 	/// State sink expecting bool. Events are forwarded if this state is true.
