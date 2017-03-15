@@ -3,7 +3,7 @@
 
 #include <tuple>
 #include <utility>
-#include <flexcore/core/function_traits.hpp>
+#include <flexcore/core/detail/function_traits.hpp>
 #include <flexcore/core/traits.hpp>
 #include <flexcore/core/tuple_meta.hpp>
 

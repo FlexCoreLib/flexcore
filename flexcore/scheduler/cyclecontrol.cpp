@@ -18,7 +18,7 @@ cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler,
 		 const std::shared_ptr<main_loop>& loop)
 	: cycle_control(std::move(scheduler), [this](auto& task)
 					{
-						return store_exception(task);
+						return this->store_exception(task);
 					},
 					loop
 	)
