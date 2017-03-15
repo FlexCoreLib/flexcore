@@ -1,12 +1,16 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0.)
 
+FIND_PACKAGE(benchmark)
+IF (NOT benchmark_FOUND)
+	message(WARNING "Disabling benchmarks")
+	return()
+ENDIF()
+
 ADD_EXECUTABLE(flexcore_benchmark
 	benchmarkfunctions.cpp
 	range_benchmarks.cpp
 	port_benchmarks.cpp
 )
-
-FIND_PACKAGE(benchmark)
 
 set_property(TARGET flexcore_benchmark PROPERTY CXX_STANDARD 14)
 
