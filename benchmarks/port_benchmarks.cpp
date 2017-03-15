@@ -24,7 +24,7 @@ void lambda(benchmark::State& state) {
 	while (state.KeepRunning()) {
 		benchmark::DoNotOptimize(x);
 
-		a = fc::identity(x);
+		a = fc::identity{}(x);
 
 		assert(a == x);
 		benchmark::DoNotOptimize(a);
