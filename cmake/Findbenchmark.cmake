@@ -30,9 +30,10 @@ find_package_handle_standard_args(benchmark FOUND_VAR benchmark_FOUND
 	REQUIRED_VARS benchmark_LIBRARY
 	benchmark_INCLUDE_DIR)
 
-if(benchmark_FOUND)
-	set(benchmark_LIBRARIES ${benchmark_LIBRARY})
-	set(benchmark_INCLUDE_DIRS ${benchmark_INCLUDE_DIR})
+if (benchmark_FOUND AND NOT TARGET benchmark)
+	add_library(benchmark UNKNOWN IMPORTED)
+	set_target_properties(benchmark PROPERTIES
+		IMPORTED_LOCATION "${benchmark_LIBRARY}"
+		INTERFACE_INCLUDE_DIRECTORIES "${benchmark_INCLUDE_DIR}"
+	)
 endif()
-
-mark_as_advanced(benchmark_INCLUDE_DIR benchmark_LIBRARY)
