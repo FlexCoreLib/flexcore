@@ -7,6 +7,7 @@
 
 namespace fc
 {
+
 static forest_t::iterator find_self(forest_t& forest, const tree_node& node)
 {
 	auto node_id = node.graph_info().get_id();
@@ -15,8 +16,6 @@ static forest_t::iterator find_self(forest_t& forest, const tree_node& node)
 	assert(self != forest.end());
 	return adobe::trailing_of(self);
 }
-
-static constexpr auto name_seperator = "/";
 
 std::string full_name(forest_t& forest, const tree_node& node)
 {

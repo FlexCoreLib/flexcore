@@ -29,6 +29,8 @@ class tree_base_node;
 class owning_base_node;
 class forest_owner;
 
+static constexpr auto name_seperator = ".";
+
 class node_args
 {
 	node_args(forest_graph& fg, const std::shared_ptr<parallel_region>& r, const std::string& name,

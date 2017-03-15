@@ -91,9 +91,9 @@ BOOST_AUTO_TEST_CASE( test_name_chaining )
 	auto& child2 = root.make_child_named<null>("2");
 	auto& child1a = child1.make_child_named<null>("a");
 
-	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child1), "root/test_owning_node");
-	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/2");
-	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child1a), "root/test_owning_node/a");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child1), "root.test_owning_node");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root.2");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child1a), "root.test_owning_node.a");
 }
 
 BOOST_AUTO_TEST_CASE( test_make_child )
@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE( test_make_child )
 	auto& child1 = root.make_child<node_class<int>>(5);
 	auto& child2 = root.make_child_named<node_class<int>>("name", 5);
 
-	BOOST_CHECK_EQUAL(full_name(*(root.forest()), child1), "root/test_node");
-	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/name");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()), child1), "root.test_node");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root.name");
 }
 
 BOOST_AUTO_TEST_CASE( test_manual_ownership )
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE( test_manual_ownership )
 	node_class<int> child1{5, root.new_node("test_node")};
 	node_class<int> child2{5, root.new_node(root.region(), "name")};
 
-	BOOST_CHECK_EQUAL(full_name(*(root.forest()), child1), "root/test_node");
-	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root/name");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()), child1), "root.test_node");
+	BOOST_CHECK_EQUAL(full_name(*(root.forest()),child2), "root.name");
 }
 
 BOOST_AUTO_TEST_CASE( test_deletion )
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE( tree_base_node_can_get_full_name_in_constructor )
 	tests::owning_node root_("root");
 	auto& root = root_.node();
 	// runs the test
-	root.make_child_named<full_name_test_node<fc::tree_base_node>>("my_node", "root/my_node");
+	root.make_child_named<full_name_test_node<fc::tree_base_node>>("my_node", "root.my_node");
 }
 
 BOOST_AUTO_TEST_CASE( owning_base_node_can_get_full_name_in_constructor )
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE( owning_base_node_can_get_full_name_in_constructor )
 	tests::owning_node root_("root");
 	auto& root = root_.node();
 	// runs the test
-	root.make_child_named<full_name_test_node<fc::owning_base_node>>("my_node", "root/my_node");
+	root.make_child_named<full_name_test_node<fc::owning_base_node>>("my_node", "root.my_node");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
