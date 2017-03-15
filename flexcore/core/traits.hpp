@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-#include <flexcore/core/function_traits.hpp>
+#include <flexcore/core/detail/function_traits.hpp>
 
 namespace fc
 {
@@ -88,31 +88,6 @@ public:
 	typedef decltype(test<derived>(nullptr)) type;
 };
 
-/// has_member check for method connect, see has_call_op for explanation
-template<class T>
-struct has_member_connect
-{
-private:
-	struct fallback
-	{
-		void connect();
-	};
-
-	struct derived : T, fallback
-	{
-	};
-
-	template<class U, U> struct check;
-
-	template<class to_test>
-	static std::false_type test(check<void (fallback::*)(), &to_test::connect>*);
-
-	template<class>
-	static std::true_type test(...);
-
-public:
-	typedef decltype(test<derived>(nullptr)) type;
-};
 
 template<class,int> struct argtype_of;
 template<class T>
@@ -158,12 +133,17 @@ constexpr bool has_result_of_type()
 template<class Expr>
 struct is_callable:
 		std::conditional_t<
-			std::is_class<Expr>{},
+			std::is_class<Expr>::value,
 			detail::type_is_callable_impl<Expr>,
 			detail::expr_is_callable_impl<Expr>
 		>
 {
 };
+
+template<class T>
+using is_callable_t = typename is_callable<T>::type;
+template<class T>
+constexpr auto is_callable_v = is_callable<T>::value;
 
 /**
  *  \brief Checks if type T is connectable.
@@ -174,11 +154,16 @@ struct is_callable:
 template <class T>
 struct is_connectable :
 	std::integral_constant<bool,
-	    is_callable<std::remove_reference_t<T>>{} &&
-	    (std::is_lvalue_reference<T>{} || std::is_copy_constructible<T>{})
+	    is_callable_v<std::remove_reference_t<T>> &&
+	    (std::is_lvalue_reference<T>::value || std::is_copy_constructible<T>::value)
 	>
 {
 };
+
+template<class T>
+using is_connectable_t = typename is_connectable<T>::type;
+template<class T>
+constexpr auto is_connectable_v = is_connectable<T>::value;
 
 namespace detail
 {
@@ -196,7 +181,22 @@ struct has_result : decltype(detail::has_result_impl<T>(nullptr))
 {
 };
 
-namespace detail{ template<class, bool> struct result_of_impl; }
+namespace detail
+{
+template<class, bool> struct result_of_impl;
+
+template<class Expr>
+struct result_of_impl<Expr, false>
+{
+typedef typename utils::function_traits<Expr>::result_t type;
+};
+
+template<class Expr>
+struct result_of_impl<Expr, true>
+{
+typedef typename std::remove_reference_t<Expr>::result_t type;
+};
+} //namespace detail
 /// Trait for determining the result of a callable.
 /** Works on
  * - things that have a ::result_t member
@@ -216,25 +216,11 @@ template<class Expr>
 struct result_of
 {
 	typedef typename detail::result_of_impl<
-	    Expr, has_result<std::remove_reference_t<Expr>>{}>::type type;
+	    Expr, has_result<std::remove_reference_t<Expr>>::value>::type type;
 };
 template <class Expr>
 using result_of_t = typename result_of<Expr>::type;
 
-namespace detail
-{
-template<class Expr>
-struct result_of_impl<Expr, false>
-{
-	typedef typename utils::function_traits<Expr>::result_t type;
-};
-
-template<class Expr>
-struct result_of_impl<Expr, true>
-{
-	typedef typename std::remove_reference_t<Expr>::result_t type;
-};
-} //namespace detail
 /// Trait for determining the type of a callables parameter.
 /** Works on the same types as result_of.
  *
@@ -355,7 +341,8 @@ struct is_instantiation_of< template_type, template_type<Args...> > : std::true_
 
 
 //************* Checks if types are active or passive connectables ************/
-
+namespace detail
+{
 template<class T, class enable = void>
 struct is_passive_source_impl: std::false_type
 {
@@ -366,6 +353,27 @@ struct is_passive_source_impl<T, std::enable_if_t<void_callable<T>(0)>> : std::t
 {
 };
 
+template<class T, class enable = void>
+struct is_passive_sink_impl: std::false_type
+{
+};
+
+template<class T>
+struct is_passive_sink_impl<T, std::enable_if_t<is_callable_v<T>
+			&& !overloaded<T>(0)>>
+		: std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
+{
+};
+
+template<class T>
+struct is_passive_sink_impl<T, std::enable_if_t<is_callable_v<T>
+			&& overloaded<T>(0)
+			&& has_result<T>::value>>
+		: std::integral_constant<bool, std::is_void<result_of_t<T>>::value>
+{
+};
+} //namespace detail
+
 template <class T, class Arg, typename = void>
 struct is_passive_sink_for : std::false_type {};
 template <class T>
@@ -373,35 +381,20 @@ struct is_passive_sink_for<T, void, std::result_of_t<T()>> : std::true_type {};
 template <class T, class Arg>
 struct is_passive_sink_for<T, Arg, std::result_of_t<T(Arg)>> : std::true_type {};
 
-template<class T, class enable = void>
-struct is_passive_sink_impl: std::false_type
-{
-};
-
-template<class T>
-struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
-			&& !overloaded<T>(0)>>
-		: std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
-{
-};
-
-template<class T>
-struct is_passive_sink_impl<T, std::enable_if_t<is_callable<T>{}
-			&& overloaded<T>(0)
-			&& has_result<T>{}>>
-		: std::integral_constant<bool, std::is_void<result_of_t<T>>{}>
-{
-};
-
 /**
  * \brief Checks if type T is a passive sink.
  *
  * It checks if the type has a call operator which returns void.
  */
 template<class T>
-struct is_passive_sink: is_passive_sink_impl<T>
+struct is_passive_sink: detail::is_passive_sink_impl<T>
 {
 };
+
+template<class T>
+using is_passive_sink_t = typename is_passive_sink<T>::type;
+template<class T>
+constexpr auto is_passive_sink_v = is_passive_sink<T>::value;
 
 /**
  * \brief Checks if type T is a passive sink.
@@ -409,14 +402,19 @@ struct is_passive_sink: is_passive_sink_impl<T>
  * It checks if the type has a call operator which takes void.
  */
 template<class T>
-struct is_passive_source: is_passive_source_impl<T>
+struct is_passive_source: detail::is_passive_source_impl<T>
 {
 };
+
+template<class T>
+using is_passive_source_t = typename is_passive_source<T>::type;
+template<class T>
+constexpr auto is_passive_source_v = is_passive_source<T>::value;
 
 ///checks if type T is either a passive sink or a passive source.
 template<class T>
 struct is_passive: std::integral_constant<bool,
-		is_passive_source<T>{} || is_passive_sink<T>{}>
+		is_passive_source_v<T> || is_passive_sink_v<T>>
 {
 };
 
@@ -431,6 +429,11 @@ struct is_active_sink: std::false_type
 {
 };
 
+template<class T>
+using is_active_sink_t = typename is_active_sink<T>::type;
+template<class T>
+constexpr auto is_active_sink_v = is_active_sink<T>::value;
+
 /**
  * \brief  Trait to define an active source.
  *
@@ -442,24 +445,44 @@ struct is_active_source: std::false_type
 {
 };
 
+template<class T>
+using is_active_source_t = typename is_active_source<T>::type;
+template<class T>
+constexpr auto is_active_source_v = is_active_source<T>::value;
+
 /// Checks if type T is either active_source or active_sink
 template<class T>
 struct is_active: std::integral_constant<bool,
-is_active_source<T>{} || is_active_sink<T>{}>
+is_active_source_v<T> || is_active_sink_v<T>>
 {
 };
+
+template<class T>
+using is_active_t = typename is_active<T>::type;
+template<class T>
+constexpr auto is_active_v = is_active<T>::value;
 
 template<class T>
 struct is_event_port: std::integral_constant<bool,
-is_active_source<T>{} || is_passive_sink<T>{}>
+is_active_source_v<T> || is_passive_sink_v<T>>
 {
 };
 
 template<class T>
+using is_event_port_t = typename is_event_port<T>::type;
+template<class T>
+constexpr auto is_event_port_v = is_event_port<T>::value;
+
+template<class T>
 struct is_state_port: std::integral_constant<bool,
-is_active_sink<T>{} || is_passive_source<T>{}>
+	is_active_sink_v<T> || is_passive_source_v<T>>
 {
 };
+
+template<class T>
+using is_state_port_t = typename is_state_port<T>::type;
+template<class T>
+constexpr auto is_state_port_v = is_state_port<T>::value;
 /** @}*/ //doxygen group traits
 
 } // namespace fc
