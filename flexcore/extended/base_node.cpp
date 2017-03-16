@@ -7,6 +7,7 @@
 
 namespace fc
 {
+
 static forest_t::iterator find_self(forest_t& forest, const tree_node& node)
 {
 	auto node_id = node.graph_info().get_id();
@@ -15,8 +16,6 @@ static forest_t::iterator find_self(forest_t& forest, const tree_node& node)
 	assert(self != forest.end());
 	return adobe::trailing_of(self);
 }
-
-static constexpr auto name_seperator = "/";
 
 std::string full_name(forest_t& forest, const tree_node& node)
 {
@@ -41,7 +40,6 @@ std::string full_name(forest_t& forest, const tree_node& node)
 tree_base_node::tree_base_node(const node_args& args)
 	: fg_(args.fg), region_(args.r), graph_info_(args.graph_info)
 {
-	assert(fg_);
 	assert(region_);
 }
 
@@ -57,7 +55,7 @@ graph::graph_node_properties tree_base_node::graph_info() const
 
 graph::connection_graph& tree_base_node::get_graph()
 {
-	return fg_->graph;
+	return fg_.graph;
 }
 
 forest_t::iterator owning_base_node::self() const
@@ -67,9 +65,8 @@ forest_t::iterator owning_base_node::self() const
 
 forest_t::iterator owning_base_node::add_child(std::unique_ptr<tree_node> child)
 {
-	assert(fg_);
 	assert(child);
-	auto& forest = fg_->forest;
+	auto& forest = fg_.forest;
 	auto child_it = adobe::trailing_of(forest.insert(self(), std::move(child)));
 	assert(adobe::find_parent(child_it) == self());
 	assert(adobe::find_parent(child_it) != forest.end());
@@ -78,7 +75,7 @@ forest_t::iterator owning_base_node::add_child(std::unique_ptr<tree_node> child)
 
 node_args owning_base_node::new_node(node_args args)
 {
-	auto proxy_iter = add_child(std::make_unique<tree_base_node>(args));
+	const auto proxy_iter = add_child(std::make_unique<tree_base_node>(args));
 	args.self = proxy_iter;
 	return args;
 }
@@ -89,17 +86,22 @@ forest_owner::forest_owner(
 	, tree_root(nullptr)
 	, viz_(std::make_unique<visualization>(fg_->graph, fg_->forest))
 {
+	assert(r);
 	assert(fg_);
 	auto& forest = fg_->forest;
-	auto args = node_args{fg_.get(), r, n};
-	auto iter = adobe::trailing_of(forest.insert(forest.begin(), std::make_unique<tree_base_node>(args)));
+	auto args = node_args{*fg_,  std::move(r),  std::move(n)};
+	//first place a proxy node in the forest to create tree_node
+	const auto iter = adobe::trailing_of(
+			forest.insert(forest.begin(), std::make_unique<tree_base_node>(args)));
 	args.self = iter;
-	{
-		std::unique_ptr<tree_node> node = std::make_unique<owning_base_node>(args);
-		node.swap(*iter);
-	}
+
+	// replace proxy with actual node
+	*iter = std::make_unique<owning_base_node>(args);
+
 	tree_root = dynamic_cast<owning_base_node*>(iter->get());
 	assert(tree_root);
+	assert(fg_);
+	assert(viz_);
 }
 
 forest_owner::~forest_owner()
@@ -108,6 +110,7 @@ forest_owner::~forest_owner()
 
 void forest_owner::visualize(std::ostream& out) const
 {
+	assert(viz_);
 	viz_->visualize(out);
 }
 }

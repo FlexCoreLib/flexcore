@@ -1,15 +1,45 @@
 #include "visualization.hpp"
 
-#include "flexcore/extended/graph/graph.hpp"
+#include <flexcore/extended/graph/graph.hpp>
+
+#include <map>
+#include <string>
+#include <vector>
+#include <ostream>
 
 namespace fc
 {
 
-visualization::visualization(const graph::connection_graph& graph, const forest_t& forest)
-	: graph_(graph), forest_(forest), ports_(graph.ports())
+struct visualization::impl
 {
-}
-graph::graph_port_properties::port_type visualization::merge_property_types(
+	impl(const graph::connection_graph& g,
+			const forest_t& f,
+			const std::set<graph::graph_properties>& p)
+		: graph_(g)
+		, forest_(f)
+		, ports_(p)
+	{
+	}
+
+	static graph::graph_port_properties::port_type merge_property_types(
+			const graph::graph_properties& source_node, const graph::graph_properties& sink_node);
+	std::vector<graph::graph_properties> find_node_ports(
+			graph::graph_port_properties::unique_id node_id) const;
+	std::vector<graph::graph_properties> find_connectables(
+			graph::graph_port_properties::unique_id node_id) const;
+	std::string get_color(const parallel_region* region);
+	void print_subgraph(typename forest_t::const_iterator node, std::ostream& stream);
+	void print_ports(const std::vector<graph::graph_properties>& ports, unsigned long owner_hash,
+			std::ostream& stream);
+
+	const graph::connection_graph& graph_;
+	const forest_t& forest_;
+	const std::set<graph::graph_properties>& ports_;
+	std::map<std::string, unsigned int> color_map_ {};
+	unsigned int current_color_index_ = 0U;
+};
+
+graph::graph_port_properties::port_type visualization::impl::merge_property_types(
 		const graph::graph_properties& source_node, const graph::graph_properties& sink_node)
 {
 	using port_type = graph::graph_port_properties::port_type;
@@ -23,7 +53,7 @@ graph::graph_port_properties::port_type visualization::merge_property_types(
 	return result;
 }
 
-std::vector<graph::graph_properties> visualization::find_node_ports(
+std::vector<graph::graph_properties> visualization::impl::find_node_ports(
 		graph::graph_port_properties::unique_id node_id) const
 {
 	std::vector<graph::graph_properties> result;
@@ -32,7 +62,7 @@ std::vector<graph::graph_properties> visualization::find_node_ports(
 	return result;
 }
 
-std::vector<graph::graph_properties> visualization::find_connectables(
+std::vector<graph::graph_properties> visualization::impl::find_connectables(
 		graph::graph_port_properties::unique_id node_id) const
 {
 	std::vector<graph::graph_properties> result;
@@ -47,46 +77,8 @@ std::vector<graph::graph_properties> visualization::find_connectables(
 	return result;
 }
 
-void visualization::visualize(std::ostream& stream)
-{
-	current_color_index_ = 0U;
 
-	// nodes with their ports that are part of the forest
-	stream << "digraph G {\n";
-	print_subgraph(forest_.begin(), stream);
-
-	// these are the ports wich are not part of the forest (ad hoc created)
-	std::vector<graph::graph_properties> named_ports;
-	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(named_ports),
-			[this](auto&& graph_properties) { return graph_properties.node_properties.is_pure(); });
-	for (auto& port : named_ports)
-	{
-		print_ports({port}, hash_value(port.node_properties.get_id()), stream);
-	}
-
-	for (auto& edge : graph_.edges())
-	{
-		const auto source_node = hash_value(edge.source.node_properties.get_id());
-		const auto sink_node = hash_value(edge.sink.node_properties.get_id());
-		const auto source_port = hash_value(edge.source.port_properties.id());
-		const auto sink_port = hash_value(edge.sink.port_properties.id());
-		using port_type = graph::graph_port_properties::port_type;
-
-		stream << source_node << ":" << source_port << "->" << sink_node << ":" << sink_port;
-
-		// draw arrow differently based on whether it is an event or state
-		const auto merged_type = merge_property_types(edge.source, edge.sink);
-		if (merged_type == port_type::STATE)
-		{
-			stream << "[arrowhead=\"dot\"]";
-		}
-		stream << ";\n";
-	}
-
-	stream << "}\n";
-}
-
-void visualization::print_subgraph(forest_t::const_iterator node, std::ostream& stream)
+void visualization::impl::print_subgraph(forest_t::const_iterator node, std::ostream& stream)
 {
 	const auto graph_info = (*node)->graph_info();
 	const auto uuid = hash_value(graph_info.get_id());
@@ -121,7 +113,7 @@ void visualization::print_subgraph(forest_t::const_iterator node, std::ostream& 
 	}
 }
 
-std::string visualization::get_color(const parallel_region* region)
+std::string visualization::impl::get_color(const parallel_region* region)
 {
 	static constexpr auto no_region_color = "#ffffff";
 	static constexpr auto out_of_color = "#000000";
@@ -152,7 +144,7 @@ std::string visualization::get_color(const parallel_region* region)
 	return *color_iter;
 }
 
-void visualization::print_ports(const std::vector<graph::graph_properties>& ports,
+void visualization::impl::print_ports(const std::vector<graph::graph_properties>& ports,
 		unsigned long owner_hash, std::ostream& stream)
 {
 	if (ports.empty())
@@ -190,4 +182,53 @@ void visualization::print_ports(const std::vector<graph::graph_properties>& port
 		stream << "\"]\n";
 	}
 }
+
+
+visualization::visualization(const graph::connection_graph& graph, const forest_t& forest)
+	: pimpl{std::make_unique<impl>(graph, forest, graph.ports())}
+{
+	assert(pimpl);
+}
+
+void visualization::visualize(std::ostream& stream)
+{
+	pimpl->current_color_index_ = 0U;
+
+	// nodes with their ports that are part of the forest
+	stream << "digraph G {\n";
+	pimpl->print_subgraph(pimpl->forest_.begin(), stream);
+
+	// these are the ports wich are not part of the forest (ad hoc created)
+	std::vector<graph::graph_properties> named_ports;
+	std::copy_if(std::begin(pimpl->ports_), std::end(pimpl->ports_), std::back_inserter(named_ports),
+			[this](auto&& graph_properties) { return graph_properties.node_properties.is_pure(); });
+	for (auto& port : named_ports)
+	{
+		pimpl->print_ports({port}, hash_value(port.node_properties.get_id()), stream);
+	}
+
+	for (auto& edge : pimpl->graph_.edges())
+	{
+		const auto source_node = hash_value(edge.source.node_properties.get_id());
+		const auto sink_node = hash_value(edge.sink.node_properties.get_id());
+		const auto source_port = hash_value(edge.source.port_properties.id());
+		const auto sink_port = hash_value(edge.sink.port_properties.id());
+		using port_type = graph::graph_port_properties::port_type;
+
+		stream << source_node << ":" << source_port << "->" << sink_node << ":" << sink_port;
+
+		// draw arrow differently based on whether it is an event or state
+		const auto merged_type = pimpl->merge_property_types(edge.source, edge.sink);
+		if (merged_type == port_type::STATE)
+		{
+			stream << "[arrowhead=\"dot\"]";
+		}
+		stream << ";\n";
+	}
+
+	stream << "}\n";
+}
+
+visualization::~visualization() = default;
+
 }

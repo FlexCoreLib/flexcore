@@ -3,7 +3,7 @@
 #define BOOST_ALL_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <flexcore/utils/logging/logger.hpp>
-#include <flexcore/extended/base_node.hpp>
+#include <tests/nodes/owning_node.hpp>
 #include <sstream>
 
 using fc::logger;
@@ -37,9 +37,9 @@ BOOST_FIXTURE_TEST_CASE( node_logging, log_test )
 {
 	fc::graph::connection_graph dummy_graph;
 	auto node_name = std::string("test node");
-	fc::graph_node node(dummy_graph, node_name);
-	BOOST_CHECK_EQUAL(node.graph_info().name(), node_name);
-	fc::log_client client{&node};
+	fc::tests::owning_node node(node_name);
+	BOOST_CHECK_EQUAL(node.node().name(), node_name);
+	fc::log_client client{&node.node()};
 	expected_in_output = node_name;
 	client.write("another log message.");
 }

@@ -4,7 +4,6 @@
 #include <flexcore/extended/node_fwd.hpp>
 #include <flexcore/ports.hpp>
 #include <adobe/forest.hpp>
-#include <boost/noncopyable.hpp>
 
 #include <cassert>
 #include <string>
@@ -13,51 +12,10 @@
 
 namespace fc
 {
-/** \brief A node that is part of a graph.
- *
- * The idea is that client code that wants to create nodes outside of the
- * forest can hold a graph_node member and pass it on to all ports that require
- * the node interface.
- *
- * Currently not used anywhere inside flexcore.
- */
-class graph_node final : public node
-{
-public:
-	graph_node(graph::connection_graph& graph, const std::string& name)
-	    : graph_node(graph, {}, name)
-	{
-	}
-	graph_node(graph::connection_graph& graph, std::shared_ptr<parallel_region> r,
-	           const std::string& name)
-	    : region_(std::move(r)), props_(name), graph_(&graph)
-	{
-		assert(graph_);
-	}
-	graph::graph_node_properties graph_info() const override
-	{
-		return props_;
-	}
-	graph::connection_graph& get_graph() override { return *graph_; }
-	std::shared_ptr<parallel_region> region() override { return region_; }
-private:
-	std::shared_ptr<parallel_region> region_;
-	graph::graph_node_properties props_;
-	graph::connection_graph* graph_;
-};
 
-/** \brief Interface for nodes that are part of a hierarchical tree.
- *
- * In principle it could have the same abstract methods as node - the objective
- * was to have type safety (so that graph_nodes are not inserted into forest).
- * The name() method is just a convenience.
- */
-class tree_node : public node
-{
-public:
-	virtual std::string name() const = 0;
-};
-
+/// any class implementing node interface can be stored in forest
+using tree_node = node;
+/// the ownership tree of all nodes
 using forest_t = adobe::forest<std::unique_ptr<tree_node>>;
 
 struct forest_graph
@@ -71,14 +29,16 @@ class tree_base_node;
 class owning_base_node;
 class forest_owner;
 
+static constexpr auto name_seperator = ".";
+
 class node_args
 {
-	node_args(forest_graph* fg, const std::shared_ptr<parallel_region>& r, const std::string& name,
+	node_args(forest_graph& fg, const std::shared_ptr<parallel_region>& r, const std::string& name,
 	          forest_t::iterator self = forest_t::iterator{})
 	    : fg(fg), r(r), graph_info(name, r.get()), self(self)
 	{
 	}
-	forest_graph* fg;
+	forest_graph& fg;
 	std::shared_ptr<parallel_region> r;
 	graph::graph_node_properties graph_info;
 	forest_t::iterator self;
@@ -88,20 +48,16 @@ class node_args
 	friend class fc::forest_owner;
 };
 
-namespace detail
-{
-using node_args [[deprecated("Please use fc::node_args directly")]] = fc::node_args;
-} // namespace detail
 
 /** \brief Base class for nodes contained in forest.
  *
  * These should only be constructed through an owning_base_node's
  * make_child()/make_child_named()/new_node() methods.
  *
- * \invariant pointer to owning forest fg_ != nullptr.
+ * \invariant region_ != nullptr
  * \ingroup nodes
  */
-class tree_base_node : public tree_node, private boost::noncopyable
+class tree_base_node : public tree_node
 {
 public:
 	template<class data_t> using event_source = ::fc::event_source<data_t>;
@@ -110,15 +66,19 @@ public:
 	template<class data_t> using state_sink = ::fc::state_sink<data_t>;
 	template<class port_t> using mixin = ::fc::default_mixin<port_t>;
 
-	tree_base_node(const node_args& args);
-	std::shared_ptr<parallel_region> region() override { return region_; }
+	explicit tree_base_node(const node_args& args);
+
+	tree_base_node(const tree_base_node&) = delete;
+	tree_base_node& operator=(const tree_base_node&) = delete;
+
+	std::shared_ptr<parallel_region> region() override { assert(region_); return region_; }
 	std::string name() const override;
 
 	graph::graph_node_properties graph_info() const override;
-	graph::connection_graph& get_graph() override;
+	graph::connection_graph& get_graph() final override;
 
 protected:
-	forest_graph* fg_;
+	forest_graph& fg_;
 private:
 	/// Information about which region the node belongs to
 	std::shared_ptr<parallel_region> region_;
@@ -126,8 +86,6 @@ private:
 	graph::graph_node_properties graph_info_;
 
 };
-
-class owning_base_node;
 
 /**
  * \brief Base class for nodes which own other nodes, aka compound nodes.
@@ -215,7 +173,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(node_args{fg_, r, node_t::default_name},
+		return make_child_impl<node_t>(node_args{fg_, std::move(r), node_t::default_name},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -232,7 +190,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(node_args{fg_, region(), name},
+		return make_child_impl<node_t>(node_args{fg_, region(), std::move(name)},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -241,7 +199,7 @@ public:
 	{
 		static_assert(std::is_base_of<tree_base_node, node_t>(),
 				"make_child can only be used with classes inheriting from fc::tree_base_node");
-		return make_child_impl<node_t>(node_args{fg_, r, name},
+		return make_child_impl<node_t>(node_args{fg_,  std::move(r),  std::move(name)},
 		                               std::forward<args_t>(args)...);
 	}
 
@@ -252,9 +210,10 @@ private:
 	template <class node_t, class... Args>
 	node_t& make_child_impl(node_args nargs, Args&&... args)
 	{
+		//first create a proxy node to get the node_args with a correct iterator
 		node_args n = new_node(std::move(nargs));
-		std::unique_ptr<tree_node> node = std::make_unique<node_t>(std::forward<Args>(args)..., n);
-		node.swap(*n.self);
+		//then replace proxy with proper node
+		*n.self = std::make_unique<node_t>(std::forward<Args>(args)..., n);
 		return dynamic_cast<node_t&>(**n.self);
 	}
 
@@ -266,7 +225,7 @@ private:
 	 */
 	forest_t::iterator add_child(std::unique_ptr<tree_node> child);
 
-	// Helper: create a new tree_base_node in tree from node_args.
+	/// Helper: create a new tree_base_node in tree from node_args.
 	node_args new_node(node_args args);
 };
 
@@ -277,13 +236,24 @@ class visualization;
  *
  * Has ownership of the forest and thus serves
  * as the root node for all other nodes in the forest.
+ *
+ *\invariant tree_root != nullptr
+ *\invariant viz_ != nullptr
+ *\invariant fg_ != nullptr
  */
 class forest_owner
 {
 public:
+	/**
+	 * \brief constructs root node with access to graph infrastructure
+	 * \param graph access to the abstract connectopn graph
+	 * \param n Human readable name of the root node
+	 * \param r parallel_region the root node belongs to
+	 * \pre r != nullptr
+	 */
 	forest_owner(graph::connection_graph& graph, std::string n, std::shared_ptr<parallel_region> r);
 	~forest_owner();
-	owning_base_node& nodes() { return *tree_root; }
+	owning_base_node& nodes() { assert(tree_root); return *tree_root; }
 	void visualize(std::ostream& out) const;
 
 private:
