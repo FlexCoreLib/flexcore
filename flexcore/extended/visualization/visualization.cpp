@@ -1,6 +1,7 @@
 #include "visualization.hpp"
 
 #include <flexcore/extended/graph/graph.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <map>
 #include <string>
@@ -31,6 +32,7 @@ struct visualization::impl
 	void print_subgraph(typename forest_t::const_iterator node, std::ostream& stream);
 	void print_ports(const std::vector<graph::graph_properties>& ports, unsigned long owner_hash,
 			std::ostream& stream);
+	static std::string escape_label(const std::string& label);
 
 	const graph::connection_graph& graph_;
 	const forest_t& forest_;
@@ -84,7 +86,7 @@ void visualization::impl::print_subgraph(forest_t::const_iterator node, std::ost
 	const auto uuid = hash_value(graph_info.get_id());
 	const auto& name = graph_info.name();
 	stream << "subgraph cluster_" << uuid << " {\n";
-	stream << "label=\"" << name << "\";\n";
+	stream << "label=\"" << escape_label(name) << "\";\n";
 	stream << "style=\"filled, bold, rounded\";\n";
 	stream << "fillcolor=\"" << get_color(graph_info.region()) << "\";\n";
 
@@ -161,15 +163,15 @@ void visualization::impl::print_ports(const std::vector<graph::graph_properties>
 			stream << "[shape=\"record\", style=\"dashed, filled, bold\", fillcolor=\"white\" "
 					  "label=\"";
 			stream << "<" << hash_value(port.port_properties.id()) << ">";
-			stream << port.port_properties.description();
+			stream << escape_label(port.port_properties.description());
 			stream << "\"];\n";
 		}
 	}
 	else // extended ports
 	{
 		const auto printer = [&stream](auto&& port) {
-			stream << "<" << hash_value(port.port_properties.id()) << ">"
-				   << port.port_properties.description();
+			stream << "<" << hash_value(port.port_properties.id()) << ">";
+			stream << escape_label(port.port_properties.description());
 		};
 
 		stream << owner_hash << "[shape=\"record\", label=\"";
@@ -183,6 +185,12 @@ void visualization::impl::print_ports(const std::vector<graph::graph_properties>
 	}
 }
 
+std::string visualization::impl::escape_label(const std::string& label)
+{
+	std::string s = boost::replace_all_copy(label, "<", "\\<");
+	boost::replace_all(s, ">", "\\>");
+	return s;
+}
 
 visualization::visualization(const graph::connection_graph& graph, const forest_t& forest)
 	: pimpl{std::make_unique<impl>(graph, forest, graph.ports())}
@@ -196,6 +204,7 @@ void visualization::visualize(std::ostream& stream)
 
 	// nodes with their ports that are part of the forest
 	stream << "digraph G {\n";
+	stream << "rankdir=\"LR\"\n";
 	pimpl->print_subgraph(pimpl->forest_.begin(), stream);
 
 	// these are the ports wich are not part of the forest (ad hoc created)
