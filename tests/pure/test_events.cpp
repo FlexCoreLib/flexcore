@@ -4,6 +4,8 @@
 #include <flexcore/pure/event_sources.hpp>
 #include <flexcore/core/connection.hpp>
 
+#include <tests/pure/sink_fixture.hpp>
+
 using namespace fc;
 
 namespace fc
@@ -29,41 +31,6 @@ struct event_sink_vector
 } // namespace fc
 
 BOOST_AUTO_TEST_SUITE(test_events)
-
-BOOST_AUTO_TEST_CASE( connections )
-{
-	static_assert(is_active<pure::event_source<int>>{},
-			"event_out_port is active by definition");
-	static_assert(is_passive<pure::event_sink<int>>{},
-			"event_in_port is passive by definition");
-	static_assert(!is_active<pure::event_sink<int>>{},
-			"event_in_port is not active by definition");
-	static_assert(!is_passive<pure::event_source<int>>{},
-			"event_out_port is not passive by definition");
-
-	pure::event_source<int> test_event;
-	pure::event_sink_value<int> test_handler;
-
-
-	connect(test_event, test_handler);
-	test_event.fire(1);
-	BOOST_CHECK_EQUAL(*(test_handler.storage), 1);
-
-
-	auto tmp_connection = test_event >> [](int i){return ++i;};
-	static_assert(is_instantiation_of<
-			detail::active_connection_proxy, decltype(tmp_connection)>{},
-			"active port connected with standard connectable gets proxy");
-	std::move(tmp_connection) >> test_handler;
-
-	test_event.fire(1);
-	BOOST_CHECK_EQUAL(*(test_handler.storage), 2);
-
-	auto incr = [](int i){return ++i;};
-	test_event >> incr >> incr >> incr >> test_handler;
-	test_event.fire(1);
-	BOOST_CHECK_EQUAL(*(test_handler.storage), 4);
-}
 
 BOOST_AUTO_TEST_CASE( merge_events )
 {
@@ -397,19 +364,4 @@ BOOST_AUTO_TEST_CASE( type_changing_lambda_with_void )
 	BOOST_CHECK(called_2);
 }
 
-BOOST_AUTO_TEST_CASE( type_changing_lambda_without_void )
-{
-	pure::event_source<double> src;
-	bool called_1 = false;
-	bool called_2 = false;
-	src >> [&](double d) {
-		called_1 = true;
-		return strongly_typed{d};
-	} >> [&](strongly_typed) {
-		called_2 = true;
-	};
-	src.fire(1.0);
-	BOOST_CHECK(called_1);
-	BOOST_CHECK(called_2);
-}
 BOOST_AUTO_TEST_SUITE_END()
