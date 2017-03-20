@@ -211,7 +211,7 @@ public:
 	}
 
 	/**
-	 * \brief registeres a new setting at the facade
+	 * \brief registers a new setting at the facade
 	 * \param id Identifier of the setting
 	 * \param initial_v Initial Value of the setting
 	 * \param setter Callback to set a new value in the setting
@@ -252,18 +252,12 @@ public:
 			region_t& region,
 			constraint_t constraint)
 	{
+		assert(constraint(initial_v));
 		setter(initial_v);
 
-		// this callback will be executed every time the value of the setting is changed
-		auto set_value = [constraint, setter](const data_t& v)
-		{
-			if(constraint(v))
-				setter(v);
-		};
-
 		//the forward_holder checks the constraint when a new value is set.
-		detail::forward_holder<data_t,decltype(set_value), constraint_t>
-				forwarder{set_value, constraint};
+		detail::forward_holder<data_t,setter_t, constraint_t>
+				forwarder{setter, constraint};
 
 		using fc::operator>>;
 		region.switch_tick() >> forwarder.in_forward();
