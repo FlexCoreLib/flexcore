@@ -161,7 +161,18 @@ public:
 	 */
 	void write(const setting_id& id, const std::string& val)
 	{
-		settings.at(id)->write(val);
+		try
+		{
+			settings.at(id)->write(val);
+		}
+		catch(const std::out_of_range& /*ex*/)
+		{
+			//we don't really care for the original message, which is just "map::at"
+			std::out_of_range additional_info{
+				"settings_backend no setting found with id: " + id.key
+			};
+			throw additional_info;
+		}
 	}
 
 	/**

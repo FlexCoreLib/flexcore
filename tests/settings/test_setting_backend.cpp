@@ -48,6 +48,19 @@ BOOST_AUTO_TEST_CASE(test_backend)
 	BOOST_CHECK_EQUAL(test_val, 1.5);
 }
 
+BOOST_AUTO_TEST_CASE(test_id_check)
+{
+	fc::settings_backend backend{};
+
+	//we just use a lambda to mock the setting callback
+	backend.register_setting<float>(fc::setting_id{"setting_id"},
+			[&](float){});
+
+	const std::string serialized{"{\"test_int\": 1.5" "}"};
+	const auto incorrect_id = fc::setting_id{"incorrect_id"};
+	BOOST_CHECK_THROW(backend.write(incorrect_id, serialized), std::out_of_range)
+}
+
 BOOST_AUTO_TEST_CASE(test_constraints)
 {
 	fc::settings_backend backend{};

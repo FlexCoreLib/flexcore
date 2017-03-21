@@ -212,9 +212,9 @@ public:
 	///event_source sending std::pair<key_t, data_t>
 	auto& out() { return out_port; }
 
-private:
 	using in_port_t = typename base::template event_sink<data_t>;
 	using out_port_t = typename base::template event_source<std::pair<key_t, data_t>>;
+private:
 
 	std::map<key_t, in_port_t> in_ports;
 	out_port_t out_port;

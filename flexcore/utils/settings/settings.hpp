@@ -111,7 +111,7 @@ public:
 	 * \return Returns the setting's current value
 	 * \post return value fulfills constraint given in constructor
 	 */
-	data_t operator()()
+	data_t operator()() const
 	{
 		return *cache;
 	}
