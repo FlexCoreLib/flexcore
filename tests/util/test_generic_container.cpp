@@ -33,12 +33,12 @@ BOOST_AUTO_TEST_CASE(test_setting_container)
 
 	settings_container<json_file_setting_facade> sc(backend);
 
-	auto int_setting = sc.add<int>("test_int", default_value);
+	auto int_setting = sc.add<int>(setting_id{"test_int"}, default_value);
 
 	//expect value from stream and not default value, since stream was loaded.
 	BOOST_CHECK_EQUAL(int_setting(), 1);
 
-	auto float_setting = sc.add<float>("test_float", 0.0);
+	auto float_setting = sc.add<float>(setting_id{"test_float"}, 0.0);
 	BOOST_CHECK_EQUAL(float_setting(), 0.5);
 }
 

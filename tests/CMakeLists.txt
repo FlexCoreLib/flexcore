@@ -31,6 +31,7 @@ ADD_EXECUTABLE( test_executable
 	runner.cpp 
 	serialisation/test_deserializer.cpp
 	settings/test_settings.cpp
+	settings/test_setting_backend.cpp
 	scheduler/TestClock.cpp
 	scheduler/test_cyclecontrol.cpp
 	scheduler/test_parallel_region.cpp

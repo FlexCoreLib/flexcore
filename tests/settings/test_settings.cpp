@@ -10,8 +10,10 @@ BOOST_AUTO_TEST_CASE(test_trivial_setting)
 {
 	int default_value = 0;
 
-	setting<int, const_setting_backend_facade> my_setting =
-			{setting_id{"setting_id"}, default_value};
+	const_setting_backend_facade facade{};
+
+	setting<int> my_setting =
+			{setting_id{"setting_id"},facade, default_value};
 
 	BOOST_CHECK_EQUAL(my_setting(), default_value);
 }
@@ -50,13 +52,13 @@ BOOST_AUTO_TEST_CASE(test_setting_from_json_file)
 
 	json_file_setting_facade backend{ss};
 
-	setting<int, json_file_setting_facade> int_setting =
+	setting<int> int_setting =
 			{setting_id{"test_int"}, backend, default_value};
 
 	//expect value from stream and not default value, since stream was loaded.
 	BOOST_CHECK_EQUAL(int_setting(), 1);
 
-	setting<float, json_file_setting_facade> float_setting =
+	setting<float> float_setting =
 			{setting_id{"test_float"}, backend, 0.0};
 	BOOST_CHECK_EQUAL(float_setting(), 0.5);
 }
@@ -74,7 +76,7 @@ BOOST_AUTO_TEST_CASE(test_incorrect_data_type)
 	//try to read string setting from float value
 	auto generate_illegal_setting = [&backend]()
 	{
-		setting<std::string, json_file_setting_facade> float_setting =
+		setting<std::string> float_setting =
 				{setting_id{"test_float"}, backend, "blabla"};
 
 		return std::move(float_setting);

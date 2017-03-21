@@ -30,12 +30,12 @@ public:
 	}
 
 	template <class data_t>
-	fc::setting<data_t, backend_t>& add(const std::string& name, data_t init_value)
+	fc::setting<data_t>& add(setting_id name, data_t init_value)
 	{
-		return container.add<fc::setting<data_t, backend_t>>(
-				setting_id{name},
+		return container.add<fc::setting<data_t>>(
+				std::move(name),
 				backend_access,
-				init_value);
+				std::move(init_value));
 	}
 
 private:
