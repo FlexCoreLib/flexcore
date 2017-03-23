@@ -54,10 +54,12 @@ BOOST_AUTO_TEST_CASE(test_state_cache)
 BOOST_AUTO_TEST_CASE(test_current_state)
 {
 	tests::owning_node root;
-	auto region = std::make_shared<parallel_region>("MyRegion");
+	auto region = std::make_shared<parallel_region>("MyRegion",
+			fc::thread::cycle_control::fast_tick);
 
 	{ //check constructor
-	auto region_2 = std::make_shared<parallel_region>("MyRegion");
+	auto region_2 = std::make_shared<parallel_region>("MyRegion",
+			fc::thread::cycle_control::fast_tick);
 	auto& test_node_1 = root.make_child<current_state<int>>(region_2,1);
 	BOOST_CHECK_EQUAL(test_node_1.out()(), 1);
 

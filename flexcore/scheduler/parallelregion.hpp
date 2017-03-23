@@ -66,10 +66,8 @@ public:
 class parallel_region
 {
 public:
-	explicit parallel_region(std::string id = "default",
-			virtual_clock::steady::duration duration =
-					std::chrono::duration_cast<virtual_clock::steady::duration>
-						(std::chrono::seconds(1)));
+	explicit parallel_region(std::string id,
+			virtual_clock::steady::duration duration);
 
 	parallel_region(const parallel_region&) = delete;
 	parallel_region(parallel_region&&) = default;
