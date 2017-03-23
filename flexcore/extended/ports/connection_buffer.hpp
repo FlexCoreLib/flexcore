@@ -10,6 +10,9 @@
 namespace fc
 {
 
+//Note: Many asserts in this file might seem stupid (like checking empty after clear)
+//but this code is multi-threaded and race conditions might trigger them.
+
 /**
  * \brief common interface of nodes serving as buffers within connections.
  *
@@ -17,6 +20,7 @@ namespace fc
  * Classes might even directly forward events.
  *
  * \tparam token_t type of tokens passing through the buffer
+ * \tparam tag either event_tag or state_tag, specifies if events or states are buffered.
  */
 template<class token_t, class tag>
 struct buffer_interface
@@ -42,10 +46,10 @@ class event_no_buffer final : public buffer_interface<token_t, event_tag>
 {
 public:
 	event_no_buffer()
-	    : in_event_port([this](auto&&... in_event)
-	                    {
-		                    out_event_port.fire(std::forward<decltype(in_event)>(in_event)...);
-	                    })
+		: in_event_port([this](auto&&... in_event)
+		{
+			out_event_port.fire(std::forward<decltype(in_event)>(in_event)...);
+		})
 	{
 	}
 
@@ -73,7 +77,7 @@ private:
  * Events from the external buffer are fired on receiving send tick.
  */
 template<class event_t>
-class event_buffer : public buffer_interface<event_t, event_tag>
+class event_buffer final : public buffer_interface<event_t, event_tag>
 {
 public:
 	event_buffer()
@@ -85,8 +89,8 @@ public:
 		, intern_buffer()
 		, extern_buffer()
 		, read(false)
-		{
-		}
+	{
+	}
 
 	typedef typename pure::out_port<event_t, event_tag>::type out_port_t;
 	typedef typename pure::in_port<event_t, event_tag>::type in_port_t;
@@ -103,7 +107,12 @@ public:
 	in_port_t& in() override { return in_event_port; }
 	out_port_t& out() override { return out_event_port; }
 
-protected:
+private:
+	/**
+	 * \brief switches intern_buffer to middle_buffer
+	 * \post intern_buffer.empty()
+	 * \post read == false
+	 */
 	void switch_active_buffers()
 	{
 		// If middle buffer has been switched with outgoing_buffer, then we can swap the incoming
@@ -115,8 +124,15 @@ protected:
 			middle_buffer.insert(end(middle_buffer), begin(intern_buffer), end(intern_buffer));
 		read = false;
 		intern_buffer.clear();
+		assert(intern_buffer.empty());
+		assert(!read);
 	}
 
+	/**
+	 * \brief switches middle_buffer to extern_buffer
+	 * \post middle_buffer.empty()
+	 * \post read ==true
+	 */
 	void switch_passive_buffers()
 	{
 		// Switching the outgoing buffers means the previous value in extern_buffer has already been
@@ -124,8 +140,14 @@ protected:
 		swap(middle_buffer, extern_buffer);
 		read = true;
 		middle_buffer.clear();
+		assert(middle_buffer.empty());
+		assert(read);
 	}
 
+	/**
+	 * \brief directly switches intern to extern buffer
+	 * \post intern_buffer.empty()
+	 */
 	void switch_active_passive_buffers()
 	{
 		if(extern_buffer.empty())
@@ -137,6 +159,7 @@ protected:
 			extern_buffer.insert(end(extern_buffer), begin(intern_buffer), end(intern_buffer));
 			intern_buffer.clear();
 		}
+		assert(intern_buffer.empty());
 	}
 
 	/**
@@ -174,7 +197,7 @@ protected:
  * Instead of real buffers we just count the events.
  */
 template<>
-class event_buffer<void> : public buffer_interface<void, event_tag>
+class event_buffer<void> final : public buffer_interface<void, event_tag>
 {
 public:
 	event_buffer()
@@ -205,7 +228,7 @@ public:
 	in_port_t& in() override { return in_event_port; }
 	out_port_t& out() override { return out_event_port; }
 
-protected:
+private:
 	void switch_active_buffers()
 	{
 		if (read)
@@ -259,7 +282,7 @@ protected:
 
 /// Implementation of buffer_interface, which directly forwards state.
 template<class data_t>
-class state_no_buffer : public buffer_interface<data_t, state_tag>
+class state_no_buffer final : public buffer_interface<data_t, state_tag>
 {
 public:
 	state_no_buffer()
@@ -286,7 +309,7 @@ private:
  * \tparam data_t type of state stored in buffer. needs to be copy_constructable.
  */
 template<class data_t>
-class state_buffer : public buffer_interface<data_t, state_tag>
+class state_buffer final : public buffer_interface<data_t, state_tag>
 {
 public:
 	state_buffer();
@@ -309,8 +332,7 @@ public:
 		return out_port;
 	}
 
-
-protected:
+private:
 	void switch_passive_buffers()
 	{
 		middle_buffer = intern_buffer;
@@ -332,7 +354,7 @@ protected:
 	pure::event_sink<void> in_work_tick;
 	pure::state_sink<data_t> in_port;
 	pure::state_source<data_t> out_port;
-private:
+
 	data_t intern_buffer;
 	data_t extern_buffer;
 	data_t middle_buffer;
