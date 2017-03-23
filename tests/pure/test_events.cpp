@@ -4,102 +4,45 @@
 #include <flexcore/pure/event_sources.hpp>
 #include <flexcore/core/connection.hpp>
 
+#include <tests/pure/sink_fixture.hpp>
+
 using namespace fc;
-
-namespace fc
-{
-namespace pure
-{
-
-template<class T>
-struct event_sink_value
-{
-	void operator()(T in) { *storage = in; }
-	std::shared_ptr<T> storage = std::make_shared<T>();
-};
-
-template<class T>
-struct event_sink_vector
-{
-	void operator()(T in) {	storage->push_back(in);	}
-	std::shared_ptr<std::vector<T>> storage = std::make_shared<std::vector<T>>();
-};
-
-} // namespace pure
-} // namespace fc
 
 BOOST_AUTO_TEST_SUITE(test_events)
 
-BOOST_AUTO_TEST_CASE( connections )
-{
-	static_assert(is_active<pure::event_source<int>>{},
-			"event_out_port is active by definition");
-	static_assert(is_passive<pure::event_sink<int>>{},
-			"event_in_port is passive by definition");
-	static_assert(!is_active<pure::event_sink<int>>{},
-			"event_in_port is not active by definition");
-	static_assert(!is_passive<pure::event_source<int>>{},
-			"event_out_port is not passive by definition");
-
-	pure::event_source<int> test_event;
-	pure::event_sink_value<int> test_handler;
-
-
-	connect(test_event, test_handler);
-	test_event.fire(1);
-	BOOST_CHECK_EQUAL(*(test_handler.storage), 1);
-
-
-	auto tmp_connection = test_event >> [](int i){return ++i;};
-	static_assert(is_instantiation_of<
-			detail::active_connection_proxy, decltype(tmp_connection)>{},
-			"active port connected with standard connectable gets proxy");
-	std::move(tmp_connection) >> test_handler;
-
-	test_event.fire(1);
-	BOOST_CHECK_EQUAL(*(test_handler.storage), 2);
-
-	auto incr = [](int i){return ++i;};
-	test_event >> incr >> incr >> incr >> test_handler;
-	test_event.fire(1);
-	BOOST_CHECK_EQUAL(*(test_handler.storage), 4);
-}
-
+//several event sources can be connected to one sink
 BOOST_AUTO_TEST_CASE( merge_events )
 {
 	pure::event_source<int> test_event;
 	pure::event_source<int> test_event_2;
-	pure::event_sink_vector<int> test_handler;
+	pure::sink_fixture<int> test_sink;
 
-	test_event >> test_handler;
-	test_event_2 >> test_handler;
+	test_event >> test_sink;
+	test_event_2 >> test_sink;
 
 	test_event.fire(0);
-	BOOST_CHECK_EQUAL(test_handler.storage->size(), 1);
-	BOOST_CHECK_EQUAL(test_handler.storage->back(), 0);
+	test_sink.expect(0);
 
 	test_event_2.fire(1);
-
-	BOOST_CHECK_EQUAL(test_handler.storage->size(), 2);
-	BOOST_CHECK_EQUAL(test_handler.storage->front(), 0);
-	BOOST_CHECK_EQUAL(test_handler.storage->back(), 1);
-
+	test_sink.expect(1);
 }
 
+//one event source can be connected to several sinks
 BOOST_AUTO_TEST_CASE( split_events )
 {
 	pure::event_source<int> test_event;
-	pure::event_sink_value<int> test_handler_1;
-	pure::event_sink_value<int> test_handler_2;
+	pure::sink_fixture<int> test_sink_1;
+	pure::sink_fixture<int> test_sink_2;
 
-	test_event >> test_handler_1;
-	test_event >> test_handler_2;
+	test_event >> test_sink_1;
+	test_event >> test_sink_2;
 
 	test_event.fire(2);
-	BOOST_CHECK_EQUAL(*(test_handler_1.storage), 2);
-	BOOST_CHECK_EQUAL(*(test_handler_2.storage), 2);
+	test_sink_1.expect(2);
+	test_sink_2.expect(2);
 }
 
+//events can be sent between event_sources and event_sink
 BOOST_AUTO_TEST_CASE( in_port )
 {
 	int test_value = 0;
@@ -113,10 +56,8 @@ BOOST_AUTO_TEST_CASE( in_port )
 	test_event.fire(1);
 	BOOST_CHECK_EQUAL(test_value, 1);
 
-
 	//test void event
 	auto write_999 = [&]() {test_value = 999;};
-
 
 	pure::event_sink<void> void_in(write_999);
 	pure::event_source<void> void_out;
@@ -125,6 +66,7 @@ BOOST_AUTO_TEST_CASE( in_port )
 	BOOST_CHECK_EQUAL(test_value, 999);
 }
 
+//lambdas (and other functors) can serve as sinks for events
 BOOST_AUTO_TEST_CASE( lambda )
 {
 	int test_value = 0;
@@ -200,6 +142,7 @@ auto sink(const operation& op )
 }
 }
 
+//polymorphic lambdas and functors with overloaded call operators work as well.
 BOOST_AUTO_TEST_CASE( test_polymorphic_lambda )
 {
 	int test_value = 0;
@@ -271,7 +214,6 @@ BOOST_AUTO_TEST_CASE(test_sink_deleted_callback)
 		test_source.fire(8);
 		BOOST_CHECK_EQUAL(*(test_sink4.storage), 8);
 	}
-
 }
 
 BOOST_AUTO_TEST_CASE(test_delete_with_lambda_in_connection)
@@ -397,19 +339,4 @@ BOOST_AUTO_TEST_CASE( type_changing_lambda_with_void )
 	BOOST_CHECK(called_2);
 }
 
-BOOST_AUTO_TEST_CASE( type_changing_lambda_without_void )
-{
-	pure::event_source<double> src;
-	bool called_1 = false;
-	bool called_2 = false;
-	src >> [&](double d) {
-		called_1 = true;
-		return strongly_typed{d};
-	} >> [&](strongly_typed) {
-		called_2 = true;
-	};
-	src.fire(1.0);
-	BOOST_CHECK(called_1);
-	BOOST_CHECK(called_2);
-}
 BOOST_AUTO_TEST_SUITE_END()

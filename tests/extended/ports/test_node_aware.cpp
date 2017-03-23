@@ -4,6 +4,7 @@
 #include <flexcore/pure/pure_ports.hpp>
 #include <flexcore/extended/base_node.hpp>
 #include <nodes/owning_node.hpp>
+#include <pure/sink_fixture.hpp>
 
 template<class base>
 struct useless_mixin : public base
@@ -30,28 +31,23 @@ BOOST_AUTO_TEST_SUITE(test_parallle_region)
 BOOST_AUTO_TEST_CASE(test_region_aware_node)
 {
 	tests::owning_node root;
-	typedef node_aware<pure::event_sink<int>> test_in_port;
+	typedef node_aware<pure::sink_fixture<int>> test_in_port;
 
-	int test_value = 0;
-	auto write_param = [&](int i) {test_value = i;};
-	test_in_port test_in(*(root.region()), write_param);
-
-	BOOST_CHECK_EQUAL(test_value, 0);
+	test_in_port test_in(*(root.region()),
+			std::vector<int>{0,1});
+	test_in(0);
 	test_in(1);
-	BOOST_CHECK_EQUAL(test_value, 1);
 }
 
 
 BOOST_AUTO_TEST_CASE(test_same_region)
 {
-	typedef node_aware<pure::event_sink<int>> test_in_port;
+	typedef node_aware<pure::sink_fixture<int>> test_in_port;
 	typedef node_aware<pure::event_source<int>> test_out_port;
 
 	tests::owning_node root;
 
-	std::vector<int> test_sink;
-	auto write_param = [&](int i) {test_sink.push_back(i);};
-	test_in_port test_in(*(root.region()), write_param);
+	test_in_port test_in(*(root.region()));
 	test_out_port test_out(*(root.region()));
 
 	static_assert(is_passive_sink<test_in_port>{}, "");
@@ -60,10 +56,8 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	test_out >> test_in;
 
-	BOOST_CHECK_EQUAL(test_sink.size(), 0);
 	test_out.fire(1);
-	BOOST_CHECK_EQUAL(test_sink.size(), 1);
-	BOOST_CHECK_EQUAL(test_sink.at(0), 1);
+	test_in.expect(1);
 
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
@@ -80,8 +74,8 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 	std::move(tmp) >> test_in;
 
 	test_out.fire(1);
-	BOOST_CHECK_EQUAL(test_sink.at(1), 1);
-	BOOST_CHECK_EQUAL(test_sink.at(2), 2);
+	test_in.expect(1); //one for first connection
+	test_in.expect(2); //another for second with increment
 }
 
 namespace
