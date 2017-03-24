@@ -32,7 +32,8 @@ struct container_sink
 
 BOOST_AUTO_TEST_CASE(test_worker)
 {
-	auto region = std::make_shared<parallel_region>("MyRegion");
+	auto region = std::make_shared<parallel_region>("MyRegion",
+			fc::thread::cycle_control::fast_tick);
 	tests::owning_node owner(region);
 
 	triggered_counter& function_gen = owner.make_child_named<triggered_counter>("Counter");

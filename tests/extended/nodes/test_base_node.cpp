@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_SUITE( test_base_node )
  */
 BOOST_AUTO_TEST_CASE( test_region_propagation )
 {
-	auto region = std::make_shared<parallel_region>("foo");
+	auto region = std::make_shared<parallel_region>("foo",fc::thread::cycle_control::fast_tick);
 	tests::owning_node root(region);
 	auto& child = root.make_child_named<null>("child");
 

@@ -1,11 +1,13 @@
 #include <flexcore/scheduler/parallelregion.hpp>
+#include <flexcore/scheduler/cyclecontrol.hpp>
+
 #include <boost/test/unit_test.hpp>
 
 #include <flexcore/pure/pure_ports.hpp>
 
 using namespace fc;
 
-namespace unit_test
+namespace
 {
 class parallel_tester
 {
@@ -23,7 +25,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(test_region_ticks)
 {
-	auto region = std::make_shared<parallel_region>();
+	auto region = std::make_shared<parallel_region>("r1",
+			thread::cycle_control::fast_tick);
 
 	bool work_ticked = false;
 	bool switch_ticked = false;
@@ -33,11 +36,11 @@ BOOST_AUTO_TEST_CASE(test_region_ticks)
 	BOOST_CHECK(!switch_ticked);
 	BOOST_CHECK(!work_ticked);
 
-	::unit_test::parallel_tester::switch_tick(region);
+	parallel_tester::switch_tick(region);
 	BOOST_CHECK(switch_ticked);
 	BOOST_CHECK(!work_ticked);
 
-	::unit_test::parallel_tester::work_tick(region);
+	parallel_tester::work_tick(region);
 	BOOST_CHECK(switch_ticked);
 	BOOST_CHECK(work_ticked);
 }

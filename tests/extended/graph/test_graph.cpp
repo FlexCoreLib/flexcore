@@ -6,6 +6,7 @@
 #include <flexcore/extended/base_node.hpp>
 #include <flexcore/ports.hpp>
 
+#include <flexcore/scheduler/cyclecontrol.hpp>
 
 using namespace fc;
 
@@ -40,7 +41,8 @@ namespace
 BOOST_AUTO_TEST_CASE(test_graph_creation)
 {
 	graph::connection_graph graph;
-	forest_owner forest{graph, "forest", std::make_shared<parallel_region>("r")};
+	forest_owner forest{graph, "forest", std::make_shared<parallel_region>("r",
+			thread::cycle_control::fast_tick)};
 	auto& r = forest.nodes();
 	auto dummy_node_factory = [&](auto name) -> dummy_node&{ return r.make_child_named<dummy_node>(name); };
 	dummy_node& source_1 = dummy_node_factory("state_source 1");

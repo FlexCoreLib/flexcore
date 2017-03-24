@@ -41,6 +41,25 @@ BOOST_AUTO_TEST_CASE(test_region_aware_node)
 	BOOST_CHECK_EQUAL(test_value, 1);
 }
 
+BOOST_AUTO_TEST_CASE(test_tick_length_checks)
+{
+	parallel_region fast_region_1("r1",
+		fc::thread::cycle_control::fast_tick);
+	parallel_region fast_region_2("r2",
+		fc::thread::cycle_control::fast_tick);
+	parallel_region medium_region("r3",
+		fc::thread::cycle_control::medium_tick);
+
+	node_aware<pure::event_source<int>> port_1(fast_region_1);
+	node_aware<pure::event_source<int>> port_2(fast_region_2);
+	node_aware<pure::event_source<int>> port_3(medium_region);
+
+	BOOST_CHECK(same_tick_rate(port_1, port_2));
+	BOOST_CHECK(!same_tick_rate(port_1, port_3));
+	BOOST_CHECK(same_region(port_1, port_1));
+	BOOST_CHECK(!same_region(port_1, port_2));
+	BOOST_CHECK(!same_tick_rate(port_1, port_3));
+}
 
 BOOST_AUTO_TEST_CASE(test_same_region)
 {
@@ -151,8 +170,10 @@ BOOST_AUTO_TEST_CASE(test_different_region)
 
 BOOST_AUTO_TEST_CASE(test_void_event)
 {
-	parallel_region region_1{"r1"};
-	parallel_region region_2{"r2"};
+	parallel_region region_1{"r1",
+		fc::thread::cycle_control::fast_tick};
+	parallel_region region_2{"r2",
+		fc::thread::cycle_control::fast_tick};
 
 	node_aware<pure::event_source<void>> source{region_1};
 	bool written{false};
@@ -208,8 +229,10 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 {
 	typedef node_aware<pure::event_sink<int>> test_in_port;
 	typedef node_aware<pure::event_source<int>> test_out_port;
-	auto region_1 = std::make_shared<parallel_region>("r1");
-	auto region_2 = std::make_shared<parallel_region>("r2");
+	auto region_1 = std::make_shared<parallel_region>("r1",
+			fc::thread::cycle_control::fast_tick);
+	auto region_2 = std::make_shared<parallel_region>("r2",
+			fc::thread::cycle_control::fast_tick);
 	tests::owning_node root_1(region_1);
 	tests::owning_node root_2(region_2);
 
@@ -233,7 +256,8 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	BOOST_CHECK_EQUAL(test_value, 2);
 
 	// test more than one lambda in between
-	auto region_3 = std::make_shared<parallel_region>("r3");
+	auto region_3 = std::make_shared<parallel_region>("r3",
+			fc::thread::cycle_control::fast_tick);
 	tests::owning_node root_3(region_3);
 
 	test_in_port test_in_2(*(root_3.region()), write_param);
@@ -257,8 +281,10 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 {
 	typedef node_aware<pure::event_sink<int>> test_in_port;
 	typedef node_aware<pure::event_source<int>> test_out_port;
-	auto region_1 = std::make_shared<parallel_region>("r1");
-	auto region_2 = std::make_shared<parallel_region>("r2");
+	auto region_1 = std::make_shared<parallel_region>("r1",
+			fc::thread::cycle_control::fast_tick);
+	auto region_2 = std::make_shared<parallel_region>("r2",
+			fc::thread::cycle_control::fast_tick);
 	tests::owning_node root_1(region_1);
 	tests::owning_node root_2(region_2);
 
