@@ -19,12 +19,14 @@ namespace fc
 /// Classes and Functions related to the multithreading model of flexcore.
 namespace thread
 {
-
+namespace detail
+{
 struct condition_pair
 {
 	std::mutex mtx;
 	std::condition_variable cv;
 };
+}
 
 /**
  * \brief class representing a task
@@ -35,23 +37,26 @@ struct periodic_task final
 	/**
 	 * \brief Constructor taking a job
 	 * \param job task which is to be executed every cycle
+	 * \pre job must not be empty
 	 */
-	periodic_task(std::function<void(void)> job)
+	explicit periodic_task(std::function<void(void)> job)
 		: work_to_do(false)
-		, sync(std::make_unique<condition_pair>())
+		, sync(std::make_unique<detail::condition_pair>())
 		, work(std::move(job))
 		, work_start(wall_clock::steady::now())
 		, region(nullptr)
 	{
+		assert(work);
 	}
 	/// Construct a periodic task executes work within a region
 	explicit periodic_task(const std::shared_ptr<parallel_region>& r) :
 				work_to_do(false),
-				sync(std::make_unique<condition_pair>()),
+				sync(std::make_unique<detail::condition_pair>()),
 				work(r->ticks.in_work()),
 				work_start(wall_clock::steady::now()),
 				region(r)
 	{
+		assert(r != nullptr);
 	}
 
 	bool done()
@@ -77,10 +82,11 @@ struct periodic_task final
 	bool wait_until_done(virtual_clock::steady::duration timeout)
 	{
 		std::unique_lock<std::mutex> lock(sync->mtx);
-		return sync->cv.wait_until(lock, work_start + timeout, [&]
-		                         {
-			                         return !work_to_do;
-		                         });
+		return sync->cv.wait_until(
+				lock,
+				work_start + timeout,
+				[this](){ return !this->work_to_do; }
+		);
 	}
 
 	void send_switch_tick()
@@ -95,12 +101,10 @@ struct periodic_task final
 		work();
 		set_work_to_do(false);
 	}
-
-	const parallel_region* get_region() const { return region.get(); }
 private:
 	/// flag to check if work has already been executed this cycle.
 	bool work_to_do;
-	std::unique_ptr<condition_pair> sync;
+	std::unique_ptr<detail::condition_pair> sync;
 	/// work to be done every cycle
 	std::function<void(void)> work;
 	/// start time of most recent work cycle
@@ -162,16 +166,31 @@ private:
 class cycle_control
 {
 public:
-	static constexpr wall_clock::steady::duration min_tick_length =
-			wall_clock::steady::duration(std::chrono::milliseconds(10));
+	//forward definitions of tick rates for use in scheduler
+	static constexpr auto min_tick_length = parallel_region::min_tick_length;
+	static constexpr auto fast_tick =  parallel_region::fast_tick;
+	static constexpr auto medium_tick =  parallel_region::medium_tick;
+	static constexpr auto slow_tick =  parallel_region::slow_tick;
 
-	static constexpr virtual_clock::steady::duration fast_tick = min_tick_length;
-	static constexpr virtual_clock::steady::duration medium_tick = min_tick_length * 10;
-	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
-
+	/**
+	 * \brief construct cycle_control with a scheduler and a main loop functor
+	 * \param scheduler scheduler for work ticks to be used.
+	 * \param loop functor which controls the main loop
+	 * \pre loop != nullptr
+	 *
+	 * \see parallel_scheduler for an example of a scheduler.
+	 */
 	explicit cycle_control(std::unique_ptr<scheduler> scheduler,
 			const std::shared_ptr<main_loop>& loop = std::make_shared<realtime_main_loop>());
 
+	/**
+	 * \brief Construct cycle_control together with a user controled timeout handler
+	 * \param scheduler scheduler for work ticks to be used.
+	 * \param loop functor which controls the main loop
+	 * \param err TimeOutHandler, is triggered when the scheduler notices
+	 * that a work tick takes to long.
+	 * \pre loop != nullptr
+	 */
 	template <class TimeOutFun>
 	cycle_control(std::unique_ptr<scheduler> scheduler,
 			TimeOutFun err,
@@ -181,7 +200,7 @@ public:
 
 	/// starts the main loop
 	void start();
-	// halts the main loop without joining worker threads
+	/// halts the main loop without joining worker threads
 	void stop();
 
 	/// advances the clock by a single tick and executes all tasks for the cycle.
@@ -197,8 +216,10 @@ public:
 	 * \post list of tasks for given tick_rate is not empty
 	 */
 	void add_task(periodic_task task, virtual_clock::duration tick_rate);
-	size_t nr_of_tasks() { return scheduler_->nr_of_waiting_tasks(); }
+	/// returns the number of currently scheduled tasks
+	size_t nr_of_tasks() const { return scheduler_->nr_of_waiting_tasks(); }
 
+	/// Get last exception thrown by timeout. Returns nullptr if no exception was thrown
 	std::exception_ptr last_exception();
 
 	void set_main_loop(const std::shared_ptr<main_loop>& loop);

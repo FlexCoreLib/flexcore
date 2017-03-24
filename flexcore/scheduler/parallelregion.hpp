@@ -66,6 +66,13 @@ public:
 class parallel_region
 {
 public:
+	static constexpr wall_clock::steady::duration min_tick_length =
+			wall_clock::steady::duration(std::chrono::milliseconds(10));
+
+	static constexpr virtual_clock::steady::duration fast_tick = min_tick_length;
+	static constexpr virtual_clock::steady::duration medium_tick = min_tick_length * 10;
+	static constexpr virtual_clock::steady::duration slow_tick = min_tick_length * 100;
+
 	explicit parallel_region(std::string id,
 			virtual_clock::steady::duration duration);
 

@@ -17,10 +17,10 @@ constexpr virtual_clock::steady::duration cycle_control::slow_tick;
 cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler,
 		 const std::shared_ptr<main_loop>& loop)
 	: cycle_control(std::move(scheduler), [this](auto& task)
-					{
-						return this->store_exception(task);
-					},
-					loop
+			{
+				return this->store_exception(task);
+			},
+			loop
 	)
 {
 }
@@ -59,7 +59,7 @@ void cycle_control::stop()
 
 bool cycle_control::store_exception(periodic_task&)
 {
-	auto ep = std::make_exception_ptr(out_of_time_exception());
+	const auto ep = std::make_exception_ptr(out_of_time_exception());
 	std::lock_guard<std::mutex> lock(task_exception_mutex);
 	task_exceptions.push_back(ep);
 	return false;
@@ -108,6 +108,7 @@ void cycle_control::wait_for_current_tasks()
 cycle_control::~cycle_control()
 {
 	stop();
+	assert(!running);
 }
 
 bool cycle_control::run_periodic_tasks(tick_task_pair& tasks)
@@ -164,7 +165,8 @@ std::exception_ptr cycle_control::last_exception()
 	std::lock_guard<std::mutex> lock(task_exception_mutex);
 	if(task_exceptions.empty())
 		return nullptr;
-	std::exception_ptr except = task_exceptions.back();
+
+	const std::exception_ptr except = task_exceptions.back();
 	task_exceptions.pop_back();
 	return except;
 }

@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE(test_adding_tasks_to_running_scheduler)
 	namespace sched = fc::thread;
 	sched::cycle_control controller{std::make_unique<sched::parallel_scheduler>()};
 	controller.start();
-	BOOST_CHECK_THROW(controller.add_task({[]{}}, sched::cycle_control::fast_tick), std::runtime_error);
+	BOOST_CHECK_THROW(controller.add_task(sched::periodic_task{[]{}}, sched::cycle_control::fast_tick), std::runtime_error);
 	controller.stop();
-	BOOST_CHECK_THROW(controller.add_task({[]{}}, 2 * sched::cycle_control::slow_tick), std::invalid_argument);
+	BOOST_CHECK_THROW(controller.add_task(sched::periodic_task{[]{}}, 2 * sched::cycle_control::slow_tick), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(test_fast_main_loop)
@@ -74,9 +74,9 @@ BOOST_AUTO_TEST_CASE(test_fast_main_loop)
 	auto count_medium = 0ull;
 	auto count_slow = 0ull;
 	std::atomic_bool slow_done{false};
-	controller.add_task({[&] { ++count_fast; }}, cycle::fast_tick);
-	controller.add_task({[&] { ++count_medium; }}, cycle::medium_tick);
-	controller.add_task({[&, b=false]() mutable {
+	controller.add_task(sched::periodic_task{[&] { ++count_fast; }}, cycle::fast_tick);
+	controller.add_task(sched::periodic_task{[&] { ++count_medium; }}, cycle::medium_tick);
+	controller.add_task(sched::periodic_task{[&, b=false]() mutable {
 		++count_slow;
 		if (!b) {
 			slow_done.store(true);
