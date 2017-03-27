@@ -3,7 +3,7 @@
 #include <flexcore/ports.hpp>
 #include <flexcore/pure/pure_node.hpp>
 
-
+#include <pure/sink_fixture.hpp>
 #include <nodes/owning_node.hpp>
 
 using namespace fc;
@@ -15,19 +15,16 @@ BOOST_AUTO_TEST_CASE(test_event_terminal)
 	const float test_val = 1.234f;
 
 	{ //test pure terminal
-	float test_out = 0.0f;
 
 	event_terminal<float, pure::pure_node> pure_terminal;
 
 	pure::event_source<float> pure_source;
-	pure::event_sink<float> pure_sink{[&test_out](float in)
-			{test_out = in;}};
+	pure::sink_fixture<float> pure_sink{test_val};
 
 	pure_source >> pure_terminal.in();
 	pure_terminal.out() >> pure_sink;
 
 	pure_source.fire(test_val);
-	BOOST_CHECK_EQUAL(test_val, test_out);
 	}
 
 	{ // test extended terminal

@@ -12,7 +12,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 OPTION( FLEXCORE_ENABLE_COVERAGE_ANALYSIS "activate gcov based coverage anlysis" OFF )
 OPTION( FLEXCORE_ENABLE_TESTS "build unit tests" ${STANDALONE} )
-OPTION( FLEXCORE_ENABLE_BENCHMARKS "build micro benchmarks" ${STANDALONE} )
+OPTION( FLEXCORE_ENABLE_BENCHMARKS "build micro benchmarks" OFF )
 
 IF( FLEXCORE_ENABLE_COVERAGE_ANALYSIS AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	MESSAGE( WARNING "Build type is not Debug, code coverage information may be wrong" )

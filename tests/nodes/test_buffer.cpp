@@ -4,12 +4,36 @@
 #include <flexcore/extended/base_node.hpp>
 #include <flexcore/pure/event_sources.hpp>
 #include <flexcore/pure/state_sink.hpp>
+#include <flexcore/pure/pure_node.hpp>
 
 #include "owning_node.hpp"
 
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_buffers)
+
+BOOST_AUTO_TEST_CASE( test_list_collector_pure )
+{
+	// test case of list collector without region context
+	typedef list_collector<int, swap_on_pull, pure::pure_node> collector_t;
+
+	collector_t collector;
+
+	pure::state_sink<std::vector<int>> sink;
+
+	collector.out() >> sink;
+
+	// send data
+	collector.in()( std::vector<int>{1, 2} );
+	collector.in()( std::vector<int>{3} );
+
+	BOOST_CHECK(sink.get() == (std::vector<int>{ 1, 2, 3 }));
+
+	collector.in()( std::vector<int>{4, 5} );
+
+	BOOST_CHECK(sink.get() == (std::vector<int>{ 4, 5 }));
+	BOOST_CHECK(sink.get() == (std::vector<int>{ }));
+}
 
 using collector_t = list_collector<int, swap_on_tick, tree_base_node>;
 

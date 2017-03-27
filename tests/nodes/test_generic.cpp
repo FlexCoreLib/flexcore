@@ -3,6 +3,8 @@
 #include <flexcore/extended/nodes/generic.hpp>
 
 #include "owning_node.hpp"
+#include <pure/sink_fixture.hpp>
+
 
 using namespace fc;
 
@@ -94,28 +96,24 @@ BOOST_AUTO_TEST_CASE(watch_node)
 
 BOOST_AUTO_TEST_CASE(test_on_changed)
 {
-	int test_value = 0;
-
 	auto changed = on_changed<int>();
 
 	int test_state = 1;
 	pure::state_source<int> source([&test_state](){ return test_state; });
-	pure::event_sink<int> sink([&test_value](int i){test_value = i;});
+	pure::sink_fixture<int> sink{};
 
 	source >> changed.in();
 	changed.out() >> sink;
 
 	changed.check_tick()();
-
-	BOOST_CHECK_EQUAL(test_value, 1);
+	sink.expect(test_state);
 
 	test_state = 0;
 	changed.check_tick()();
-	BOOST_CHECK_EQUAL(test_value, test_state);
+	sink.expect(test_state);
 
 	test_state = 1;
 	changed.check_tick()();
-	BOOST_CHECK_EQUAL(test_value, test_state);
-
+	sink.expect(test_state);
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -10,7 +10,6 @@ ADD_EXECUTABLE( test_executable
 	core/test_traits.cpp
 	logging/test_logging.cpp
 	nodes/test_buffer.cpp
-	nodes/test_list_manipulation.cpp
 	nodes/test_generic.cpp
 	nodes/test_event_nodes.cpp
 	nodes/test_state_nodes.cpp

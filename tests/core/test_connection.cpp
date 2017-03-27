@@ -4,6 +4,7 @@
 
 // boost
 #include <boost/test/unit_test.hpp>
+#include <boost/mpl/list.hpp>
 
 using namespace fc;
 
@@ -136,47 +137,49 @@ BOOST_AUTO_TEST_CASE(test_polymorphic_lambda)
 	auto one_plus_one = connect(give_one, poly_increment);
 	BOOST_CHECK(one_plus_one() == 2);
 }
+
+using token_types = boost::mpl::list<int, float, std::string>;
 /**
  * Confirm that connecting connectables
  * does not depend on any particular order.
  */
-BOOST_AUTO_TEST_CASE( associativity )
+BOOST_AUTO_TEST_CASE_TEMPLATE( associativity , T, token_types)
 {
 	// this variable is captures by lambdas
-	int tee_ref = 0;
-	int sink_ref = 0;
-	int source = 1;
+	T tee_ref{0};
+	T sink_ref{0};
+	T source{1};
 
 	//named differnt sources and sinks to make tests more readable
 	auto give_source = [&]() {return source; };
-	auto increment = [](int i) -> int { return i + 1; };
-	auto tee = [&](int i) { tee_ref = i; return i; };
-	auto write_param = [&](int i){ sink_ref = i; };
+	auto increment = [](T i) { return i + T{1}; };
+	auto tee = [&](T i) { tee_ref = i; return i; };
+	auto write_param = [&](T i){ sink_ref = i; };
 
 	auto a = give_source;
 	auto b = increment;
 	auto c = tee;
 	auto d = write_param;
 
-	source = 10;
+	source = T{10};
 	(a >> b >> c >> d)();
-	BOOST_CHECK_EQUAL(tee_ref, source+1);
-	BOOST_CHECK_EQUAL(sink_ref, source+1);
+	BOOST_CHECK_EQUAL(tee_ref, source + T{1});
+	BOOST_CHECK_EQUAL(sink_ref, source + T{1});
 
-	source = 20;
+	source = T{20};
 	((a >> b) >> (c >> d))();
-	BOOST_CHECK_EQUAL(tee_ref, source+1);
-	BOOST_CHECK_EQUAL(sink_ref, source+1);
+	BOOST_CHECK_EQUAL(tee_ref, source + T{1});
+	BOOST_CHECK_EQUAL(sink_ref, source + T{1});
 
-	source = 50;
+	source = T{50};
 	((a >> (b >> c)) >> d)();
-	BOOST_CHECK_EQUAL(tee_ref, source+1);
-	BOOST_CHECK_EQUAL(sink_ref, source+1);
+	BOOST_CHECK_EQUAL(tee_ref, source + T{1});
+	BOOST_CHECK_EQUAL(sink_ref, source + T{1});
 
-	source = 60;
+	source = T{60};
 	(a >> ((b >> c) >> d))();
-	BOOST_CHECK_EQUAL(tee_ref, source+1);
-	BOOST_CHECK_EQUAL(sink_ref, source+1);
+	BOOST_CHECK_EQUAL(tee_ref, source + T{1});
+	BOOST_CHECK_EQUAL(sink_ref, source + T{1});
 }
 
 BOOST_AUTO_TEST_CASE( result_of_connection)
