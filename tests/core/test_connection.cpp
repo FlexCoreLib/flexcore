@@ -240,4 +240,22 @@ BOOST_AUTO_TEST_CASE( apply_to_connection )
 	BOOST_CHECK(c_visited);
 }
 
+struct constexpr_add
+{
+	template<class T>
+	constexpr auto operator()(T x) const
+	{
+		return ++x;
+	}
+};
+
+BOOST_AUTO_TEST_CASE( constexpr_connection )
+{
+	using fc::operator>>;
+	constexpr auto con = constexpr_add{} >> constexpr_add{};
+	constexpr auto test_val = con(1);
+	static_assert(test_val == 3, "compile time eval");
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
