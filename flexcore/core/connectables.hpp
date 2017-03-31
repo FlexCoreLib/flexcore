@@ -24,19 +24,19 @@ namespace fc
 struct increment
 {
 	template<class T>
-	auto operator()(T in) const { return ++in; }
+	constexpr auto operator()(T in) const { return ++in; }
 };
 /// Decrements input using prefix operator --.
 struct decrement
 {
 	template<class T>
-	auto operator()(T in) const { return --in; }
+	constexpr auto operator()(T in) const { return --in; }
 };
 /// Returns input unchanged.
 struct identity
 {
 	template<class T>
-	T operator()(T in) const { return in; }
+	constexpr T operator()(T in) const { return in; }
 };
 /// Adds a constant addend to inputs.
 template<class T>
@@ -70,21 +70,21 @@ auto divide(const T divisor)
 struct absolute
 {
 	template<class T>
-	auto operator()(const T& in) const { return std::abs(in); }
+	constexpr auto operator()(const T& in) const { return std::abs(in); }
 };
 
 /// Negates input using unary -.
 struct negate
 {
 	template<class T>
-	auto operator()(const T& in) const { return -in; }
+	constexpr auto operator()(const T& in) const { return -in; }
 };
 
 /// Returns logical not (operator !) of input.
 struct logical_not
 {
 	template<class T>
-	auto operator()(const T& in) const { return !in; }
+	constexpr auto operator()(const T& in) const { return !in; }
 };
 
 /**
