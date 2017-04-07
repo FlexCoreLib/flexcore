@@ -44,6 +44,7 @@ struct event_sink
 		assert(event_handler);
 	}
 
+	///event sinks are callable with event_t, which makes them connectables
 	template <class T>
 	auto operator()(T&& in_event) -> std::enable_if_t<std::is_convertible<T&&, event_t>{}>
 	{
@@ -86,6 +87,7 @@ struct event_sink
 		}
 	}
 
+	///registers a callback to be called, when this port is deconnected.
 	void register_callback(std::shared_ptr<std::function<void(size_t)>>& visit_fun)
 	{
 		assert(visit_fun);

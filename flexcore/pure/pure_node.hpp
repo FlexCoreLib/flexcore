@@ -11,6 +11,12 @@ namespace pure
 
 class pure_node;
 
+/**
+ * \brief port mixin which does nothing and leaves the port as pure.
+ *
+ * pure_port_mixin is used for metaprogramming code which applies mixins
+ * which are given as template parameters to ports.
+ */
 template<class port>
 struct pure_port_mixin : port
 {
@@ -28,6 +34,11 @@ struct pure_port_mixin : port
   }
 };
 
+/**
+ * \brief pure base class for generic nodes which are templates over node types
+ *
+ * pure_node defines the pure port types and is otherwise an empty class.
+ */
 class pure_node
 {
 public:
