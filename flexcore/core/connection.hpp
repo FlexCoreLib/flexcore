@@ -6,6 +6,7 @@
 #include <flexcore/core/detail/function_traits.hpp>
 #include <flexcore/core/traits.hpp>
 
+/// All Classes, Functions and other symbols from flexcore are in this namespace.
 namespace fc
 {
 
