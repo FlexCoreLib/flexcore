@@ -3,6 +3,8 @@
 #include <flexcore/utils/serialisation/deserializer.hpp>
 #include <flexcore/core/connection.hpp>
 
+#include <boost/mpl/list.hpp>
+
 #include <limits>
 #include <vector>
 #include <iostream>
@@ -12,9 +14,12 @@
 #include <cereal/archives/xml.hpp>
 #include <cereal/types/vector.hpp>
 
+BOOST_AUTO_TEST_SUITE(test_serialization)
 
 using namespace fc;
 
+namespace
+{
 template <class archive_in_t, class archive_out_t, class data_t>
 static void round_trip_test(data_t to_send)
 {
@@ -25,8 +30,7 @@ static void round_trip_test(data_t to_send)
 
 	BOOST_CHECK(round_trip(to_send) == to_send);
 }
-
-BOOST_AUTO_TEST_SUITE(test_serialization)
+}
 
 BOOST_AUTO_TEST_CASE(test_round_trip)
 {
@@ -56,6 +60,8 @@ BOOST_AUTO_TEST_CASE(test_stl_type)
 	round_trip_test<cereal::XMLInputArchive, cereal::XMLOutputArchive>(test_vec);
 }
 
+namespace
+{
 class class_with_internal_serialize
 {
 public:
@@ -63,24 +69,20 @@ public:
 		x(0)
 		, y(0)
 		, z(0)
-		, p(0)
 	{
 	}
 
-	class_with_internal_serialize(int px, int py, int pz, int pp) :
+	class_with_internal_serialize(int px, int py, int pz) :
 		x(px)
 		, y(py)
 		, z(pz)
-		, p(pp)
 	{
 	}
-
-	int x, y, z;
 
 	// comparison operator only needed for test
 	inline bool operator==(class_with_internal_serialize &other)
 	{
-		return x == other.x && y == other.y && z == other.z && p == other.p;
+		return x == other.x && y == other.y && z == other.z;
 	}
 
 	// This function is sufficient for serializing and deserializing
@@ -88,19 +90,11 @@ public:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( x, y, z, p);
+		archive( x, y, z);
 	}
-
 private:
-	int p;
+	int x, y, z;
 };
-
-BOOST_AUTO_TEST_CASE(test_internal_serialize)
-{
-	round_trip_test<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>(class_with_internal_serialize(1, 2, 3, 4));
-	round_trip_test<cereal::JSONInputArchive, cereal::JSONOutputArchive>(class_with_internal_serialize(1, 2, 3, 4));
-	round_trip_test<cereal::XMLInputArchive, cereal::XMLOutputArchive>(class_with_internal_serialize(1, 2, 3, 4));
-}
 
 struct struct_with_external_serialize
 {
@@ -116,13 +110,6 @@ template <class Archive>
 void serialize(Archive& archive, struct_with_external_serialize& s)
 {
 	archive(s.x, s.y, s.z);
-}
-
-BOOST_AUTO_TEST_CASE(test_external_serialize)
-{
-	round_trip_test<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>(struct_with_external_serialize{1, 2, 3});
-	round_trip_test<cereal::JSONInputArchive, cereal::JSONOutputArchive>(struct_with_external_serialize{1, 2, 3});
-	round_trip_test<cereal::XMLInputArchive, cereal::XMLOutputArchive>(struct_with_external_serialize{1, 2, 3});
 }
 
 struct struct_with_split_save_load
@@ -149,11 +136,18 @@ struct struct_with_split_save_load
 	}
 };
 
-BOOST_AUTO_TEST_CASE(test_split_save_load)
+using archive_types = boost::mpl::list<class_with_internal_serialize,
+		struct_with_external_serialize,
+		struct_with_split_save_load>;
+
+} //anon namespace
+
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_archive_types, T, archive_types)
 {
-	round_trip_test<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>(struct_with_split_save_load{1, 2, 3});
-	round_trip_test<cereal::JSONInputArchive, cereal::JSONOutputArchive>(struct_with_split_save_load{1, 2, 3});
-	round_trip_test<cereal::XMLInputArchive, cereal::XMLOutputArchive>(struct_with_split_save_load{1, 2, 3});
+	round_trip_test<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>(T{1, 2, 3});
+	round_trip_test<cereal::JSONInputArchive, cereal::JSONOutputArchive>(T{1, 2, 3});
+	round_trip_test<cereal::XMLInputArchive, cereal::XMLOutputArchive>(T{1, 2, 3});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
