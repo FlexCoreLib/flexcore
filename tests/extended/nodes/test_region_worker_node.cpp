@@ -8,6 +8,8 @@
 
 BOOST_AUTO_TEST_SUITE(test_region_worker)
 
+namespace
+{
 struct triggered_counter : public fc::region_worker_node
 {
 public:
@@ -22,6 +24,7 @@ public:
 	event_source<int> out_event_source;
 	int work_counter;
 };
+}
 
 BOOST_AUTO_TEST_CASE(test_worker)
 {
