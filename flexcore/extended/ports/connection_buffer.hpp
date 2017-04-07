@@ -360,7 +360,8 @@ private:
 	data_t middle_buffer;
 };
 
-
+namespace detail
+{
 template<class data_t, class tag>
 struct no_buffer {};
 
@@ -390,7 +391,7 @@ struct buffer<data_t, state_tag>
 {
 	typedef state_buffer<data_t> type;
 };
-
+}
 
 } // namespace fc
 
