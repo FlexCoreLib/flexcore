@@ -7,13 +7,21 @@
 
 namespace fc
 {
+
+/// Range Actions are eager versions of algorithms working on iterator ranges.
 namespace actions
 {
 
 /**
  * \brief Eager Version Higher order map aka transform as a connectable.
  *
+ * This version is used when the operation changes the type of the range values.
+ *
  * \tparam operation operation to apply to each element of range.
+ * \tparam target_range type of range or container the result should be stored in.
+ *
+ * \note The value type received needs to be default constructable
+ * as the output vector is resized to the correct size at the moment.
  *
  * \see https://en.wikipedia.org/wiki/Map_%28higher-order_function%29
  */
