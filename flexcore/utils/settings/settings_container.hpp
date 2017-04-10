@@ -38,6 +38,17 @@ public:
 				std::move(init_value));
 	}
 
+	template <class data_t, class constraint_t>
+	fc::setting<data_t>& add(setting_id name, data_t init_value, constraint_t constr)
+	{
+		return container.add<fc::setting<data_t>>(
+				std::move(name),
+				backend_access,
+				std::move(init_value),
+				std::move(constr));
+	}
+
+
 private:
 	generic_container container;
 	backend_t& backend_access;
