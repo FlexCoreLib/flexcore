@@ -99,7 +99,10 @@ public:
 	/// Construct a log_client with the region name "null"
 	log_client();
 	/// Construct a log_client which logs from the passed region.
-	log_client(const node* node_);
+	explicit log_client(const node& node_);
+
+	/// Construct a log_client which logs to a given boost::log::channel
+	explicit log_client(const std::string& channel);
 
 	log_client(const log_client&);
 	log_client& operator=(log_client);

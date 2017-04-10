@@ -148,10 +148,16 @@ logger::logger()
 class log_client::log_client_impl
 {
 public:
-	explicit log_client_impl(const node* node_)
-	    : lg(keywords::channel = (node_ ? node_->graph_info().name() : "(null)"))
+	explicit log_client_impl(const node& node_)
+	    : log_client_impl(node_.name())
 	{
 	}
+
+	explicit log_client_impl(const std::string& channel)
+	    : lg(keywords::channel = channel)
+	{
+	}
+
 	void write(const std::string& msg, level severity)
 	{
 		BOOST_LOG_SEV(lg, severity) << msg;
@@ -165,12 +171,17 @@ void log_client::write(const std::string& msg, level severity)
 	log_client_pimpl->write(msg, severity);
 }
 
-log_client::log_client() : log_client_pimpl(std::make_unique<log_client::log_client_impl>(nullptr))
+log_client::log_client() : log_client("(null)")
 {
 }
 
-log_client::log_client(const node* node_)
+log_client::log_client(const node& node_)
     : log_client_pimpl(std::make_unique<log_client::log_client_impl>(node_))
+{
+}
+
+log_client::log_client(const std::string& channel)
+    : log_client_pimpl(std::make_unique<log_client::log_client_impl>(channel))
 {
 }
 

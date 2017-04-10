@@ -39,7 +39,7 @@ BOOST_FIXTURE_TEST_CASE( node_logging, log_test )
 	auto node_name = std::string("test node");
 	fc::tests::owning_node node(node_name);
 	BOOST_CHECK_EQUAL(node.node().name(), node_name);
-	fc::log_client client{&node.node()};
+	fc::log_client client{node.node()};
 	expected_in_output = node_name;
 	client.write("another log message.");
 }
