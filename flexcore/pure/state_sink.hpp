@@ -86,7 +86,7 @@ private:
 
 } // namespace pure
 
-// traits
+/// state_sink is the essential active_sink
 template<class T> struct is_active_sink<pure::state_sink<T>> : std::true_type {};
 
 } // namespace fc

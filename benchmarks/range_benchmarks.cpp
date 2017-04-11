@@ -6,6 +6,11 @@
 #include <random>
 #include <algorithm>
 
+namespace fc
+{
+namespace bench
+{
+
 // Benchmark of flexcore range functions
 
 using fc::operator>>;
@@ -100,5 +105,8 @@ BENCHMARK_TEMPLATE(vector_f, filter_loop)
 		->RangeMultiplier(2)->Range(64, benchmark_size);
 BENCHMARK_TEMPLATE(vector_f, fc_filter_map)
 		->RangeMultiplier(2)->Range(64, benchmark_size);
+
+}
+}
 
 BENCHMARK_MAIN()

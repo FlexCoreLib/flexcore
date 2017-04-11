@@ -7,6 +7,13 @@
 
 #include <random>
 
+namespace fc
+{
+/// Performance benchmarks of flexcore
+namespace bench
+{
+
+
 // benchmnark of flexcore basic functions, nodes, ports etc.
 // tested against std function, function calls, function pointers etc.
 
@@ -103,3 +110,6 @@ BENCHMARK(lambda);
 BENCHMARK(virtual_function);
 BENCHMARK(pure_port);
 BENCHMARK(extended_node);
+
+}
+}

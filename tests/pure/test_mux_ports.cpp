@@ -7,6 +7,8 @@ using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(mux_ports)
 
+namespace
+{
 struct mux_fixture
 {
 	pure::state_source<int> a{[] {return 1;}};
@@ -17,6 +19,7 @@ struct mux_fixture
 	decltype(mux(a, b, c)) muxed_sources = mux(a, b, c);
 	decltype(mux(sink_a, sink_b, sink_c)) muxed_sinks = mux(sink_a, sink_b, sink_c);
 };
+}
 
 BOOST_FIXTURE_TEST_CASE(mux_to_mux_connection, mux_fixture)
 {

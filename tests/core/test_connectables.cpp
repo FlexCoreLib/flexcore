@@ -25,7 +25,8 @@ BOOST_AUTO_TEST_CASE(test_arithmetic_and_logical)
 	BOOST_CHECK_EQUAL(([](){ return 4;} >> divide(2))(), 2);
 
 	BOOST_CHECK_EQUAL(([](){ return -1;} >> absolute{})(), 1);
-	BOOST_CHECK_EQUAL(([](){ return -1.f;} >> absolute{})(), 1.f);
+	BOOST_CHECK_EQUAL(([](){ return  1;} >> absolute{})(), 1);
+	BOOST_CHECK_EQUAL(([](){ return -1.5f;} >> absolute{})(), 1.5f);
 	BOOST_CHECK_EQUAL(([](){ return -1.l;} >> absolute{})(), 1.l);
 
 	BOOST_CHECK_EQUAL(([](){ return 1;} >> negate{})(), -1);
@@ -59,9 +60,8 @@ BOOST_AUTO_TEST_CASE(tee_move_only)
 	int tee_target{0};
 	auto sink = [&target](auto&& in){ target = std::move(in); };
 
-	auto test_con =
-			src >>
-			tee([&tee_target](const auto& ptr) { tee_target = *ptr; })
+	auto test_con =	src
+			>> tee([&tee_target](const auto& ptr) { tee_target = *ptr; })
 			>> sink;
 
 	test_con();
@@ -77,6 +77,14 @@ BOOST_AUTO_TEST_CASE(test_print)
 	connection();
 
 	BOOST_CHECK_EQUAL(test_stream.str(), "1\n");
+}
+
+BOOST_AUTO_TEST_CASE(test_constexpr_connectables)
+{
+	constexpr auto con = increment{} >> decrement{} >> identity{};
+	constexpr auto val = con(0);
+	static_assert(val == 0, "");
+	static_assert(con(1) == 1, "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

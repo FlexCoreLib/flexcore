@@ -16,6 +16,9 @@ struct unloaded_merge_port;
 template <class op, class... ports>
 struct loaded_merge_port;
 
+
+namespace detail
+{
 struct default_tag {};
 struct merge_tag {};
 struct mux_tag {};
@@ -39,9 +42,6 @@ struct port_traits<unloaded_merge_port<op>>
 {
 	using mux_category = merge_tag;
 };
-
-namespace detail
-{
 /// Helper: check if any of the passed bools are true.
 template <bool... vals>
 constexpr bool any()
@@ -74,10 +74,6 @@ constexpr bool all()
 			return false;
 	return true;
 }
-} // namespace detail
-
-template <class base>
-struct node_aware;
 
 struct many_to_many_tag {};
 struct one_to_many_tag {};
@@ -106,6 +102,10 @@ struct mux_traits<1, ports>
 {
 	using connection_category = one_to_many_tag;
 };
+} // namespace detail
+
+template <class base>
+struct node_aware;
 
 /** \brief A wrapper around multiple ports that simplifies establishing
  *         *identical* connections.
@@ -126,6 +126,7 @@ struct mux_traits<1, ports>
 template <class... port_ts>
 struct mux_port
 {
+	///ports and other connectables stored in the mux_port
 	std::tuple<port_ts...> ports;
 
 private:
@@ -138,7 +139,7 @@ private:
 	 *          ports previously held by *this.
 	 */
 	template <class T>
-	auto connect(T t, merge_tag)
+	auto connect(T t, detail::merge_tag)
 	{
 		static_assert(
 		    detail::has_result_of_type<decltype(t.merge), decltype(std::declval<port_ts>()())...>(),
@@ -161,11 +162,12 @@ private:
 	 * for N > 1. The appropriate overload of connect_mux is selected using mux_traits.
 	 */
 	template <class other_mux>
-	auto connect(other_mux&& other, mux_tag)
+	auto connect(other_mux&& other, detail::mux_tag)
 	{
 		constexpr size_t this_ports = sizeof...(port_ts);
 		constexpr size_t other_ports = std::tuple_size<decltype(other.ports)>::value;
-		using connection_tag = typename mux_traits<this_ports, other_ports>::connection_category;
+		using connection_tag = typename detail::mux_traits<
+				this_ports, other_ports>::connection_category;
 		return connect_mux(std::forward<other_mux>(other), connection_tag{});
 	}
 
@@ -175,7 +177,7 @@ private:
 	 * \returns (if used correctly) std::tuple<port_connections...>
 	 */
 	template <class other_mux_port>
-	auto connect_mux(other_mux_port&& other, many_to_many_tag)
+	auto connect_mux(other_mux_port&& other,detail:: many_to_many_tag)
 	{
 		auto pairwise_connect = [](auto&& l, auto&& r)
 		{
@@ -193,7 +195,7 @@ private:
 	 * \returns std::tuple<port_connections...>
 	 */
 	template <class sink_t>
-	auto connect_mux(mux_port<sink_t>&& other, many_to_one_tag)
+	auto connect_mux(mux_port<sink_t>&& other, detail::many_to_one_tag)
 	{
 		sink_t&& sink = std::get<0>(std::move(other).ports);
 		auto all_to_sink = [&sink](auto&& port)
@@ -211,7 +213,7 @@ private:
 	 * \returns std::tuple<port_connections...>
 	 */
 	template <class other_mux_port>
-	auto connect_mux(other_mux_port&& other, one_to_many_tag)
+	auto connect_mux(other_mux_port&& other, detail::one_to_many_tag)
 	{
 		static_assert(
 		    sizeof...(port_ts) == 1,
@@ -231,7 +233,7 @@ private:
 	 * \returns mux_port<connection...> (or mux_port<port_connection...>)
 	 */
 	template <class T>
-	auto connect(T&& t, default_tag)
+	auto connect(T&& t, detail::default_tag)
 	{
 		auto connect_to_copy = [&t](auto&& elem)
 		{
@@ -248,7 +250,7 @@ public:
 	auto operator>>(T&& t) &&
 	{
 		using decayed = std::decay_t<T>;
-		using tag = typename fc::port_traits<decayed>::mux_category;
+		using tag = typename fc::detail::port_traits<decayed>::mux_category;
 		return this->connect(std::forward<T>(t), tag{});
 	}
 	template <class T>
@@ -264,7 +266,7 @@ auto operator>>(T&& src, mux_port<ports...> mux)
 	return mux_port<T>{std::forward_as_tuple(std::forward<T>(src))} >> std::move(mux);
 }
 
-/** \brief Create a mux port from lvalue references to the supplied ports.
+/** \brief Create a mux_port from lvalue references to the supplied ports.
  *
  * \param ports should be non-const connectables.
  */
@@ -275,6 +277,7 @@ auto mux(port_ts&&... ports)
 	    std::forward_as_tuple(std::forward<port_ts>(ports)...)};
 }
 
+///Creates a mux_port from a tuple of connectables
 template <class... conn_ts>
 mux_port<conn_ts...> mux_from_tuple(std::tuple<conn_ts...> tuple_)
 {

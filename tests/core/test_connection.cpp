@@ -195,12 +195,15 @@ BOOST_AUTO_TEST_CASE( result_of_connection)
 
 BOOST_AUTO_TEST_CASE( moving_connectables )
 {
-	constructor_count ctr;
+	tests::constructor_count ctr;
 	auto provide_zero = [] { return 0; };
 	auto identity = [](auto x) { return x; };
-	int val;
+	int val{0};
 	auto consume_int = [&val] (int val_) { val = val_; };
-	auto connection = provide_zero >> movable_connectable{&ctr} >> identity >> consume_int;
+	auto connection = provide_zero
+			>> tests::movable_connectable{&ctr}
+			>> identity
+			>> consume_int;
 	connection();
 	BOOST_CHECK_EQUAL(val, 1);
 	BOOST_CHECK_EQUAL(ctr.times_moved, 3);
@@ -208,6 +211,8 @@ BOOST_AUTO_TEST_CASE( moving_connectables )
 	BOOST_CHECK_EQUAL(ctr.times_constructed, 1);
 }
 
+namespace
+{
 template <typename functor>
 struct visit_checker : functor
 {
@@ -226,6 +231,7 @@ auto make_visit_checker(functor&& f, bool* flag)
 {
 	return visit_checker<std::decay_t<functor>>(std::forward<functor>(f), flag);
 }
+}
 
 BOOST_AUTO_TEST_CASE( apply_to_connection )
 {
@@ -238,6 +244,24 @@ BOOST_AUTO_TEST_CASE( apply_to_connection )
 	BOOST_CHECK(a_visited);
 	BOOST_CHECK(b_visited);
 	BOOST_CHECK(c_visited);
+}
+
+struct constexpr_add
+{
+	template<class T>
+	constexpr auto operator()(T x) const
+	{
+		return ++x;
+	}
+};
+
+BOOST_AUTO_TEST_CASE( constexpr_connection )
+{
+	using fc::operator>>;
+	constexpr auto con = constexpr_add{} >> constexpr_add{};
+	constexpr auto test_val = con(1);
+	static_assert(test_val == 3, "compile time eval");
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

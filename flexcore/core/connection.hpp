@@ -6,6 +6,7 @@
 #include <flexcore/core/detail/function_traits.hpp>
 #include <flexcore/core/traits.hpp>
 
+/// All Classes, Functions and other symbols from flexcore are in this namespace.
 namespace fc
 {
 
@@ -15,18 +16,17 @@ namespace detail
 enum void_flag
 {
 	payload_void,
-	payload_not_void,
-	invalid,
+	payload_not_void
 };
 
 template<class source,class sink, class... P>
-constexpr auto void_check(int) ->  decltype(std::declval<sink>()(), std::declval<source>()(std::declval<P>()...), void_flag())
+constexpr auto void_check() ->  decltype(std::declval<sink>()(), std::declval<source>()(std::declval<P>()...), void_flag())
 {
 	return payload_void;
 }
 
 template<class source,class sink, class... P>
-constexpr auto void_check(int) ->  decltype(std::declval<sink>()(std::declval<source>()(std::declval<P>()...)), void_flag())
+constexpr auto void_check() ->  decltype(std::declval<sink>()(std::declval<source>()(std::declval<P>()...)), void_flag())
 {
 	return payload_not_void;
 }
@@ -40,7 +40,7 @@ template<class source_t, class sink_t>
 struct invoke_helper<payload_void, source_t, sink_t>
 {
 	template<class... param>
-	decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p)
+	constexpr decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p) const
 	{
 		source(std::forward<param>(p)...);
 		return sink();
@@ -51,7 +51,7 @@ template<class source_t, class sink_t>
 struct invoke_helper<payload_not_void, source_t, sink_t>
 {
 	template<class... param>
-	decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p)
+	constexpr decltype(auto) operator()(source_t& source, sink_t& sink, param&&... p) const
 	{
 		return sink(source(std::forward<param>(p)...));
 	}
@@ -92,10 +92,7 @@ constexpr bool void_check_signatures()
 
  * \pre the return value of source_t needs to be convertible to the parameter of sink_t.
  */
-template<
-		class source_t,
-		class sink_t
-		>
+template<class source_t, class sink_t>
 struct connection
 {
 	source_t source;
@@ -111,17 +108,34 @@ struct connection
 	 * and thus be a substitution failure.
 	 */
 	template<class S = source_t, class T = sink_t, class... param>
-	auto operator()(param&&... p)
+	constexpr auto operator()(param&&... p)
 	-> decltype(detail::invoke_helper<
-				detail::void_check<S, T, param...>(0),
-				S,T
-			>()
+					detail::void_check<S, T, param...>(),
+					S,T
+				>()
 			(source, sink, std::forward<param>(p)...))
 	{
-		constexpr auto test = detail::void_check<S, T, param...>(0);
+		constexpr auto test = detail::void_check<S, T, param...>();
 		return detail::invoke_helper<
 					test,
 					S,T
+				>()
+				(source, sink, std::forward<param>(p)...);
+	}
+
+	///const overload of call operator
+	template<class S = source_t, class T = sink_t, class... param>
+	constexpr auto operator()(param&&... p) const
+	-> decltype(detail::invoke_helper<
+				detail::void_check<const S, const T, param...>(),
+				const S, const T
+			>()
+			(source, sink, std::forward<param>(p)...))
+	{
+		constexpr auto test = detail::void_check<const S, const T, param...>();
+		return detail::invoke_helper<
+					test,
+					const S, const T
 				>()
 				(source, sink, std::forward<param>(p)...);
 	}
@@ -134,7 +148,7 @@ namespace detail
 template<class source_t, class sink_t, class Enable = void>
 struct connect_impl
 {
-	auto operator()(source_t&& source, sink_t&& sink)
+	constexpr auto operator()(source_t&& source, sink_t&& sink)
 	{
 		return connection<source_t, sink_t>
 				{std::forward<source_t>(source), std::forward<sink_t>(sink)};
@@ -154,16 +168,15 @@ using rm_ref_t = std::remove_reference_t<T>;
  * \returns connection object which has its type determined by the source_t and sink_t.
  *
  * If source_t and sink_t fulfill connectable, the result is connectable.
- * If one of source_t and sink_t fulfills receive_connectable and the other
- * fulfills send_connectable, the result is not non_connectable.
- * If either source_t or sink_t fulfill send_connectable, the result is send_connectable.
- * If either source_t or sink_t fulfill receive_connectable, the result is receive_connectable.
+ * If one of source_t and sink_t fulfills passive_connectable and the other
+ * fulfills active_connectable, the result is a complete connection and non_connectable.
+ * If either source_t or sink_t fulfill active_connectable, the result is an active connection proxy.
+ * If either source_t or sink_t fulfill passive_connectable, the result is passive_connectable.
  */
-template
-	<	class source_t,
-		class sink_t
-	>
-auto connect (source_t&& source, sink_t&& sink)
+template<class source_t, class sink_t, class enable = std::enable_if_t<
+		(is_connectable_v<source_t> || is_active_source_v<rm_ref_t<source_t>>)
+		&& (is_connectable_v<sink_t> || is_active_sink_v<rm_ref_t<sink_t>>)>>
+constexpr auto connect (source_t&& source, sink_t&& sink)
 {
 	return detail::connect_impl<source_t, sink_t>()(
 	        std::forward<source_t>(source), std::forward<sink_t>(sink));
@@ -172,12 +185,12 @@ auto connect (source_t&& source, sink_t&& sink)
 /**
  * \brief Operator >> takes two connectables and returns a connection.
  *
- * This operator is syntactic sugar for Connect.
+ * This operator is syntactic sugar for connect.
  */
 template<class source_t, class sink_t, class enable = std::enable_if_t<
 		(is_connectable_v<source_t> || is_active_source_v<rm_ref_t<source_t>>)
 		&& (is_connectable_v<sink_t> || is_active_sink_v<rm_ref_t<sink_t>>)>>
-auto operator >>(source_t&& source, sink_t&& sink)
+constexpr auto operator >>(source_t&& source, sink_t&& sink)
 {
 	static_assert(!(is_active_v<rm_ref_t<source_t>> && is_active_v<rm_ref_t<sink_t>>),
 	              "event_source can not be connected to state_sink.");

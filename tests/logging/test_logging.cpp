@@ -6,8 +6,13 @@
 #include <tests/nodes/owning_node.hpp>
 #include <sstream>
 
+BOOST_AUTO_TEST_SUITE(test_logging)
+
+
 using fc::logger;
 
+namespace
+{
 struct log_test
 {
 	log_test()
@@ -25,6 +30,7 @@ struct log_test
 	std::string expected_in_output;
 	fc::stream_handle handle;
 };
+}
 
 BOOST_FIXTURE_TEST_CASE( stream_logging, log_test )
 {
@@ -101,4 +107,7 @@ BOOST_AUTO_TEST_CASE( log_client_copy_and_move )
 	client.write("second");
 	BOOST_CHECK(true);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
 #endif // !defined(__clang__)

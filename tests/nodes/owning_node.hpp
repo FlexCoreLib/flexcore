@@ -7,6 +7,7 @@
 namespace fc
 {
 
+/// Helper classes to use in tests
 namespace tests
 {
 class test_helper_node : public owning_base_node

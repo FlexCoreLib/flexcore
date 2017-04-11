@@ -7,6 +7,12 @@
 
 #include "benchmarkfunctions.h"
 
+namespace fc
+{
+namespace bench
+{
+
+
 float identity_function(const float in)
 {
 	return in;
@@ -26,4 +32,7 @@ identity_node::identity_node()
 std::unique_ptr<base_class> make_inherited()
 {
 	return std::make_unique<inherited>();
+}
+
+}
 }
