@@ -6,6 +6,7 @@
 #include <flexcore/core/connection.hpp>
 #include <flexcore/extended/ports/connection_buffer.hpp>
 #include <flexcore/scheduler/parallelregion.hpp>
+
 #include <functional>
 
 namespace fc
@@ -13,9 +14,7 @@ namespace fc
 template <class base>
 struct node_aware;
 
-/**
- * checks if two node_aware connectables are from the same region
- */
+///checks if two node_aware connectables are from the same region
 template<class source_t, class sink_t>
 bool same_region(const node_aware<source_t>& source,
         const node_aware<sink_t>& sink)
@@ -24,8 +23,7 @@ bool same_region(const node_aware<source_t>& source,
 }
 
 /**
- * checks if two node_aware's regions have the same tick rate
- *
+ * \brief checks if two node_aware's regions have the same tick rate
  * \pre same_region(source, sink) == true;
  */
 template<class source_t, class sink_t>
@@ -35,29 +33,25 @@ bool same_tick_rate(const node_aware<source_t>& source,
 	return source.region().get_duration() == sink.region().get_duration();
 }
 
-/**
- * \brief factory method to construct a buffer
- */
-template<class result_t>
+///factory to construct a buffer depending on region and token_type
+template<class token_t>
 struct buffer_factory
 {
 	/**
 	 * \brief Creates buffer or no_buffer depending on regions of active and passive
-	 * \returns either buffer if the regions differ,
-	 * and no_buffer if they are from the same region.
+	 * \returns either buffer if the regions differ and no_buffer if they are from the same region.
 	 * \param active active port of the connection
 	 * \param passive passive port of the connection
 	 */
 	template<class active_t, class passive_t, class tag>
 	static auto construct_buffer(const active_t& active,
-	        const passive_t& passive,
-	        tag) ->
-	        std::shared_ptr<buffer_interface<result_t, tag>>
+			const passive_t& passive, tag)
+			-> std::shared_ptr<buffer_interface<token_t, tag>>
 	{
 		if (!same_region(active, passive))
 		{
 			auto result_buffer =
-					std::make_shared<typename buffer<result_t, tag>::type>();
+					std::make_shared<typename detail::buffer<token_t, tag>::type>();
 
 			if(same_tick_rate(active, passive))
 			{
@@ -73,7 +67,7 @@ struct buffer_factory
 			return result_buffer;
 		}
 		else
-			return std::make_shared<typename no_buffer<result_t, tag>::type>();
+			return std::make_shared<typename detail::no_buffer<token_t, tag>::type>();
 	}
 };
 
@@ -112,6 +106,7 @@ private:
 };
 
 /**
+ * \brief Connection that contain a buffer_interface
  * \see buffered_event_connection
  * remove this code duplication if possible
  */
@@ -137,6 +132,7 @@ private:
 	std::shared_ptr<buffer_interface<result_t, state_tag>> buffer;
 };
 
+///node_aware ports inherit these properties from their base
 template<class T> struct is_active_sink<node_aware<T>> : is_active_sink<T> {};
 template<class T> struct is_active_source<node_aware<T>> : is_active_source<T> {};
 
@@ -216,6 +212,7 @@ struct node_aware: base
 	//allows explicit access to base of this mixin.
 	typedef base base_t;
 
+	///Constructor takes a reference to the region and forwards all other args.
 	template <class ... args>
 	node_aware(parallel_region& r, args&&... base_constructor_args)
 		: base(std::forward<args>(base_constructor_args)...), region_(r)

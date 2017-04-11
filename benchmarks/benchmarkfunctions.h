@@ -14,6 +14,11 @@
 
 #include "../tests/nodes/owning_node.hpp"
 
+namespace fc
+{
+namespace bench
+{
+
 float identity_function(float in);
 
 struct identity_node
@@ -38,5 +43,7 @@ struct inherited : base_class
 	float foo(float in) const override;
 };
 
+}
+}
 
 #endif /* BENCHMARKS_BENCHMARKFUNCTIONS_H_ */

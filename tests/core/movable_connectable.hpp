@@ -1,9 +1,9 @@
 namespace fc
 {
+namespace tests
+{
 
-/**
- * A data structure for counting calls to various constructors.
- */
+///A data structure for counting calls to various constructors.
 struct constructor_count
 {
 	int times_constructed;
@@ -37,4 +37,5 @@ struct movable_connectable
 	constructor_count* ptr;
 };
 
+}
 }

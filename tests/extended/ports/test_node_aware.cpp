@@ -6,6 +6,9 @@
 #include <nodes/owning_node.hpp>
 #include <pure/sink_fixture.hpp>
 
+
+namespace
+{
 template<class base>
 struct useless_mixin : public base
 {
@@ -15,6 +18,7 @@ struct useless_mixin : public base
 	{
 	}
 };
+}
 
 namespace fc
 {
@@ -24,9 +28,10 @@ template <class T>
 struct is_active_sink<useless_mixin<T>> : is_active_sink<T> {};
 }
 
-using namespace fc;
-
 BOOST_AUTO_TEST_SUITE(test_parallle_region)
+
+
+using namespace fc;
 
 BOOST_AUTO_TEST_CASE(test_region_aware_node)
 {

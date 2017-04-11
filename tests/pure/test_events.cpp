@@ -6,9 +6,9 @@
 
 #include <tests/pure/sink_fixture.hpp>
 
-using namespace fc;
-
 BOOST_AUTO_TEST_SUITE(test_events)
+
+using namespace fc;
 
 //several event sources can be connected to one sink
 BOOST_AUTO_TEST_CASE( merge_events )
@@ -164,6 +164,8 @@ BOOST_AUTO_TEST_CASE(test_sink_has_callback)
 				"type is defined with ability to register a callback");
 }
 
+namespace
+{
 template <class T>
 struct disconnecting_event_sink : public pure::event_sink<T>
 {
@@ -178,6 +180,7 @@ struct disconnecting_event_sink : public pure::event_sink<T>
 
 	std::shared_ptr<T> storage = std::make_shared<T>();
 };
+}
 
 BOOST_AUTO_TEST_CASE(test_sink_deleted_callback)
 {

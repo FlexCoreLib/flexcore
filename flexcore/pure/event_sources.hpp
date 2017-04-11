@@ -106,7 +106,7 @@ private:
 
 } // namespace pure
 
-// traits
+/// event_source is the essential active_source
 template<class T> struct is_active_source<pure::event_source<T>> : std::true_type {};
 
 } // namespace fc
