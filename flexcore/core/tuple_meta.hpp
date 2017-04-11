@@ -31,7 +31,7 @@ constexpr auto make_index_sequence()
 
 template<class lhs_tuple, class rhs_tuple, std::size_t ... index,
 class operation>
-decltype(auto) binary_invoke_helper(lhs_tuple&& lsh,
+constexpr decltype(auto) binary_invoke_helper(lhs_tuple&& lsh,
 		rhs_tuple&& rhs,
 		std::index_sequence<index...>,
 		operation&& op)
@@ -44,7 +44,7 @@ decltype(auto) binary_invoke_helper(lhs_tuple&& lsh,
 template<class lhs_tuple, std::size_t ... index,
 class operation>
 
-decltype(auto) unary_invoke_helper(lhs_tuple&& lsh,
+constexpr decltype(auto) unary_invoke_helper(lhs_tuple&& lsh,
 		std::index_sequence<index...>,
 		operation&& op)
 {
@@ -52,7 +52,7 @@ decltype(auto) unary_invoke_helper(lhs_tuple&& lsh,
 }
 
 template<class operation, class tuple, std::size_t... index>
-decltype(auto) invoke_function_helper(
+constexpr decltype(auto) invoke_function_helper(
 		operation&& op, tuple&& tup, std::index_sequence<index...>)
 {
 	return op(std::get<index>(std::forward<tuple>(tup))...);
@@ -61,21 +61,21 @@ decltype(auto) invoke_function_helper(
 
 ///applies function to every element in tuple
 template<class tuple, class operation>
-void for_each(tuple&& tup, operation&& op)
+constexpr void for_each(tuple&& tup, operation&& op)
 {
 	unary_invoke_helper(std::forward<tuple>(tup), detail::make_index_sequence<tuple>(), op);
 }
 
 ///transform, returns tuple of transformed elements
 template<class tuple, class operation>
-decltype(auto) transform(tuple&& tup, const operation& op)
+constexpr decltype(auto) transform(tuple&& tup, const operation& op)
 {
 	return detail::unary_invoke_helper(std::forward<tuple>(tup),
 	                                   detail::make_index_sequence<tuple>(), op);
 }
 ///binary_transform, returns tuple of results of bin_op on elements of first and second tuple
 template<class first_tuple, class second_tuple, class operation>
-decltype(auto) transform(first_tuple&& first, second_tuple&& second, const operation& op)
+constexpr decltype(auto) transform(first_tuple&& first, second_tuple&& second, const operation& op)
 {
 	static_assert(std::tuple_size<std::decay_t<first_tuple>>::value ==
 	                  std::tuple_size<std::decay_t<second_tuple>>::value,
@@ -88,7 +88,7 @@ decltype(auto) transform(first_tuple&& first, second_tuple&& second, const opera
 
 ///Helper function to call variadic functions with tuple
 template<class operation, class tuple>
-decltype(auto) invoke_function(operation&& op, tuple&& tup)
+constexpr decltype(auto) invoke_function(operation&& op, tuple&& tup)
 {
 	return detail::invoke_function_helper(
 			std::forward<operation>(op),
