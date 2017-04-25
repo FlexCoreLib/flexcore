@@ -25,13 +25,13 @@ class sink_fixture
 public:
 	///Initialize sink_fixture with a list of expected values
 	explicit sink_fixture(std::vector<T> expected_values = std::vector<T>{})
-		: expected{std::move(expected_values)}
+		: expected(std::move(expected_values))
 	{
 	}
 
 	///Initialize sink_fixture with a list of expected values
 	explicit sink_fixture(std::initializer_list<T> expected_values)
-		: expected{expected_values}
+		: expected(expected_values)
 	{
 	}
 
