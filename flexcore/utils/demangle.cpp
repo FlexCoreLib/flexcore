@@ -4,6 +4,9 @@
 #include <memory>
 #include <cxxabi.h>
 
+namespace  fc
+{
+
 // from http://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
 std::string demangle(const char* name)
 {
@@ -14,10 +17,15 @@ std::string demangle(const char* name)
 	};
 	return status == 0 ? res.get() : name;
 }
+} //namespace fc
 
 #else
+namespace  fc
+{
 std::string demangle(const char* name)
 {
 	return name;
 }
+} //namespace fc
 #endif
+

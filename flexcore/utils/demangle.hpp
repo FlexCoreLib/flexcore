@@ -3,6 +3,9 @@
 
 #include <string>
 
+namespace  fc
+{
 std::string demangle(const char* name);
+}
 
 #endif /* SRC_UTIL_DEMANGLE_HPP_*/
