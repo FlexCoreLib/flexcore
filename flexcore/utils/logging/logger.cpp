@@ -13,6 +13,8 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/core.hpp>
+
+#include <cassert>
 #include <ios>
 #include <utility>
 
@@ -42,8 +44,10 @@
 namespace fc
 {
 
-stream_handle::stream_handle(std::function<void()> deleter) : deleter(deleter)
+stream_handle::stream_handle(std::function<void()> d)
+		: deleter(std::move(d))
 {
+	assert(deleter);
 }
 
 stream_handle::~stream_handle()
@@ -96,7 +100,7 @@ auto get_format_with_timestamp()
 }
 } // anonymous namespace
 
-void logger::add_file_log(std::string filename)
+void logger::add_file_log(const std::string& filename)
 {
 	// append to file, never truncate.
 	auto file_sink = boost::make_shared<sinks::text_file_backend>(
@@ -107,7 +111,7 @@ void logger::add_file_log(std::string filename)
 	core::get()->add_sink(sink_front);
 }
 
-void logger::add_syslog_log(std::string progname)
+void logger::add_syslog_log(const std::string& progname)
 {
 	// use the native api implementation does not use a local network connection.
 	auto syslog_sink = boost::make_shared<sinks::syslog_backend>(

@@ -17,7 +17,7 @@ struct log_test
 {
 	log_test()
 	    : handle(
-	          logger::get().add_stream_log(stream, logger::flush::true_, logger::cleanup::true_))
+	          logger::get().add_stream_log(stream, logger::flush::yes, logger::cleanup::yes))
 	{
 	}
 	~log_test()
@@ -70,9 +70,9 @@ std::ostringstream global_stream;
 BOOST_AUTO_TEST_CASE( stream_no_cleanup )
 {
 	global_stream.str(std::string{});
-	logger::get().add_stream_log(global_stream, logger::flush::true_, logger::cleanup::false_);
+	logger::get().add_stream_log(global_stream, logger::flush::yes, logger::cleanup::no);
 	fc::log_client client;
-	auto msg = "message!";
+	const auto msg = "message!";
 	client.write(msg);
 	auto str = global_stream.str();
 	BOOST_CHECK_NE(str.find(msg), std::string::npos);

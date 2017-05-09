@@ -1,7 +1,8 @@
 #ifndef SRC_LOGGING_LOGGER_HPP_
 #define SRC_LOGGING_LOGGER_HPP_
 
-#include "flexcore/extended/node_fwd.hpp"
+#include <flexcore/extended/node_fwd.hpp>
+
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -36,6 +37,11 @@ enum class level : char
 class stream_handle
 {
 public:
+	/**
+	 * \brief construct stream_handle with a given delete function
+	 * \param deleter will be executed, when stream_handle is destroyed
+	 * \pre bool(deleter) != false
+	 */
 	explicit stream_handle(std::function<void()> deleter);
 
 	// moveable, but not copyable
@@ -59,11 +65,11 @@ public:
 	static logger& get();
 
 	/// add log backends of the specified types
-	void add_file_log(std::string filename);
-	void add_syslog_log(std::string progname);
+	void add_file_log(const std::string& filename);
+	void add_syslog_log(const std::string& progname);
 
-	enum class flush { true_ = true, false_ = false };
-	enum class cleanup { true_ = true, false_ = false };
+	enum class flush { yes = true, no = false };
+	enum class cleanup { yes = true, no = false };
 	/**
 	 * \brief add an ostream backend to the logger.
 	 * The reference to the stream will be stored, so make sure that the stream is (either one):
@@ -87,10 +93,11 @@ private:
 
 /**
  * \brief A client of the logger.
- * This class allows to write log messages to the registered logger backends.  The client is not
- * MT-safe but models a value type, so a copy of a client can safely be used in another thread.
+ * This class allows to write log messages to the registered logger backends.
+ *
+ * The client is not MT-safe but models a value type,
+ * so a copy of a client can safely be used in another thread.
  */
-
 class log_client
 {
 public:
@@ -113,24 +120,28 @@ private:
 	std::unique_ptr<log_client_impl> log_client_pimpl;
 };
 
+///Log client which provides a std stream interface to write log messages.
 class stream_log_client
-
 {
 public:
-	stream_log_client(log_client log, level severity = level::info);
+	explicit stream_log_client(log_client log = log_client(),
+			level severity = level::info);
 
-	struct stream_log_proxy
+	class stream_log_proxy
 	{
-		log_client* log;
-		const level severity;
-		std::ostringstream ss;
-
+	public:
 		stream_log_proxy(const std::string& msg, log_client& log, const level severity);
 		stream_log_proxy(stream_log_proxy&& other);
 		~stream_log_proxy();
 
+		stream_log_proxy(const stream_log_proxy&) = delete;
+
 		stream_log_proxy& operator<<(const std::string& msg);
 
+	private:
+		log_client* log;
+		const level severity;
+		std::ostringstream ss;
 	};
 
 	stream_log_proxy operator<<(const std::string& msg);
@@ -150,8 +161,7 @@ inline stream_log_client::stream_log_client(log_client log, level severity)
 
 inline auto stream_log_client::operator<<(const std::string& msg) -> stream_log_proxy
 {
-	stream_log_proxy proxy(msg, log, severity);
-	return proxy;
+	return stream_log_proxy(msg, log, severity);
 }
 
 inline stream_log_client::stream_log_proxy::stream_log_proxy(const std::string& msg,
@@ -179,7 +189,6 @@ inline auto stream_log_client::stream_log_proxy::operator<<(const std::string& m
 	ss << msg;
 	return *this;
 }
-
 
 } // namespace fc
 #endif // SRC_LOGGING_LOGGER_HPP_
