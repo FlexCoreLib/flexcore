@@ -7,10 +7,11 @@
 #ifndef SRC_PORTS_PORT_UTILS_HPP_
 #define SRC_PORTS_PORT_UTILS_HPP_
 
-#include <functional>
 #include <algorithm>
-#include <vector>
+#include <cassert>
+#include <functional>
 #include <iterator>
+#include <vector>
 
 namespace fc
 {

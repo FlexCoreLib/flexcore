@@ -1,10 +1,12 @@
 #ifndef SRC_PORTS_DETAIL_ACTIVE_SOURCE_PROXY_HPP_
 #define SRC_PORTS_DETAIL_ACTIVE_SOURCE_PROXY_HPP_
 
-#include <functional>
-
 #include <flexcore/core/connection.hpp>
 #include <flexcore/pure/port_connection.hpp>
+
+#include <cassert>
+#include <functional>
+#include <utility>
 
 namespace fc
 {
