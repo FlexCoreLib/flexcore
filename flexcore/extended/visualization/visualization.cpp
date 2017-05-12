@@ -1,12 +1,14 @@
 #include "visualization.hpp"
 
 #include <flexcore/extended/graph/graph.hpp>
+
 #include <boost/algorithm/string/replace.hpp>
 
+#include <cassert>
 #include <map>
+#include <ostream>
 #include <string>
 #include <vector>
-#include <ostream>
 
 namespace fc
 {

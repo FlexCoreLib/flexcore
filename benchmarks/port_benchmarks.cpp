@@ -26,12 +26,11 @@ void lambda(benchmark::State& state) {
 
 
 	float x = gen();
-	float a = 0.0;
 
 	while (state.KeepRunning()) {
 		benchmark::DoNotOptimize(x);
 
-		a = fc::identity{}(x);
+		const float a = fc::identity{}(x);
 
 		assert(a == x);
 		benchmark::DoNotOptimize(a);
@@ -64,7 +63,6 @@ void virtual_function(benchmark::State& state) {
 
 
 	float x = gen();
-	float a = 0.0;
 
 	//try to hide the dynmic class
 	//by constructing it in a different compilation unit.
@@ -74,7 +72,7 @@ void virtual_function(benchmark::State& state) {
 	while (state.KeepRunning()) {
 		benchmark::DoNotOptimize(x);
 
-		a = obj->foo(x);
+		const float a = obj->foo(x);
 
 		assert(a == x);
 		benchmark::DoNotOptimize(a);
@@ -87,7 +85,6 @@ void extended_node(benchmark::State& state) {
 
 
 	float x = gen();
-	float a = 0.0;
 
 	identity_node node{};
 	//make sure we create the connection outside of the loop
@@ -97,7 +94,7 @@ void extended_node(benchmark::State& state) {
 	while (state.KeepRunning()) {
 		benchmark::DoNotOptimize(x);
 
-		a = node.internal.out()();
+		const float a = node.internal.out()();
 
 		assert(a == x);
 		benchmark::DoNotOptimize(a);

@@ -1,10 +1,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include <flexcore/core/connection.hpp>
-#include <vector>
-#include <algorithm>
-
 #include <flexcore/pure/pure_ports.hpp>
+
+#include <algorithm>
+#include <vector>
 
 using namespace fc;
 

@@ -1,16 +1,14 @@
 #ifndef SRC_PORTS_STATES_STATE_SINK_HPP_
 #define SRC_PORTS_STATES_STATE_SINK_HPP_
 
-// std
-#include <functional>
-#include <memory>
-
-// flexcore
+#include <flexcore/core/connection_util.hpp>
+#include <flexcore/core/exceptions.hpp>
 #include <flexcore/pure/detail/port_traits.hpp>
 #include <flexcore/pure/detail/port_utils.hpp>
 #include <flexcore/pure/detail/active_connection_proxy.hpp>
-#include <flexcore/core/connection_util.hpp>
-#include <flexcore/core/exceptions.hpp>
+
+#include <functional>
+#include <memory>
 
 namespace fc
 {

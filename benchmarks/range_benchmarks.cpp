@@ -64,7 +64,10 @@ constexpr auto benchmark_size = 2 << 15;
 static void VectorCopy(benchmark::State& state) {
 	std::vector<int> vec(state.range(0));
 	while (state.KeepRunning())
+	{
 		std::vector<int> copy(vec);
+		benchmark::DoNotOptimize(copy);
+	}
 }
 
 template<class T> void vector_f(benchmark::State& state) {

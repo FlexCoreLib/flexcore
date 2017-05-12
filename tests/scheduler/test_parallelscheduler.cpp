@@ -11,8 +11,6 @@
 
 #include <functional>
 
-#include <iostream>
-
 using namespace fc;
 
 BOOST_AUTO_TEST_SUITE(test_scheduler)
@@ -26,11 +24,11 @@ std::unique_ptr<thread::cycle_control> make_parallel_cycle_control()
 
 struct store
 {
-	int val = 0;
+	std::atomic<int> val{0};
 
 	void make_1()
 	{
-		val = 1;
+		val++;
 	}
 };
 }
@@ -104,23 +102,28 @@ BOOST_AUTO_TEST_CASE(test_multiple_execution)
 
 BOOST_AUTO_TEST_CASE(test_main_loop)
 {
+	using task = fc::thread::periodic_task;
+	auto test_scheduler = make_parallel_cycle_control();
 
 	store test_values;
-	auto test_scheduler = make_parallel_cycle_control();
-	{
-		thread::periodic_task task1(std::bind(&store::make_1, &test_values));
-		test_scheduler->add_task(std::move(task1), thread::cycle_control::fast_tick);
-	}
+	auto write = [&test_values](){ test_values.make_1(); };
+
+	test_scheduler->add_task(task(write),
+			thread::cycle_control::fast_tick);
+	test_scheduler->add_task(task(write),
+			thread::cycle_control::fast_tick);
+	test_scheduler->add_task(task(write),
+			thread::cycle_control::fast_tick);
+
 	test_scheduler->start(); //start main loop
-	sleep(1); //todo remove this hack,
-	//currently needed because this function runs through
-	//while the task is being added to the working threads by the scheduler
-	while (test_scheduler->nr_of_tasks() != 0)
+
+	while (test_scheduler->nr_of_tasks() != 0
+			|| test_values.val == 0)
 	{
 		//do nothing but wait
 	}
 	test_scheduler->stop(); // stop main loop
-	BOOST_CHECK_EQUAL(test_values.val, 1);
+	BOOST_CHECK_GE(test_values.val, 3);
 
 }
 

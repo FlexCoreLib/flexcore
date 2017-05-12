@@ -1,6 +1,8 @@
 #ifndef SRC_CORE_EXCEPTIONS_HPP_
 #define SRC_CORE_EXCEPTIONS_HPP_
 
+#include <exception>
+
 namespace fc
 {
 

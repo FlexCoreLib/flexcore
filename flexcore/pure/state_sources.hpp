@@ -1,13 +1,14 @@
 #ifndef SRC_PORTS_STREAM_SOURCES_STREAM_QUERY_FUNCTION_HPP_
 #define SRC_PORTS_STREAM_SOURCES_STREAM_QUERY_FUNCTION_HPP_
 
-// std
-#include <functional>
-#include <memory>
-
 #include <flexcore/core/connection.hpp>
 #include <flexcore/core/traits.hpp>
 #include <flexcore/pure/detail/active_connection_proxy.hpp>
+
+#include <cassert>
+#include <functional>
+#include <memory>
+#include <utility>
 
 namespace fc
 {
