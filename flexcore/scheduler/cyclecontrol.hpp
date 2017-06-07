@@ -120,6 +120,8 @@ public:
 	virtual void loop_body(const std::function<void(void)>& work) = 0;
 	virtual ~main_loop() = default;
 
+	virtual void arm() = 0;
+
 	std::function<void(void)> wait_for_current_tasks{};
 };
 
@@ -131,6 +133,8 @@ class afap_main_loop : public main_loop
 public:
 	void loop_body(const std::function<void(void)>& work) override;
 
+	void arm() override {};
+
 };
 
 /**
@@ -140,6 +144,11 @@ class realtime_main_loop : public main_loop
 {
 public:
 	void loop_body(const std::function<void(void)>& work) override;
+
+	void arm() override { epoch = wall_clock::steady::now(); };
+
+private:
+	wall_clock::steady::time_point epoch{wall_clock::steady::now()};
 };
 
 /**
@@ -152,10 +161,12 @@ public:
 
 	void set_warp_factor(double factor);
 
+	void arm() override { epoch = wall_clock::steady::now(); };
 private:
 	std::mutex warp_mutex{};
 	std::condition_variable warp_signal{};
 	double warp_factor{1};
+	wall_clock::steady::time_point epoch{wall_clock::steady::now()};
 };
 
 /**
