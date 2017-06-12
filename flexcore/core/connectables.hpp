@@ -88,7 +88,7 @@ struct logical_not
 };
 
 /**
- * \brief  Clamps input to closed range [min, max].
+ * \brief Clamps input to closed range [min, max].
  *
  * \pre min <= max
  * \post output >= min && output <= max
@@ -120,7 +120,7 @@ namespace detail
 	struct tee_op
 	{
 		template<class data_t>
-		auto operator()(data_t&& in) const -> data_t
+		auto operator()(data_t&& in) -> data_t
 		{
 			// call callback with const_ref to make sure it cannot change token
 			// But token can still be move_only
@@ -137,7 +137,7 @@ namespace detail
 /**
  * \brief Calls a given callback and then returns value every time it is called.
  * \param op callback which is called before forwarding tokens
- * \pre op needs to fulfill copy_constructible.
+ * \pre op needs to fulfill copy_constructible or move_constructible.
  */
 template<class T>
 auto tee(T&& op)
