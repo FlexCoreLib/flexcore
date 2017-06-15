@@ -20,13 +20,13 @@ namespace detail
 template<class event_t>
 struct handle_type
 {
-	typedef std::function<void(event_t)> type; // need rvalue ref here?
+	using type = std::function<void(event_t)>; // need rvalue ref here?
 };
 
 template<>
 struct handle_type<void>
 {
-	typedef std::function<void()> type;
+	using type = std::function<void()>;
 };
 
 template <template <class...> class mixin_t, class port_t>
