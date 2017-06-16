@@ -1,7 +1,7 @@
 #include <flexcore/scheduler/cyclecontrol.hpp>
 
-#include <stdexcept>
 #include <algorithm>
+#include <stdexcept>
 
 namespace fc
 {
@@ -30,10 +30,11 @@ void cycle_control::start()
 	assert(!running);
 	keep_working.store(true);
 	running = true;
-	main_loop_->arm();
+	//set the start time of the cycle to now.
 	// give the main thread some actual work to do (execute infinite main loop)
 	main_loop_thread = std::thread{
 		[&, this](){
+			main_loop_->arm();
 			while(keep_working.load())
 				main_loop_->loop_body([this](){ work(); });
 		}
@@ -56,6 +57,9 @@ void cycle_control::stop()
 	wait_or_throw(tasks_medium);
 	wait_or_throw(tasks_slow);
 	running = false;
+	//check post condition
+	assert(!keep_working.load());
+	assert(!running);
 }
 
 bool cycle_control::store_exception(periodic_task&)
@@ -175,6 +179,7 @@ std::exception_ptr cycle_control::last_exception()
 void cycle_control::set_main_loop(const std::shared_ptr<main_loop>& loop)
 {
 	assert(!running);
+	assert(loop);
 	main_loop_ = loop;
 	main_loop_->wait_for_current_tasks = [this](){ wait_for_current_tasks(); };
 }
@@ -192,6 +197,7 @@ void timewarp_main_loop::loop_body(const std::function<void(void)>& work)
 	work();
 
 	std::unique_lock<std::mutex> lock(warp_mutex);
+	assert(warp_factor >= 0.0);
 	warp_signal.wait_until(lock,
 			epoch + cycle_control::min_tick_length * warp_factor,
 			[this]()
@@ -203,6 +209,7 @@ void timewarp_main_loop::loop_body(const std::function<void(void)>& work)
 
 void timewarp_main_loop::set_warp_factor(double factor)
 {
+	assert(factor >= 0.0);
 	std::lock_guard<std::mutex> lock(warp_mutex);
 	warp_factor = factor;
 	warp_signal.notify_all();
