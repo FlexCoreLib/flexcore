@@ -134,7 +134,7 @@ template<class data_t, template<class...> class container_t>
 struct collector
 {
 	// result_t is defined to allow result_of trait with overloaded operator().
-	typedef void result_t;
+	using result_t = void;
 
 	template <class range_t>
 	void operator()(const range_t& range)
@@ -169,7 +169,7 @@ template<class data_t, template<class...> class container_t, class base_t>
 class base_event_to_state : public base_t
 {
 public:
-	typedef container_t<data_t> out_range_t;
+	using out_range_t = container_t<data_t>;
 
 	/// Input Port accepting both ranges and single events of type data_t
 	auto in() noexcept
@@ -254,7 +254,7 @@ class hold_n : public base_t
 {
 public:
 	static constexpr auto default_name = "hold_n";
-	typedef boost::circular_buffer<data_t> buffer_t;
+	using buffer_t = boost::circular_buffer<data_t>;
 
 	static_assert(!std::is_void<data_t>(),
 			"data stored in hold_last cannot be void");

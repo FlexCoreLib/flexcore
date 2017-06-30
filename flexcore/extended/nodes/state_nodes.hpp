@@ -101,11 +101,11 @@ protected:
 template<class parent_t, class operation>
 auto make_merge(parent_t& parent, operation op, std::string name = "merger")
 {
-	typedef merge_node
-			<	operation,
-				typename utils::function_traits<operation>::function_type,
-				tree_base_node
-			> node_t;
+	using node_t = merge_node<
+			operation,
+			typename utils::function_traits<operation>::function_type,
+			tree_base_node
+			>;
 	return parent.template make_child<node_t>(op, name);
 }
 
@@ -113,11 +113,11 @@ auto make_merge(parent_t& parent, operation op, std::string name = "merger")
 template<class operation>
 auto make_merge(operation op)
 {
-	typedef merge_node
-			<	operation,
-				typename utils::function_traits<operation>::function_type,
-				pure::pure_node
-			> node_t;
+	using node_t = merge_node<
+			operation,
+			typename utils::function_traits<operation>::function_type,
+			pure::pure_node
+			>;
 	return node_t{op};
 }
 
@@ -160,7 +160,7 @@ public:
 private:
 	out_container_t merge_inputs()
 	{
-		out_container_t out_buffer;
+		out_container_t out_buffer{};
 		for(auto& port : in_ports)
 		{
 			out_buffer.push_back(port->get());
@@ -177,18 +177,28 @@ private:
 /*                                   Caches                                  */
 /*****************************************************************************/
 
-/// Pulls inputs on incoming pull tick and makes it available to state output out().
+/**
+ * \brief Pulls inputs on work tick and makes it available to state output.
+ *
+ * current_state keeps the cache for a single tick.
+ * This makes is useful to limit calls the state call chains to once per tick.
+ *
+ * \tparam data_t the type of token stored in the cache.
+ */
 template<class data_t>
 class current_state : public region_worker_node
 {
 public:
 	static constexpr auto default_name = "cache";
 
+	///Initialize current_state with default constructed data_t.
 	explicit current_state(const node_args& node)
 		: current_state(data_t{}, node)
 	{
 	}
-	explicit current_state(const data_t& initial_value, const node_args& node)
+
+	///Construct current_state with initial_value
+	current_state(const data_t& initial_value, const node_args& node)
 		: region_worker_node(
 			[this]()
 			{
@@ -199,6 +209,9 @@ public:
 			stored_state(initial_value)
 	{
 	}
+
+	current_state(const current_state&) = delete;
+	current_state(current_state&&) = delete;
 
 	/// State Input Port of type data_t.
 	auto& in() noexcept { return in_port; }

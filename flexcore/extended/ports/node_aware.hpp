@@ -84,11 +84,11 @@ struct buffer_factory
 template<class base_connection>
 struct buffered_event_connection: base_connection
 {
-	typedef typename base_connection::result_t result_t;
+	using result_t = typename base_connection::result_t;
 
 	buffered_event_connection(std::shared_ptr<
-	        buffer_interface<result_t, event_tag>> new_buffer,
-	        const base_connection& base) :
+			buffer_interface<result_t, event_tag>> new_buffer,
+			const base_connection& base) :
 			base_connection(base), buffer(new_buffer)
 	{
 		assert(buffer);
@@ -113,11 +113,11 @@ private:
 template<class base_connection>
 struct buffered_state_connection: base_connection
 {
-	typedef typename base_connection::result_t result_t;
+	using result_t = typename base_connection::result_t;
 
 	buffered_state_connection(std::shared_ptr<
-	        buffer_interface<result_t, state_tag>> new_buffer,
-	        const base_connection& base) :
+			buffer_interface<result_t, state_tag>> new_buffer,
+			const base_connection& base) :
 			base_connection(base), buffer(new_buffer)
 	{
 		assert(buffer);
@@ -159,16 +159,16 @@ auto make_buffered_connection(std::shared_ptr<
         sink_t&& sink)
 {
 	assert(buffer);
-	typedef port_connection<
+	using base_connection_t = port_connection<
 			typename source_t::base_t,
 			sink_t,
 			buffer_t
-			> base_connection_t;
+			>;
 
 	connect(buffer->out(), std::forward<sink_t>(sink));
 
 	return buffered_event_connection<base_connection_t>(std::move(buffer),
-	        base_connection_t());
+			base_connection_t());
 }
 
 /**
@@ -180,17 +180,17 @@ auto make_buffered_connection(std::shared_ptr<
  */
 template<class source_t, class sink_t, class buffer_t>
 auto make_buffered_connection(std::shared_ptr<
-        buffer_interface<buffer_t, state_tag>> buffer,
-        source_t&& source,
-        const sink_t&) /*sink*/  //only needed for type deduction
+		buffer_interface<buffer_t, state_tag>> buffer,
+		source_t&& source,
+		const sink_t&) /*sink*/  //only needed for type deduction
 {
 	assert(buffer);
-	typedef port_connection<source_t, typename sink_t::base_t, buffer_t> base_connection_t;
+	using base_connection_t =port_connection<source_t, typename sink_t::base_t, buffer_t>;
 
 	connect(std::forward<source_t>(source), buffer->in());
 
 	return buffered_state_connection<base_connection_t>(std::move(buffer),
-	        base_connection_t());
+			base_connection_t());
 }
 }  // namespace detail
 
@@ -201,7 +201,7 @@ auto make_buffered_connection(std::shared_ptr<
  *
  * example:
  * \code{cpp}
- * typedef node_aware<pure::event_in_port<int>> node_aware_event_port;
+ * using node_aware_event_port = node_aware<pure::event_in_port<int>>;
  * \endcode
  */
 template <class base>
@@ -210,7 +210,7 @@ struct node_aware: base
 	static_assert(std::is_class<base>{},
 			"can only be mixed into clases, not primitives");
 	//allows explicit access to base of this mixin.
-	typedef base base_t;
+	using base_t = base ;
 
 	///Constructor takes a reference to the region and forwards all other args.
 	template <class ... args>
@@ -219,15 +219,17 @@ struct node_aware: base
 	{
 	}
 
+	///Overload for connect in case connectable is active.
 	template<class conn_t,
-			class base_t = base,
-			class enable = std::enable_if_t<is_active<base_t>{}>>
+			class T = base,
+			class enable = std::enable_if_t<is_active<T>{}>>
 	auto connect(conn_t&& conn)
 	{
 		return connect_impl(std::forward<conn_t>(conn),
-		        std::integral_constant<bool, has_node_aware<conn_t>()> { });
+				std::integral_constant<bool, has_node_aware<conn_t>()> { });
 	}
 
+	///returns reference to parallel_region this mixin is associated with.
 	parallel_region& region() const { return region_; }
 
 private:
@@ -281,10 +283,10 @@ private:
 	{
 		if (is_active_source<base> { })
 			return detail::is_derived_from<fc::node_aware,
-			                               decltype(get_sink(std::declval<conn_t&>()))>::value;
+						decltype(get_sink(std::declval<conn_t&>()))>::value;
 		else
 			return detail::is_derived_from<fc::node_aware,
-			                               decltype(get_source(std::declval<conn_t&>()))>::value;
+						decltype(get_source(std::declval<conn_t&>()))>::value;
 	}
 };
 

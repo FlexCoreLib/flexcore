@@ -25,8 +25,8 @@ namespace fc
 template<class token_t, class tag>
 struct buffer_interface
 {
-	typedef typename pure::out_port<token_t, tag>::type out_port_t;
-	typedef typename pure::in_port<token_t, tag>::type in_port_t;
+	using out_port_t = typename pure::out_port<token_t, tag>::type;
+	using in_port_t = typename pure::in_port<token_t, tag>::type;
 
 	buffer_interface() = default;
 	virtual ~buffer_interface() = default;
@@ -92,8 +92,8 @@ public:
 	{
 	}
 
-	typedef typename pure::out_port<event_t, event_tag>::type out_port_t;
-	typedef typename pure::in_port<event_t, event_tag>::type in_port_t;
+	using out_port_t = typename pure::out_port<event_t, event_tag>::type;
+	using in_port_t = typename pure::in_port<event_t, event_tag>::type;
 
 	/// event in port of type void, switches active-side buffers
 	auto& switch_active_tick() { return switch_active_tick_; }
@@ -184,7 +184,7 @@ private:
 	in_port_t in_event_port;
 	out_port_t out_event_port;
 
-	typedef std::vector<event_t> buffer_t;
+	using buffer_t = std::vector<event_t>;
 	buffer_t intern_buffer;
 	buffer_t extern_buffer;
 	buffer_t middle_buffer;
@@ -213,8 +213,8 @@ public:
 		{
 		}
 
-	typedef typename pure::out_port<void, event_tag>::type out_port_t;
-	typedef typename pure::in_port<void, event_tag>::type in_port_t;
+	using out_port_t = typename pure::out_port<void, event_tag>::type;
+	using in_port_t = typename pure::in_port<void, event_tag>::type;
 
 	/// event in port of type void, switches active-side buffers
 	auto& switch_active_tick() { return switch_active_tick_; }
@@ -368,13 +368,13 @@ struct no_buffer {};
 template<class data_t>
 struct no_buffer<data_t, event_tag>
 {
-	typedef event_no_buffer<data_t> type;
+	using type = event_no_buffer<data_t>;
 };
 
 template<class data_t>
 struct no_buffer<data_t, state_tag>
 {
-	typedef state_no_buffer<data_t> type;
+	using type = state_no_buffer<data_t>;
 };
 
 template<class data_t, class tag>
@@ -383,13 +383,13 @@ struct buffer {};
 template<class data_t>
 struct buffer<data_t, event_tag>
 {
-	typedef event_buffer<data_t> type;
+	using type = event_buffer<data_t>;
 };
 
 template<class data_t>
 struct buffer<data_t, state_tag>
 {
-	typedef state_buffer<data_t> type;
+	using type = state_buffer<data_t>;
 };
 }
 
