@@ -24,9 +24,9 @@ template<class T> class master_clock;
 struct wall_clock
 {
 	/// system_wall_clock is just a forward to std::system_clock
-	typedef std::chrono::system_clock system;
+	using system = std::chrono::system_clock ;
 	/// steady_wall_clock is just a forward to std::steady_clock
-	typedef std::chrono::steady_clock steady;
+	using steady = std::chrono::steady_clock;
 };
 
 
@@ -47,9 +47,9 @@ struct virtual_clock
 	 * we set the base type of the duration to a fixed width integer
 	 * to have the same value on all platforms.
 	 */
-	typedef std::chrono::nanoseconds duration;
-	typedef duration::rep rep; ///<storage format of the time
-	typedef duration::period period; ///<duration of a tick == smallest duration possible
+	using duration = std::chrono::nanoseconds ;
+	using rep = duration::rep; ///<storage format of the time
+	using period = duration::period; ///<duration of a tick == smallest duration possible
 
 	/**
 	 * \brief virtual clock for measuring time points in simulation time
@@ -61,10 +61,10 @@ struct virtual_clock
 	public:
 		static constexpr bool is_steady = false;
 
-		typedef virtual_clock::rep rep;
-		typedef virtual_clock::period period;
-		typedef virtual_clock::duration duration;
-		typedef std::chrono::time_point<virtual_clock::system, duration> time_point;
+		using rep = virtual_clock::rep;
+		using period = virtual_clock::period;
+		using duration = virtual_clock::duration;
+		using time_point = std::chrono::time_point<virtual_clock::system, duration>;
 		/**
 		 * \brief returns current absolute simulation time
 		 * \return A time point representing the current virtual time.
@@ -92,10 +92,10 @@ struct virtual_clock
 	{
 		static constexpr bool is_steady = true;
 
-		typedef virtual_clock::rep rep;
-		typedef virtual_clock::period period;
-		typedef virtual_clock::duration duration;
-		typedef std::chrono::time_point<virtual_clock::steady, duration> time_point;
+		using rep = virtual_clock::rep;
+		using period = virtual_clock::period;
+		using duration = virtual_clock::duration;
+		using time_point = std::chrono::time_point<virtual_clock::steady, duration>;
 
 		/**
 		 * \brief returns current relative simulation time
@@ -123,9 +123,9 @@ template<class period_t>
 class master_clock
 {
 public:
-	typedef std::chrono::duration<int64_t, period_t> duration;
-	typedef typename duration::rep rep; ///<storage format of the time
-	typedef typename duration::period period; ///<duration of a tick == smallest duration possible
+	using duration = std::chrono::duration<int64_t, period_t>;
+	using rep = typename duration::rep; ///<storage format of the time
+	using period = typename duration::period; ///<duration of a tick == smallest duration possible
 
 	/**
 	 * \brief advances clock by a single tick

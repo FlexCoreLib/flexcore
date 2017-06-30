@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(test_clock)
 
 namespace
 {
-typedef master_clock<std::centi> master;
+using master = master_clock<std::centi>;
 
 static constexpr virtual_clock::steady::duration one_tick
 		= chr::duration_cast<virtual_clock::duration>(master::duration(1));
@@ -21,10 +21,10 @@ static constexpr virtual_clock::steady::duration one_tick
 
 BOOST_AUTO_TEST_CASE(test_example_uses)
 {
-	auto one_tick_ago = virtual_clock::steady::now();
+	const auto one_tick_ago = virtual_clock::steady::now();
 	master::advance();
-	auto now = virtual_clock::steady::now();
-	auto diff = now - one_tick_ago; //the time passed between the two calls to now().
+	const auto now = virtual_clock::steady::now();
+	const auto diff = now - one_tick_ago; //the time passed between the two calls to now().
 
 	//since we advanced the clock only once,
 	//the time should be equal to the minimal duration of the clock.
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(test_example_uses)
 
 BOOST_AUTO_TEST_CASE(test_advance)
 {
-	auto tmp = virtual_clock::steady::now();
+	const auto tmp = virtual_clock::steady::now();
 	for (int i = 0; i != 1000; ++i)
 		master::advance();
 
@@ -46,12 +46,12 @@ BOOST_AUTO_TEST_CASE(test_advance)
 
 BOOST_AUTO_TEST_CASE(test_set_time)
 {
-	auto time_null = virtual_clock::system::time_point(
+	const auto time_null = virtual_clock::system::time_point(
 			master::duration::zero());
 
 	master::set_time(time_null);
 
-	auto tmp = virtual_clock::system::now();
+	const auto tmp = virtual_clock::system::now();
 
 	BOOST_CHECK_EQUAL(tmp.time_since_epoch().count(),
 			virtual_clock::duration::zero().count());
@@ -63,9 +63,9 @@ BOOST_AUTO_TEST_CASE(test_set_time)
 
 BOOST_AUTO_TEST_CASE(test_time_t_conversion)
 {
-	auto now = virtual_clock::system::now();
+	const auto now = virtual_clock::system::now();
 
-	auto c_time = virtual_clock::system::to_time_t(now);
+	const auto c_time = virtual_clock::system::to_time_t(now);
 	auto back_converted = virtual_clock::system::from_time_t(c_time);
 	//need to cast durations to seconds, since that is the unit of std::time_t
 	BOOST_CHECK(chr::time_point_cast<chr::seconds>(now)
@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(test_time_t_conversion)
 	for (int i = 0; i != 1000; ++i)
 		master::advance();
 
-	auto now_2 = virtual_clock::system::now();
+	const auto now_2 = virtual_clock::system::now();
 	BOOST_CHECK(now_2 != now);
 
-	auto c_time_2 = virtual_clock::system::to_time_t(now_2);
+	const auto c_time_2 = virtual_clock::system::to_time_t(now_2);
 	back_converted = virtual_clock::system::from_time_t(c_time_2);
 
 	BOOST_CHECK(c_time_2 != c_time);
