@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(parameter_result_pairs)
 {
 	// this variable is captures by lambdas
 	// to check if lambdas without return values work.
-	int capture_ref = 0;
+	int capture_ref{0};
 
 	//named differnt sources and sinks to make tests more readable
 	auto write_param = [&](int i){ capture_ref = i; };
