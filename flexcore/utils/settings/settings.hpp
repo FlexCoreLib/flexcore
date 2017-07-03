@@ -1,6 +1,7 @@
 #ifndef SRC_SETTINGS_SETTINGS_HPP_
 #define SRC_SETTINGS_SETTINGS_HPP_
 
+#include <cassert>
 #include <memory>
 #include <string>
 
@@ -13,7 +14,7 @@ struct setting_id
 	explicit setting_id(std::string id)
 		: key{ std::move(id) }
 	{
-
+		assert(key != "");
 	}
 
 	std::string key;
@@ -43,6 +44,7 @@ struct always_valid
 class const_setting_backend_facade
 {
 public:
+	///register setting at facade
 	template<class data_t, class setter_t, class constraint_t>
 	void register_setting(setting_id /*id*/,
 			data_t initial_v,
@@ -57,6 +59,7 @@ public:
 		setter(initial_v);
 	}
 
+	///register setting at facade together with parallel_region
 	template<class data_t, class setter_t, class region_, class constraint_t>
 	void register_setting(setting_id id,
 			data_t initial_v,
@@ -74,7 +77,8 @@ public:
  * \tparam data_t type of data provided by setting.
  * Needs to be serializable by chosen serialization framework.
  *
- * \invariant will always contain valid state of data_t.
+ * \invariant will always contain valid state of data_t. cache != nullptr
+ *
  * The Constructor will fail and throw an exception if value cannot be loaded.
  */
 template<class data_t>
@@ -91,7 +95,8 @@ public:
 	 * \param constraint any function object with signature \code{ bool(data_t) const } \endcode
 	 * \tparam backend_facade type of backend used to store and retrieve values.
 	 * Usually access to serialization framework.
-	 * \pre initial_value needs to fulfill constraint
+	 * \pre initial_value needs to fulfill constraint.
+	 * \post setting is registered at given backend.
 	 */
 	template <class backend_facade, class constraint_t = always_valid>
 	setting(setting_id id,
@@ -100,11 +105,15 @@ public:
 			constraint_t constraint = constraint_t{})
 		: cache(std::make_shared<data_t>(initial_value))
 	{
+		assert(constraint(initial_value));
 		backend.register_setting(
-				id, //unique id of setting in registry
-				initial_value, //initial value, in case it needs to be stored
+				std::move(id), //unique id of setting in registry
+				std::move(initial_value), //initial value, in case it needs to be stored
 				[c = this->cache](data_t i){ *c = i; }, //callback to let registry write cache
-				constraint);
+				std::move(constraint)
+				);
+
+		assert(cache != nullptr);
 	}
 
 	/**
@@ -113,9 +122,9 @@ public:
 	 */
 	data_t operator()() const
 	{
+		assert(cache != nullptr);
 		return *cache;
 	}
-
 
 private:
 	//cache is a shared_ptr since references store a callback to set the cache.

@@ -27,6 +27,9 @@ struct movable_connectable
 		++count_.times_moved;
 	}
 
+	movable_connectable& operator=(movable_connectable&& o) = delete;
+	movable_connectable& operator=(const movable_connectable& o) = delete;
+
 	int operator()(int value)
 	{
 		*ptr = count_;

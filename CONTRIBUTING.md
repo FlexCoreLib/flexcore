@@ -1,8 +1,15 @@
-Coding style guide for FlexCore Development.
+# Contribution Guideline and Coding style guide for FlexCore Development
+
+The first rule of the Contribution Guideline is: Contribute!  
+We are confident that stylistic inconsitencies etc. can easily be fixed.
+This guideline is meant to encourage contribution, not block it.
 
 ## C++
 
 We generally try to adher to the [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md).
+
+The coding style in general is meant to be close to that of the stl and boost,
+since flexcore is used as a foundation library for other domain specific libraries and tools.
 
 ### Code layout
 * Lines are strictly limited to 100 characters
@@ -31,5 +38,5 @@ We generally try to adher to the [CppCoreGuidelines](https://github.com/isocpp/C
 
 ### Other
 * Header files have the extension .hpp, Source files .cpp
-* Includes are grouped (in this order) in: standard library, boost, other system libraries, flexcore includes
+* Includes are grouped (in this order) in: flexcore includes, standard library, boost, other system libraries.
 * Includes may not use "." or ".."

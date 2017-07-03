@@ -8,20 +8,19 @@
 namespace fc
 {
 
+///Facade for setting which reads values from json.
 class json_file_setting_facade
 {
 public:
-	typedef cereal::JSONInputArchive json_archive;
-
 	/**
-	 * @brief Creates a setting facade that reads values from
+	 * \brief Creates a setting facade that reads values from
 	 * stream using json format.
 	 *
-	 * @param stream The input stream containing the data in json syntax.
-	 * @throw ::cereal::Exception if the given @p stream cannot be parsed
+	 * \param stream The input stream containing the data in json syntax.
+	 * \throw ::cereal::Exception if the given \p stream cannot be parsed
 	 * by json parser, e.g. if syntax is wrong.
 	 */
-	json_file_setting_facade(std::istream& stream)
+	explicit json_file_setting_facade(std::istream& stream)
 		try : archive(stream)
 	{
 	}
@@ -33,14 +32,15 @@ public:
 
 	/**
 	 * \brief Registers Setting and immediately tries to read value from archive.
-	 * @param id Key of Setting in json format.
-	 * @param initial_v initial value of setting, here for completeness of interface,
+	 * \param id Key of Setting in json format.
+	 * \param initial_v initial value of setting, here for completeness of interface,
 	 * as value is read immediately from archive
-	 * @param setter callback to write value from archive to setting.
-	 * @param constraint any function object with signature \code{ bool(data_t) } \endcode
-	 * @tparam data_t type of data stored in setting.
-	 * @throw ::cereal::Exception if json value under @p id cannot be converted to data_t.
-	 * @pre initial value needs to fulfill constraint
+	 * \param setter callback to write value from archive to setting.
+	 * \param constraint any function object with signature \code{ bool(data_t) } \endcode
+	 * \tparam data_t type of data stored in setting.
+	 * \throw ::cereal::Exception if json value under @p id cannot be converted to data_t.
+	 * \pre initial value needs to fulfill constraint
+	 * \post if no exception is thrown the setting now has a value from the json archive.
 	 */
 	template<class data_t, class setter_t, class constraint_t>
 	void register_setting(
@@ -50,9 +50,9 @@ public:
 			constraint_t constraint)
 	{
 		assert(constraint(initial_v));
-		auto value = initial_v;
 		try
 		{
+			auto value = initial_v;
 			archive(cereal::make_nvp(id.key, value));
 			if (constraint(value))
 				setter(value);
@@ -88,7 +88,8 @@ public:
 		register_setting(id, initial_v, setter, constraint);
 	}
 
-	json_archive archive;
+private:
+	cereal::JSONInputArchive archive;
 };
 
 }  // namespace fc
