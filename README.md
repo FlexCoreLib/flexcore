@@ -1,7 +1,15 @@
-flexcore {#mainpage}
+flexcore
 ========
 
-A generic C++ library for dataflow programming.
+Build fast computational graphs quickly using modern C++!
+
+Flexcore is:
+* A modern C++ library for dataflow programming based on C++14.
+* Fast: FlexCore does not contain any hidden performance traps. The template based design does not hide the execution path behind unnecessary indirection and thus allows compilers to optimize the whole dataflow program.
+A set of benchmarks is delivered with the library to back up our claims.
+* Generic: FlexCore requires only minimal concepts from user defined types and algorithms.
+* Robust:  FlexCore makes full use of the C++ type system to make it easy to write correct and hard to write incorrect code.
+* Well tested: FlexCore is in production use for 3D point cloud scanners. An extensive suite of unit-tests is provided as well.
 
 Usage
 -----
