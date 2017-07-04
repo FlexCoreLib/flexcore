@@ -11,7 +11,7 @@ namespace fc
 class json_file_setting_facade
 {
 public:
-	typedef cereal::JSONInputArchive json_archive;
+	using json_archive = cereal::JSONInputArchive;
 
 	/**
 	 * @brief Creates a setting facade that reads values from

@@ -10,7 +10,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
-#include <iostream>
 #include <chrono>
 #include <iomanip>
 #include <ctime>
@@ -24,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(test_cyclecontrol)
 BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time)
 {
 	fc::thread::cycle_control thread_manager{std::make_unique<thread::parallel_scheduler>()};
-	std::atomic<bool> terminate_thread(false);
+	std::atomic<bool> terminate_thread{false};
 	{
 		auto tick_cycle = fc::thread::periodic_task(
 		    [&terminate_thread]()
@@ -37,7 +36,7 @@ BOOST_AUTO_TEST_CASE( test_cyclecontrol_task_not_finished_in_time)
 	}
 	thread_manager.start();
 
-	bool exception_thrown = false;
+	bool exception_thrown{false};
 	for (int i = 0; i < 300; ++i)
 	{
 		if (auto except_ptr = thread_manager.last_exception())

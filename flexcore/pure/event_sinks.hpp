@@ -5,9 +5,9 @@
 #include <functional>
 #include <vector>
 
+#include <flexcore/core/connection.hpp>
 #include <flexcore/core/traits.hpp>
 #include <flexcore/pure/detail/port_traits.hpp>
-#include <flexcore/pure/detail/active_connection_proxy.hpp>
 
 namespace fc
 {
@@ -19,15 +19,15 @@ namespace pure
  * \brief Input port for events, executes given actions on incoming events.
  *
  * event_sink fulfills passive_sink.
+ * \invariant event_handler is always valid and callable
  * \tparam event_t type of event expected, must be copy_constructable or move_constructable
  * \ingroup ports
  */
 template<class event_t>
 struct event_sink
 {
-	typedef typename detail::handle_type<event_t>::type handler_t;
-	typedef void result_t;
-	typedef event_t token_t;
+	using result_t = void;
+	using token_t = event_t;
 
 	/**
 	 * \brief Construct event_sink with action to execute in events
@@ -67,18 +67,20 @@ struct event_sink
 		// NDEBUG is defined) the moved-from-object can still disconnect
 		// itself.
 		swap(o.event_handler, event_handler);
+		assert(event_handler);
 	}
 
 	event_sink& operator=(event_sink&& o)
 	{
 		assert(o.connection_breakers.empty());
 		swap(o.event_handler, event_handler);
+		assert(event_handler);
 		return *this;
 	}
 
 	~event_sink()
 	{
-		auto self = std::hash<decltype(this)>{}(this);
+		const auto self = std::hash<decltype(this)>{}(this);
 		for (auto& breaker_ptr : connection_breakers)
 		{
 			auto breaker = breaker_ptr.lock();
@@ -96,6 +98,7 @@ struct event_sink
 	}
 
 private:
+	using handler_t = typename detail::handle_type<event_t>::type;
 	handler_t event_handler;
 	std::vector<std::weak_ptr<std::function<void(size_t)>>> connection_breakers;
 };

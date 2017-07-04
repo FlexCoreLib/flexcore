@@ -8,6 +8,8 @@
 #include <flexcore/extended/graph/traits.hpp>
 #include <flexcore/utils/demangle.hpp>
 
+#include <cassert>
+
 namespace fc
 {
 namespace graph
@@ -48,6 +50,7 @@ auto port_description(const std::string& node_name)
 		return demangle(typeid(typename T::token_t).name());
 }
 
+/// \post !result.empty()
 template <class T>
 auto port_description(const std::string& node_name)
 		-> std::enable_if_t<!has_token_type<T>(0), std::string>
@@ -93,18 +96,27 @@ void set_graph_object(T&, connection_graph*)
 template <class base_t>
 struct graph_connectable : base_t
 {
+	/**
+	 * \brief Construct graph_connectable with access to graph::connection_graph
+	 * \param graph access to central connection_graph
+	 * \param graph_info information for the connection_graph of this object
+	 * \param args arguments forwarded to base class
+	 * \post graph != nullptr
+	 */
 	template <class... base_t_args>
-	graph_connectable(graph::connection_graph& graph, const graph_node_properties& graph_info,
+	graph_connectable(graph::connection_graph& central_graph, const graph_node_properties& graph_info,
 			base_t_args&&... args)
 		: base_t(std::forward<base_t_args>(args)...)
 		, graph_info(graph_info)
 		, graph_port_info(detail::port_description<base_t>(std::string{}), graph_info.get_id(),
 				  graph_port_properties::to_port_type<base_t>())
-		, graph(&graph)
+		, graph(&central_graph)
 	{
-		graph.add_port({graph_info, graph_port_info});
+		graph->add_port({graph_info, graph_port_info});
+		assert(graph != nullptr);
 	}
 
+	///Construct graph_connectables without access to connection_graph
 	template <class... base_t_args>
 	graph_connectable(const graph_node_properties& graph_info, base_t_args&&... args)
 		: base_t(std::forward<base_t_args>(args)...)
@@ -115,9 +127,10 @@ struct graph_connectable : base_t
 	{
 	}
 
+	///Adds connection to graph and then forwards call to base_t::connect
 	template <class arg_t,
 			class base_check = base_t, // forward base_t to template param of method
-			class = std::enable_if_t<is_active<base_check>::value>>
+			class = std::enable_if_t<class_is_active_v<base_check>>>
 	decltype(auto) connect(arg_t&& conn)
 	{
 		auto* current_graph = graph;
@@ -128,28 +141,32 @@ struct graph_connectable : base_t
 		if (!current_graph)
 			return base_t::connect(std::forward<arg_t>(conn));
 
+		assert(current_graph != nullptr);
+
 		// hijack graph object
 		detail::set_graph_object(conn, current_graph);
 		graph = current_graph;
+		assert(graph != nullptr);
 
 		// traverse connection and build up graph
 		if (is_active_sink<base_t>{}) // condition set at compile_time
 		{
-			add_state_connection(conn, *current_graph);
+			add_state_connection(conn, *graph);
 		}
 		else if (is_active_source<base_t>{}) // condition set at compile_time
 		{
-			add_event_connection(conn, *current_graph);
+			add_event_connection(conn, *graph);
 		}
 
 		return base_t::connect(std::forward<arg_t>(conn));
 	}
 
+	///graph_info needs to be public as it is checked by graph adding methods.
 	graph_node_properties graph_info;
 	graph_port_properties graph_port_info;
 	graph::connection_graph* graph;
-
 private:
+
 	template <class connection_t>
 	void add_state_connection(connection_t& conn, graph::connection_graph& current_graph) const
 	{

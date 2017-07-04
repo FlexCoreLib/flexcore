@@ -4,75 +4,79 @@
 #include <flexcore/extended/graph/graph.hpp>
 #include <flexcore/extended/graph/graph_connectable.hpp>
 #include <flexcore/extended/base_node.hpp>
+#include <flexcore/extended/nodes/terminal.hpp>
 #include <flexcore/ports.hpp>
-
 #include <flexcore/scheduler/cyclecontrol.hpp>
 
-using namespace fc;
-
-BOOST_AUTO_TEST_SUITE( test_graph )
+#include <boost/mpl/list.hpp>
 
 namespace
 {
-	struct dummy_node : tree_base_node
+	struct graph_fixture
 	{
-		explicit dummy_node(const node_args& node)
-			: tree_base_node(node)
-			, out_port(this, [](){ return 0;})
-			, in_port(this)
-		{
-		}
-
-		auto& out() { return out_port; }
-		auto& in() { return in_port; }
-
-		state_source<int> out_port;
-		state_sink<int> in_port;
-		dummy_node(const dummy_node&) = delete;
-
-		static_assert(is_active<state_sink<int>>::value,
-				"state_sink is active independent of mixins");
-		static_assert(is_passive<state_source<int>>::value,
-				"state_source is passive independent of mixins");
+		fc::graph::connection_graph graph;
+		fc::forest_owner forest{graph, "forest", std::make_shared<fc::parallel_region>("r",
+				fc::thread::cycle_control::fast_tick)};
+		std::ostringstream out_stream{};
 	};
-
 }
 
-BOOST_AUTO_TEST_CASE(test_graph_creation)
+BOOST_FIXTURE_TEST_SUITE( test_graph, graph_fixture)
+
+using fc::operator>>;
+
+BOOST_AUTO_TEST_CASE(test_minimal_graph)
 {
-	graph::connection_graph graph;
-	forest_owner forest{graph, "forest", std::make_shared<parallel_region>("r",
-			thread::cycle_control::fast_tick)};
-	auto& r = forest.nodes();
-	auto dummy_node_factory = [&](auto name) -> dummy_node&{ return r.make_child_named<dummy_node>(name); };
-	dummy_node& source_1 = dummy_node_factory("state_source 1");
-	dummy_node& source_2 = dummy_node_factory("state_source 2");
-	dummy_node& intermediate = dummy_node_factory("intermediate");
-	dummy_node& sink = dummy_node_factory("state_sink");
+	auto factory = [&r = forest.nodes()](auto name) -> fc::state_terminal<int>&{
+			return r.make_child_named<fc::state_terminal<int>>(name); };
+	auto& source = factory("state_source 1");
+	auto& sink = factory("state_source 2");
+
+	source.out() >> sink.in();
+
+	graph.print(out_stream);
+
+	const auto dot_string = out_stream.str();
+	const auto line_count =
+			std::count(dot_string.begin(), dot_string.end(),'\n');
+
+	// nr of lines in dot graph is nr of nodes and named lambdas
+	// + nr of connections + 2 (one for begin one for end)
+	BOOST_CHECK_EQUAL(line_count, 2 + 1 + 2);
+}
+
+using nodes = boost::mpl::list<fc::state_terminal<int>, fc::event_terminal<int>>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_graph_creation, node_t, nodes)
+{
+	auto factory = [&r = forest.nodes()](auto name) -> node_t&{
+			return r.make_child_named<node_t>(name); };
+	auto& source_1 = factory("state_source 1");
+	auto& source_2 = factory("state_source 2");
+	auto& intermediate = factory("intermediate");
+	auto& sink = factory("state_sink");
 
 	source_1.out() >> [](int i){ return i; } >> intermediate.in();
-	source_2.out() >> (graph::named([](int i){ return i; }, "incr") >> intermediate.in());
+	source_2.out() >> (fc::graph::named([](int i){ return i; }, "incr") >> intermediate.in());
 	intermediate.out() >>
-			(graph::named([](int i){ return i; }, "l 1") >>
-			graph::named([](int i){ return i; }, "l 2")) >> sink.in();
+			(fc::graph::named([](int i){ return i; }, "l 1") >>
+					fc::graph::named([](int i){ return i; }, "l 2")) >> sink.in();
 
-	typedef graph::graph_connectable<pure::event_source<int>> graph_source;
-	typedef graph::graph_connectable<pure::event_sink<int>> graph_sink;
+	using graph_source =  fc::graph::graph_connectable<fc::pure::event_source<int>>;
+	using graph_sink = fc::graph::graph_connectable<fc::pure::event_sink<int>>;
 
-	auto g_source = graph_source{graph, graph::graph_node_properties{"event_source"}};
-	int test_val = 0;
-	auto g_sink = graph_sink{graph, graph::graph_node_properties{"event_sink"},
+	auto g_source = graph_source{graph, fc::graph::graph_node_properties{"event_source"}};
+	int test_val{0};
+	auto g_sink = graph_sink{graph, fc::graph::graph_node_properties{"event_sink"},
 			[&test_val](int i){test_val = i;}};
 
-	g_source >> graph::named([](int i){ return i; }, "l 3") >> g_sink;
-
-	std::ostringstream out_stream;
+	g_source >> fc::graph::named([](int i){ return i; }, "l 3") >> g_sink;
 
 	graph.print(out_stream);
 	g_source.fire(1);
 
-	auto dot_string = out_stream.str();
-	auto line_count =
+	const auto dot_string = out_stream.str();
+	const auto line_count =
 			std::count(dot_string.begin(), dot_string.end(),'\n');
 
 	BOOST_CHECK_EQUAL(test_val, 1);

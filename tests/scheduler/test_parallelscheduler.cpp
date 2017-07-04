@@ -36,7 +36,7 @@ struct store
 }
 BOOST_AUTO_TEST_CASE(test_single_execution)
 {
-	store test_values;
+	store test_values{};
 	{
 	auto test_scheduler = make_parallel_cycle_control();
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_single_execution)
 	{
 		auto test_scheduler = make_parallel_cycle_control();
 
-	store test_values_2;
+	store test_values_2{};
 	{
 		thread::periodic_task task_2(std::bind(&store::make_1, &test_values_2));
 		test_scheduler->add_task(std::move(task_2), thread::cycle_control::fast_tick);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_single_execution)
 
 BOOST_AUTO_TEST_CASE(test_multiple_execution)
 {
-	const int nr_of_tasks = 20;
+	constexpr int nr_of_tasks{20};
 	std::vector<store> test_values(nr_of_tasks);
 	{
 	auto test_scheduler = make_parallel_cycle_control();
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(test_multiple_execution)
 BOOST_AUTO_TEST_CASE(test_main_loop)
 {
 
-	store test_values;
+	store test_values{};
 	auto test_scheduler = make_parallel_cycle_control();
 	{
 		thread::periodic_task task1(std::bind(&store::make_1, &test_values));
@@ -125,4 +125,3 @@ BOOST_AUTO_TEST_CASE(test_main_loop)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

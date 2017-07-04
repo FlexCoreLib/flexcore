@@ -7,10 +7,11 @@
 #ifndef SRC_PORTS_PORT_UTILS_HPP_
 #define SRC_PORTS_PORT_UTILS_HPP_
 
-#include <functional>
 #include <algorithm>
-#include <vector>
+#include <cassert>
+#include <functional>
 #include <iterator>
+#include <vector>
 
 namespace fc
 {
@@ -76,8 +77,7 @@ template <class handler_t>
 struct multiple_handler_policy
 {
 public:
-	/// \pre The handler corresponding to hash has been pushed_back to handlers before this
-	/// call.
+	/// \pre The handler corresponding to hash has been pushed_back to handlers.
 	void add_handler(const handler_t& handler, size_t hash)
 	{
 		handlers.push_back(handler);

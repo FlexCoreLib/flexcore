@@ -11,9 +11,9 @@ namespace fc
 template<class source, class sink, class payload>
 struct port_connection
 {
-	typedef source source_t;
-	typedef sink sink_t;
-	typedef payload result_t;
+	using source_t = source;
+	using sink_t = sink ;
+	using result_t = payload;
 };
 
 } //namespace fc

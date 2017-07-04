@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(test_id_check)
 
 	const std::string serialized{"{\"test_int\": 1.5" "}"};
 	const auto incorrect_id = fc::setting_id{"incorrect_id"};
-	BOOST_CHECK_THROW(backend.write(incorrect_id, serialized), std::out_of_range)
+	BOOST_CHECK_THROW(backend.write(incorrect_id, serialized), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(test_constraints)
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_constraints)
 	fc::settings_backend backend{};
 	fc::settings_facade facade{backend};
 
-	const int default_value = 0;
+	const int default_value{0};
 
 	fc::setting<int> my_setting =
 			{fc::setting_id{"setting_id"},

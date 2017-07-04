@@ -47,7 +47,7 @@ private:
 	//might be worthwhile exchanging it for a lockfree one.
 	std::queue<task_t> task_queue;
 	mutable std::mutex task_queue_mutex;
-	typedef std::unique_lock<std::mutex> queue_lock;
+	using queue_lock = std::unique_lock<std::mutex>;
 	///used to notify worker threads if new tasks are available
 	std::condition_variable thread_control;
 };

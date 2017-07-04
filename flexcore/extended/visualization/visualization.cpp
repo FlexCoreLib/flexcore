@@ -1,5 +1,7 @@
 #include "visualization.hpp"
 
+#include <flexcore/scheduler/parallelregion.hpp>
+
 #include <flexcore/extended/graph/graph.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
@@ -25,9 +27,9 @@ struct visualization::impl
 	static graph::graph_port_properties::port_type merge_property_types(
 			const graph::graph_properties& source_node, const graph::graph_properties& sink_node);
 	std::vector<graph::graph_properties> find_node_ports(
-			graph::graph_port_properties::unique_id node_id) const;
+			graph::unique_id node_id) const;
 	std::vector<graph::graph_properties> find_connectables(
-			graph::graph_port_properties::unique_id node_id) const;
+			graph::unique_id node_id) const;
 	std::string get_color(const parallel_region* region);
 	void print_subgraph(typename forest_t::const_iterator node, std::ostream& stream);
 	void print_ports(const std::vector<graph::graph_properties>& ports, unsigned long owner_hash,
@@ -56,7 +58,7 @@ graph::graph_port_properties::port_type visualization::impl::merge_property_type
 }
 
 std::vector<graph::graph_properties> visualization::impl::find_node_ports(
-		graph::graph_port_properties::unique_id node_id) const
+		graph::unique_id node_id) const
 {
 	std::vector<graph::graph_properties> result;
 	std::copy_if(std::begin(ports_), std::end(ports_), std::back_inserter(result),
@@ -65,7 +67,7 @@ std::vector<graph::graph_properties> visualization::impl::find_node_ports(
 }
 
 std::vector<graph::graph_properties> visualization::impl::find_connectables(
-		graph::graph_port_properties::unique_id node_id) const
+		graph::unique_id node_id) const
 {
 	std::vector<graph::graph_properties> result;
 	for (auto& edge : graph_.edges())

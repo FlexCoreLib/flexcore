@@ -1,17 +1,16 @@
 #ifndef SRC_PORTS_EVENT_SOURCES_EVENT_SOURCES_HPP_
 #define SRC_PORTS_EVENT_SOURCES_EVENT_SOURCES_HPP_
 
-#include <cassert>
-#include <functional>
-#include <memory>
-#include <vector>
-
 #include <flexcore/core/traits.hpp>
 #include <flexcore/core/connection_util.hpp>
+#include <flexcore/pure/detail/active_connection_proxy.hpp>
 #include <flexcore/pure/detail/port_traits.hpp>
 #include <flexcore/pure/detail/port_utils.hpp>
 #include <flexcore/pure/port_connection.hpp>
-#include <flexcore/pure/detail/active_connection_proxy.hpp>
+
+#include <cassert>
+#include <memory>
+#include <vector>
 
 namespace fc
 {
@@ -34,9 +33,8 @@ namespace pure
 template<class event_t>
 struct event_source
 {
-	typedef std::remove_reference_t<event_t> result_t;
-	typedef event_t token_t;
-	typedef typename detail::handle_type<result_t>::type handler_t;
+	using result_t = std::remove_reference_t<event_t>;
+	using token_t = event_t;
 
 	event_source() = default;
 
@@ -51,9 +49,9 @@ struct event_source
 				"we only allow single events, or void events atm");
 
 		static_assert(std::is_void<event_t>{} ||
-		              std::is_constructible<event_t, T...>{},
-		              "tried to call fire with a type, not implicitly convertible to type of port."
-		              "If conversion is required, do the cast before calling fire.");
+				std::is_constructible<event_t, T...>{},
+				"tried to call fire with a type, not implicitly convertible to type of port."
+				"If conversion is required, do the cast before calling fire.");
 
 		for (auto& target : base.storage.handlers)
 		{
@@ -87,18 +85,19 @@ struct event_source
 		base.add_handler(detail::handler_wrapper(std::forward<conn_t>(c)), get_sink(c));
 
 		assert(!base.storage.handlers.empty());
-		return port_connection<decltype(this), conn_t, result_t>();
+		return port_connection<decltype(*this), conn_t, result_t>();
 	}
 
 	///Illegal overload for rvalue port to give better error message.
 	template<class con_t>
 	void connect(con_t&&) &&
 	{
-		static_assert(detail::always_false<con_t>(),
+		static_assert(fc::always_false<con_t>(),
 				"Illegally tried to connect a temporary event_source object.");
 	}
 
 private:
+	using handler_t = typename detail::handle_type<result_t>::type;
 	// Stores event_handlers in a vector, the node needs to send
 	// to all connected event_handlers when an event is fired.
 	detail::active_port_base<handler_t, detail::multiple_handler_policy> base;

@@ -82,7 +82,7 @@ static bool StaticFunction(int)
 
 struct result_haver
 {
-	typedef int result_t; // has a result_t
+	using result_t = int; // has a result_t
 };
 
 } //namespace
@@ -91,47 +91,45 @@ struct result_haver
 
 BOOST_AUTO_TEST_CASE( test_callable_traits )
 {
-	{ /// Check the return value of a bunch of callables
-		std::function<int(int)> callable1;
-		auto callable2 = []() { return std::string("Test"); };
-		CustomCallable callable3;
-		CustomCallable2 callable4;
-		auto callable5 = StaticFunction;
+	/// Check the return value of a bunch of callables
+	std::function<int(int)> callable1;
+	auto callable2 = []() { return std::string("Test"); };
+	CustomCallable callable3;
+	CustomCallable2 callable4;
+	auto callable5 = StaticFunction;
 
-		ASSERT_RESULT_OF(callable1, int);
-		static_assert(utils::function_traits<decltype(callable1)>::arity == 1,
-				"Arity of std::function<int(int)> should be 1.");
-		ASSERT_ARG_TYPE(callable1, 0, int);
+	ASSERT_RESULT_OF(callable1, int);
+	static_assert(utils::function_traits<decltype(callable1)>::arity == 1,
+			"Arity of std::function<int(int)> should be 1.");
+	ASSERT_ARG_TYPE(callable1, 0, int);
 
-		ASSERT_RESULT_OF(callable2, std::string);
-		ASSERT_RESULT_OF(callable3, bool);
+	ASSERT_RESULT_OF(callable2, std::string);
+	ASSERT_RESULT_OF(callable3, bool);
 
-		ASSERT_ARG_TYPE(callable4, 0, const CustomCallable&);
-		ASSERT_ARG_TYPE(callable4, 1, CustomCallable&&);
+	ASSERT_ARG_TYPE(callable4, 0, const CustomCallable&);
+	ASSERT_ARG_TYPE(callable4, 1, CustomCallable&&);
 
-		ASSERT_RESULT_OF(callable5, bool);
+	ASSERT_RESULT_OF(callable5, bool);
 
-		static_assert(is_callable<CustomCallable>{},
-				"this type was made to be callable");
-		static_assert(is_connectable<CustomCallable>{},
-				"struct was made to be connectable");
+	static_assert(is_callable<CustomCallable>{},
+			"this type was made to be callable");
+	static_assert(is_connectable<CustomCallable>{},
+			"struct was made to be connectable");
 
-		auto test = [](int){ };
-		static_assert(is_callable<decltype(test)>{},
-				"lambda taking int is callable");
-		static_assert(is_connectable<decltype(test)>{},
-				"lambda taking int is connectable");
+	auto test = [](int){ };
+	static_assert(is_callable<decltype(test)>{},
+			"lambda taking int is callable");
+	static_assert(is_connectable<decltype(test)>{},
+			"lambda taking int is connectable");
 
-		auto con_lambda = [](int)->int{return 1;};
-		static_assert(is_connectable<decltype(con_lambda)>{},
-				"lambda takes and returns int, is connectable");
+	auto con_lambda = [](int)->int{return 1;};
+	static_assert(is_connectable<decltype(con_lambda)>{},
+			"lambda takes and returns int, is connectable");
 
-		static_assert(!has_result<CustomCallable>{}, "CustomCallable does not have a result_t");
-		static_assert(has_result<result_haver>{}, "result_haver has a result_t");
+	static_assert(!has_result<CustomCallable>{}, "CustomCallable does not have a result_t");
+	static_assert(has_result<result_haver>{}, "result_haver has a result_t");
 
-		static_assert(std::is_same<result_of_t<result_haver>, int>{}, "result_t is int");
-
-	}
+	static_assert(std::is_same<result_of_t<result_haver>, int>{}, "result_t is int");
 }
 
 namespace

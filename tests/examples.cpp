@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(events_example)
 	// Ownership of these nodes can and has to be managed manually.
 
 	// Terminal nodes just forward all data and do no computations at all.
-	fc::event_terminal<int, fc::pure::pure_node> source;
+	fc::event_terminal<int, fc::pure::pure_node> source{};
 
 	//Hold last stores the last event received and provides it as state.
 	fc::hold_last<int, fc::pure::pure_node> sink{0};
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(events_example)
 	source.in()(0);
 	BOOST_CHECK_EQUAL(sink.out()(), 10);
 
-	fc::event_terminal<int, fc::pure::pure_node> source_2;
+	fc::event_terminal<int, fc::pure::pure_node> source_2{};
 
 	// an event_sink can be connected to more than one source
 	// it will receive tokens from all sources, when they fire events.
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(state_example)
 	// in this example we don't use the full extended infrastructure.
 	// Nodes and ports from the pure namespace have no notion of parallel region.
 	// Ownership of these nodes can and has to be managed manually.
-	fc::state_terminal<int, fc::pure::pure_node> source;
-	fc::state_terminal<int, fc::pure::pure_node> sink;
+	fc::state_terminal<int, fc::pure::pure_node> source{};
+	fc::state_terminal<int, fc::pure::pure_node> sink{};
 
 	//provide a constant state as inputs to our node
 	fc::constant(42) >> source.in();
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(state_example)
 	//every time we pull data from our sink we get the result from the chain.
 	BOOST_CHECK_EQUAL(sink.out()(), 42 +1);
 
-	fc::state_terminal<int, fc::pure::pure_node> sink_2;
+	fc::state_terminal<int, fc::pure::pure_node> sink_2{};
 	// a state source an be connected to more than one state sink
 	// each sink is able to pull the tokens separately.
 	// Calculations within the chain might be done twice.
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(range_example)
 	std::vector<int> vec {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
 	fc::pure::state_source<std::vector<int>> source(fc::constant(vec));
-	fc::pure::state_sink<int> sink;
+	fc::pure::state_sink<int> sink{};
 
 	source
 	// This filters the source range and only lets the elements smaller than zero through
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(range_example)
 BOOST_AUTO_TEST_CASE(mux_example)
 {
 	//use the shortcut for a passive source, which provides a constant value.
-	auto source_1 = fc::constant(1.234);
-	auto source_2 = fc::constant(5.678);
+	const auto source_1 = fc::constant(1.234);
+	const auto source_2 = fc::constant(5.678);
 
-	fc::pure::state_sink<double> sink;
+	fc::pure::state_sink<double> sink{};
 
 	//mux creates a multiplexed connectable from the two sources.
 	fc::mux(source_1, source_2)

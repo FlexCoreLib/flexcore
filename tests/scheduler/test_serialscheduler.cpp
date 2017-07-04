@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(test_nr_of_waiting_tasks)
 	auto scheduler = make_blocking_scheduler();
 	std::atomic_bool ran{false};
 	std::atomic_bool finish{false};
-	bool nr_was_one = false;
+	bool nr_was_one{false};
 	auto check = std::thread([&]
 	                        {
 		                        while (!ran.load())
