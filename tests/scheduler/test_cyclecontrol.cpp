@@ -69,6 +69,12 @@ BOOST_AUTO_TEST_CASE(test_fast_main_loop)
 	namespace sched = fc::thread;
 	using cycle = sched::cycle_control;
 	sched::cycle_control controller{std::make_unique<sched::parallel_scheduler>(),
+		[](auto& task)
+		{
+			const bool res{task.wait_until_done(sched::cycle_control::slow_tick)};
+			assert(res);
+			return res;
+		}, //we don't react to timeouts here, just continue working
 		std::make_shared<sched::afap_main_loop>()};
 	auto count_fast = 0ull;
 	auto count_medium = 0ull;

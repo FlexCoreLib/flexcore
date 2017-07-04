@@ -6,6 +6,7 @@
 #include <flexcore/scheduler/parallelregion.hpp>
 #include <flexcore/pure/event_sources.hpp>
 
+#include <cassert>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -57,14 +58,17 @@ struct periodic_task final
 				region(r)
 	{
 		assert(r != nullptr);
+		assert(work);
 	}
 
+	///returns true if all work in task is complete
 	bool done()
 	{
 		std::lock_guard<std::mutex> lock(sync->mtx);
 		return !work_to_do;
 	}
 
+	///notify task if more work is to be done
 	void set_work_to_do(bool todo)
 	{
 		{
@@ -89,6 +93,7 @@ struct periodic_task final
 		);
 	}
 
+	///trigger switch tick of associated parallel_region if it is registered.
 	void send_switch_tick()
 	{
 		if (region)
@@ -120,42 +125,53 @@ public:
 	virtual void loop_body(const std::function<void(void)>& work) = 0;
 	virtual ~main_loop() = default;
 
+	virtual void arm() = 0;
+
 	std::function<void(void)> wait_for_current_tasks{};
 };
 
 /**
  * \brief Main Loop which runs as fast as possible
  */
-class afap_main_loop : public main_loop
+class afap_main_loop final : public main_loop
 {
 public:
 	void loop_body(const std::function<void(void)>& work) override;
 
+	void arm() override {};
 };
 
 /**
  * \brief Main Loop which runs in realtime.
  */
-class realtime_main_loop : public main_loop
+class realtime_main_loop final : public main_loop
 {
 public:
 	void loop_body(const std::function<void(void)>& work) override;
+
+	void arm() override { epoch = wall_clock::steady::now(); };
+
+private:
+	wall_clock::steady::time_point epoch{wall_clock::steady::now()};
 };
 
 /**
  * \brief Main Loop which runs variable speed.
  */
-class timewarp_main_loop : public main_loop
+class timewarp_main_loop final : public main_loop
 {
 public:
 	void loop_body(const std::function<void(void)>& work) override;
 
+	/// \pre factor >= 0.0
 	void set_warp_factor(double factor);
 
+	void arm() override { epoch = wall_clock::steady::now(); };
 private:
 	std::mutex warp_mutex{};
 	std::condition_variable warp_signal{};
-	double warp_factor{1};
+	double warp_factor{1.0};
+	wall_clock::steady::time_point epoch{wall_clock::steady::now()};
 };
 
 /**
@@ -177,6 +193,7 @@ public:
 	 * \param scheduler scheduler for work ticks to be used.
 	 * \param loop functor which controls the main loop
 	 * \pre loop != nullptr
+	 * \pre scheduler != nullptr
 	 *
 	 * \see parallel_scheduler for an example of a scheduler.
 	 */
@@ -190,6 +207,7 @@ public:
 	 * \param err TimeOutHandler, is triggered when the scheduler notices
 	 * that a work tick takes to long.
 	 * \pre loop != nullptr
+	 * \pre scheduler != nullptr
 	 */
 	template <class TimeOutFun>
 	cycle_control(std::unique_ptr<scheduler> scheduler,
@@ -222,6 +240,12 @@ public:
 	/// Get last exception thrown by timeout. Returns nullptr if no exception was thrown
 	std::exception_ptr last_exception();
 
+	/**
+	 * \brief set a new main_loop to run.
+	 * \pre loop != nullptr
+	 * \pre scheduler is not running
+	 * \post loop will run, when cyclecontrol is started again
+	 */
 	void set_main_loop(const std::shared_ptr<main_loop>& loop);
 
 private:
@@ -265,6 +289,8 @@ inline cycle_control::cycle_control(std::unique_ptr<scheduler> scheduler,
 	, timeout_callback(std::move(callback))
 {
 	assert(scheduler_);
+	assert(main_loop_);
+	assert(timeout_callback);
 	main_loop_->wait_for_current_tasks = [this](){ wait_for_current_tasks(); };
 }
 
