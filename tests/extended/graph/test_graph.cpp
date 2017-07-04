@@ -50,7 +50,7 @@ using nodes = boost::mpl::list<fc::state_terminal<int>, fc::event_terminal<int>>
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_graph_creation, node_t, nodes)
 {
 	auto factory = [&r = forest.nodes()](auto name) -> node_t&{
-			return r.make_child_named<node_t>(name); };
+			return r.template make_child_named<node_t>(name); };
 	auto& source_1 = factory("state_source 1");
 	auto& source_2 = factory("state_source 2");
 	auto& intermediate = factory("intermediate");
