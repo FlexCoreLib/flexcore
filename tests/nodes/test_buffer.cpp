@@ -15,11 +15,11 @@ BOOST_AUTO_TEST_SUITE(test_buffers)
 BOOST_AUTO_TEST_CASE( test_list_collector_pure )
 {
 	// test case of list collector without region context
-	typedef list_collector<int, swap_on_pull, pure::pure_node> collector_t;
+	using collector_t = list_collector<int, swap_on_pull, pure::pure_node>;
 
-	collector_t collector;
+	collector_t collector{};
 
-	pure::state_sink<std::vector<int>> sink;
+	pure::state_sink<std::vector<int>> sink{};
 
 	collector.out() >> sink;
 
@@ -39,7 +39,7 @@ using collector_t = list_collector<int, swap_on_tick, tree_base_node>;
 
 BOOST_AUTO_TEST_CASE(single_event_to_state)
 {
-	tests::owning_node root;
+	tests::owning_node root{};
 	auto& buffer = root.make_child_named<collector_t>("collector");
 	event_source<int> source{&root.node()};
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(single_event_to_state)
 
 BOOST_AUTO_TEST_CASE(event_range_to_state)
 {
-	tests::owning_node root;
+	tests::owning_node root{};
 
 	auto& buffer = root.make_child_named<collector_t>("collector");
 	event_source<std::vector<int>> source{&root.node()};
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(event_range_to_state)
 
 BOOST_AUTO_TEST_CASE(test_hold_last)
 {
-	tests::owning_node root;
+	tests::owning_node root{};
 
 	auto& buffer = root.make_child<hold_last<int, tree_base_node>>(0);
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(test_hold_last)
 
 BOOST_AUTO_TEST_CASE(test_hold_n)
 {
-	tests::owning_node root;
+	tests::owning_node root{};
 
 	auto& buffer = root.make_child<hold_n<int, tree_base_node>>(3);
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test_hold_n)
 
 BOOST_AUTO_TEST_CASE(test_hold_n_incoming_range)
 {
-	tests::owning_node root;
+	tests::owning_node root{};
 
 	auto& buffer = root.make_child<hold_n<int, tree_base_node>>(5);
 

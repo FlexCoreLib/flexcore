@@ -1,4 +1,5 @@
 #include <flexcore/extended/graph/graph.hpp>
+#include <flexcore/scheduler/parallelregion.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
@@ -25,13 +26,13 @@ struct edge
 	std::string name;
 };
 
-typedef boost::adjacency_list<boost::vecS, // Store out-edges of each vertex in a std::list
-		boost::vecS,					   // Store vertex set in a std::list
-		boost::directedS,				   // The dataflow graph is directed
-		vertex,							   // vertex properties
-		edge							   // edge properties
-		>
-		dataflow_graph_t;
+using dataflow_graph_t = boost::adjacency_list<
+		boost::vecS, 		// Store out-edges of each vertex in a std::list
+		boost::vecS,		// Store vertex set in a std::list
+		boost::directedS,	// The dataflow graph is directed
+		vertex,				// vertex properties
+		edge				// edge properties
+		>;
 
 struct connection_graph::impl
 {
@@ -44,7 +45,7 @@ struct connection_graph::impl
 	const std::unordered_set<graph_edge>& edges() const;
 
 	dataflow_graph_t dataflow_graph;
-	std::map<graph_node_properties::unique_id, dataflow_graph_t::vertex_descriptor> vertex_map;
+	std::map<graph::unique_id, dataflow_graph_t::vertex_descriptor> vertex_map;
 	std::unordered_set<graph_edge> edge_set;
 	std::set<graph_properties> port_set;
 
@@ -57,9 +58,9 @@ struct vertex_printer
 	template <class Vertex>
 	void operator()(std::ostream& out, const Vertex& v) const
 	{
-		auto Name = boost::get(&vertex::name, graph);
-		auto Uuid = boost::get(&vertex::uuid, graph);
-		auto Region = boost::get(&vertex::region, graph);
+		const auto Name = boost::get(&vertex::name, graph);
+		const auto Uuid = boost::get(&vertex::uuid, graph);
+		const auto Region = boost::get(&vertex::region, graph);
 		out << std::hex;
 		out << "[label=\"" << Name[v] << "\", uuid=\"0x" << Uuid[v] << "\", region=\"0x"
 			<< Region[v] << "\"]";
@@ -90,6 +91,8 @@ graph_port_properties::graph_port_properties(
 	, id_(boost::uuids::random_generator()())
 	, type_(std::move(type))
 {
+	assert(!description_.empty());
+	assert(owning_node_ != id_);
 }
 
 bool graph_port_properties::operator<(const graph_port_properties& o) const
@@ -99,7 +102,7 @@ bool graph_port_properties::operator<(const graph_port_properties& o) const
 
 connection_graph::~connection_graph() = default;
 
-void connection_graph::print(std::ostream& stream)
+void connection_graph::print(std::ostream& stream) const
 {
 	std::lock_guard<std::mutex> lock(pimpl->graph_mutex);
 	const auto& graph = pimpl->dataflow_graph;

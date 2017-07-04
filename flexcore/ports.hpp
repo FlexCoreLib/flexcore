@@ -78,14 +78,14 @@ using state_source = default_mixin<pure::state_source<data_t>>;
 template<class data_t, class tag>
 struct in_port
 {
-	typedef default_mixin<typename pure::in_port<data_t, tag>::type> type;
+	using type = default_mixin<typename pure::in_port<data_t, tag>::type>;
 };
 
 /// template output port, tag object creates either event_source or state_source
 template<class data_t, class tag>
 struct out_port
 {
-	typedef default_mixin<typename pure::out_port<data_t, tag>::type> type;
+	using type = default_mixin<typename pure::out_port<data_t, tag>::type>;
 };
 
 } // namespace fc

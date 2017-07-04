@@ -8,9 +8,9 @@
 #ifndef SRC_CORE_TRAITS_H_
 #define SRC_CORE_TRAITS_H_
 
-#include <type_traits>
 #include <functional>
 #include <memory>
+#include <type_traits>
 
 #include <flexcore/core/detail/function_traits.hpp>
 
@@ -85,7 +85,7 @@ private:
 public:
 	// this actually evaluates the test by building the derived type
 	// and evaluating the result type of test, either false_type or true_type
-	typedef decltype(test<derived>(nullptr)) type;
+	using type = decltype(test<derived>(nullptr));
 };
 
 
@@ -119,7 +119,7 @@ struct result_of_fwd<F, void>
 /**
  * \brief Check whether F can be called with Arg.
  *
- * Is done by checking whether std::result_of has a type typedef.
+ * Is done by checking whether std::result_of has a type alias.
  */
 template <class F, typename... Arg>
 constexpr bool has_result_of_type()
@@ -188,13 +188,13 @@ template<class, bool> struct result_of_impl;
 template<class Expr>
 struct result_of_impl<Expr, false>
 {
-typedef typename utils::function_traits<Expr>::result_t type;
+using type = typename utils::function_traits<Expr>::result_t;
 };
 
 template<class Expr>
 struct result_of_impl<Expr, true>
 {
-typedef typename std::remove_reference_t<Expr>::result_t type;
+using type = typename std::remove_reference_t<Expr>::result_t;
 };
 } //namespace detail
 /// Trait for determining the result of a callable.
@@ -209,14 +209,14 @@ typedef typename std::remove_reference_t<Expr>::result_t type;
  * template<>
  * struct result_of<MyType>
  * {
- *    typedef MyType::result_t
+ *    using type = MyType::result_t
  * }
  * @endcode */
 template<class Expr>
 struct result_of
 {
-	typedef typename detail::result_of_impl<
-	    Expr, has_result<std::remove_reference_t<Expr>>::value>::type type;
+	using type = typename detail::result_of_impl<
+			Expr, has_result<std::remove_reference_t<Expr>>::value>::type;
 };
 template <class Expr>
 using result_of_t = typename result_of<Expr>::type;
@@ -229,20 +229,27 @@ using result_of_t = typename result_of<Expr>::type;
  * template<>
  * struct argtype_of<MyType, 0>
  * {
- *    typedef int type;
+ *     using type = int;
  * }
  * @endcode
  */
 template<class Expr, int Arg, class enable = void>
 struct argtype_of
 {
-	typedef typename utils::function_traits<Expr>::template arg<Arg>::type type;
+	using type = typename utils::function_traits<Expr>::template arg<Arg>::type;
 };
 
 template<class T>
 struct param_type
 {
-	typedef typename argtype_of<T,0>::type type;
+	using type = typename argtype_of<T,0>::type;
+};
+
+
+///helper type to have always false values in sfinae and static_asserts.
+template <class T>
+struct always_false : std::false_type
+{
 };
 
 ///Checks if type T can be called with void
@@ -395,7 +402,8 @@ template<class T>
 using is_passive_sink_t = typename is_passive_sink<T>::type;
 template<class T>
 constexpr bool is_passive_sink_v = is_passive_sink<T>::value;
-
+template<class T>
+constexpr bool class_is_passive_sink_v = is_passive_sink_v<std::decay_t<T>>;
 /**
  * \brief Checks if type T is a passive sink.
  *
@@ -410,6 +418,8 @@ template<class T>
 using is_passive_source_t = typename is_passive_source<T>::type;
 template<class T>
 constexpr bool is_passive_source_v = is_passive_source<T>::value;
+template<class T>
+constexpr bool class_is_passive_source_v = is_passive_source_v<std::decay_t<T>>;
 
 ///checks if type T is either a passive sink or a passive source.
 template<class T>
@@ -434,6 +444,9 @@ using is_active_sink_t = typename is_active_sink<T>::type;
 template<class T>
 constexpr bool is_active_sink_v = is_active_sink<T>::value;
 
+///shortcut for is_active which decays template parameter
+template<class T>
+constexpr bool class_is_active_sink_v = is_active_sink_v<std::decay_t<T>>;
 /**
  * \brief  Trait to define an active source.
  *
@@ -450,6 +463,9 @@ using is_active_source_t = typename is_active_source<T>::type;
 template<class T>
 constexpr bool is_active_source_v = is_active_source<T>::value;
 
+///shortcut for is_active which decays template parameter
+template<class T>
+constexpr bool class_is_active_source_v = is_active_source_v<std::decay_t<T>>;
 /// Checks if type T is either active_source or active_sink
 template<class T>
 struct is_active: std::integral_constant<bool,
@@ -461,6 +477,10 @@ template<class T>
 using is_active_t = typename is_active<T>::type;
 template<class T>
 constexpr bool is_active_v = is_active<T>::value;
+
+///shortcut for is_active which decays template parameter
+template<class T>
+constexpr bool class_is_active_v = is_active_v<std::decay_t<T>>;
 
 template<class T>
 struct is_event_port: std::integral_constant<bool,

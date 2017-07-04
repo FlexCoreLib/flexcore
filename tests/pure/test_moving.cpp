@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE( moving_state )
 //test case to make sure objects are not move if we don't want them to be
 BOOST_AUTO_TEST_CASE( non_moving )
 {
-	typedef std::shared_ptr<int> non_move; //shared_ptr is nulled after move, so we can check
-	pure::event_source<non_move> source;
-	bool moved = false;
+	using non_move = std::shared_ptr<int>; //shared_ptr is nulled after move, so we can check
+	pure::event_source<non_move> source{};
+	bool moved{false};
 	pure::event_sink<non_move> sink([&moved](non_move t){ moved = !t.operator bool() ;});
 	pure::event_sink<non_move> sink2([&moved](non_move t){ moved = !t.operator bool() ;});
 

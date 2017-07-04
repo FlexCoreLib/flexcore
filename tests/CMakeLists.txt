@@ -19,9 +19,8 @@ ADD_EXECUTABLE( test_executable
 	extended/nodes/test_infrastructure.cpp
 	extended/nodes/test_region_worker_node.cpp
 	extended/nodes/test_terminal_node.cpp
-	extended/ports/test_event_buffer.cpp
 	extended/ports/test_node_aware.cpp
-	extended/ports/test_state_buffer.cpp
+	extended/ports/test_region_buffer.cpp
 	pure/test_events.cpp
 	pure/test_moving.cpp
 	pure/test_mux_ports.cpp

@@ -20,6 +20,15 @@ struct useless_mixin : public base
 	{
 	}
 };
+
+struct node_fixture
+{
+	fc::tests::owning_node root;
+
+};
+
+using int_event_sink = fc::node_aware<fc::pure::sink_fixture<int>>;
+using int_event_source =  fc::node_aware<fc::pure::event_source<int>>;
 }
 
 namespace fc
@@ -30,21 +39,10 @@ template <class T>
 struct is_active_sink<useless_mixin<T>> : is_active_sink<T> {};
 }
 
-BOOST_AUTO_TEST_SUITE(test_parallle_region)
+BOOST_FIXTURE_TEST_SUITE(test_parallle_region, node_fixture)
 
 
 using namespace fc;
-
-BOOST_AUTO_TEST_CASE(test_region_aware_node)
-{
-	tests::owning_node root;
-	typedef node_aware<pure::sink_fixture<int>> test_in_port;
-
-	test_in_port test_in(*(root.region()),
-			std::vector<int>{0,1});
-	test_in(0);
-	test_in(1);
-}
 
 BOOST_AUTO_TEST_CASE(test_tick_length_checks)
 {
@@ -68,17 +66,8 @@ BOOST_AUTO_TEST_CASE(test_tick_length_checks)
 
 BOOST_AUTO_TEST_CASE(test_same_region)
 {
-	typedef node_aware<pure::sink_fixture<int>> test_in_port;
-	typedef node_aware<pure::event_source<int>> test_out_port;
-
-	tests::owning_node root;
-
-	test_in_port test_in(*(root.region()));
-	test_out_port test_out(*(root.region()));
-
-	static_assert(is_passive_sink<test_in_port>{}, "");
-	static_assert(has_result<test_out_port>{},
-			"its an out port, that has result_t defined");
+	int_event_sink test_in(*(root.region()));
+	int_event_source test_out(*(root.region()));
 
 	test_out >> test_in;
 
@@ -87,15 +76,10 @@ BOOST_AUTO_TEST_CASE(test_same_region)
 
 	auto tmp = test_out >> [](int i ){ return ++i;};
 
-	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
-	static_assert(! is_active_sink   <test_in_port>{}, "");
-	static_assert(! is_active_source <test_in_port>{}, "");
-	static_assert(  is_passive_sink  <test_in_port>{}, "");
-	static_assert(! is_passive_source<test_in_port>{}, "");
-	static_assert(! is_passive_source<decltype(tmp)>{}, "");
-	static_assert(! is_passive_sink  <decltype(tmp)>{}, "");
-	static_assert(  is_active_source <decltype(tmp)>{}, "");
-	static_assert(! is_active_sink   <decltype(tmp)>{}, "");
+	static_assert(!is_passive_source<decltype(tmp)>{}, "");
+	static_assert(!is_passive_sink  <decltype(tmp)>{}, "");
+	static_assert( is_active_source <decltype(tmp)>{}, "");
+	static_assert(!is_active_sink   <decltype(tmp)>{}, "");
 
 	std::move(tmp) >> test_in;
 
@@ -165,12 +149,12 @@ using token_types = boost::mpl::list<int, float, boost::variant<int>>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_different_region, T, token_types)
 {
-	typedef node_aware<pure::event_sink<T>> no_mixin_sink;
-	typedef node_aware<pure::event_source<T>> no_mixin_source;
+	using no_mixin_sink = node_aware<pure::event_sink<T>>;
+	using no_mixin_source = node_aware<pure::event_source<T>>;
 	check_mixins<no_mixin_source, no_mixin_sink, T>();
 
-	typedef useless_mixin<node_aware<pure::event_sink<T>>> test_mixin_sink;
-	typedef useless_mixin<node_aware<pure::event_source<T>>> test_mixin_source;
+	using test_mixin_sink = useless_mixin<node_aware<pure::event_sink<T>>>;
+	using test_mixin_source = useless_mixin<node_aware<pure::event_source<T>>>;
 	check_mixins<test_mixin_source, test_mixin_sink, T>();
 }
 
@@ -189,7 +173,6 @@ BOOST_AUTO_TEST_CASE(test_void_event)
 	source >> sink;
 	source >> sink2;
 
-
 	BOOST_CHECK(!written);
 	source.fire();
 	BOOST_CHECK(written);
@@ -203,12 +186,12 @@ BOOST_AUTO_TEST_CASE(test_void_event)
 	BOOST_CHECK(written);
 }
 
-BOOST_AUTO_TEST_CASE(test_traits)
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_traits, T, token_types)
 {
-	using full_state_sink = state_sink<int>;
-	using full_state_source = state_source<int>;
-	using full_event_sink = event_sink<int>;
-	using full_event_source = event_source<int>;
+	using full_state_sink = state_sink<T>;
+	using full_state_source = state_source<T>;
+	using full_event_sink = event_sink<T>;
+	using full_event_source = event_source<T>;
 
 	BOOST_CHECK( is_active_sink   <full_state_sink>{});
 	BOOST_CHECK(!is_active_source <full_state_sink>{});
@@ -233,8 +216,8 @@ BOOST_AUTO_TEST_CASE(test_traits)
 
 BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 {
-	typedef node_aware<pure::event_sink<int>> test_in_port;
-	typedef node_aware<pure::event_source<int>> test_out_port;
+	using test_in_port = node_aware<pure::event_sink<int>> ;
+
 	auto region_1 = std::make_shared<parallel_region>("r1",
 			fc::thread::cycle_control::fast_tick);
 	auto region_2 = std::make_shared<parallel_region>("r2",
@@ -242,10 +225,10 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 	tests::owning_node root_1(region_1);
 	tests::owning_node root_2(region_2);
 
-	int test_value = 0;
+	int test_value{0};
 	auto write_param = [&test_value](int i) {test_value = i;};
 	test_in_port test_in(*(root_2.region()), write_param);
-	test_out_port test_out(*(root_1.region()));
+	int_event_source test_out(*(root_1.region()));
 
 	test_out >> [](auto i){ return i+1;} >> test_in;
 
@@ -285,8 +268,8 @@ BOOST_AUTO_TEST_CASE(test_connectable_in_between)
 
 BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 {
-	typedef node_aware<pure::event_sink<int>> test_in_port;
-	typedef node_aware<pure::event_source<int>> test_out_port;
+	using test_in_port = node_aware<pure::event_sink<int>> ;
+
 	auto region_1 = std::make_shared<parallel_region>("r1",
 			fc::thread::cycle_control::fast_tick);
 	auto region_2 = std::make_shared<parallel_region>("r2",
@@ -294,10 +277,10 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	tests::owning_node root_1(region_1);
 	tests::owning_node root_2(region_2);
 
-	int test_value = 0;
+	int test_value{0};
 	auto write_param = [&test_value](int i) {test_value = i;};
 	test_in_port test_in(*(root_2.region()), write_param);
-	test_out_port test_out(*(root_1.region()));
+	int_event_source test_out(*(root_1.region()));
 
 	auto inc = [](int i){ return i + 1; };
 
@@ -316,8 +299,8 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 	BOOST_CHECK_EQUAL(test_value, 4);
 
 	// check the same for states
-	typedef node_aware<pure::state_sink<int>> test_in_state;
-	typedef node_aware<pure::state_source<int>> test_out_state;
+	using test_in_state = node_aware<pure::state_sink<int>> ;
+	using test_out_state = node_aware<pure::state_source<int>>;
 
 	test_out_state state_out{*(root_1.region()), [](){ return 1; }};
 	test_in_state state_in{*(root_2.region())};
@@ -336,10 +319,10 @@ BOOST_AUTO_TEST_CASE(test_multiple_connectable_in_between)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_state_transition, T, token_types)
 {
-	auto default_tick = thread::cycle_control::slow_tick;
-	auto different_tick = thread::cycle_control::fast_tick;
-	typedef node_aware<pure::state_sink<T>> test_in_port;
-	typedef node_aware<pure::state_source<T>> test_out_port;
+	const auto default_tick = thread::cycle_control::slow_tick;
+	const auto different_tick = thread::cycle_control::fast_tick;
+	using test_in_port = node_aware<pure::state_sink<T>>;
+	using test_out_port = node_aware<pure::state_source<T>>;
 	auto region_1 = std::make_shared<parallel_region>("r1", default_tick);
 	auto region_2 = std::make_shared<parallel_region>("r2", default_tick);
 	auto region_3 = std::make_shared<parallel_region>("r3", different_tick);
@@ -350,17 +333,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_state_transition, T, token_types)
 	test_out_port source(*(root_1.region()), [](){ return T{1}; });
 	test_in_port sink_1(*(root_2.region()));
 	test_in_port sink_2(*(root_3.region()));
-
-	static_assert(is_instantiation_of<node_aware, test_in_port>{}, "");
-	static_assert(is_instantiation_of<node_aware, test_out_port>{}, "");
-	static_assert(  is_active_sink   <test_in_port>{}, "");
-	static_assert(! is_active_source <test_in_port>{}, "");
-	static_assert(! is_passive_sink  <test_in_port>{}, "");
-	static_assert(! is_passive_source<test_in_port>{}, "");
-	static_assert(  is_passive_source<test_out_port>{}, "");
-	static_assert(! is_passive_sink  <test_out_port>{}, "");
-	static_assert(! is_active_source <test_out_port>{}, "");
-	static_assert(! is_active_sink   <test_out_port>{}, "");
 
 	static_assert(std::is_same<T,
 			result_of_t<test_out_port>>{},
@@ -388,9 +360,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_state_transition, T, token_types)
 
 BOOST_AUTO_TEST_CASE(test_state_same_region)
 {
-	typedef node_aware<pure::state_sink<int>> test_in_port;
-	typedef node_aware<pure::state_source<int>> test_out_port;
-	tests::owning_node root;
+	using test_in_port = node_aware<pure::state_sink<int>>;
+	using test_out_port = node_aware<pure::state_source<int>>;
 
 	test_out_port source(*(root.region()), [](){ return 1; });
 	test_in_port sink(*(root.region()));

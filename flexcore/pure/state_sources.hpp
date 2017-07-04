@@ -3,7 +3,6 @@
 
 #include <flexcore/core/connection.hpp>
 #include <flexcore/core/traits.hpp>
-#include <flexcore/pure/detail/active_connection_proxy.hpp>
 
 #include <cassert>
 #include <functional>
@@ -85,8 +84,8 @@ public:
 		connection_breakers.emplace_back(visit_fun);
 	}
 
-	typedef data_t result_t;
-	typedef data_t token_t;
+	using result_t = data_t;
+	using token_t = data_t;
 
 private:
 	std::function<data_t()> call;

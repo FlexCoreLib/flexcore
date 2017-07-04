@@ -6,6 +6,7 @@ namespace fc
 namespace graph
 {
 
+///checks if a type has a member called graph_info
 template<class T>
 constexpr auto has_graph_info(int) -> decltype(std::declval<T>().graph_info, bool())
 {

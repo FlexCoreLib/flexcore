@@ -63,7 +63,7 @@ public:
 				"only passive sources can be connected to a state_sink");
 
 		static_assert(std::is_convertible<decltype(std::declval<con_t>()()), data_t>{},
-		              "The type returned by this connection is incompatible with this sink.");
+				"The type returned by this connection is incompatible with this sink.");
 
 		base.add_handler(detail::handler_wrapper(std::forward<con_t>(c)), get_source(c));
 	}
@@ -72,12 +72,12 @@ public:
 	template<class con_t>
 	void connect(con_t&&) &&
 	{
-		static_assert(detail::always_false<con_t>(),
+		static_assert(fc::always_false<con_t>(),
 				"Illegally tried to connect a temporary state_sink object.");
 	}
 
-	typedef void result_t;
-	typedef data_t token_t;
+	using result_t = void ;
+	using token_t = data_t;
 private:
 	detail::active_port_base<std::function<data_t()>, detail::single_handler_policy> base;
 };
