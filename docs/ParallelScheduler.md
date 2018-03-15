@@ -16,6 +16,6 @@ Cyclecontrol goes through the following steps each cycle.
 
 The switch tick serves as the synchronization point and the work tick does the actual calculations.
 
-![2015-11-10_Scheduler_sequence](2015-11-10_Scheduler_sequence.png)
+![2015-11-10_Scheduler_sequence](./images/2015-11-10_Scheduler_sequence.png)
 
-![2015-09-25_scheduler_class_v2ck](2015-09-25_scheduler_class_v2ck.png)
+![2015-09-25_scheduler_class_v2ck](./images/2015-09-25_scheduler_class_v2ck.png)

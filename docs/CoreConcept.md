@@ -38,7 +38,7 @@ connectable_a >> connectable_b;
 
 The following UML class diagram shows the interaction between these concepts:
 
-![CoreClassDiagram_v3](CoreClassDiagram_v3.png)
+![CoreClassDiagram_v3](./images/CoreClassDiagram_v3.png)
 
 By calling connect on connectables and connections repeatedly we can
 build **chains** of connections.
@@ -76,6 +76,6 @@ connect(active_connectable, active_connectable);                   // illegal.
 connect(passive_connectable, passive_connectable);                 // illegal.
 ~~~
 
-![CoreClassDiagram_v4](CoreClassDiagram_v4.png)
+![CoreClassDiagram_v4](./images/CoreClassDiagram_v4.png)
 
 [lvalue]: http://en.cppreference.com/w/cpp/language/value_category

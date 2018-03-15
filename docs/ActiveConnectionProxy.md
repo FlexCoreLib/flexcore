@@ -15,7 +15,7 @@ When the proxy reaches a passive_connectable, the connection stored within the p
 
 Creation and use of active connection proxies is completely symmetric for events and states. The only difference is that for events the source is active, and thus the proxy is built from left to right while for states the sink is active and the proxy thus built from right to left. 
 
-![2015-11-02_ActiveConnectionProxy](2015-11-02_ActiveConnectionProxy.png)
+![2015-11-02_ActiveConnectionProxy](./images/2015-11-02_ActiveConnectionProxy.png)
 
 Due to operator precedence rules in the typical chain of connections
 

@@ -13,7 +13,7 @@ Buffers are created automatically and inserted into the connection, if the conne
 
 Client code specifies which region a port belongs to as a constructor parameter to the port.
 
-![2015-11-02_ParallelRegion](2015-11-02_ParallelRegion.png)
+![2015-11-02_ParallelRegion](./images/2015-11-02_ParallelRegion.png)
 
 Each Region has two ticks, which trigger all operations:
 1. The switch tick triggers switching of all buffers of the region.
