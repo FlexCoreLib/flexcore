@@ -3,6 +3,7 @@
 /.cproject
 Debug
 Release
+build*/
 build-*/
 CMakeLists.txt.user
 
