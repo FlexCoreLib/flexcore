@@ -3,7 +3,7 @@
 
 #include <flexcore/extended/node_fwd.hpp>
 #include <flexcore/ports.hpp>
-#include <adobe/forest.hpp>
+#include <flexcore/3rdparty/adobe/forest.hpp>
 
 #include <cassert>
 #include <string>
